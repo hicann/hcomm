@@ -16,6 +16,7 @@
 #include "ip_address.h"
 #include "nlohmann/json.hpp"
 #include "topo_common_types.h"
+#include "rank_table_source.h"
 
 namespace Hccl {
 constexpr unsigned int MIN_VALUE_LISTENPORT = 1;
@@ -28,7 +29,7 @@ public:
     AddrType addrType;
     IpAddress addr;
     u32 listenPort{0};
-    void Deserialize(const nlohmann::json& controlPlaneJson);
+    void Deserialize(const nlohmann::json& controlPlaneJson, RankTableSource source = RankTableSource::RANKTABLE);
     void GetBinStream(BinaryStream& binaryStream) const;
     explicit ControlPlane(BinaryStream& binStream);
     std::string Describe() const;

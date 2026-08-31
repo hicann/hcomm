@@ -12,6 +12,7 @@
 #include "json_parser.h"
 #include "invalid_params_exception.h"
 #include "exception_util.h"
+#include "rank_table_report_macro.h"
 
 namespace Hccl {
 
@@ -43,7 +44,9 @@ const unordered_map<string, AddrPosition> EdgeInfo::strToAddrPosition
 void EdgeInfo::Deserialize(const nlohmann::json& edgeInfoJson)
 {
     std::string msgNetLayer = "[EdgeInfo::Deserialize] error occurs when parser object of propName \"net_layer\"";
-    TRY_CATCH_THROW(InvalidParamsException, msgNetLayer, netLayer = GetJsonPropertyUInt(edgeInfoJson, "net_layer"););
+    TRY_CATCH_THROW_REPORT_TOPO(
+        InvalidParamsException, msgNetLayer, (netLayer = GetJsonPropertyUInt(edgeInfoJson, "net_layer")), edgeInfoJson,
+        "net_layer", "0 ~ UINT32_MAX");
     if (netLayer > MAX_VALUE_LEVEL) {
         THROW<InvalidParamsException>(StringFormat(
             "[EdgeInfo::%s] netLayer value[%u] is out of range[0, %u].", __func__, netLayer, MAX_VALUE_LEVEL));
@@ -54,7 +57,9 @@ void EdgeInfo::Deserialize(const nlohmann::json& edgeInfoJson)
     if (edgeInfoJson.contains("topo_type")) {
         std::string topoTypeStr;
         std::string msgtopoType = "[EdgeInfo::Deserialize] error occurs when parser object of propName \"topo_type\"";
-        TRY_CATCH_THROW(InvalidParamsException, msgtopoType, topoTypeStr = GetJsonProperty(edgeInfoJson, "topo_type"););
+        TRY_CATCH_THROW_REPORT_TOPO(
+            InvalidParamsException, msgtopoType, (topoTypeStr = GetJsonProperty(edgeInfoJson, "topo_type")),
+            edgeInfoJson, "topo_type", "non-empty string");
         topoType = GetTopoType(topoTypeStr);
     } else {
         HCCL_WARNING("[EdgeInfo::%s] topo_type not found, [default]topo_type=TopoType::CLOS", __func__);
@@ -64,8 +69,10 @@ void EdgeInfo::Deserialize(const nlohmann::json& edgeInfoJson)
     std::string msgtopoInstIdType
         = "[EdgeInfo::Deserialize] error occurs when parser object of propName \"topo_instance_id\"";
     if (edgeInfoJson.contains("topo_instance_id")) {
-        TRY_CATCH_THROW(InvalidParamsException, msgtopoInstIdType,
-                        topoInstId = GetJsonPropertyUInt(edgeInfoJson, "topo_instance_id"););
+        TRY_CATCH_THROW_REPORT_TOPO(
+            InvalidParamsException, msgtopoInstIdType,
+            (topoInstId = GetJsonPropertyUInt(edgeInfoJson, "topo_instance_id")), edgeInfoJson, "topo_instance_id",
+            "0 ~ UINT32_MAX");
     } else {
         HCCL_WARNING("[EdgeInfo::%s] topo_instance_id not found, [default]topo_instance_id=0", __func__);
         topoInstId = 0;
@@ -80,8 +87,9 @@ void EdgeInfo::DeserializeProtocol(const nlohmann::json& edgeInfoJson)
     nlohmann::json jsonProtocols;
     std::string msgProtocols
         = "[EdgeInfo::DeserializeProtocol] error occurs when parser object of propName \"protocols\"";
-    TRY_CATCH_THROW(InvalidParamsException, msgProtocols,
-                    GetJsonPropertyList(edgeInfoJson, "protocols", jsonProtocols););
+    TRY_CATCH_THROW_REPORT_TOPO(
+        InvalidParamsException, msgProtocols, (GetJsonPropertyList(edgeInfoJson, "protocols", jsonProtocols)),
+        edgeInfoJson, "protocols", "array");
     for (auto& protocolEle : jsonProtocols) {
         auto protocolStr = protocolEle.get<std::string>();
         LinkProtocol protocol = GetLinkProtocol(protocolStr);
@@ -102,11 +110,15 @@ void EdgeInfo::DeserializeEndpoint(const nlohmann::json& edgeInfoJson)
     std::string linkTypeStr;
     std::string msglinkType
         = "[EdgeInfo::DeserializeEndpoint] error occurs when parser object of propName \"link_type\"";
-    TRY_CATCH_THROW(InvalidParamsException, msglinkType, linkTypeStr = GetJsonProperty(edgeInfoJson, "link_type"););
+    TRY_CATCH_THROW_REPORT_TOPO(
+        InvalidParamsException, msglinkType, (linkTypeStr = GetJsonProperty(edgeInfoJson, "link_type")), edgeInfoJson,
+        "link_type", "non-empty string");
     linkType = GetLinkType(linkTypeStr);
 
     std::string msgLocalA = "[EdgeInfo::DeserializeEndpoint] error occurs when parser object of propName \"local_a\"";
-    TRY_CATCH_THROW(InvalidParamsException, msgLocalA, localA = GetJsonPropertyUInt(edgeInfoJson, "local_a"););
+    TRY_CATCH_THROW_REPORT_TOPO(
+        InvalidParamsException, msgLocalA, (localA = GetJsonPropertyUInt(edgeInfoJson, "local_a")), edgeInfoJson,
+        "local_a", "0 ~ UINT32_MAX");
 
     DeserializePort(edgeInfoJson, "local_a_ports", localAPorts);
     if (localAPorts.empty()) {
@@ -116,7 +128,9 @@ void EdgeInfo::DeserializeEndpoint(const nlohmann::json& edgeInfoJson)
     if (linkType == LinkType::PEER2PEER) {
         std::string msgLocalB
             = "[EdgeInfo::DeserializeEndpoint] error occurs when parser object of propName \"local_b\"";
-        TRY_CATCH_THROW(InvalidParamsException, msgLocalB, localB = GetJsonPropertyUInt(edgeInfoJson, "local_b"););
+        TRY_CATCH_THROW_REPORT_TOPO(
+            InvalidParamsException, msgLocalB, (localB = GetJsonPropertyUInt(edgeInfoJson, "local_b")), edgeInfoJson,
+            "local_b", "0 ~ UINT32_MAX");
 
         if (localA == localB) { // localA 和 localB 不能是同一个点
             THROW<InvalidParamsException>(
@@ -137,7 +151,9 @@ void EdgeInfo::DeserializeEndpoint(const nlohmann::json& edgeInfoJson)
         string positionStr;
         std::string msgPosition
             = "[EdgeInfo::DeserializeEndpoint] error occurs when parser object of propName \"position\"";
-        TRY_CATCH_THROW(InvalidParamsException, msgPosition, positionStr = GetJsonProperty(edgeInfoJson, "position"););
+        TRY_CATCH_THROW_REPORT_TOPO(
+            InvalidParamsException, msgPosition, (positionStr = GetJsonProperty(edgeInfoJson, "position")),
+            edgeInfoJson, "position", "non-empty string");
         position = GetAddrPosition(positionStr);
     } else {
         HCCL_WARNING("[EdgeInfo::%s] position not found, [default]position=DEVICE", __func__);
@@ -150,7 +166,9 @@ void EdgeInfo::DeserializePort(const nlohmann::json& edgeInfoJson, std::string p
     nlohmann::json jsonPorts;
     std::string msgPort
         = StringFormat("[EdgeInfo::%s] error occurs when parser object of propName \"%s\"", __func__, propName.c_str());
-    TRY_CATCH_THROW(InvalidParamsException, msgPort, GetJsonPropertyList(edgeInfoJson, propName.c_str(), jsonPorts));
+    TRY_CATCH_THROW_REPORT_TOPO(
+        InvalidParamsException, msgPort, (GetJsonPropertyList(edgeInfoJson, propName.c_str(), jsonPorts)), edgeInfoJson,
+        propName.c_str(), "array");
     if (jsonPorts.empty() || jsonPorts.size() > MAX_PORTS_SIZE) {
         THROW<InvalidParamsException>(
             "[EdgeInfo::%s] ports[%s].size=[%zu] out of range[1, %u]", __func__, propName.c_str(), jsonPorts.size(),

@@ -12,6 +12,7 @@
 #include "json_parser.h"
 #include "invalid_params_exception.h"
 #include "exception_util.h"
+#include "rank_table_report_macro.h"
 
 namespace Hccl {
 
@@ -22,9 +23,15 @@ void TopoInfo::Deserialize(const nlohmann::json& topoInfoJson)
     std::string msgVersion = "[TopoInfo::Deserialize] error occurs when parser object of propName \"version\"";
     std::string msgPc = "[TopoInfo::Deserialize] error occurs when parser object of propName \"peer_count\"";
     std::string msgEc = "[TopoInfo::Deserialize] error occurs when parser object of propName \"edge_count\"";
-    TRY_CATCH_THROW(InvalidParamsException, msgVersion, version = GetJsonProperty(topoInfoJson, "version"););
-    TRY_CATCH_THROW(InvalidParamsException, msgPc, peerCount = GetJsonPropertyUInt(topoInfoJson, "peer_count"););
-    TRY_CATCH_THROW(InvalidParamsException, msgEc, edgeCount = GetJsonPropertyUInt(topoInfoJson, "edge_count"););
+    TRY_CATCH_THROW_REPORT_TOPO(
+        InvalidParamsException, msgVersion, (version = GetJsonProperty(topoInfoJson, "version")), topoInfoJson,
+        "version", "non-empty string");
+    TRY_CATCH_THROW_REPORT_TOPO(
+        InvalidParamsException, msgPc, (peerCount = GetJsonPropertyUInt(topoInfoJson, "peer_count")), topoInfoJson,
+        "peer_count", "0 ~ UINT32_MAX");
+    TRY_CATCH_THROW_REPORT_TOPO(
+        InvalidParamsException, msgEc, (edgeCount = GetJsonPropertyUInt(topoInfoJson, "edge_count")), topoInfoJson,
+        "edge_count", "0 ~ UINT32_MAX");
 
     if (version != "2.0") {
         HCCL_ERROR("[TopoInfo::%s] failed with version[%s] is not \"2.0\".", __func__, version.c_str());
@@ -55,7 +62,9 @@ void TopoInfo::DeserializePeers(const nlohmann::json& topoInfoJson)
 {
     nlohmann::json peerJsons;
     std::string msgPl = "[TopoInfo::DeserializePeers] error occurs when parser object of propName \"peer_list\"";
-    TRY_CATCH_THROW(InvalidParamsException, msgPl, GetJsonPropertyList(topoInfoJson, "peer_list", peerJsons););
+    TRY_CATCH_THROW_REPORT_TOPO(
+        InvalidParamsException, msgPl, (GetJsonPropertyList(topoInfoJson, "peer_list", peerJsons)), topoInfoJson,
+        "peer_list", "array");
     for (auto& peerJson : peerJsons) {
         PeerInfo peer;
         peer.Deserialize(peerJson);
@@ -103,7 +112,9 @@ void TopoInfo::DeserializeEdges(const nlohmann::json& topoInfoJson)
 {
     nlohmann::json edgeJsons;
     std::string msgPe = "[TopoInfo::DeserializeEdges] error occurs when parser object of propName \"edge_list\"";
-    TRY_CATCH_THROW(InvalidParamsException, msgPe, GetJsonPropertyList(topoInfoJson, "edge_list", edgeJsons););
+    TRY_CATCH_THROW_REPORT_TOPO(
+        InvalidParamsException, msgPe, (GetJsonPropertyList(topoInfoJson, "edge_list", edgeJsons)), topoInfoJson,
+        "edge_list", "array");
     if (edgeJsons.empty()) {
         if (edgeCount != 0) {
             THROW<InvalidParamsException>(StringFormat(

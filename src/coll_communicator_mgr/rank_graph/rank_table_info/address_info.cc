@@ -18,18 +18,20 @@
 #include "invalid_params_exception.h"
 #include "exception_util.h"
 #include "adapter_error_manager_pub.h"
-
+#include "rank_table_report_macro.h"
 namespace Hccl {
 using namespace std;
 
 const unordered_map<string, AddrType> AddressInfo::strToAddrType
     = (unordered_map<string, AddrType>{{"EID", AddrType::EID}, {"IPV4", AddrType::IPV4}, {"IPV6", AddrType::IPV6}});
 
-void AddressInfo::Deserialize(const nlohmann::json& addressInfoJson)
+void AddressInfo::DeserializeAddrTypeAndAddr(const nlohmann::json& addressInfoJson, RankTableSource source)
 {
     std::string addrTypeStr;
     std::string msgAddrtype = "error occurs when parser object of propName \"addr_type\"";
-    TRY_CATCH_THROW(InvalidParamsException, msgAddrtype, addrTypeStr = GetJsonProperty(addressInfoJson, "addr_type"););
+    TRY_CATCH_THROW_REPORT(
+        InvalidParamsException, msgAddrtype, (addrTypeStr = GetJsonProperty(addressInfoJson, "addr_type")),
+        addressInfoJson, "addr_type", "non-empty string", source);
 
     if (!IsStringInAddrType(addrTypeStr)) {
         THROW<InvalidParamsException>(StringFormat("[AddressInfo::%s] failed with Invalid addrType. ", __func__));
@@ -38,7 +40,9 @@ void AddressInfo::Deserialize(const nlohmann::json& addressInfoJson)
 
     std::string address;
     std::string msgAddr = "error occurs when parser object of propName \"addr\"";
-    TRY_CATCH_THROW(InvalidParamsException, msgAddr, address = GetJsonProperty(addressInfoJson, "addr"););
+    TRY_CATCH_THROW_REPORT(
+        InvalidParamsException, msgAddr, (address = GetJsonProperty(addressInfoJson, "addr")), addressInfoJson, "addr",
+        "non-empty string", source);
 
     if (address.length() < MIN_VALUE_ADDR_LENGRH || address.length() > MAX_VALUE_ADDR_LENGRH) {
         if (address.empty()) {
@@ -66,17 +70,16 @@ void AddressInfo::Deserialize(const nlohmann::json& addressInfoJson)
     // 先解析主地址以确定 addrType，再使用同一类型校验可选的 backup_addr。
     const std::string msgBackupAddr = "deserialize backup_addr failed";
     TRY_CATCH_THROW(InvalidParamsException, msgBackupAddr, DeserializeBackupAddrs(addressInfoJson, addrTypeStr););
+}
 
-    planeId = addressInfoJson.value<std::string>("plane_id", "0");
-    if (planeId.length() > MAX_VALUE_PLANEID) {
-        THROW<InvalidParamsException>(StringFormat(
-            "plane_id [%s] length is out of range [%u] to [%u]", planeId.c_str(), MIN_VALUE_PLANEID,
-            MAX_VALUE_PLANEID));
-    }
-
+void AddressInfo::DeserializePorts(const nlohmann::json& addressInfoJson, RankTableSource source)
+{
     nlohmann::json portsJsons;
     std::string msgPortlist = "error occurs when parser object of propName \"ports\"";
-    TRY_CATCH_THROW(InvalidParamsException, msgPortlist, GetJsonPropertyList(addressInfoJson, "ports", portsJsons););
+    TRY_CATCH_THROW_REPORT(
+        InvalidParamsException, msgPortlist, (GetJsonPropertyList(addressInfoJson, "ports", portsJsons)),
+        addressInfoJson, "ports", "array", source);
+
     for (auto& portsJson : portsJsons) {
         if (portsJson.get<std::string>().size() < MIN_VALUE_PORT_LENGTH
             || portsJson.get<std::string>().size() > MAX_VALUE_PORT_LENGTH) {
@@ -90,6 +93,20 @@ void AddressInfo::Deserialize(const nlohmann::json& addressInfoJson)
         THROW<InvalidParamsException>(StringFormat(
             "ports [%u] length is out of range [%u] to [%u]", ports.size(), MIN_VALUE_PORT, MAX_VALUE_PORT));
     }
+}
+
+void AddressInfo::Deserialize(const nlohmann::json& addressInfoJson, RankTableSource source)
+{
+    DeserializeAddrTypeAndAddr(addressInfoJson, source);
+
+    planeId = addressInfoJson.value<std::string>("plane_id", "0");
+    if (planeId.length() > MAX_VALUE_PLANEID) {
+        THROW<InvalidParamsException>(StringFormat(
+            "plane_id [%s] length is out of range [%u] to [%u]", planeId.c_str(), MIN_VALUE_PLANEID,
+            MAX_VALUE_PLANEID));
+    }
+
+    DeserializePorts(addressInfoJson, source);
 }
 
 void AddressInfo::ParseAddrByType(const std::string& addrType, const std::string& address, IpAddress& ipAddress)

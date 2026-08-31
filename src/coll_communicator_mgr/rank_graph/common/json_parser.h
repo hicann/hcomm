@@ -27,7 +27,6 @@ std::string GetJsonProperty(const nlohmann::json& obj, const char* propName, boo
 u32 GetJsonPropertyUInt(const nlohmann::json& obj, const char* propName, bool required = true, u32 defaultValue = 0);
 s32 GetJsonPropertySInt(const nlohmann::json& obj, const char* propName, bool required = true, s32 defaultValue = 0);
 void GetJsonPropertyList(const nlohmann::json& obj, const char* propName, nlohmann::json& listObj);
-
 class JsonParser {
 public:
     template <typename T>

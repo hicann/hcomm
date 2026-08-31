@@ -19,6 +19,7 @@
 #include "rank_level_info.h"
 #include "control_plane.h"
 #include "orion_adapter_hccp.h"
+#include "rank_table_source.h"
 namespace Hccl {
 constexpr unsigned int MAX_VALUE_DEVICEID = 512;
 constexpr unsigned int DEFAULT_VALUE_TCPPORT = 16666;
@@ -42,9 +43,14 @@ public:
     TlsStatus tlsStatus{TlsStatus::UNKNOWN};
     TlsStatus hostDpuTlsStatus{TlsStatus::UNKNOWN};
     std::string Describe() const;
-    void Deserialize(const nlohmann::json& newRankInfoJson);
+    void Deserialize(const nlohmann::json& newRankInfoJson, RankTableSource source = RankTableSource::RANKTABLE);
     explicit NewRankInfo(BinaryStream& binStream);
     void GetBinStream(bool isContainLoaId, BinaryStream& binStream) const;
+
+private:
+    void DeserializeRankIdAndLocalId(const nlohmann::json& newRankInfoJson, RankTableSource source);
+    void DeserializeDeviceIdAndPort(const nlohmann::json& newRankInfoJson, RankTableSource source);
+    void DeserializeLevelList(const nlohmann::json& newRankInfoJson, RankTableSource source);
 };
 
 } // namespace Hccl

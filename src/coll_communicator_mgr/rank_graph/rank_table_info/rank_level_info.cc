@@ -15,6 +15,8 @@
 #include "json_parser.h"
 #include "invalid_params_exception.h"
 #include "exception_util.h"
+#include "adapter_error_manager_pub.h"
+#include "rank_table_report_macro.h"
 
 namespace Hccl {
 using namespace std;
@@ -27,14 +29,16 @@ const unordered_map<string, NetType> RankLevelInfo::strToNetType = (unordered_ma
     {"TOPO_FILE_DESC", NetType::TOPO_FILE_DESC},
     {"CLOS", NetType::CLOS}});
 
-void RankLevelInfo::Deserialize(const nlohmann::json& rankLevelInfoJson)
+void RankLevelInfo::DeserializeNetLayerInfo(const nlohmann::json& rankLevelInfoJson, RankTableSource source)
 {
     std::string msgNetlayer = "error occurs when parser object of propName \"net_layer\"";
     std::string msgNetinstid = "error occurs when parser object of propName \"net_instance_id\"";
-    TRY_CATCH_THROW(InvalidParamsException, msgNetlayer,
-                    netLayer = GetJsonPropertyUInt(rankLevelInfoJson, "net_layer"););
-    TRY_CATCH_THROW(InvalidParamsException, msgNetinstid,
-                    netInstId = GetJsonProperty(rankLevelInfoJson, "net_instance_id"););
+    TRY_CATCH_THROW_REPORT(
+        InvalidParamsException, msgNetlayer, (netLayer = GetJsonPropertyUInt(rankLevelInfoJson, "net_layer")),
+        rankLevelInfoJson, "net_layer", "0 ~ UINT32_MAX", source);
+    TRY_CATCH_THROW_REPORT(
+        InvalidParamsException, msgNetinstid, (netInstId = GetJsonProperty(rankLevelInfoJson, "net_instance_id")),
+        rankLevelInfoJson, "net_instance_id", "non-empty string", source);
 
     if (netLayer > MAX_VALUE_NETLAYER) {
         THROW<InvalidParamsException>(
@@ -50,20 +54,26 @@ void RankLevelInfo::Deserialize(const nlohmann::json& rankLevelInfoJson)
     if (rankLevelInfoJson.contains("net_type")) {
         string netTypeStr;
         std::string msgNettype = "error occurs when parser object of propName \"net_type\"";
-        TRY_CATCH_THROW(InvalidParamsException, msgNettype,
-                        netTypeStr = GetJsonProperty(rankLevelInfoJson, "net_type"););
+        TRY_CATCH_THROW_REPORT(
+            InvalidParamsException, msgNettype, (netTypeStr = GetJsonProperty(rankLevelInfoJson, "net_type")),
+            rankLevelInfoJson, "net_type", "non-empty string", source);
         if (!IsStringInNetType(netTypeStr)) {
             THROW<InvalidParamsException>(StringFormat("[RankLevelInfo::%s] failed with Invalid netType. ", __func__));
         }
         netType = strToNetType.at(netTypeStr);
     }
+}
+
+void RankLevelInfo::DeserializeRankAddrs(const nlohmann::json& rankLevelInfoJson, RankTableSource source)
+{
     nlohmann::json rank_addrs;
     std::string msgAddrs = "error occurs when parser object of propName \"rank_addrs\"";
-    TRY_CATCH_THROW(InvalidParamsException, msgAddrs,
-                    GetJsonPropertyList(rankLevelInfoJson, "rank_addr_list", rank_addrs););
+    TRY_CATCH_THROW_REPORT(
+        InvalidParamsException, msgAddrs, (GetJsonPropertyList(rankLevelInfoJson, "rank_addr_list", rank_addrs)),
+        rankLevelInfoJson, "rank_addr_list", "array", source);
     for (auto& addr : rank_addrs) {
         AddressInfo addressInfo;
-        addressInfo.Deserialize(addr);
+        addressInfo.Deserialize(addr, source);
         rankAddrs.emplace_back(addressInfo);
     }
     if (rankAddrs.size() > MAX_VALUE_RANKADDR_SIZE) {
@@ -71,6 +81,10 @@ void RankLevelInfo::Deserialize(const nlohmann::json& rankLevelInfoJson)
             "rank_addr_list [%u] out of range [%u] to [%u]", rankAddrs.size(), MIN_VALUE_RANKADDR_SIZE,
             MAX_VALUE_RANKADDR_SIZE));
     }
+}
+
+void RankLevelInfo::BuildPortAddrMap()
+{
     for (auto& rankAddr : rankAddrs) {
         IpAddress ipAddress = rankAddr.addr;
         for (auto& port : rankAddr.ports) {
@@ -83,6 +97,13 @@ void RankLevelInfo::Deserialize(const nlohmann::json& rankLevelInfoJson)
             }
         }
     }
+}
+
+void RankLevelInfo::Deserialize(const nlohmann::json& rankLevelInfoJson, RankTableSource source)
+{
+    DeserializeNetLayerInfo(rankLevelInfoJson, source);
+    DeserializeRankAddrs(rankLevelInfoJson, source);
+    BuildPortAddrMap();
 }
 
 string RankLevelInfo::Describe() const

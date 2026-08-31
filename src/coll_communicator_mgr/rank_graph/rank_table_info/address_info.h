@@ -17,6 +17,7 @@
 #include "nlohmann/json.hpp"
 #include "ip_address.h"
 #include "topo_common_types.h"
+#include "rank_table_source.h"
 
 namespace Hccl {
 
@@ -41,7 +42,7 @@ public:
     AddrType addrType;
     std::set<std::string> ports; // 网口标记
     std::string planeId{"0"};
-    void Deserialize(const nlohmann::json& addressInfoJson);
+    void Deserialize(const nlohmann::json& addressInfoJson, RankTableSource source = RankTableSource::RANKTABLE);
     explicit AddressInfo(BinaryStream& binStream);
     void GetBinStream(BinaryStream& binStream) const;
     std::string Describe() const;
@@ -56,6 +57,8 @@ private:
     void IPV4ToAddr(std::string str);
     void IPV6ToAddr(std::string str);
     void DeserializeBackupAddrs(const nlohmann::json& addressInfoJson, const std::string& addrTypeStr);
+    void DeserializeAddrTypeAndAddr(const nlohmann::json& addressInfoJson, RankTableSource source);
+    void DeserializePorts(const nlohmann::json& addressInfoJson, RankTableSource source);
     static bool IsStringInAddrType(std::string str) { return strToAddrType.count(str) > 0; }
 };
 

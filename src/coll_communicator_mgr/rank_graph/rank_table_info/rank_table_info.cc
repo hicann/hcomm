@@ -18,6 +18,7 @@
 #include "invalid_params_exception.h"
 #include "exception_util.h"
 #include "adapter_error_manager_pub.h"
+#include "rank_table_report_macro.h"
 
 namespace Hccl {
 
@@ -144,16 +145,20 @@ void RankTableInfo::Check()
     }
 }
 
-void RankTableInfo::Deserialize(const nlohmann::json& rankTableInfoJson, bool isCheck)
+void RankTableInfo::Deserialize(const nlohmann::json& rankTableInfoJson, bool isCheck, RankTableSource source)
 {
+    source_ = source;
     std::string msgVersion = "error occurs when parser object of propName \"version\"";
-    TRY_CATCH_THROW(InvalidParamsException, msgVersion, version = GetJsonProperty(rankTableInfoJson, "version"););
+    TRY_CATCH_THROW_REPORT(
+        InvalidParamsException, msgVersion, (version = GetJsonProperty(rankTableInfoJson, "version")),
+        rankTableInfoJson, "version", "non-empty string", source_);
     std::string msgStatus = "error occurs when parser object of propName \"status\"";
 
     std::string detourStr;
     std::string msgDetour = "error occurs when parser object of propName \"detour\"";
-    TRY_CATCH_THROW(InvalidParamsException, msgDetour,
-                    detourStr = GetJsonProperty(rankTableInfoJson, "detour", false););
+    TRY_CATCH_THROW_REPORT(
+        InvalidParamsException, msgDetour, (detourStr = GetJsonProperty(rankTableInfoJson, "detour", false)),
+        rankTableInfoJson, "detour", "non-empty string", source_);
     if (detourStr == "true") {
         detour = true;
     } else if (detourStr == "false" || detourStr == "") {
@@ -163,16 +168,18 @@ void RankTableInfo::Deserialize(const nlohmann::json& rankTableInfoJson, bool is
     }
 
     std::string msgRankcount = "error occurs when parser object of propName \"rank_count\"";
-    TRY_CATCH_THROW(InvalidParamsException, msgRankcount,
-                    rankCount = GetJsonPropertyUInt(rankTableInfoJson, "rank_count"););
+    TRY_CATCH_THROW_REPORT(
+        InvalidParamsException, msgRankcount, (rankCount = GetJsonPropertyUInt(rankTableInfoJson, "rank_count")),
+        rankTableInfoJson, "rank_count", "0 ~ UINT32_MAX", source_);
 
     nlohmann::json rankJsons;
     std::string msgRanklist = "error occurs when parser object of propName \"rank_list\"";
-    TRY_CATCH_THROW(InvalidParamsException, msgRanklist,
-                    GetJsonPropertyList(rankTableInfoJson, "rank_list", rankJsons););
+    TRY_CATCH_THROW_REPORT(
+        InvalidParamsException, msgRanklist, (GetJsonPropertyList(rankTableInfoJson, "rank_list", rankJsons)),
+        rankTableInfoJson, "rank_list", "array", source_);
     for (auto& rankJson : rankJsons) {
         NewRankInfo rankInfo;
-        rankInfo.Deserialize(rankJson);
+        rankInfo.Deserialize(rankJson, source_);
         ranks.emplace_back(rankInfo);
     }
 

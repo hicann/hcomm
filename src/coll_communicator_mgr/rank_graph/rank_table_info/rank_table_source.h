@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2025 Huawei Technologies Co., Ltd.
+ * Copyright (c) 2026 Huawei Technologies Co., Ltd.
  * This program is free software, you can redistribute it and/or modify it under the terms and conditions of
  * CANN Open Software License Agreement Version 2.0 (the "License").
  * Please refer to the License for details. You may not use this file except in compliance with the License.
@@ -8,29 +8,14 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
-#ifndef CHANGED_RANK_INFO_H
-#define CHANGED_RANK_INFO_H
-
-#include <vector>
-#include <string>
-#include <unordered_map>
-#include "nlohmann/json.hpp"
-#include "new_rank_info.h"
-#include "orion_adapter_rts.h"
-#include "rank_table_source.h"
+// rank_table_source.h
+#ifndef RANK_TABLE_SOURCE_H
+#define RANK_TABLE_SOURCE_H
 
 namespace Hccl {
-class ChangedRankInfo {
-public:
-    ChangedRankInfo() {};
-    std::string version;
-    u32 rankCount{0};
-    std::vector<NewRankInfo> ranks;
-    void Dump() const;
-    std::string Describe() const;
-    void Deserialize(const nlohmann::json& changedRankInfoJson, RankTableSource source = RankTableSource::RANKTABLE);
-};
+
+enum class RankTableSource { RANKTABLE, ROOTINFO };
 
 } // namespace Hccl
 
-#endif // CHANGED_RANK_INFO_H
+#endif // RANK_TABLE_SOURCE_H

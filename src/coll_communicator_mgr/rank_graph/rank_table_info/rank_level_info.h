@@ -19,7 +19,7 @@
 #include <regex>
 #include "topo_common_types.h"
 #include "address_info.h"
-
+#include "rank_table_source.h"
 namespace Hccl {
 constexpr unsigned int MIN_VALUE_NETLAYER = 0;
 constexpr unsigned int MAX_VALUE_NETLAYER = 7;
@@ -39,13 +39,15 @@ public:
     std::vector<AddressInfo> rankAddrs;
     std::string Describe() const;
     std::map<std::string, std::vector<IpAddress>> portAddrMap;
-    void Deserialize(const nlohmann::json& rankLevelInfoJson);
+    void Deserialize(const nlohmann::json& rankLevelInfoJson, RankTableSource source = RankTableSource::RANKTABLE);
     explicit RankLevelInfo(BinaryStream& binaStream);
     void GetBinStream(BinaryStream& binaStream) const;
 
 private:
     static const std::unordered_map<std::string, NetType> strToNetType;
-
+    void DeserializeNetLayerInfo(const nlohmann::json& rankLevelInfoJson, RankTableSource source);
+    void DeserializeRankAddrs(const nlohmann::json& rankLevelInfoJson, RankTableSource source);
+    void BuildPortAddrMap();
     static bool IsStringInNetType(std::string str) { return strToNetType.count(str) > 0; }
 };
 

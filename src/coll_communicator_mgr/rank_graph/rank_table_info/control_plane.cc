@@ -17,18 +17,22 @@
 #include "exception_util.h"
 #include "control_plane.h"
 #include "topo_common_types.h"
+#include "adapter_error_manager_pub.h"
+#include "rank_table_report_macro.h"
 namespace Hccl {
 using namespace std;
 
 const unordered_map<string, AddrType> ControlPlane::strToAddrType
     = (unordered_map<string, AddrType>{{"EID", AddrType::EID}, {"IPV4", AddrType::IPV4}, {"IPV6", AddrType::IPV6}});
 
-void ControlPlane::Deserialize(const nlohmann::json& controlPlaneJson)
+void ControlPlane::Deserialize(const nlohmann::json& controlPlaneJson, RankTableSource source)
 {
     string addrTypeStr;
     std::string msgAddrtype = "error occurs when parser object of propName \"addr_type\"";
 
-    TRY_CATCH_THROW(InvalidParamsException, msgAddrtype, addrTypeStr = GetJsonProperty(controlPlaneJson, "addr_type"););
+    TRY_CATCH_THROW_REPORT(
+        InvalidParamsException, msgAddrtype, (addrTypeStr = GetJsonProperty(controlPlaneJson, "addr_type")),
+        controlPlaneJson, "addr_type", "non-empty string", source);
 
     if (!IsStringInAddrType(addrTypeStr)) {
         THROW<InvalidParamsException>(StringFormat("[ControlPlane::%s] failed with Invalid addrType. ", __func__));
@@ -38,7 +42,9 @@ void ControlPlane::Deserialize(const nlohmann::json& controlPlaneJson)
     std::string address;
     std::string msgAddr = "error occurs when parser object of propName \"addr\"";
     const int MAX_DISPLAY_LEN = 128;
-    TRY_CATCH_THROW(InvalidParamsException, msgAddr, address = GetJsonProperty(controlPlaneJson, "addr"););
+    TRY_CATCH_THROW_REPORT(
+        InvalidParamsException, msgAddr, (address = GetJsonProperty(controlPlaneJson, "addr")), controlPlaneJson,
+        "addr", "non-empty string", source);
 
     if (address.length() < MIN_VALUE_ADDR || address.length() > MAX_VALUE_ADDR) {
         THROW<InvalidParamsException>(StringFormat(
@@ -55,8 +61,9 @@ void ControlPlane::Deserialize(const nlohmann::json& controlPlaneJson)
     }
 
     std::string msgListenport = "error occurs when parser object of propName \"listen_port\"";
-    TRY_CATCH_THROW(InvalidParamsException, msgListenport,
-                    listenPort = GetJsonPropertyUInt(controlPlaneJson, "listen_port"););
+    TRY_CATCH_THROW_REPORT(
+        InvalidParamsException, msgListenport, (listenPort = GetJsonPropertyUInt(controlPlaneJson, "listen_port")),
+        controlPlaneJson, "listen_port", "0 ~ UINT32_MAX", source);
 
     if (listenPort < MIN_VALUE_LISTENPORT || listenPort > MAX_VALUE_LISTENPORT) {
         THROW<InvalidParamsException>(StringFormat(

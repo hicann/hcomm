@@ -21,6 +21,47 @@
 
 using namespace Hccl;
 
+namespace {
+std::string g_capturedErrorCode;
+std::vector<std::string> g_capturedKeys;
+std::vector<std::string> g_capturedValues;
+uint32_t g_rptCallCount = 0;
+
+void stub_RptInputErr_capture(std::string error_code, std::vector<std::string> key, std::vector<std::string> value)
+{
+    g_capturedErrorCode = error_code;
+    g_capturedKeys = key;
+    g_capturedValues = value;
+    g_rptCallCount++;
+}
+
+void ResetRptCapture()
+{
+    g_capturedErrorCode.clear();
+    g_capturedKeys.clear();
+    g_capturedValues.clear();
+    g_rptCallCount = 0;
+}
+
+void DeserializeWithRptCapture(const std::string& rankTableString, RankTableSource source)
+{
+    ResetRptCapture();
+    MOCKER(RptInputErr).stubs().will(invoke(stub_RptInputErr_capture));
+    nlohmann::json rankTableJson = nlohmann::json::parse(rankTableString);
+    RankTableInfo rankTableInfo;
+    EXPECT_THROW(rankTableInfo.Deserialize(rankTableJson, false, source), InvalidParamsException);
+}
+
+void ExpectReportOnce(
+    const std::string& errorCode, const std::vector<std::string>& keys, const std::vector<std::string>& values)
+{
+    EXPECT_EQ(g_rptCallCount, 1U);
+    EXPECT_EQ(g_capturedErrorCode, errorCode);
+    EXPECT_EQ(g_capturedKeys, keys);
+    EXPECT_EQ(g_capturedValues, values);
+}
+} // namespace
+
 class RankTableInfoParserTest : public testing::Test {
 protected:
     static void SetUpTestCase() { std::cout << "RankTableInfoParserTest SetUP" << std::endl; }
@@ -988,4 +1029,35 @@ TEST_F(RankTableInfoParserTest, Ut_Check_When_SameLocalIdWithReplaced_Expect_Exc
 
     rankTableInfo.ranks = {rank0, rank1};
     EXPECT_THROW(rankTableInfo.Check(), InvalidParamsException);
+}
+
+TEST_F(RankTableInfoParserTest, Ut_Deserialize_When_RootInfoVersionMissing_Expect_EI0016ReportedOnce)
+{
+    DeserializeWithRptCapture(R"({"status": "completed"})", RankTableSource::ROOTINFO);
+    ExpectReportOnce("EI0016", {"value", "variable", "expect"}, {"status", "version", "non-empty string"});
+}
+
+TEST_F(RankTableInfoParserTest, Ut_Deserialize_When_RankTableVersionMissing_Expect_EI0017ReportedOnce)
+{
+    DeserializeWithRptCapture(R"({"status": "completed"})", RankTableSource::RANKTABLE);
+    ExpectReportOnce("EI0017", {"config"}, {"version"});
+}
+
+TEST_F(RankTableInfoParserTest, Ut_Deserialize_When_RootInfoRankCountInvalid_Expect_EI0016WithValue)
+{
+    DeserializeWithRptCapture(R"({"version": "2.0", "rank_count": -5})", RankTableSource::ROOTINFO);
+    ExpectReportOnce("EI0016", {"value", "variable", "expect"}, {"-5", "rank_count", "0 ~ UINT32_MAX"});
+}
+
+TEST_F(RankTableInfoParserTest, Ut_Deserialize_When_RankTableRankCountInvalid_Expect_EI0014WithValue)
+{
+    DeserializeWithRptCapture(R"({"version": "2.0", "rank_count": -5})", RankTableSource::RANKTABLE);
+    ExpectReportOnce("EI0014", {"value", "variable", "expect"}, {"-5", "rank_count", "0 ~ UINT32_MAX"});
+}
+
+TEST_F(RankTableInfoParserTest, Ut_Deserialize_When_RootInfoRankIdMissing_Expect_EI0016WithKeys)
+{
+    DeserializeWithRptCapture(
+        R"({"version": "2.0", "rank_count": 1, "rank_list": [{"device_id": 0}]})", RankTableSource::ROOTINFO);
+    ExpectReportOnce("EI0016", {"value", "variable", "expect"}, {"device_id", "rank_id", "0 ~ UINT32_MAX"});
 }

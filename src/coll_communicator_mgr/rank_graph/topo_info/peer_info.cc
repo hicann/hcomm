@@ -11,13 +11,16 @@
 #include "peer_info.h"
 #include "json_parser.h"
 #include "invalid_params_exception.h"
+#include "rank_table_report_macro.h"
 
 namespace Hccl {
 
 void PeerInfo::Deserialize(const nlohmann::json& peerInfoJson)
 {
     std::string msgId = "[PeerInfo::Deserialize] error occurs when parser object of propName \"local_id\"";
-    TRY_CATCH_THROW(InvalidParamsException, msgId, localId = GetJsonPropertyUInt(peerInfoJson, "local_id"););
+    TRY_CATCH_THROW_REPORT_TOPO(
+        InvalidParamsException, msgId, (localId = GetJsonPropertyUInt(peerInfoJson, "local_id")), peerInfoJson,
+        "local_id", "0 ~ UINT32_MAX");
 
     if (localId > MAX_PEER_LOCAL_ID) {
         THROW<InvalidParamsException>(
