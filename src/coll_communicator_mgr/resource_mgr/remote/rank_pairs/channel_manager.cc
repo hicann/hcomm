@@ -526,8 +526,7 @@ HcclResult ChannelManager::DeepCopyH2DchannelParam(
             remoteResV2ArraySize, HcclRtMemcpyKind::HCCL_RT_MEMCPY_KIND_HOST_TO_DEVICE));
 
         // 更新设备端参数中的remoteResV2指针
-        deviceChannelParam.remoteResV2
-            = reinterpret_cast<HcclIndOpChannelRemoteResV2*>(deviceRemoteResV2Array.get()->ptr());
+        deviceChannelParam.remoteResV2 = static_cast<HcclIndOpChannelRemoteResV2*>(deviceRemoteResV2Array.get()->ptr());
         channelParamMemVector_.push_back(std::move(deviceRemoteResV2Array));
     } else {
         HCCL_ERROR("[%s]invalid hostChannelParam", __func__);
@@ -696,8 +695,8 @@ HcclResult ChannelManager::AicpuChannelInit(
                       std::numeric_limits<uint16_t>::max() :
                       NOTIFY_DEFAULT_WAIT_TIME;
     CHK_RET(AicpuAclKernelLaunch(
-        localStream.ptr(), reinterpret_cast<void*>(&customInitTask), sizeof(customInitTask), binHandle_, kernelName,
-        true, timeOut));
+        localStream.ptr(), static_cast<void*>(&customInitTask), sizeof(customInitTask), binHandle_, kernelName, true,
+        timeOut));
     CHK_RET(hcclStreamSynchronize(localStream.ptr(), CommConfiger::GetInstance().GetCommConfigExecTimeOut(tag)));
 
     // 将device侧的channelList拷贝回host侧的channelList

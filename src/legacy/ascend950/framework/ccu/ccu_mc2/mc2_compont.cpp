@@ -611,10 +611,10 @@ void Mc2Compont::DisplayRPCMsg() const
         }
         return;
     }
-    void* ckeAddr = reinterpret_cast<uint8_t*>(xnAddr) + comParamBuffer->GetSize();
-    uint64_t* xnBaseAddr = reinterpret_cast<uint64_t*>(xnAddr);
-    uint64_t* waitCkeAddr = reinterpret_cast<uint64_t*>(ckeAddr);
-    uint64_t* setCkeAddr = reinterpret_cast<uint64_t*>(ckeAddr) + CCU_TASK_NUM_MAX;
+    void* ckeAddr = static_cast<uint8_t*>(xnAddr) + comParamBuffer->GetSize();
+    uint64_t* xnBaseAddr = static_cast<uint64_t*>(xnAddr);
+    uint64_t* waitCkeAddr = static_cast<uint64_t*>(ckeAddr);
+    uint64_t* setCkeAddr = static_cast<uint64_t*>(ckeAddr) + CCU_TASK_NUM_MAX;
     uint32_t xnNumPerMsg = CCU_PARAM_NUM_MAX;
     for (uint32_t msgId = 0; msgId < CCU_TASK_NUM_MAX; msgId++) {
         uint64_t* xnMsg = xnBaseAddr + msgId * xnNumPerMsg;
