@@ -137,6 +137,11 @@ TEST_F(AicpuTsUrmaChannelTest, Ut_Resume_MockedBuilds_Returns_SUCCESS)
         .with(mockcpp::any())
         .will(returnValue(HCCL_SUCCESS));
 
+    MOCKER_CPP(&AicpuTsUrmaChannel::ResetLocalNotifies, HcclResult(AicpuTsUrmaChannel::*)())
+        .stubs()
+        .with(mockcpp::any())
+        .will(returnValue(HCCL_SUCCESS));
+
     MOCKER_CPP(&AicpuTsUrmaChannel::BuildUbMemTransport, HcclResult(AicpuTsUrmaChannel::*)())
         .stubs()
         .with(mockcpp::any())
@@ -144,6 +149,35 @@ TEST_F(AicpuTsUrmaChannelTest, Ut_Resume_MockedBuilds_Returns_SUCCESS)
 
     auto ret = ch.Resume();
     EXPECT_EQ(ret, HCCL_SUCCESS);
+}
+
+TEST_F(AicpuTsUrmaChannelTest, Ut_ResetLocalNotifies_When_Empty_Expect_SUCCESS)
+{
+    HcommChannelDesc desc{};
+    EndpointHandle ep = reinterpret_cast<EndpointHandle>(0x1);
+    AicpuTsUrmaChannel ch(ep, desc);
+
+    EXPECT_EQ(ch.ResetLocalNotifies(), HCCL_SUCCESS);
+}
+
+TEST_F(AicpuTsUrmaChannelTest, Ut_Resume_When_ResetLocalNotifiesFailed_Expect_ReturnFailed)
+{
+    HcommChannelDesc desc{};
+    EndpointHandle ep = reinterpret_cast<EndpointHandle>(0x1);
+    AicpuTsUrmaChannel ch(ep, desc);
+
+    MOCKER_CPP(&AicpuTsUrmaChannel::BuildSocket, HcclResult(AicpuTsUrmaChannel::*)())
+        .stubs()
+        .will(returnValue(HCCL_SUCCESS));
+    MOCKER_CPP(&AicpuTsUrmaChannel::BuildConnection, HcclResult(AicpuTsUrmaChannel::*)())
+        .stubs()
+        .will(returnValue(HCCL_SUCCESS));
+    MOCKER_CPP(&AicpuTsUrmaChannel::ResetLocalNotifies, HcclResult(AicpuTsUrmaChannel::*)())
+        .stubs()
+        .will(returnValue(HCCL_E_INTERNAL));
+    MOCKER_CPP(&AicpuTsUrmaChannel::BuildUbMemTransport, HcclResult(AicpuTsUrmaChannel::*)()).expects(never());
+
+    EXPECT_EQ(ch.Resume(), HCCL_E_INTERNAL);
 }
 
 TEST_F(AicpuTsUrmaChannelTest, UT_ParseInputParam_When_ExchangeAllMemsFalse_Expect_FillCommonRes)

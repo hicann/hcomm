@@ -15,6 +15,7 @@
 #include "thread_manager.h"
 #include "launch_aicpu.h"
 #include "aicpu_launch_manager.h"
+#include "adapter_rts_common.h"
 
 using namespace hccl;
 
@@ -82,4 +83,31 @@ TEST_F(ThreadManagerTest, Ut_ThreadExportToCommEngineAicpu_When_Normal_Expect_Re
         ret = threadManager->HcclThreadExportToCommEngine(threadNum, threads, dstCommEngine, exportedThreads);
         EXPECT_EQ(ret, HCCL_SUCCESS);
     }
+}
+
+TEST_F(ThreadManagerTest, Ut_ResetThreadLocalNotifies_When_NoThreads_Expect_Success)
+{
+    EXPECT_EQ(threadManager->ResetThreadLocalNotifies(), HCCL_SUCCESS);
+}
+
+TEST_F(ThreadManagerTest, Ut_ResetThreadLocalNotifies_When_HrtNotifyResetFailed_Expect_ReturnFailed)
+{
+    MockGetRunSideIsDevice();
+    HcclResult ret = threadManager->HcclThreadAcquireWithStream(CommEngine::COMM_ENGINE_CPU, nullptr, 1, threads);
+    ASSERT_EQ(ret, HCCL_SUCCESS);
+
+    MOCKER(hrtNotifyReset).stubs().will(returnValue(HCCL_E_INTERNAL));
+    ret = threadManager->ResetThreadLocalNotifies();
+    EXPECT_EQ(ret, HCCL_E_INTERNAL);
+}
+
+TEST_F(ThreadManagerTest, Ut_ResetThreadLocalNotifies_When_OrderLaunchThreadRegistered_Expect_Success)
+{
+    MockGetRunSideIsDevice();
+    HcclResult ret = threadManager->HcclThreadAcquireWithStream(CommEngine::COMM_ENGINE_CPU, nullptr, 1, threads);
+    ASSERT_EQ(ret, HCCL_SUCCESS);
+
+    ret = threadManager->RegisterOrderLaunchThread(threads[0]);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+    EXPECT_EQ(threadManager->ResetThreadLocalNotifies(), HCCL_SUCCESS);
 }

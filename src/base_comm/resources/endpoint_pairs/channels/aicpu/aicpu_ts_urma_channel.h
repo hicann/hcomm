@@ -66,6 +66,7 @@ private:
     HcclResult BuildConnection();
     HcclResult BuildNotify();
     HcclResult BuildUbMemTransport();
+    HcclResult ResetLocalNotifies();
 
     HcclResult PackOpData(std::vector<char>& data);
 

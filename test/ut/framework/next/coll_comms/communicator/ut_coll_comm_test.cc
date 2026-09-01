@@ -22,6 +22,26 @@ public:
     void TearDown() override { TestHcommCAdptBase::TearDown(); }
 };
 
+namespace {
+std::unique_ptr<CollComm> PrepareSuspendingCollCommForResetNotify(HcclResult resetNotifyRet)
+{
+    auto coll = std::make_unique<CollComm>(nullptr, 0u, std::string("ut_test"), hccl::ManagerCallbacks{});
+    coll->commStatus_ = HcclCommStatus::HCCL_COMM_STATUS_SUSPENDING;
+    coll->isCleaned_ = true;
+    coll->commEngineResMgr_ = std::make_unique<CommEngineResMgr>();
+
+    MOCKER_CPP(&MyRank::Resume, HcclResult(MyRank::*)()).stubs().with(mockcpp::any()).will(returnValue(HCCL_SUCCESS));
+    MOCKER_CPP(&CommEngineResMgr::ResetCommLocalNotifies, HcclResult(CommEngineResMgr::*)())
+        .stubs()
+        .with(mockcpp::any())
+        .will(returnValue(resetNotifyRet));
+
+    aclrtBinHandle binHandle;
+    coll->myRank_ = std::make_shared<MyRank>(binHandle, 0, coll->GetCommConfig(), ManagerCallbacks(), nullptr, nullptr);
+    return coll;
+}
+} // namespace
+
 HcclResult StubCollCommUrmaHrtMalloc(void** devPtr, u64 size, bool Level2Address)
 {
     static uintptr_t devAddr = 0x7000000;
@@ -144,6 +164,46 @@ TEST_F(TestCollComm, test_resume_fail_invalid_and_resume_success)
     EXPECT_EQ(ret, HCCL_SUCCESS);
     EXPECT_EQ(coll_->commStatus_, HcclCommStatus::HCCL_COMM_STATUS_READY);
     EXPECT_FALSE(coll_->isCleaned_);
+}
+
+TEST_F(TestCollComm, Ut_Resume_When_CommEngineResMgrNullptr_Expect_SkipResetCommLocalNotifiesAndSuccess)
+{
+    std::unique_ptr<CollComm> coll_
+        = std::make_unique<CollComm>(nullptr, 0u, std::string("ut_test"), hccl::ManagerCallbacks{});
+    coll_->commStatus_ = HcclCommStatus::HCCL_COMM_STATUS_SUSPENDING;
+    coll_->isCleaned_ = true;
+    coll_->commEngineResMgr_ = nullptr;
+
+    MOCKER_CPP(&MyRank::Resume, HcclResult(MyRank::*)()).stubs().with(mockcpp::any()).will(returnValue(HCCL_SUCCESS));
+
+    aclrtBinHandle binHandle;
+    coll_->myRank_
+        = std::make_shared<MyRank>(binHandle, 0, coll_->GetCommConfig(), ManagerCallbacks(), nullptr, nullptr);
+
+    auto ret = coll_->Resume();
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+    EXPECT_EQ(coll_->commStatus_, HcclCommStatus::HCCL_COMM_STATUS_READY);
+    EXPECT_FALSE(coll_->isCleaned_);
+}
+
+TEST_F(TestCollComm, Ut_Resume_When_ResetCommLocalNotifiesSuccess_Expect_ReturnSuccess)
+{
+    auto coll = PrepareSuspendingCollCommForResetNotify(HCCL_SUCCESS);
+
+    auto ret = coll->Resume();
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+    EXPECT_EQ(coll->commStatus_, HcclCommStatus::HCCL_COMM_STATUS_READY);
+    EXPECT_FALSE(coll->isCleaned_);
+}
+
+TEST_F(TestCollComm, Ut_Resume_When_ResetCommLocalNotifiesFailed_Expect_ReturnFailed)
+{
+    auto coll = PrepareSuspendingCollCommForResetNotify(HCCL_E_INTERNAL);
+
+    auto ret = coll->Resume();
+    EXPECT_EQ(ret, HCCL_E_INTERNAL);
+    EXPECT_EQ(coll->commStatus_, HcclCommStatus::HCCL_COMM_STATUS_SUSPENDING);
+    EXPECT_TRUE(coll->isCleaned_);
 }
 
 TEST_F(TestCollComm, Ut_InitSimpleMode_When_Success_Expect_ReturnsSuccessAndRankgraphSet)

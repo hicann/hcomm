@@ -339,11 +339,42 @@ HcclResult AicpuTsUrmaChannel::Clean()
     return HCCL_SUCCESS;
 }
 
+HcclResult AicpuTsUrmaChannel::ResetLocalNotifies()
+{
+    for (size_t i = 0; i < localNotifies_.size(); ++i) {
+        if (localNotifies_[i] == nullptr) {
+            continue;
+        }
+        Hccl::RtsNotify* rtsNotify = localNotifies_[i]->GetNotify();
+        if (rtsNotify == nullptr) {
+            continue;
+        }
+        HcclRtNotify rtNotify = reinterpret_cast<HcclRtNotify>(rtsNotify->GetHandleAddr());
+        if (rtNotify == nullptr) {
+            continue;
+        }
+        HcclResult ret = hrtNotifyReset(rtNotify);
+        CHK_PRT_RET(
+            ret != HCCL_SUCCESS,
+            HCCL_ERROR(
+                "[AicpuTsUrmaChannel][ResetLocalNotifies] hrtNotifyReset failed, channel[%p], notifyIdx[%zu], "
+                "notifyId[%u], ret[0x%016llx]",
+                this, i, rtsNotify->GetId(), HCCL_ERROR_CODE(ret)),
+            ret);
+        HCCL_INFO(
+            "[AicpuTsUrmaChannel][ResetLocalNotifies] reset notify success, channel[%p], notifyIdx[%zu], "
+            "notifyId[%u], notifyPtr[%p]",
+            this, i, rtsNotify->GetId(), rtNotify);
+    }
+    return HCCL_SUCCESS;
+}
+
 HcclResult AicpuTsUrmaChannel::Resume()
 {
-    BuildSocket();
-    BuildConnection();
-    BuildUbMemTransport();
+    CHK_RET(BuildSocket());
+    CHK_RET(BuildConnection());
+    CHK_RET(ResetLocalNotifies());
+    CHK_RET(BuildUbMemTransport());
     return HCCL_SUCCESS;
 }
 

@@ -480,6 +480,15 @@ HcclResult CollComm::Resume()
             return ret;
         }
 
+        if (commEngineResMgr_ != nullptr) {
+            auto notifyRet = commEngineResMgr_->ResetCommLocalNotifies();
+            if (notifyRet != HcclResult::HCCL_SUCCESS) {
+                HCCL_ERROR(
+                    "[CollComm][Resume] ResetCommLocalNotifies failed, ret = 0x%016llx", HCCL_ERROR_CODE(notifyRet));
+                return notifyRet;
+            }
+        }
+
         commStatus_ = HcclCommStatus::HCCL_COMM_STATUS_READY;
         isCleaned_ = false;
     }

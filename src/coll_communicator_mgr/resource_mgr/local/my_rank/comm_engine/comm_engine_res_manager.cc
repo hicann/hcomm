@@ -116,4 +116,26 @@ HcclResult CommEngineResMgr::RegisterOrderLaunchThread(ThreadHandle thread)
     return threadMgr_->RegisterOrderLaunchThread(thread);
 }
 
+HcclResult CommEngineResMgr::ResetCommLocalNotifies()
+{
+    CHK_SMART_PTR_NULL(threadMgr_);
+    HcclResult ret = threadMgr_->ResetThreadLocalNotifies();
+    if (ret != HCCL_SUCCESS) {
+        HCCL_ERROR(
+            "[CommEngineResMgr][ResetCommLocalNotifies] ResetThreadLocalNotifies failed, ret[0x%016llx]",
+            HCCL_ERROR_CODE(ret));
+        return ret;
+    }
+    if (notifyMgr_ != nullptr) {
+        ret = notifyMgr_->ResetAllocLocalNotifies();
+        if (ret != HCCL_SUCCESS) {
+            HCCL_ERROR(
+                "[CommEngineResMgr][ResetCommLocalNotifies] ResetAllocLocalNotifies failed, ret[0x%016llx]",
+                HCCL_ERROR_CODE(ret));
+            return ret;
+        }
+    }
+    return ret;
+}
+
 } // namespace hccl

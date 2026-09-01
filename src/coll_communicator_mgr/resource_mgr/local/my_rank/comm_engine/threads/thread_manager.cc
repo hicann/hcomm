@@ -10,10 +10,12 @@
 
 #include "thread_manager.h"
 #include <cstring>
+#include "adapter_rts_common.h"
 #include "aicpu_launch_manager.h"
 #include "independent_op.h"
 #include "comm_engine_utils.h"
 #include "hcomm_res.h"
+#include "thread.h"
 
 namespace hccl {
 
@@ -727,6 +729,146 @@ HcclResult ThreadMgr::HcclDedicatedThreadAcquire(
     HCCL_INFO(
         "[%s] success, useType[%u], thread[0x%llx], notifyNumPerThread[%u]", __func__, useType, *thread,
         notifyNumPerThread);
+    return HCCL_SUCCESS;
+}
+
+HcclResult ThreadMgr::ResetLocalNotify(LocalNotify* notify, uint32_t notifyIdx, uint64_t threadHandle)
+{
+    if (notify == nullptr) {
+        return HCCL_SUCCESS;
+    }
+    HcclRtNotify rtNotify = notify->ptr();
+    if (rtNotify == nullptr) {
+        return HCCL_SUCCESS;
+    }
+    HcclResult ret = hrtNotifyReset(rtNotify);
+    if (ret != HCCL_SUCCESS) {
+        HCCL_ERROR(
+            "[ThreadMgr][ResetLocalNotify] hrtNotifyReset failed, Hcom[%s], thread[0x%llx], notifyIdx[%u], "
+            "notifyId[%u], ret[0x%016llx]",
+            commId_.c_str(), threadHandle, notifyIdx, notify->notifyId_, HCCL_ERROR_CODE(ret));
+        return ret;
+    }
+    HCCL_INFO(
+        "[ThreadMgr][ResetLocalNotify] reset notify success, Hcom[%s], thread[0x%llx], notifyIdx[%u], "
+        "notifyId[%u], notifyPtr[%p]",
+        commId_.c_str(), threadHandle, notifyIdx, notify->notifyId_, rtNotify);
+    return HCCL_SUCCESS;
+}
+
+HcclResult ThreadMgr::ResetNotifiesInThread(Thread* thread)
+{
+    if (thread == nullptr) {
+        return HCCL_SUCCESS;
+    }
+    const uint64_t threadHandle = reinterpret_cast<uint64_t>(thread);
+    const uint32_t notifyNum = thread->GetNotifyNum();
+    for (uint32_t i = 0; i < notifyNum; ++i) {
+        CHK_RET(ResetLocalNotify(thread->GetNotify(i), i, threadHandle));
+    }
+    return HCCL_SUCCESS;
+}
+
+HcclResult ThreadMgr::ResetThreadPoolLocalNotifies()
+{
+    std::lock_guard<std::mutex> lock(threadMutex_);
+    for (auto& threadPtr : threads_) {
+        HcclResult ret = ResetNotifiesInThread(threadPtr.get());
+        CHK_PRT_RET(
+            ret != HCCL_SUCCESS,
+            HCCL_ERROR(
+                "[ThreadMgr][ResetThreadPoolLocalNotifies] reset notifies failed, Hcom[%s], thread[0x%llx], "
+                "ret[0x%016llx]",
+                commId_.c_str(), reinterpret_cast<uint64_t>(threadPtr.get()), HCCL_ERROR_CODE(ret)),
+            ret);
+    }
+    return HCCL_SUCCESS;
+}
+
+HcclResult ThreadMgr::ResetMainThreadLocalNotifies()
+{
+    std::lock_guard<std::mutex> lock(mainThreadMutex_);
+    for (auto& pair : mainThread_) {
+        HcclResult ret = ResetNotifiesInThread(pair.second.get());
+        CHK_PRT_RET(
+            ret != HCCL_SUCCESS,
+            HCCL_ERROR(
+                "[ThreadMgr][ResetMainThreadLocalNotifies] reset notifies failed, Hcom[%s], thread[0x%llx], "
+                "ret[0x%016llx]",
+                commId_.c_str(), reinterpret_cast<uint64_t>(pair.second.get()), HCCL_ERROR_CODE(ret)),
+            ret);
+    }
+    return HCCL_SUCCESS;
+}
+
+HcclResult ThreadMgr::ResetDedicatedThreadLocalNotifies()
+{
+    std::lock_guard<std::mutex> lock(dedicatedThreadMutex_);
+    for (auto& pair : dedicatedThreadMap_) {
+        if (pair.second == 0) {
+            continue;
+        }
+        std::shared_ptr<Thread> threadPtr;
+        // dedicated 由 HcommThreadAlloc 创建，对象在 hccl::g_ThreadMap；不进 ThreadMgr::threadMap_。
+        // Lookup 未命中即 Thread/notify 已 Free，勿裸指针解引用。
+        if (LookupThreadByHandle(pair.second, threadPtr) != HCCL_SUCCESS || threadPtr == nullptr) {
+            HCCL_WARNING(
+                "[ThreadMgr][ResetDedicatedThreadLocalNotifies] thread not found (likely freed), skip reset, "
+                "Hcom[%s], useType[%u], thread[0x%llx]",
+                commId_.c_str(), static_cast<uint32_t>(pair.first), static_cast<uint64_t>(pair.second));
+            continue;
+        }
+        HcclResult ret = ResetNotifiesInThread(threadPtr.get());
+        CHK_PRT_RET(
+            ret != HCCL_SUCCESS,
+            HCCL_ERROR(
+                "[ThreadMgr][ResetDedicatedThreadLocalNotifies] reset notifies failed, Hcom[%s], useType[%u], "
+                "thread[0x%llx], ret[0x%016llx]",
+                commId_.c_str(), static_cast<uint32_t>(pair.first), reinterpret_cast<uint64_t>(threadPtr.get()),
+                HCCL_ERROR_CODE(ret)),
+            ret);
+    }
+    return HCCL_SUCCESS;
+}
+
+HcclResult ThreadMgr::ResetOrderLaunchThreadLocalNotifies()
+{
+    for (ThreadHandle handle : orderLaunchThreads_) {
+        if (handle == 0) {
+            continue;
+        }
+        std::shared_ptr<Thread> threadPtr;
+        // orderLaunch 所有权在 OrderLaunchThreadMgr；Lookup 未命中即 Thread/notify 已 Free，勿裸指针解引用。
+        if (LookupThreadByHandle(handle, threadPtr) != HCCL_SUCCESS || threadPtr == nullptr) {
+            HCCL_WARNING(
+                "[ThreadMgr][ResetOrderLaunchThreadLocalNotifies] thread not found (likely freed), skip reset, "
+                "Hcom[%s], thread[0x%llx]",
+                commId_.c_str(), static_cast<uint64_t>(handle));
+            continue;
+        }
+        HcclResult ret = ResetNotifiesInThread(threadPtr.get());
+        CHK_PRT_RET(
+            ret != HCCL_SUCCESS,
+            HCCL_ERROR(
+                "[ThreadMgr][ResetOrderLaunchThreadLocalNotifies] reset notifies failed, Hcom[%s], thread[0x%llx], "
+                "ret[0x%016llx]",
+                commId_.c_str(), reinterpret_cast<uint64_t>(threadPtr.get()), HCCL_ERROR_CODE(ret)),
+            ret);
+    }
+    return HCCL_SUCCESS;
+}
+
+HcclResult ThreadMgr::ResetThreadLocalNotifies()
+{
+    // pool / main / dedicated / orderLaunch 可能指向同一 Thread（orderLaunch 常是已 Acquire
+    // 的 handle 再 Register）。同一 LocalNotify 可能对 RTS 多次 hrtNotifyReset；
+    // hrtNotifyReset → aclrtNotifyBatchReset 清零触发态，重复调用视为幂等，可接受。
+    HCCL_INFO("[ThreadMgr][ResetThreadLocalNotifies] start, Hcom[%s]", commId_.c_str());
+    CHK_RET(ResetThreadPoolLocalNotifies());
+    CHK_RET(ResetMainThreadLocalNotifies());
+    CHK_RET(ResetDedicatedThreadLocalNotifies());
+    CHK_RET(ResetOrderLaunchThreadLocalNotifies());
+    HCCL_INFO("[ThreadMgr][ResetThreadLocalNotifies] finish, Hcom[%s]", commId_.c_str());
     return HCCL_SUCCESS;
 }
 } // namespace hccl

@@ -10,6 +10,7 @@
 
 #include "notify_manager.h"
 #include "adapter_hal_pub.h"
+#include "adapter_rts_common.h"
 #include "device_capacity.h"
 #include "aicpu_launch_manager.h"
 
@@ -228,6 +229,38 @@ HcclResult NotifyManager::HcommFreeNotify(uint32_t notifyNum, NotifyHandle* noti
     } else {
         handleBlocks_.erase(itBlock);
     }
+    return HCCL_SUCCESS;
+}
+
+HcclResult NotifyManager::ResetAllocLocalNotifies()
+{
+    std::lock_guard<std::mutex> lock(notifyMutex_);
+    HCCL_INFO(
+        "[NotifyManager][ResetAllocLocalNotifies] start, Hcom[%s], notifyNum[%zu]", commId_.c_str(), notifys_.size());
+    for (size_t i = 0; i < notifys_.size(); ++i) {
+        const auto& notifyPtr = notifys_[i];
+        if (notifyPtr == nullptr) {
+            continue;
+        }
+        HcclRtNotify rtNotify = notifyPtr->ptr();
+        if (rtNotify == nullptr) {
+            continue;
+        }
+        HcclResult ret = hrtNotifyReset(rtNotify);
+        if (ret != HCCL_SUCCESS) {
+            HCCL_ERROR(
+                "[NotifyManager][ResetAllocLocalNotifies] hrtNotifyReset failed, Hcom[%s], notifyIdx[%zu], "
+                "notifyId[%u], "
+                "ret[0x%016llx]",
+                commId_.c_str(), i, notifyPtr->notifyId_, HCCL_ERROR_CODE(ret));
+            return ret;
+        }
+        HCCL_INFO(
+            "[NotifyManager][ResetAllocLocalNotifies] reset notify success, Hcom[%s], notifyIdx[%zu], notifyId[%u], "
+            "notifyPtr[%p]",
+            commId_.c_str(), i, notifyPtr->notifyId_, rtNotify);
+    }
+    HCCL_INFO("[NotifyManager][ResetAllocLocalNotifies] finish, Hcom[%s]", commId_.c_str());
     return HCCL_SUCCESS;
 }
 #endif

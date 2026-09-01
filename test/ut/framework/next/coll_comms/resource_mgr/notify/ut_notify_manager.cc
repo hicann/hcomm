@@ -15,9 +15,12 @@
 #include <cstring>
 
 #define private public
+#define protected public
 #include "notify_manager.h"
 #include "hccl_independent_common.h"
+#include "adapter_rts_common.h"
 #undef private
+#undef protected
 
 #include "manager_common.h"
 
@@ -124,4 +127,23 @@ TEST_F(ParseBinNotifysTest, GetBinNotifys_EmptyList)
     iss.read(reinterpret_cast<char*>(&loadType), sizeof(loadType));
     iss.read(reinterpret_cast<char*>(&notifyNum), sizeof(notifyNum));
     EXPECT_EQ(notifyNum, 0u);
+}
+
+TEST_F(NotifyManagerTest, Ut_ResetAllocLocalNotifies_When_Empty_Expect_Success)
+{
+    NotifyManager mgr("test_comm", (aclrtBinHandle)0x1, ManagerCallbacks{});
+    EXPECT_EQ(mgr.ResetAllocLocalNotifies(), HCCL_SUCCESS);
+}
+
+TEST_F(NotifyManagerTest, Ut_ResetAllocLocalNotifies_When_HrtNotifyResetFailed_Expect_ReturnFailed)
+{
+    NotifyManager mgr("test_comm", (aclrtBinHandle)0x1, ManagerCallbacks{});
+    auto notify = std::make_unique<LocalNotify>();
+    notify->notifyPtr = reinterpret_cast<HcclRtNotify>(0x1234);
+    notify->notifyOwner_ = false;
+    notify->notifyId_ = 7;
+    mgr.notifys_.push_back(std::move(notify));
+
+    MOCKER(hrtNotifyReset).stubs().will(returnValue(HCCL_E_INTERNAL));
+    EXPECT_EQ(mgr.ResetAllocLocalNotifies(), HCCL_E_INTERNAL);
 }

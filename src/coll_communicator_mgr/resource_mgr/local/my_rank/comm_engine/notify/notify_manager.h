@@ -42,6 +42,7 @@ public:
     HcclResult HcclAllocNotify(
         CommEngine commEngine, ::NotifyType notifyType, uint32_t notifyNum, NotifyHandle** notifyHandleList);
     HcclResult HcommFreeNotify(uint32_t notifyNum, NotifyHandle* notifyHandleList);
+    HcclResult ResetAllocLocalNotifies();
 
     inline LocalNotify* GetNotify(u32 index) const
     {

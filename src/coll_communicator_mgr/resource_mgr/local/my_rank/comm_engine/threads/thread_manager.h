@@ -45,6 +45,7 @@ public:
     HcclResult
     HcclDedicatedThreadAcquire(HcclDedicatedThreadType useType, uint32_t notifyNumPerThread, ThreadHandle* thread);
     HcclResult RegisterOrderLaunchThread(ThreadHandle thread);
+    HcclResult ResetThreadLocalNotifies();
     u32 GetThreadNum() const { return threadNum_; }
     u32 GetNotifyNumPerThread() const { return notifyNumPerThread_; }
 
@@ -83,6 +84,12 @@ private:
         std::unique_ptr<ThreadHandle[]>& hostHandle);
     HcclResult
     HcclUnfoldThreadAcquire(HcclDedicatedThreadType useType, uint32_t notifyNumPerThread, ThreadHandle* thread);
+    HcclResult ResetLocalNotify(LocalNotify* notify, uint32_t notifyIdx, uint64_t threadHandle);
+    HcclResult ResetNotifiesInThread(Thread* thread);
+    HcclResult ResetThreadPoolLocalNotifies();        // 普通线程池 threads_
+    HcclResult ResetMainThreadLocalNotifies();        // 主线程 mainThread_
+    HcclResult ResetDedicatedThreadLocalNotifies();   // 专用线程 dedicatedThreadMap_
+    HcclResult ResetOrderLaunchThreadLocalNotifies(); // 保序流线程 orderLaunchThreads_
 
     u32 threadNum_ = 0;
     u32 notifyNumPerThread_ = 0;
