@@ -41,6 +41,17 @@ public:
     }
 };
 
+TEST_F(TestHcclThread, Ut_NotifyLoadType_When_AicpuEngine_Expect_HostNotify)
+{
+    NotifyLoadType notifyLoadType = NotifyLoadType::DEVICE_NOTIFY;
+    EXPECT_EQ(CommEngineToNotifyLoadType(COMM_ENGINE_AICPU_TS, notifyLoadType), HCCL_SUCCESS);
+    EXPECT_EQ(notifyLoadType, NotifyLoadType::HOST_NOTIFY);
+
+    notifyLoadType = NotifyLoadType::DEVICE_NOTIFY;
+    EXPECT_EQ(GetNotifyLoadType(COMM_ENGINE_AICPU, THREAD_TYPE_TS, notifyLoadType), HCCL_SUCCESS);
+    EXPECT_EQ(notifyLoadType, NotifyLoadType::HOST_NOTIFY);
+}
+
 TEST_F(TestHcclThread, Ut_TestHcclThread_When_CreateHostCpuTsCommEngineThread_Return_HCCL_Success)
 {
     bool isDeviceSide{false};
@@ -64,7 +75,7 @@ TEST_F(TestHcclThread, Ut_TestHcclThread_When_CreateAicpuTsCommEngineThread_Retu
     bool isDeviceSide{false};
     MOCKER(GetRunSideIsDevice).stubs().with(outBound(isDeviceSide)).will(returnValue(HCCL_SUCCESS));
     HcclResult ret = CreateThread(
-        COMM_ENGINE_AICPU_TS, StreamType::STREAM_TYPE_DEVICE, 2, NotifyLoadType::DEVICE_NOTIFY, aicpuHandle);
+        COMM_ENGINE_AICPU_TS, StreamType::STREAM_TYPE_DEVICE, 2, NotifyLoadType::HOST_NOTIFY, aicpuHandle);
     EXPECT_EQ(ret, 0);
     ret = aicpuHandle->Init();
     EXPECT_EQ(ret, HCCL_SUCCESS);
@@ -451,7 +462,7 @@ TEST_F(TestHcclThread, Ut_HcclThreadAcquire_When_Acquire_AicpuTsThread_Reuse_Ret
     MOCKER(GetRunSideIsDevice).stubs().with(outBound(isDeviceSide)).will(returnValue(HCCL_SUCCESS));
     MOCKER_CPP(&hcclComm::GetAicpuCommState).stubs().will(returnValue(true));
     MOCKER_CPP(&AicpuLaunchMgr::ThreadKernelLaunchForComm).stubs().will(returnValue(0));
-    MOCKER_CPP(&AicpuLaunchMgr::SupplementNotifyKernelLaunch).stubs().will(returnValue(0));
+    MOCKER_CPP(&AicpuLaunchMgr::SupplementNotifyKernelLaunch).expects(exactly(2)).will(returnValue(0));
     MOCKER_CPP(&HcclCommProfiling::ReportKernel).stubs().will(returnValue(0));
 
     void* commV2 = (void*)0x2000;

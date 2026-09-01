@@ -87,7 +87,7 @@ HcclResult CommEngineToNotifyLoadType(CommEngine engine, NotifyLoadType& type)
             break;
         case COMM_ENGINE_AICPU:
         case COMM_ENGINE_AICPU_TS:
-            type = NotifyLoadType::DEVICE_NOTIFY;
+            type = NotifyLoadType::HOST_NOTIFY;
             break;
         default:
             HCCL_ERROR(
@@ -135,7 +135,7 @@ const std::unordered_map<std::pair<CommEngine, ThreadType>, NotifyLoadType, Enum
     {{COMM_ENGINE_CPU, THREAD_TYPE_TS}, NotifyLoadType::HOST_NOTIFY},
     {{COMM_ENGINE_CCU, THREAD_TYPE_TS}, NotifyLoadType::HOST_NOTIFY},
     {{COMM_ENGINE_AIV, THREAD_TYPE_TS}, NotifyLoadType::HOST_NOTIFY},
-    {{COMM_ENGINE_AICPU, THREAD_TYPE_TS}, NotifyLoadType::DEVICE_NOTIFY},
+    {{COMM_ENGINE_AICPU, THREAD_TYPE_TS}, NotifyLoadType::HOST_NOTIFY},
 };
 
 const std::unordered_map<std::pair<CommEngine, ThreadType>, StreamType, EnumPairHash> STREAM_TYPE_CONVERT = {

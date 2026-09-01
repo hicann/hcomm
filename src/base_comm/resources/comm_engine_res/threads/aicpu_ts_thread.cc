@@ -193,9 +193,11 @@ uint32_t AicpuTsThread::GetNotifyNum() const { return notifyNum_; }
 
 LocalNotify* AicpuTsThread::GetNotify(uint32_t index) const
 {
-    if (UNLIKELY(index >= notifyNum_)) {
+    if (UNLIKELY(index >= notifyNum_ || index >= notifys_.size() || notifys_[index] == nullptr)) {
         HCCL_ERROR(
-            "[AicpuTsThread][GetNotify] notifyNum[%u], index[%u] out of range[0, %u)", notifyNum_, index, notifyNum_);
+            "[AicpuTsThread][GetNotify] this[%p], streamId[%d], notifyNum[%u], index[%u], notifysSize[%zu], "
+            "index out of range[0, %u) or notify is null",
+            this, stream_ ? stream_->id() : -1, notifyNum_, index, notifys_.size(), notifyNum_);
         return nullptr;
     }
     return notifys_[index].get();
@@ -391,15 +393,6 @@ HcclResult AicpuTsThread::HostInit()
         }
     }
 
-    // A5 aicpu场景thread多申请一个host类型notify，用于host&device同步
-    if (devType_ == DevType::DEV_TYPE_950 || devType_ == DevType::DEV_TYPE_960) {
-        notifys_.emplace_back(nullptr);
-        notifys_[notifyNum_].reset(new (std::nothrow) LocalNotify());
-        CHK_SMART_PTR_NULL(notifys_[notifyNum_]);
-        CHK_RET(notifys_[notifyNum_]->Init(NotifyLoadType::HOST_NOTIFY));
-        notifyNum_ += 1;
-    }
-
     if (streamType_ == StreamType::STREAM_TYPE_DEVICE && devType_ != DevType::DEV_TYPE_950
         && devType_ != DevType::DEV_TYPE_960) {
         uint64_t size = sizeof(SqCqeContext);
@@ -475,18 +468,11 @@ void AicpuTsThread::SetIsMaster(bool isMaster) { isMaster_ = isMaster; }
 HcclResult AicpuTsThread::SupplementNotify(uint32_t notifyNum)
 {
     HCCL_INFO("[%s]supplement notifyNum[%u], notifyNum_[%u]", __func__, notifyNum, notifyNum_);
-    // A5 aicpu场景thread多申请一个host类型notify，用于host&device同步
-    u32 beginIdx = notifyNum_;
-    u32 allNotifyNum = notifyNum_ + notifyNum;
-    u32 endIdx = allNotifyNum - 1;
+    const u32 beginIdx = notifyNum_;
+    const u32 allNotifyNum = notifyNum_ + notifyNum;
     notifys_.resize(allNotifyNum);
-    if ((devType_ == DevType::DEV_TYPE_950 || devType_ == DevType::DEV_TYPE_960) && notifyNum_ > 0) {
-        beginIdx--;
-        CHK_SMART_PTR_NULL(notifys_[beginIdx]);
-        notifys_[endIdx] = std::move(notifys_[beginIdx]);
-    }
 
-    for (uint32_t idx = beginIdx; idx < endIdx; idx++) {
+    for (uint32_t idx = beginIdx; idx < allNotifyNum; idx++) {
         notifys_[idx].reset(new (std::nothrow) LocalNotify());
         CHK_SMART_PTR_NULL(notifys_[idx]);
         CHK_RET(notifys_[idx]->Init(notifyLoadType_));
@@ -540,18 +526,8 @@ HcclResult AicpuTsThread::SupplementNotify(u32 notifyNum, const std::string& not
     HCCL_INFO("[%s]supplement notifyNum[%u], notifyNum_[%u]", __func__, notifyNum, notifyNum_);
 
     std::istringstream iss(notifyDesc);
-    // A5 aicpu场景thread多申请一个host类型notify，用于host&device同步
-    u32 beginIdx = notifyNum_;
-    u32 endIdx = notifyNum - 1;
+    const u32 beginIdx = notifyNum_;
     notifys_.resize(notifyNum);
-    if ((devType_ == DevType::DEV_TYPE_950 || devType_ == DevType::DEV_TYPE_960) && notifyNum_ > 0) {
-        beginIdx--;
-        CHK_SMART_PTR_NULL(notifys_[beginIdx]);
-        notifys_[endIdx] = std::move(notifys_[beginIdx]);
-        HCCL_INFO(
-            "[AicpuTsThread][SupplementNotify]notifyId[%u] beginIdx[%u], endIdx[%u]", notifys_[endIdx]->notifyId_,
-            beginIdx, endIdx);
-    }
     for (uint32_t idx = 0; idx < beginIdx; idx++) {
         HcclSignalInfo notifyInfo;
         iss.read(reinterpret_cast<char_t*>(&notifyInfo), sizeof(notifyInfo));
@@ -560,7 +536,7 @@ HcclResult AicpuTsThread::SupplementNotify(u32 notifyNum, const std::string& not
             notifyInfo.tsId, notifyInfo.devId);
     }
 
-    for (uint32_t idx = beginIdx; idx < endIdx; idx++) {
+    for (uint32_t idx = beginIdx; idx < notifyNum; idx++) {
         HcclSignalInfo notifyInfo;
         iss.read(reinterpret_cast<char_t*>(&notifyInfo), sizeof(notifyInfo));
         notifys_[idx].reset(new (std::nothrow) LocalNotify());

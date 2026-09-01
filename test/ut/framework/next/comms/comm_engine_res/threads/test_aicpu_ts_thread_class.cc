@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include <sstream>
 #include "../../../hccl_api_base_test.h"
 #include "local_notify_impl.h"
 #include "llt_hccl_stub_rank_graph.h"
@@ -37,6 +38,18 @@ TEST_F(TestAicpuTsThread, Ut_AicpuTsThread_Init_On_A3_HostWhen_Normal_Expect_Ret
     EXPECT_NE(nullptr, notify);
 }
 
+TEST_F(TestAicpuTsThread, Ut_AicpuTsThread_SupplementNotify_On_A3_When_Normal_Expect_AppendAllNotifies)
+{
+    bool isDeviceSide{false};
+    MOCKER(GetRunSideIsDevice).stubs().with(outBound(isDeviceSide)).will(returnValue(HCCL_SUCCESS));
+
+    AicpuTsThread aicpuThread(StreamType::STREAM_TYPE_DEVICE, 2, NotifyLoadType::DEVICE_NOTIFY);
+    ASSERT_EQ(aicpuThread.Init(), HCCL_SUCCESS);
+    ASSERT_EQ(aicpuThread.SupplementNotify(2), HCCL_SUCCESS);
+    EXPECT_EQ(aicpuThread.GetNotifyNum(), 4U);
+    EXPECT_NE(aicpuThread.GetNotify(3), nullptr);
+}
+
 TEST_F(TestAicpuTsThread, Ut_AicpuTsThread_Init_On_A5_Host_When_Normal_Expect_Return_HCCL_SUCCESS)
 {
     bool isDeviceSide{false};
@@ -44,16 +57,61 @@ TEST_F(TestAicpuTsThread, Ut_AicpuTsThread_Init_On_A5_Host_When_Normal_Expect_Re
 
     MOCKER(hrtGetDeviceType).stubs().with(outBound(DevType::DEV_TYPE_950)).will(returnValue(HCCL_SUCCESS));
 
-    AicpuTsThread aicpuThread(StreamType::STREAM_TYPE_DEVICE, 2, NotifyLoadType::DEVICE_NOTIFY);
+    AicpuTsThread aicpuThread(StreamType::STREAM_TYPE_DEVICE, 2, NotifyLoadType::HOST_NOTIFY);
     HcclResult ret = aicpuThread.Init();
     EXPECT_EQ(ret, HCCL_SUCCESS);
     Stream* stream = aicpuThread.GetStream();
     EXPECT_NE(stream, nullptr);
     uint32_t notifyNum = aicpuThread.GetNotifyNum();
-    // thread内部暂时会多申请一个notify用于host&device侧同步
-    EXPECT_EQ(3, notifyNum);
+    EXPECT_EQ(2, notifyNum);
     void* notify = aicpuThread.GetNotify(1);
     EXPECT_NE(nullptr, notify);
+
+    std::istringstream iss(aicpuThread.GetUniqueId());
+    StreamType streamType = StreamType::STREAM_TYPE_RESERVED;
+    NotifyLoadType notifyLoadType = NotifyLoadType::DEVICE_NOTIFY;
+    iss.read(reinterpret_cast<char_t*>(&streamType), sizeof(streamType));
+    iss.read(reinterpret_cast<char_t*>(&notifyLoadType), sizeof(notifyLoadType));
+    EXPECT_EQ(StreamType::STREAM_TYPE_DEVICE, streamType);
+    EXPECT_EQ(NotifyLoadType::HOST_NOTIFY, notifyLoadType);
+}
+
+TEST_F(TestAicpuTsThread, Ut_AicpuTsThread_SupplementNotify_On_A5_When_Normal_Expect_AppendAllNotifies)
+{
+    bool isDeviceSide{false};
+    MOCKER(GetRunSideIsDevice).stubs().with(outBound(isDeviceSide)).will(returnValue(HCCL_SUCCESS));
+    MOCKER(hrtGetDeviceType).stubs().with(outBound(DevType::DEV_TYPE_950)).will(returnValue(HCCL_SUCCESS));
+
+    AicpuTsThread hostThread(StreamType::STREAM_TYPE_DEVICE, 2, NotifyLoadType::HOST_NOTIFY);
+    ASSERT_EQ(hostThread.Init(), HCCL_SUCCESS);
+    std::string initialUniqueId = hostThread.GetUniqueId();
+    LocalNotify* originalLastNotify = hostThread.GetNotify(1);
+    ASSERT_NE(originalLastNotify, nullptr);
+
+    ASSERT_EQ(hostThread.SupplementNotify(2), HCCL_SUCCESS);
+    EXPECT_EQ(hostThread.GetNotifyNum(), 4U);
+    EXPECT_EQ(hostThread.GetNotify(1), originalLastNotify);
+    EXPECT_NE(hostThread.GetNotify(3), nullptr);
+
+    u32 notifyNum = 0;
+    std::string notifyDesc;
+    ASSERT_EQ(hostThread.GetNotifyByUniqueId(notifyNum, notifyDesc), HCCL_SUCCESS);
+    ASSERT_EQ(notifyNum, 4U);
+
+    isDeviceSide = true;
+    GlobalMockObject::verify();
+    MOCKER(GetRunSideIsDevice).stubs().with(outBound(isDeviceSide)).will(returnValue(HCCL_SUCCESS));
+    MOCKER(hrtGetDeviceType).stubs().with(outBound(DevType::DEV_TYPE_950)).will(returnValue(HCCL_SUCCESS));
+
+    AicpuTsThread deviceThread(initialUniqueId);
+    ASSERT_EQ(deviceThread.Init(), HCCL_SUCCESS);
+    LocalNotify* originalDeviceLastNotify = deviceThread.GetNotify(1);
+    ASSERT_NE(originalDeviceLastNotify, nullptr);
+
+    ASSERT_EQ(deviceThread.SupplementNotify(notifyNum, notifyDesc), HCCL_SUCCESS);
+    EXPECT_EQ(deviceThread.GetNotifyNum(), 4U);
+    EXPECT_EQ(deviceThread.GetNotify(1), originalDeviceLastNotify);
+    EXPECT_NE(deviceThread.GetNotify(3), nullptr);
 }
 
 TEST_F(TestAicpuTsThread, Ut_AicpuTsThread_Init_On_A3_Device_When_Normal_Expect_Return_HCCL_SUCCESS)

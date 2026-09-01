@@ -137,19 +137,11 @@ ThreadMgr::SupplementNotify(CommEngine engine, uint32_t threadNum, ThreadType ty
         "[ThreadMgr][%s] Hcom[%s] threadNum[%zu] notifyLoadType[%d]", __func__, commId_.c_str(), threads.size(),
         static_cast<int32_t>(notifyLoadType));
 
-    DevType devType = DevType::DEV_TYPE_COUNT;
-    CHK_RET(hrtGetDeviceType(devType));
-    u32 aicpuHostNotify
-        = ((devType == DevType::DEV_TYPE_950 || devType == DevType::DEV_TYPE_960) && (engine == COMM_ENGINE_AICPU)) ?
-              1 :
-              0;
-
     for (size_t i = 0; i < threads.size() && i < threadNum; ++i) {
         HCCL_INFO(
             "[ThreadMgr][%s] Hcom[%s] AicpuTsThread[%u] notifyLoadType[%d] notifyNum[%u]", __func__, commId_.c_str(),
             static_cast<uint32_t>(i), static_cast<int32_t>(notifyLoadType), config[i].notifyNumPerThread);
-        u32 notifyNum
-            = threads[i]->GetNotifyNum() >= aicpuHostNotify ? (threads[i]->GetNotifyNum() - aicpuHostNotify) : 0;
+        const u32 notifyNum = threads[i]->GetNotifyNum();
         if (config[i].notifyNumPerThread > notifyNum) {
             u32 supplementNotifyNum = config[i].notifyNumPerThread - notifyNum;
             CHK_RET(CheckNotifyNum(engine, 1, supplementNotifyNum));
