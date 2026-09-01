@@ -17,7 +17,6 @@ set(src_list
     hcomm_channel_c_adpt.cc
     hcomm_thread_c_adpt.cc
     hcomm_engine_ctx_c_adpt.cc
-    endpoint_map.cc
     hccl_comm_socket_c_adpt.cc
 )
 

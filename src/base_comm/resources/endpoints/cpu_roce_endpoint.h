@@ -16,6 +16,8 @@
 #include <vector>
 #include <string>
 #include "endpoint.h"
+#include "server_socket_context/host_server_socket_context.h"
+#include "roce_reged_mem_mgr.h"
 #include "externalinput_pub.h"
 
 namespace hcomm {
@@ -30,17 +32,10 @@ public:
 
     HcclResult Init() override;
 
-    HcclResult ServerSocketListen(const uint32_t port) override;
-    HcclResult ServerSocketStopListen(const uint32_t port) override;
-    inline HcclResult ServerSocketStopListenImpl(const uint32_t port);
-    HcclResult ServerSocketGetListenPort(uint32_t* port) override;
-
-    HcclResult RegisterMemory(HcommMem mem, const char* memTag, void** memHandle) override;
-    HcclResult UnregisterMemory(void* memHandle) override;
-    HcclResult MemoryExport(void* memHandle, void** memDesc, uint32_t* memDescLen) override;
-    HcclResult MemoryImport(const void* memDesc, uint32_t descLen, HcommMem* outMem) override;
-    HcclResult MemoryUnimport(const void* memDesc, uint32_t descLen) override;
-    HcclResult GetAllMemHandles(void** memHandles, uint32_t* memHandleNum) override;
+    RegedMemMgr* GetRegedMemMgr() override { return regedMemMgr_.get(); }
+    void* GetRdmaHandle() override { return ctxHandle_; }
+    bool IsCtxHandleValid() const override;
+    ServerSocketContext* GetServerSocketContext() override { return &serverSocketContext_; }
 
     struct Capabilities {
         uint64_t maxMsgSize{0};
@@ -50,8 +45,16 @@ public:
     HcclResult GetCapabilities(Capabilities& caps);
 
 private:
-    std::mutex portMutex_;
-    u32 dynamicPort_{HCCL_INVALID_PORT};
+    HcclResult ReleaseEndpointCtx();
+    HcclResult AttachCache(const MemMgrCacheKey& key, const std::function<std::shared_ptr<RegedMemMgr>()>& creator);
+    HcclResult ReleaseCache();
+
+    void* ctxHandle_{nullptr};
+    std::shared_ptr<EndpointCtx> endpointCtx_{};
+    std::shared_ptr<RoceRegedMemMgr> regedMemMgr_{};
+    HostServerSocketContext serverSocketContext_{Hccl::ConnectProtoType::RDMA};
+    MemMgrCacheKey cacheKey_{};
+    std::shared_ptr<ProcRegedMemMgrCache> cacheKeepAlive_{};
     Capabilities capabilities_{};
     bool isCapabilitiesAvailable_{false};
 };

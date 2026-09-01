@@ -8,9 +8,9 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
-#include "endpoint_mgr.h"
+#include "resources/endpoints/endpoint.h"
 #include "hccl_common.h"
-#include "urma_mem.h"
+#include "ub_reged_mem_mgr.h"
 #include <algorithm>
 #include "log.h"
 #include "hccl/hccl_res.h"
@@ -22,15 +22,20 @@
 
 namespace hcomm {
 
-UbRegedMemMgr::UbRegedMemMgr() { localUbRmaBufferMgr_ = std::make_unique<LocalUbRmaBufferMgr>(); }
+UbRegedMemMgr::UbRegedMemMgr(RdmaHandle rdmaHandle) : rdmaHandle_(rdmaHandle)
+{
+    localUbRmaBufferMgr_ = std::make_unique<LocalUbRmaBufferMgr>();
+}
 
-HcclResult UbRegedMemMgr::RegisterMemory(HcommMem mem, const char* memTag, void** memHandle)
+HcclResult UbRegedMemMgr::RegisterMemory(const HcommMem* mem, const char* memTag, void** memHandle)
 {
     HCCL_INFO("[%s] Begin", __FUNCTION__);
+    CHK_PTR_NULL(mem);
+    CHK_PTR_NULL(memHandle);
     CHK_PTR_NULL(localUbRmaBufferMgr_);
     std::lock_guard<std::mutex> lock(memMtx_);
     return RegisterMemoryImpl(
-        mem, memTag, memHandle, localUbRmaBufferMgr_, allRegisteredBuffers_, &handlesRecords_, "UbRegedMemMgr",
+        *mem, memTag, memHandle, localUbRmaBufferMgr_, allRegisteredBuffers_, &handlesRecords_, "UbRegedMemMgr",
         [&](auto& bufPtr, auto& parent) {
             return std::make_shared<Hccl::LocalUbRmaBuffer>(bufPtr, rdmaHandle_, *parent);
         },
@@ -42,6 +47,7 @@ HcclResult UbRegedMemMgr::RegisterMemory(HcommMem mem, const char* memTag, void*
 HcclResult UbRegedMemMgr::UnregisterMemory(void* memHandle)
 {
     HCCL_INFO("[%s] Begin", __FUNCTION__);
+    CHK_PTR_NULL(memHandle);
     CHK_PTR_NULL(localUbRmaBufferMgr_);
     std::lock_guard<std::mutex> lock(memMtx_);
     return UnregisterMemoryImpl(
@@ -83,7 +89,7 @@ HcclResult UbRegedMemMgr::GetMemDesc(const EndpointDesc endpointDesc, Hccl::Loca
 }
 
 HcclResult
-UbRegedMemMgr::MemoryExport(const EndpointDesc endpointDesc, void* memHandle, void** memDesc, uint32_t* memDescLen)
+UbRegedMemMgr::MemoryExport(const EndpointDesc& endpointDesc, void* memHandle, void** memDesc, uint32_t* memDescLen)
 {
     HCCL_INFO("[%s] Begin", __FUNCTION__);
 
@@ -135,6 +141,8 @@ HcclResult UbRegedMemMgr::GetParamsFromMemDesc(
 HcclResult UbRegedMemMgr::MemoryImport(const void* memDesc, uint32_t descLen, HcommMem* outMem)
 {
     HCCL_INFO("[%s] Begin", __FUNCTION__);
+    CHK_PTR_NULL(memDesc);
+    CHK_PTR_NULL(outMem);
     std::lock_guard<std::mutex> lock(memMtx_);
 
     EndpointDesc endpointDesc;
@@ -172,6 +180,7 @@ HcclResult UbRegedMemMgr::MemoryImport(const void* memDesc, uint32_t descLen, Hc
 HcclResult UbRegedMemMgr::MemoryUnimport(const void* memDesc, uint32_t descLen)
 {
     HCCL_INFO("[%s] Begin", __FUNCTION__);
+    CHK_PTR_NULL(memDesc);
     std::lock_guard<std::mutex> lock(memMtx_);
 
     EndpointDesc endpointDesc;

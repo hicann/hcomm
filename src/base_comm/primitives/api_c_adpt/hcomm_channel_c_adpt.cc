@@ -14,6 +14,7 @@
 
 #include "hcomm_c_adpt.h"
 #include "hcomm_c_adpt_common.h"
+#include "hcomm_res_mgr.h"
 #include "hcomm_res.h"
 #include "hcomm_result_defs.h"
 #include "hcomm_res_defs.h"
@@ -26,7 +27,6 @@
 #include "channel_config.h"
 #include "shared_jetty_mgr.h"
 #include "endpoint.h"
-#include "builtin_endpoint_ops.h"
 #include "nic_plugin_holder.h"
 #include "nic_plugin_manager.h"
 #include "acl/acl_rt.h"
@@ -394,7 +394,7 @@ HcommResult CreatePluginChannels(
     CHK_PTR_NULL(epHolder);
     const NicPluginEntry* entry = epHolder->GetPluginEntry();
     CHK_PTR_NULL(entry);
-    void* epCtx = endpoint->GetNicCtx();
+    void* epCtx = epHolder->GetNicCtx();
 
     for (uint32_t idx = 0; idx < channelNum; ++idx) {
         HcommResult ret = CreateOnePluginChannel(entry, epCtx, &channelDescs[idx], &channels[idx]);
@@ -418,12 +418,12 @@ HcommResult HcommChannelCreate(
         (channelNum == 0), HCCL_ERROR("[%s] Invalid channelNum, channelNum[%u]", __func__, channelNum), HCCL_E_PARA);
     std::vector<HcommChannelDesc> channelDescFinals;
     CHK_RET(static_cast<HcclResult>(NormalizeHcommChannelDescs(channelDescs, channelNum, channelDescFinals, engine)));
-    auto endpoint = GetEndpointMap().GetEndpoint(endpointHandle);
+    auto endpoint = HcommResMgr::GetInstance().GetEndpointMgr().Get(endpointHandle);
     auto startut = std::chrono::steady_clock::now();
     HCCL_INFO(
         "[%s] START. endpointHandle[0x%llx], engine[%s], channelNum[%u].", __func__, endpointHandle,
         GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str(), channelNum);
-    if (endpoint != nullptr && endpoint->GetNicOps() != nullptr && endpoint->GetNicOps() != &g_BuiltinEndpointOps) {
+    if (endpoint != nullptr && dynamic_cast<hcomm::PluginEndpointHolder*>(endpoint) != nullptr) {
         CHK_RET(
             static_cast<HcclResult>(CreatePluginChannels(endpoint, channelDescFinals.data(), channelNum, channels)));
         HCCL_INFO(
@@ -648,7 +648,7 @@ HcommResult HcommChannelCreateWithConfig(
         return HCCL_E_NOT_SUPPORT;
     }
 
-    auto endpoint = GetEndpointMap().GetEndpoint(endpointHandle);
+    auto endpoint = HcommResMgr::GetInstance().GetEndpointMgr().Get(endpointHandle);
     if (endpoint != nullptr) {
         CHK_RET(RefreshEndpointContext(endpoint->GetEndpointDesc()));
     }

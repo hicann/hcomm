@@ -8,9 +8,11 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include <memory>
 #include "aicpu_ts_hccs_channel.h"
 #include "endpoint.h"
 #include "../../../endpoints/aicputs_hccs_endpoint.h"
+#include "hccs_reged_mem_mgr.h"
 #include "../../../endpoints/net_dev/global_net_dev_manager.h"
 #include "channel_param.h"
 #include "inner/remote_ipc_rma_buffer.h"
@@ -246,7 +248,9 @@ void AicpuTsHccsChannel::TransportDeInit()
 HcclResult AicpuTsHccsChannel::EnableP2P()
 {
     CHK_PTR_NULL(localEpPtr_);
-    CHK_RET(localEpPtr_->MemoryEnableP2P(remoteEp_));
+    auto* mgr = static_cast<HccsRegedMemMgr*>(localEpPtr_->GetRegedMemMgr());
+    CHK_PTR_NULL(mgr);
+    CHK_RET(mgr->MemoryEnableP2P(localEpPtr_->GetEndpointDesc(), remoteEp_));
     HCCL_INFO("[AicpuTsHccsChannel][%s] finish EnableP2P", __func__);
     return HCCL_SUCCESS;
 }
@@ -254,7 +258,10 @@ HcclResult AicpuTsHccsChannel::EnableP2P()
 void AicpuTsHccsChannel::DisableP2P()
 {
     if (localEpPtr_ != nullptr) {
-        (void)localEpPtr_->MemoryDisableP2P(remoteEp_);
+        auto* mgr = static_cast<HccsRegedMemMgr*>(localEpPtr_->GetRegedMemMgr());
+        if (mgr != nullptr) {
+            (void)mgr->MemoryDisableP2P(localEpPtr_->GetEndpointDesc(), remoteEp_);
+        }
     }
 
     HCCL_INFO("[AicpuTsHccsChannel][%s] finish DisableP2P", __func__);
@@ -275,7 +282,10 @@ HcclResult AicpuTsHccsChannel::EnableMemAccess()
         CHK_RET(socket_->Recv(&remoteGrantInfo, sizeof(HcommMemGrantInfo)));
     }
     CHK_PTR_NULL(localEpPtr_);
-    CHK_RET(localEpPtr_->MemoryGrant(&remoteGrantInfo));
+    // MemoryGrant 由 HccsRegedMemMgr 承载；本 channel 只服务 HCCS endpoint，直接 static_cast
+    auto* mgr = static_cast<HccsRegedMemMgr*>(localEpPtr_->GetRegedMemMgr());
+    CHK_PTR_NULL(mgr);
+    CHK_RET(mgr->MemoryGrant(&remoteGrantInfo));
     // need to wait peer grant for me end, not need to check value, just make sure grant process end
     u32 localGrantSync = 1;
     u32 remoteGrantSync = 1;
@@ -286,7 +296,7 @@ HcclResult AicpuTsHccsChannel::EnableMemAccess()
         CHK_RET(socket_->Send(&localGrantSync, sizeof(u32)));
         CHK_RET(socket_->Recv(&remoteGrantSync, sizeof(u32)));
     }
-    CHK_RET(localEpPtr_->MemoryOpenRemoteIpc());
+    CHK_RET(mgr->MemoryOpenRemoteIpc());
     HCCL_INFO("[AicpuTsHccsChannel][%s] finish EnableMemAccess", __func__);
     return HCCL_SUCCESS;
 }
@@ -294,7 +304,10 @@ HcclResult AicpuTsHccsChannel::EnableMemAccess()
 void AicpuTsHccsChannel::DisableMemAccess()
 {
     if (localEpPtr_ != nullptr) {
-        (void)localEpPtr_->MemoryCloseRemoteIpc();
+        auto* mgr = static_cast<HccsRegedMemMgr*>(localEpPtr_->GetRegedMemMgr());
+        if (mgr != nullptr) {
+            (void)mgr->MemoryCloseRemoteIpc();
+        }
     }
     HCCL_INFO("[AicpuTsHccsChannel][%s] finish DisableMemAccess", __func__);
 }
@@ -333,7 +346,9 @@ HcclResult AicpuTsHccsChannel::Init()
 HcclResult AicpuTsHccsChannel::GetRemoteMems(uint32_t* memNum, CommMem** remoteMem, [[maybe_unused]] char*** memInfos)
 {
     remoteIpcRmaBufferVec_.clear();
-    CHK_RET(localEpPtr_->GetRemoteIpcRmaBuffer(remoteIpcRmaBufferVec_));
+    auto* mgr = static_cast<HccsRegedMemMgr*>(localEpPtr_->GetRegedMemMgr());
+    CHK_PTR_NULL(mgr);
+    CHK_RET(mgr->GetRemoteIpcRmaBuffer(remoteIpcRmaBufferVec_));
     *remoteMem = remoteIpcRmaBufferVec_.data();
     *memNum = remoteIpcRmaBufferVec_.size();
     return HCCL_SUCCESS;
@@ -386,13 +401,16 @@ HcclResult AicpuTsHccsChannel::BuildHcclChannelHccsRes(HcclChannelHccsRes& chann
     CHK_RET(hrtGetDeviceIndexByPhyId(localEp_.loc.device.devPhyId, deviceLogicId));
     channelHccsRes.localDeviceLogicId = static_cast<s32>(deviceLogicId);
 
+    auto* mgr = static_cast<HccsRegedMemMgr*>(localEpPtr_->GetRegedMemMgr());
+    CHK_PTR_NULL(mgr);
+
     remoteIpcRmaBufferVecEx_.clear();
-    CHK_RET(localEpPtr_->GetRemoteIpcRmaBufferEx(remoteIpcRmaBufferVecEx_));
+    CHK_RET(mgr->GetRemoteIpcRmaBufferEx(remoteIpcRmaBufferVecEx_));
     channelHccsRes.remoteBufSize = remoteIpcRmaBufferVecEx_.size();
     channelHccsRes.remoteBufMem = remoteIpcRmaBufferVecEx_.data();
 
     localIpcRmaBufferVecEx_.clear();
-    CHK_RET(localEpPtr_->GetLocalIpcRmaBufferEx(localIpcRmaBufferVecEx_));
+    CHK_RET(mgr->GetLocalIpcRmaBufferEx(localIpcRmaBufferVecEx_));
     channelHccsRes.localBufSize = localIpcRmaBufferVecEx_.size();
     channelHccsRes.localBufMem = localIpcRmaBufferVecEx_.data();
 

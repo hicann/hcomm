@@ -275,12 +275,19 @@ TEST_F(TestHcommEndpoint, Ut_BuiltinEndpoint_Expect_DispatchToBuiltinOps)
     CpuRoceEndpoint* ep = nullptr;
     HcommEndpointGet(epHandle, reinterpret_cast<void**>(&ep));
 
-    MOCKER_CPP_VIRTUAL(ep, &hcomm::CpuRoceEndpoint::RegisterMemory).stubs().will(returnValue(HCCL_SUCCESS));
-    MOCKER_CPP_VIRTUAL(ep, &hcomm::CpuRoceEndpoint::UnregisterMemory).stubs().will(returnValue(HCCL_SUCCESS));
-    MOCKER_CPP_VIRTUAL(ep, &hcomm::CpuRoceEndpoint::MemoryExport).stubs().will(returnValue(HCCL_SUCCESS));
-    MOCKER_CPP_VIRTUAL(ep, &hcomm::CpuRoceEndpoint::MemoryImport).stubs().will(returnValue(HCCL_SUCCESS));
-    MOCKER_CPP_VIRTUAL(ep, &hcomm::CpuRoceEndpoint::MemoryUnimport).stubs().will(returnValue(HCCL_SUCCESS));
-    MOCKER_CPP_VIRTUAL(ep, &hcomm::CpuRoceEndpoint::ServerSocketGetListenPort).stubs().will(returnValue(HCCL_SUCCESS));
+    // 内存方法从 Endpoint 移至 RegedMemMgr；经 ep->GetRegedMemMgr()->xxx() 路径访问。
+    // 此处 mock RoceRegedMemMgr 的虚方法，验证 HcommMemReg 等正确转发到 RegedMemMgr。
+    auto* regedMemMgr = ep->GetRegedMemMgr();
+    ASSERT_NE(regedMemMgr, nullptr);
+    MOCKER_CPP_VIRTUAL(regedMemMgr, &hcomm::RegedMemMgr::RegisterMemory).stubs().will(returnValue(HCCL_SUCCESS));
+    MOCKER_CPP_VIRTUAL(regedMemMgr, &hcomm::RegedMemMgr::UnregisterMemory).stubs().will(returnValue(HCCL_SUCCESS));
+    MOCKER_CPP_VIRTUAL(regedMemMgr, &hcomm::RegedMemMgr::MemoryExport).stubs().will(returnValue(HCCL_SUCCESS));
+    MOCKER_CPP_VIRTUAL(regedMemMgr, &hcomm::RegedMemMgr::MemoryImport).stubs().will(returnValue(HCCL_SUCCESS));
+    MOCKER_CPP_VIRTUAL(regedMemMgr, &hcomm::RegedMemMgr::MemoryUnimport).stubs().will(returnValue(HCCL_SUCCESS));
+    // Socket 监听接口由 ServerSocketContext 承载，mock 上下文虚方法验证转发路径
+    MOCKER_CPP_VIRTUAL(ep->GetServerSocketContext(), &hcomm::ServerSocketContext::ServerSocketGetListenPort)
+        .stubs()
+        .will(returnValue(HCCL_SUCCESS));
 
     // ---- 业务接口全覆盖 ----
 

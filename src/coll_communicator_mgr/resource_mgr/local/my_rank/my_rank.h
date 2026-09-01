@@ -29,7 +29,7 @@
 #include "hcomm_channel.h"
 #include "mem_host_pub.h"
 #include "rank_pair_mgr.h"
-#include "endpoint_mgr.h"
+#include "endpoints/endpoint_mgr.h"
 #include "comm_config_pub.h"
 #include "manager_common.h"
 #include "common.h"
@@ -91,7 +91,7 @@ public:
 
     CollCommConfigConsistency& GetCollCommConfigConsistency();
 
-    hcomm::EndpointMgr* GetEndpointMgr() const { return endpointMgr_.get(); }
+    hccl::EndpointMgr* GetEndpointMgr() const { return endpointMgr_.get(); }
 
     HcclResult CreateChannels(
         CommEngine engine, const std::string& commTag, const HcclChannelDesc* channelDescs, uint32_t channelNum,
@@ -199,7 +199,7 @@ private:
     uint32_t opExpansionMode_{0};
 
     std::unique_ptr<RankPairMgr> rankPairMgr_{nullptr};
-    std::unique_ptr<hcomm::EndpointMgr> endpointMgr_{nullptr};
+    std::unique_ptr<hccl::EndpointMgr> endpointMgr_{nullptr};
     std::unique_ptr<CommMems> commMems_{nullptr};
     std::unique_ptr<EngineCtxs> engineCtxs_{nullptr};
 

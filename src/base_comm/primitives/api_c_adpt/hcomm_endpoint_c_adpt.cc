@@ -17,7 +17,7 @@
 #include "log.h"
 #include "endpoint.h"
 #include "endpoint_monitor.h"
-#include "../hcomm_res_mgr.h"
+#include "hcomm_res_mgr.h"
 #include "hcomm_result_defs.h"
 #include "param_check_pub.h"
 #include "exception_handler.h"
@@ -26,7 +26,6 @@
 #include "channel_config.h"
 #include "shared_jetty_mgr.h"
 #include "endpoint.h"
-#include "builtin_endpoint_ops.h"
 #include "nic_plugin_holder.h"
 #include "nic_plugin_manager.h"
 #include "hcomm_adapter_hccp.h"
@@ -121,7 +120,7 @@ HcclResult RegisterDeviceEndpointMonitorIfNeeded(const EndpointDesc* endpoint, E
     CHK_PRT_RET(
         devLogicIdSigned < 0, HCCL_ERROR("[%s] HcclGetThreadDeviceId failed, ret[%d]", __func__, devLogicIdSigned),
         HCCL_E_INTERNAL);
-    auto* ep = GetEndpointMap().GetEndpoint(handle);
+    auto* ep = HcommResMgr::GetInstance().GetEndpointMgr().Get(handle);
     CHK_PRT_RET(ep == nullptr, HCCL_ERROR("[%s] endpoint not found, handle[%p]", __func__, handle), HCCL_E_NOT_FOUND);
     ep->AttachMonitor(devLogicIdSigned);
     CHK_RET(ep->RegisterToEndpointMonitor(devLogicIdSigned, handle));
@@ -173,7 +172,8 @@ HcommResult CreatePluginEndpointHolder(
     auto holder = std::make_unique<PluginEndpointHolder>(*endpoint, pluginEntry);
     holder->SetNicEndpointCtx(pluginHolderOps, pluginCtx);
     const EndpointHandle handle = reinterpret_cast<EndpointHandle>(holder.get());
-    EXCEPTION_CATCH(GetEndpointMap().AddEndpoint(handle, std::move(holder)), return HCCL_E_INTERNAL);
+    auto& epMgr = HcommResMgr::GetInstance().GetEndpointMgr();
+    EXCEPTION_CATCH(epMgr.Add(handle, std::move(holder)), return HCCL_E_INTERNAL);
     *endpointHandle = handle;
     HCCL_INFO(
         "[NicPlugin][%s] plugin endpoint created, protocol[%d], handle[%p].", __func__, endpoint->protocol, handle);
@@ -196,17 +196,63 @@ HcclResult CreateBuiltinEndpoint(const EndpointDesc* endpoint, EndpointHandle* e
         return ret;
     }
 
-    endpointPtr->SetNicEndpointCtx(&g_BuiltinEndpointOps, endpointPtr.get());
+    // 内置 endpoint 不再调 SetNicEndpointCtx（内存操作经 GetRegedMemMgr() 路径）
 
     const EndpointHandle handle = reinterpret_cast<EndpointHandle>(endpointPtr.get());
     CHK_PTR_NULL(handle);
-    EXCEPTION_CATCH(GetEndpointMap().AddEndpoint(handle, std::move(endpointPtr)), return HCCL_E_INTERNAL);
+    auto& epMgr = HcommResMgr::GetInstance().GetEndpointMgr();
+    EXCEPTION_CATCH(epMgr.Add(handle, std::move(endpointPtr)), return HCCL_E_INTERNAL);
     *endpointHandle = handle;
     CHK_RET(RegisterDeviceEndpointMonitorIfNeeded(endpoint, handle));
     HCCL_INFO(
         "[%s] endpointDesc.protocol [%d] and endpointDesc.loc.locType [%d] create endpointHandle [%p] done.", __func__,
         endpoint->protocol, endpoint->loc.locType, handle);
     return HCCL_SUCCESS;
+}
+
+// C 适配层监听入口统一分发：全部 Socket 类经 endpoint->GetServerSocketContext() 访问
+// （Host/Device/AicpuTsRoce/AicpuTsHccs/Plugin 5 类子类均 override 返回非 nullptr）。
+HcclResult StartListenByEndpoint(Endpoint* endpoint, uint32_t port)
+{
+    ServerSocketContext* serverSocketContext = endpoint->GetServerSocketContext();
+    if (serverSocketContext == nullptr) {
+        // 非 Socket 类（Uboe/UbRtp/UbMem）历史上为 no-op SUCCESS，保持现有语义
+        HCCL_INFO(
+            "[%s] endpoint does not hold server socket context, skip listen, protocol[%d]", __func__,
+            endpoint->GetEndpointDesc().protocol);
+        return HCCL_SUCCESS;
+    }
+    Hccl::IpAddress ipAddr{};
+    CHK_RET(CommAddrToIpAddress(endpoint->GetEndpointDesc().commAddr, ipAddr));
+    return serverSocketContext->ServerSocketListen(ipAddr, port);
+}
+
+HcclResult StopListenByEndpoint(Endpoint* endpoint, uint32_t port)
+{
+    ServerSocketContext* serverSocketContext = endpoint->GetServerSocketContext();
+    if (serverSocketContext == nullptr) {
+        HCCL_ERROR(
+            "[%s] endpoint does not support server socket stop listen, protocol[%d]", __func__,
+            endpoint->GetEndpointDesc().protocol);
+        return HCCL_E_NOT_SUPPORT;
+    }
+    Hccl::IpAddress ipAddr{};
+    CHK_RET(CommAddrToIpAddress(endpoint->GetEndpointDesc().commAddr, ipAddr));
+    return serverSocketContext->ServerSocketStopListen(ipAddr, port);
+}
+
+HcclResult GetListenPortByEndpoint(Endpoint* endpoint, uint32_t* port)
+{
+    ServerSocketContext* serverSocketContext = endpoint->GetServerSocketContext();
+    if (serverSocketContext == nullptr) {
+        HCCL_ERROR(
+            "[%s] endpoint does not support get listen port, protocol[%d]", __func__,
+            endpoint->GetEndpointDesc().protocol);
+        return HCCL_E_NOT_SUPPORT;
+    }
+    Hccl::IpAddress ipAddr{};
+    CHK_RET(CommAddrToIpAddress(endpoint->GetEndpointDesc().commAddr, ipAddr));
+    return serverSocketContext->ServerSocketGetListenPort(ipAddr, port);
 }
 } // namespace
 
@@ -291,7 +337,7 @@ HcommResult HcommEndpointGet(EndpointHandle endpointHandle, void** endpoint) // 
 {
     CHK_PTR_NULL(endpoint);
 
-    auto it = GetEndpointMap().GetEndpoint(endpointHandle);
+    auto it = HcommResMgr::GetInstance().GetEndpointMgr().Get(endpointHandle);
     CHK_PRT_RET(
         it == nullptr, HCCL_ERROR("[%s] endpoint not found, endpointHandle[%p]", __func__, endpointHandle),
         HCCL_E_NOT_FOUND);
@@ -324,13 +370,15 @@ HcommResult HcommEndpointCreate(const EndpointDesc* endpoint, EndpointHandle* en
 HcommResult HcommEndpointDestroy(EndpointHandle endpointHandle)
 {
     HCCL_INFO("[%s] START. endpointHandle[0x%llx].", __func__, endpointHandle);
-    auto endpoint = GetEndpointMap().GetEndpoint(endpointHandle);
-    if (endpoint != nullptr && endpoint->GetNicOps() != nullptr && endpoint->GetNicOps() != &g_BuiltinEndpointOps) {
+    auto& epMgr = HcommResMgr::GetInstance().GetEndpointMgr();
+    auto* endpoint = epMgr.Get(endpointHandle);
+    auto* pluginHolder = dynamic_cast<PluginEndpointHolder*>(endpoint);
+    if (endpoint != nullptr && pluginHolder != nullptr && pluginHolder->GetNicOps() != nullptr) {
         HCCL_INFO("[NicPlugin][%s] destroy plugin endpoint.", __func__);
         // 先摘除 SharedJettyMgr 中该 plugin endpoint 的 channel 注册记录, 避免 plugin 句柄复用误判
         hcomm::SharedJettyMgr::GetInstance().UnregisterEndpoint(endpointHandle);
         endpoint->ReleaseEndpointMonitor(endpointHandle);
-        auto ret = GetEndpointMap().RemoveEndpoint(endpointHandle);
+        auto ret = epMgr.Remove(endpointHandle);
         CHK_PRT_RET(
             ret == false, HCCL_ERROR("[%s] endpoint not found, endpointHandle[0x%llx]", __func__, endpointHandle),
             HCCL_E_NOT_FOUND);
@@ -348,10 +396,10 @@ HcommResult HcommEndpointDestroy(EndpointHandle endpointHandle)
         CHK_RET(RefreshEndpointContext(endpoint->GetEndpointDesc()));
         endpoint->ReleaseEndpointMonitor(endpointHandle);
     }
-    // 在 RemoveEndpoint 释放 Endpoint 对象前摘除 SharedJettyMgr 反查记录，
+    // 在 Remove 释放 Endpoint 对象前摘除 SharedJettyMgr 反查记录，
     // 避免 Endpoint* 复用误判；此处单例确定存活（运行期），不依赖 ~Endpoint 调用以规避静态析构顺序风险。
     hcomm::SharedJettyMgr::GetInstance().UnregisterEndpoint(endpointHandle);
-    auto ret = GetEndpointMap().RemoveEndpoint(endpointHandle);
+    auto ret = epMgr.Remove(endpointHandle);
     CHK_PRT_RET(
         ret == false, HCCL_ERROR("[%s] endpoint not found, endpointHandle[0x%llx]", __func__, endpointHandle),
         HCCL_E_NOT_FOUND);
@@ -361,31 +409,31 @@ HcommResult HcommEndpointDestroy(EndpointHandle endpointHandle)
 HcommResult HcommEndpointStartListen(EndpointHandle endpointHandle, uint32_t port, HcommEndpointListenConfig* config)
 {
     (void)config;
-    auto endpoint = GetEndpointMap().GetEndpoint(endpointHandle);
+    auto endpoint = HcommResMgr::GetInstance().GetEndpointMgr().Get(endpointHandle);
     CHK_PRT_RET(
         endpoint == nullptr, HCCL_ERROR("[%s] endpoint not found, endpointHandle[%p]", __func__, endpointHandle),
         HCCL_E_NOT_FOUND);
-    CHK_RET(endpoint->ServerSocketListen(port));
-    return HCCL_SUCCESS;
+    return static_cast<HcommResult>(StartListenByEndpoint(endpoint, port));
 }
 
 HcommResult HcommEndpointStopListen(EndpointHandle endpointHandle, uint32_t port)
 {
-    auto endpoint = GetEndpointMap().GetEndpoint(endpointHandle);
+    auto endpoint = HcommResMgr::GetInstance().GetEndpointMgr().Get(endpointHandle);
     CHK_PRT_RET(
         endpoint == nullptr, HCCL_ERROR("[%s] endpoint not found, endpointHandle[%p]", __func__, endpointHandle),
         HCCL_E_NOT_FOUND);
-    CHK_RET(endpoint->ServerSocketStopListen(port));
-    return HCCL_SUCCESS;
+    return static_cast<HcommResult>(StopListenByEndpoint(endpoint, port));
 }
 
 HcommResult HcommEndpointGetListenPort(EndpointHandle endpointHandle, uint32_t* port)
 {
-    auto endpoint = GetEndpointMap().GetEndpoint(endpointHandle);
+    (void)HcommResMgrInit();
+    auto endpoint = HcommResMgr::GetInstance().GetEndpointMgr().Get(endpointHandle);
     CHK_PRT_RET(
         endpoint == nullptr, HCCL_ERROR("[%s] endpoint not found, endpointHandle[%p]", __func__, endpointHandle),
         HCCL_E_NOT_FOUND);
-    return static_cast<HcclResult>(endpoint->GetNicOps()->getListenPort(endpoint->GetNicCtx(), port));
+    CHK_RET(RefreshEndpointContext(endpoint->GetEndpointDesc()));
+    return static_cast<HcommResult>(GetListenPortByEndpoint(endpoint, port));
 }
 
 HcommResult

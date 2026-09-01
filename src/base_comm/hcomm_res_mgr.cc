@@ -116,8 +116,13 @@ void HcommBaseResMgr::Init()
 
 HcommResMgr::HcommResMgr() = default;
 
+// 进程销毁兜底：先清全局 endpoint 句柄表残留，再遍历各设备 EndpointCtxMgr 强制释放残留 ctx
 HcommResMgr::~HcommResMgr()
 {
+    endpointMgr_.DeInit();
+    for (uint32_t devPhyId = 0; devPhyId <= MAX_MODULE_DEVICE_NUM; ++devPhyId) {
+        deviceResMgrs_[devPhyId].GetEndpointCtxMgr().DeInit();
+    }
     g_deviceRefreshCallbackRegistered = false;
     g_deviceResetCallbackRegistered = false;
     UnregisterDeviceRefreshCallback();

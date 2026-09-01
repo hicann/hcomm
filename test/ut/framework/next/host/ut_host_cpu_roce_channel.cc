@@ -259,13 +259,13 @@ public:
         ctxHandle_ = (void*)0x1000000; // non-null so CHK_PTR_NULL(rdmaHandle_) passes
     }
     HcclResult Init() override { return HCCL_SUCCESS; }
-    HcclResult ServerSocketListen(const uint32_t port) override { return HCCL_SUCCESS; }
-    HcclResult RegisterMemory(HcommMem mem, const char* memTag, void** memHandle) override { return HCCL_SUCCESS; }
-    HcclResult UnregisterMemory(void* memHandle) override { return HCCL_SUCCESS; }
-    HcclResult MemoryExport(void* memHandle, void** memDesc, uint32_t* memDescLen) override { return HCCL_SUCCESS; }
-    HcclResult MemoryImport(const void* memDesc, uint32_t descLen, HcommMem* outMem) override { return HCCL_SUCCESS; }
-    HcclResult MemoryUnimport(const void* memDesc, uint32_t descLen) override { return HCCL_SUCCESS; }
-    HcclResult GetAllMemHandles(void** memHandles, uint32_t* memHandleNum) override { return HCCL_SUCCESS; }
+    // 内存方法在 RegedMemMgr 上，Endpoint 不再 override
+    RegedMemMgr* GetRegedMemMgr() override { return nullptr; }
+    void* GetRdmaHandle() override { return ctxHandle_; }
+    bool IsCtxHandleValid() const override { return ctxHandle_ != nullptr; }
+
+private:
+    void* ctxHandle_{nullptr};
 };
 
 TEST_F(HostCpuRoceChannelTest, Ut_When_Normal_Expect_HCCL_SUCCESS)

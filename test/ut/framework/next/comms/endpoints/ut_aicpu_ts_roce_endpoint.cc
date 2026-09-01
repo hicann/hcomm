@@ -25,7 +25,8 @@
 
 #define private public
 #include "aicpu_ts_roce_endpoint.h"
-#include "aicpu_ts_roce_mem.h"
+#include "aicpu_ts_roce_reged_mem_mgr.h"
+#include "server_socket_context/aicpu_ts_roce_server_socket_context.h"
 #undef private
 
 using namespace hcomm;
@@ -62,15 +63,17 @@ HcclResult StubHcclSocketAcceptForEp(
     return HCCL_SUCCESS;
 }
 
-class FakeRegedMemMgrForEndpointUt : public RegedMemMgr {
+// AicpuTsRoceEndpoint::regedMemMgr_ 为 shared_ptr<AicpuTsRoceRegedMemMgr>，mock 需派生自 AicpuTsRoceRegedMemMgr
+class FakeRegedMemMgrForEndpointUt : public AicpuTsRoceRegedMemMgr {
 public:
-    HcclResult RegisterMemory(HcommMem, const char*, void** memHandle) override
+    FakeRegedMemMgrForEndpointUt() : AicpuTsRoceRegedMemMgr(nullptr, nullptr) {}
+    HcclResult RegisterMemory(const HcommMem*, const char*, void** memHandle) override
     {
         *memHandle = reinterpret_cast<void*>(0x42ULL);
         return HCCL_SUCCESS;
     }
     HcclResult UnregisterMemory(void*) override { return HCCL_SUCCESS; }
-    HcclResult MemoryExport(const EndpointDesc, void*, void** memDesc, uint32_t* memDescLen) override
+    HcclResult MemoryExport(const EndpointDesc&, void*, void** memDesc, uint32_t* memDescLen) override
     {
         static char kBlob[] = {'r', 'd', 'm', 'a'};
         *memDesc = static_cast<void*>(kBlob);
@@ -109,7 +112,7 @@ protected:
     void TearDown() override
     {
         GlobalMockObject::verify();
-        auto& m = AicpuTsRoceEndpoint::GetServerSocketMap();
+        auto& m = AicpuTsRoceServerSocketContext::GetServerSocketMap();
         m.clear();
         auto& nd = AicpuTsRoceEndpoint::GetNetDevMap();
         nd.clear();
@@ -129,42 +132,28 @@ TEST_F(AicpuTsRoceEndpointTest, Ut_Init_WhenLocIsHost_Returns_NOT_SUPPORT)
 
 TEST_F(AicpuTsRoceEndpointTest, Ut_AddListenSocketWhiteList_WhenEmpty_Returns_PARA)
 {
-    EndpointDesc desc{};
-    desc.protocol = COMM_PROTOCOL_ROCE;
-    desc.loc.locType = ENDPOINT_LOC_TYPE_DEVICE;
-    desc.commAddr.type = COMM_ADDR_TYPE_IP_V4;
-    AicpuTsRoceEndpoint ep(desc);
+    AicpuTsRoceServerSocketContext ctx(nullptr, UINT32_MAX);
     const std::vector<SocketWlistInfo> empty{};
-    EXPECT_EQ(ep.AddListenSocketWhiteList(16666, empty), HCCL_E_PARA);
+    EXPECT_EQ(ctx.AddListenSocketWhiteList(16666, empty), HCCL_E_PARA);
 }
 
 TEST_F(AicpuTsRoceEndpointTest, Ut_AddListenSocketWhiteList_WhenNoListenSocket_Returns_NOT_FOUND)
 {
-    EndpointDesc desc{};
-    desc.protocol = COMM_PROTOCOL_ROCE;
-    desc.loc.locType = ENDPOINT_LOC_TYPE_DEVICE;
-    desc.commAddr.type = COMM_ADDR_TYPE_IP_V4;
-    AicpuTsRoceEndpoint ep(desc);
-    ep.netDevRefPhyId_ = 0U;
+    AicpuTsRoceServerSocketContext ctx(nullptr, 0U);
     SocketWlistInfo entry{};
     entry.connLimit = 1U;
     const std::vector<SocketWlistInfo> one{entry};
 
     constexpr uint32_t kUnusedListenPort = 49151U;
-    EXPECT_EQ(ep.AddListenSocketWhiteList(kUnusedListenPort, one), HCCL_E_NOT_FOUND);
+    EXPECT_EQ(ctx.AddListenSocketWhiteList(kUnusedListenPort, one), HCCL_E_NOT_FOUND);
 }
 
 TEST_F(AicpuTsRoceEndpointTest, Ut_AcceptDataSocket_WhenNoListenSocket_Returns_NOT_FOUND)
 {
-    EndpointDesc desc{};
-    desc.protocol = COMM_PROTOCOL_ROCE;
-    desc.loc.locType = ENDPOINT_LOC_TYPE_DEVICE;
-    desc.commAddr.type = COMM_ADDR_TYPE_IP_V4;
-    AicpuTsRoceEndpoint ep(desc);
-    ep.netDevRefPhyId_ = 0U;
+    AicpuTsRoceServerSocketContext ctx(nullptr, 0U);
     std::shared_ptr<hccl::HcclSocket> out;
     constexpr uint32_t kUnusedListenPort = 49152U;
-    EXPECT_EQ(ep.AcceptDataSocket(kUnusedListenPort, "tag", out, 0), HCCL_E_NOT_FOUND);
+    EXPECT_EQ(ctx.AcceptDataSocket(kUnusedListenPort, "tag", out, 0), HCCL_E_NOT_FOUND);
     EXPECT_EQ(out.get(), nullptr);
 }
 
@@ -178,7 +167,7 @@ TEST_F(AicpuTsRoceEndpointTest, Ut_UnregisterMemory_WhenMemHandleNull_Returns_PT
 
     AicpuTsRoceEndpoint ep(desc);
     ep.regedMemMgr_ = std::make_shared<AicpuTsRoceRegedMemMgr>(nullptr, nullptr);
-    EXPECT_EQ(ep.UnregisterMemory(nullptr), HCCL_E_PTR);
+    EXPECT_EQ(ep.GetRegedMemMgr()->UnregisterMemory(nullptr), HCCL_E_PTR);
 }
 
 TEST_F(AicpuTsRoceEndpointTest, Ut_RegisterMemory_WhenMemHandleOutNull_Returns_PTR)
@@ -195,7 +184,7 @@ TEST_F(AicpuTsRoceEndpointTest, Ut_RegisterMemory_WhenMemHandleOutNull_Returns_P
     mem.addr = reinterpret_cast<void*>(0x1000U);
     mem.size = 4096U;
     mem.type = COMM_MEM_TYPE_DEVICE;
-    EXPECT_EQ(ep.RegisterMemory(mem, "t", nullptr), HCCL_E_PTR);
+    EXPECT_EQ(ep.GetRegedMemMgr()->RegisterMemory(&mem, "t", nullptr), HCCL_E_PTR);
 }
 
 TEST_F(AicpuTsRoceEndpointTest, Ut_RegisterMemory_Delegates_Returns_SUCCESS)
@@ -213,7 +202,7 @@ TEST_F(AicpuTsRoceEndpointTest, Ut_RegisterMemory_Delegates_Returns_SUCCESS)
     mem.size = 2048U;
     mem.type = COMM_MEM_TYPE_DEVICE;
     void* handle = nullptr;
-    ASSERT_EQ(ep.RegisterMemory(mem, "tag", &handle), HCCL_SUCCESS);
+    ASSERT_EQ(ep.GetRegedMemMgr()->RegisterMemory(&mem, "tag", &handle), HCCL_SUCCESS);
     EXPECT_EQ(handle, reinterpret_cast<void*>(0x42ULL));
 }
 
@@ -229,7 +218,9 @@ TEST_F(AicpuTsRoceEndpointTest, Ut_MemoryExport_Delegates_Returns_SUCCESS)
     ep.regedMemMgr_ = std::make_shared<FakeRegedMemMgrForEndpointUt>();
     void* memDesc = nullptr;
     uint32_t len = 0U;
-    ASSERT_EQ(ep.MemoryExport(reinterpret_cast<void*>(0x1), &memDesc, &len), HCCL_SUCCESS);
+    ASSERT_EQ(
+        ep.GetRegedMemMgr()->MemoryExport(ep.GetEndpointDesc(), reinterpret_cast<void*>(0x1), &memDesc, &len),
+        HCCL_SUCCESS);
     EXPECT_NE(memDesc, nullptr);
     EXPECT_EQ(len, 4U);
 }
@@ -246,7 +237,7 @@ TEST_F(AicpuTsRoceEndpointTest, Ut_GetAllMemHandles_Delegates_Returns_SUCCESS)
     ep.regedMemMgr_ = std::make_shared<FakeRegedMemMgrForEndpointUt>();
     void* handles = reinterpret_cast<void*>(0xdeadbeefULL);
     uint32_t n = 99U;
-    ASSERT_EQ(ep.GetAllMemHandles(&handles, &n), HCCL_SUCCESS);
+    ASSERT_EQ(ep.GetRegedMemMgr()->GetAllMemHandles(&handles, &n), HCCL_SUCCESS);
     EXPECT_EQ(n, 0U);
     EXPECT_EQ(handles, nullptr);
 }
@@ -284,7 +275,7 @@ TEST_F(AicpuTsRoceEndpointTest, Ut_MemoryImport_Delegates_Returns_SUCCESS)
     AicpuTsRoceEndpoint ep(desc);
     ep.regedMemMgr_ = std::make_shared<FakeRegedMemMgrForEndpointUt>();
     HcommMem out{};
-    ASSERT_EQ(ep.MemoryImport(nullptr, 0U, &out), HCCL_SUCCESS);
+    ASSERT_EQ(ep.GetRegedMemMgr()->MemoryImport(nullptr, 0U, &out), HCCL_SUCCESS);
 }
 
 TEST_F(AicpuTsRoceEndpointTest, Ut_MemoryUnimport_Delegates_Returns_SUCCESS)
@@ -296,7 +287,7 @@ TEST_F(AicpuTsRoceEndpointTest, Ut_MemoryUnimport_Delegates_Returns_SUCCESS)
     ASSERT_EQ(inet_pton(AF_INET, "10.10.10.33", &desc.commAddr.addr), 1);
     AicpuTsRoceEndpoint ep(desc);
     ep.regedMemMgr_ = std::make_shared<FakeRegedMemMgrForEndpointUt>();
-    ASSERT_EQ(ep.MemoryUnimport(nullptr, 0U), HCCL_SUCCESS);
+    ASSERT_EQ(ep.GetRegedMemMgr()->MemoryUnimport(nullptr, 0U), HCCL_SUCCESS);
 }
 
 TEST_F(AicpuTsRoceEndpointTest, Ut_UnregisterMemory_Delegates_Returns_SUCCESS)
@@ -308,7 +299,7 @@ TEST_F(AicpuTsRoceEndpointTest, Ut_UnregisterMemory_Delegates_Returns_SUCCESS)
     ASSERT_EQ(inet_pton(AF_INET, "10.10.10.34", &desc.commAddr.addr), 1);
     AicpuTsRoceEndpoint ep(desc);
     ep.regedMemMgr_ = std::make_shared<FakeRegedMemMgrForEndpointUt>();
-    ASSERT_EQ(ep.UnregisterMemory(reinterpret_cast<void*>(0x99ULL)), HCCL_SUCCESS);
+    ASSERT_EQ(ep.GetRegedMemMgr()->UnregisterMemory(reinterpret_cast<void*>(0x99ULL)), HCCL_SUCCESS);
 }
 
 TEST_F(AicpuTsRoceEndpointTest, Ut_TwoInitsSameDevicePhyId_ShareOneNetDevSlot)
@@ -319,8 +310,8 @@ TEST_F(AicpuTsRoceEndpointTest, Ut_TwoInitsSameDevicePhyId_ShareOneNetDevSlot)
     MOCKER(HcclNetDevClose).stubs().will(invoke(StubHcclNetDevCloseForEp));
     MOCKER_CPP(&hccl::NetworkManager::CreateRdmaHandle).stubs().will(invoke(StubCreateRdmaHandleEp));
     MOCKER_CPP(&hccl::NetworkManager::GetRdmaHandleByIpAddr).stubs().will(invoke(StubGetRdmaHandleByIpAddrEp));
-    auto& sockMap = AicpuTsRoceEndpoint::GetServerSocketMap();
     const SocketMapKey key{0U, 16666U};
+    auto& sockMap = AicpuTsRoceServerSocketContext::GetServerSocketMap();
     sockMap[key]
         = AicpuTsListenSocketSlot{std::make_shared<hccl::HcclSocket>(static_cast<HcclNetDevCtx>(nullptr), 16666U), 1U};
 
@@ -351,7 +342,7 @@ TEST_F(AicpuTsRoceEndpointTest, Ut_Init_DeviceRoce_WhenDepsMocked_Returns_SUCCES
     MOCKER(HcclNetDevClose).stubs().will(invoke(StubHcclNetDevCloseForEp));
     MOCKER_CPP(&hccl::NetworkManager::CreateRdmaHandle).stubs().will(invoke(StubCreateRdmaHandleEp));
     MOCKER_CPP(&hccl::NetworkManager::GetRdmaHandleByIpAddr).stubs().will(invoke(StubGetRdmaHandleByIpAddrEp));
-    auto& sockMap = AicpuTsRoceEndpoint::GetServerSocketMap();
+    auto& sockMap = AicpuTsRoceServerSocketContext::GetServerSocketMap();
     const SocketMapKey key{0U, 16666U};
     sockMap[key]
         = AicpuTsListenSocketSlot{std::make_shared<hccl::HcclSocket>(static_cast<HcclNetDevCtx>(nullptr), 16666U), 1U};
@@ -375,11 +366,13 @@ TEST_F(AicpuTsRoceEndpointTest, Ut_ServerSocketListen_WhenReuse_Returns_SUCCESS)
     ASSERT_EQ(inet_pton(AF_INET, "10.10.10.41", &desc.commAddr.addr), 1);
     AicpuTsRoceEndpoint ep(desc);
     ep.netDevRefPhyId_ = 0U;
-    auto& sockMap = AicpuTsRoceEndpoint::GetServerSocketMap();
+    ep.serverSocketContext_.emplace(ep.netDev_, ep.netDevRefPhyId_);
+    auto& sockMap = AicpuTsRoceServerSocketContext::GetServerSocketMap();
     const SocketMapKey key{0U, 16666U};
     sockMap[key]
         = AicpuTsListenSocketSlot{std::make_shared<hccl::HcclSocket>(static_cast<HcclNetDevCtx>(nullptr), 16666U), 1U};
-    ASSERT_EQ(ep.ServerSocketListen(16666U), HCCL_SUCCESS);
+    ASSERT_NE(ep.GetServerSocketContext(), nullptr);
+    ASSERT_EQ(ep.GetServerSocketContext()->ServerSocketListen(Hccl::IpAddress(), 16666U), HCCL_SUCCESS);
 }
 
 TEST_F(AicpuTsRoceEndpointTest, Ut_ServerSocketListen_WhenNoExistingSocket_InsertMapSuccess)
@@ -398,50 +391,41 @@ TEST_F(AicpuTsRoceEndpointTest, Ut_ServerSocketListen_WhenNoExistingSocket_Inser
     AicpuTsRoceEndpoint ep(desc);
     ASSERT_EQ(ep.Init(), HCCL_SUCCESS);
 
-    ASSERT_EQ(ep.ServerSocketListen(16666U), HCCL_SUCCESS);
+    ASSERT_NE(ep.GetServerSocketContext(), nullptr);
+    ASSERT_EQ(ep.GetServerSocketContext()->ServerSocketListen(Hccl::IpAddress(), 16666U), HCCL_SUCCESS);
 
-    auto& sockMap = AicpuTsRoceEndpoint::GetServerSocketMap();
+    auto& sockMap = AicpuTsRoceServerSocketContext::GetServerSocketMap();
     const SocketMapKey key{0U, 16666U};
     ASSERT_EQ(sockMap.size(), 1U);
     ASSERT_NE(sockMap.at(key).socket, nullptr);
     ASSERT_EQ(sockMap.at(key).refCount, 1U);
-    ASSERT_TRUE(ep.hasListenSocketRef_);
-    ASSERT_EQ(ep.listenRefKeys_.size(), 1U);
+    ASSERT_TRUE(ep.serverSocketContext_->hasListenSocketRef_);
+    ASSERT_EQ(ep.serverSocketContext_->listenRefKeys_.size(), 1U);
 }
 
 TEST_F(AicpuTsRoceEndpointTest, Ut_AddListenSocketWhiteList_WhenListenPresent_Returns_SUCCESS)
 {
     MOCKER_CPP(&hccl::HcclSocket::AddWhiteList).stubs().will(returnValue(HCCL_SUCCESS));
-    EndpointDesc desc{};
-    desc.protocol = COMM_PROTOCOL_ROCE;
-    desc.loc.locType = ENDPOINT_LOC_TYPE_DEVICE;
-    desc.commAddr.type = COMM_ADDR_TYPE_IP_V4;
-    AicpuTsRoceEndpoint ep(desc);
-    ep.netDevRefPhyId_ = 0U;
-    auto& sockMap = AicpuTsRoceEndpoint::GetServerSocketMap();
+    AicpuTsRoceServerSocketContext ctx(nullptr, 0U);
+    auto& sockMap = AicpuTsRoceServerSocketContext::GetServerSocketMap();
     const SocketMapKey key{0U, 17777U};
     sockMap[key]
         = AicpuTsListenSocketSlot{std::make_shared<hccl::HcclSocket>(static_cast<HcclNetDevCtx>(nullptr), 17777U), 1U};
     SocketWlistInfo entry{};
     entry.connLimit = 1U;
     const std::vector<SocketWlistInfo> one{entry};
-    ASSERT_EQ(ep.AddListenSocketWhiteList(17777U, one), HCCL_SUCCESS);
+    ASSERT_EQ(ctx.AddListenSocketWhiteList(17777U, one), HCCL_SUCCESS);
 }
 
 TEST_F(AicpuTsRoceEndpointTest, Ut_AcceptDataSocket_WhenListenPresent_Returns_SUCCESS)
 {
     MOCKER_CPP(&hccl::HcclSocket::Accept).stubs().will(invoke(StubHcclSocketAcceptForEp));
-    EndpointDesc desc{};
-    desc.protocol = COMM_PROTOCOL_ROCE;
-    desc.loc.locType = ENDPOINT_LOC_TYPE_DEVICE;
-    desc.commAddr.type = COMM_ADDR_TYPE_IP_V4;
-    AicpuTsRoceEndpoint ep(desc);
-    ep.netDevRefPhyId_ = 0U;
-    auto& sockMap = AicpuTsRoceEndpoint::GetServerSocketMap();
+    AicpuTsRoceServerSocketContext ctx(nullptr, 0U);
+    auto& sockMap = AicpuTsRoceServerSocketContext::GetServerSocketMap();
     const SocketMapKey key{0U, 18888U};
     sockMap[key]
         = AicpuTsListenSocketSlot{std::make_shared<hccl::HcclSocket>(static_cast<HcclNetDevCtx>(nullptr), 18888U), 1U};
     std::shared_ptr<hccl::HcclSocket> out;
-    ASSERT_EQ(ep.AcceptDataSocket(18888U, "ut_tag", out, 0U), HCCL_SUCCESS);
+    ASSERT_EQ(ctx.AcceptDataSocket(18888U, "ut_tag", out, 0U), HCCL_SUCCESS);
     ASSERT_NE(out.get(), nullptr);
 }

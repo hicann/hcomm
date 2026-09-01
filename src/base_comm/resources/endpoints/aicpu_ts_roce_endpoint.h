@@ -15,33 +15,16 @@
 #include <functional>
 #include <memory>
 #include <mutex>
+#include <optional>
 #include <string>
 #include <unordered_map>
 #include <vector>
 #include "hccl_mem_defs.h"
 #include "endpoint.h"
-#include "hccl_socket.h"
+#include "server_socket_context/aicpu_ts_roce_server_socket_context.h"
+#include "aicpu_ts_roce_reged_mem_mgr.h"
 
 namespace hcomm {
-struct AicpuTsListenSocketSlot {
-    std::shared_ptr<hccl::HcclSocket> socket{};
-    uint32_t refCount{0U};
-};
-
-struct SocketMapKey {
-    uint32_t devicePhyId;
-    uint32_t port;
-
-    bool operator==(const SocketMapKey& other) const { return devicePhyId == other.devicePhyId && port == other.port; }
-};
-
-struct SocketMapKeyHash {
-    size_t operator()(const SocketMapKey& k) const
-    {
-        return std::hash<uint32_t>()(k.devicePhyId) ^ (std::hash<uint32_t>()(k.port) << 1);
-    }
-};
-
 struct AicpuTsNetDevSlot {
     HcclNetDev netDev{nullptr};
     uint32_t refCount{0U};
@@ -54,30 +37,18 @@ public:
 
     HcclResult Init() override;
 
-    HcclResult ServerSocketListen(const uint32_t port) override;
+    RegedMemMgr* GetRegedMemMgr() override { return regedMemMgr_.get(); }
+    void* GetRdmaHandle() override { return ctxHandle_; }
+    bool IsCtxHandleValid() const override;
 
-    HcclResult RegisterMemory(HcommMem mem, const char* memTag, void** memHandle) override;
-    HcclResult UnregisterMemory(void* memHandle) override;
-    HcclResult MemoryExport(void* memHandle, void** memDesc, uint32_t* memDescLen) override;
-    HcclResult MemoryImport(const void* memDesc, uint32_t descLen, HcommMem* outMem) override;
-    HcclResult MemoryUnimport(const void* memDesc, uint32_t descLen) override;
-    HcclResult GetAllMemHandles(void** memHandles, uint32_t* memHandleNum) override;
+    ServerSocketContext* GetServerSocketContext() override
+    {
+        return serverSocketContext_.has_value() ? &serverSocketContext_.value() : nullptr;
+    }
 
     HcclNetDev GetNetDev() const { return netDev_; }
 
-    HcclResult GetSocket(uint32_t port, const std::string& tag, std::shared_ptr<hccl::HcclSocket>& outConnected);
-    HcclResult AcceptDataSocket(
-        uint32_t port, const std::string& tag, std::shared_ptr<hccl::HcclSocket>& outConnected,
-        uint32_t acceptTimeoutMs = 0);
-
-    HcclResult AddListenSocketWhiteList(uint32_t port, const std::vector<SocketWlistInfo>& wlistInfos);
-
 private:
-    static std::unordered_map<SocketMapKey, AicpuTsListenSocketSlot, SocketMapKeyHash>& GetServerSocketMap();
-    static std::mutex& ListenSocketMapMutex();
-    bool ReuseListenSocketIfExist(const SocketMapKey& key, const char* logPrefix);
-    void ReleaseListenSocketRefs();
-
     static std::unordered_map<uint32_t, AicpuTsNetDevSlot>& GetNetDevMap();
     static std::mutex& NetDevMapMutex();
     HcclResult AcquireSharedNetDev(uint32_t devicePhyId, const HcclNetDevInfos& info);
@@ -85,10 +56,12 @@ private:
     void ReleaseNicSocketHandle(HcclNetDev netDev);
     HcclResult AcquireRdmaContext(uint32_t devPhyId, const EndpointDesc& endpointDesc);
 
+    void* ctxHandle_{nullptr};
+    std::shared_ptr<AicpuTsRoceRegedMemMgr> regedMemMgr_{};
     HcclNetDev netDev_{nullptr};
     uint32_t netDevRefPhyId_{UINT32_MAX};
-    std::vector<SocketMapKey> listenRefKeys_{};
-    bool hasListenSocketRef_{false};
+    // Init 内 AcquireSharedNetDev 成功后构造
+    std::optional<AicpuTsRoceServerSocketContext> serverSocketContext_{};
 };
 } // namespace hcomm
 #endif // AICPUTS_ROCE_ENDPOINT_H

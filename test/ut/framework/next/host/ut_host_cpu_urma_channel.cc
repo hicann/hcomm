@@ -71,7 +71,12 @@ protected:
         Hccl::IpAddress remoteIp("2.0.0.0");
 
         MOCKER(hrtGetDevice).stubs().will(returnValue(HCCL_SUCCESS));
-        MOCKER(hrtGetDevicePhyIdByIndex).stubs().with(mockcpp::any(), mockcpp::any()).will(returnValue(HCCL_SUCCESS));
+        // 出参 devPhyId 需赋合法值：批次1后它作为 GetDeviceResMgr(devPhyId) 的设备数组下标
+        unsigned int devicePhyId = 0U;
+        MOCKER(hrtGetDevicePhyIdByIndex)
+            .stubs()
+            .with(mockcpp::any(), outBound(devicePhyId))
+            .will(returnValue(HCCL_SUCCESS));
 
         RdmaHandle rdmaHandle = (void*)0x1000000;
         MOCKER(&Hccl::RdmaHandleManager::GetByAddr).stubs().will(returnValue(rdmaHandle));

@@ -8,7 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
-#include "ub_mem.h"
+#include "ub_mem_reged_mem_mgr.h"
 #include <algorithm>
 #include "log.h"
 
@@ -16,13 +16,15 @@ namespace hcomm {
 
 UbMemRegedMemMgr::UbMemRegedMemMgr() { localIpcRmaBufferMgr_ = std::make_unique<LocalIpcRmaBufferMgr>(); }
 
-HcclResult UbMemRegedMemMgr::RegisterMemory(HcommMem mem, const char* memTag, void** memHandle)
+HcclResult UbMemRegedMemMgr::RegisterMemory(const HcommMem* mem, const char* memTag, void** memHandle)
 {
     HCCL_INFO("[%s] Begin", __func__);
+    CHK_PTR_NULL(mem);
+    CHK_PTR_NULL(memHandle);
     CHK_PTR_NULL(localIpcRmaBufferMgr_);
     std::lock_guard<std::mutex> lock(memMtx_);
     return RegisterMemoryImpl(
-        mem, memTag, memHandle, localIpcRmaBufferMgr_, allRegisteredBuffers_,
+        *mem, memTag, memHandle, localIpcRmaBufferMgr_, allRegisteredBuffers_,
         static_cast<std::vector<std::shared_ptr<Hccl::LocalIpcRmaBuffer>>*>(nullptr), "UbMemRegedMemMgr",
         [&](auto& bufPtr, auto& parent) {
             return std::make_shared<Hccl::LocalIpcRmaBuffer>(bufPtr, *parent);
@@ -35,6 +37,7 @@ HcclResult UbMemRegedMemMgr::RegisterMemory(HcommMem mem, const char* memTag, vo
 HcclResult UbMemRegedMemMgr::UnregisterMemory(void* memHandle)
 {
     HCCL_INFO("[%s] Begin", __func__);
+    CHK_PTR_NULL(memHandle);
     CHK_PTR_NULL(localIpcRmaBufferMgr_);
     std::lock_guard<std::mutex> lock(memMtx_);
     return UnregisterMemoryImpl(
@@ -49,8 +52,8 @@ HcclResult UbMemRegedMemMgr::UnregisterMemory(void* memHandle)
 }
 
 HcclResult UbMemRegedMemMgr::MemoryExport(
-    [[maybe_unused]] const EndpointDesc endpointDesc, [[maybe_unused]] void* memHandle, [[maybe_unused]] void** memDesc,
-    [[maybe_unused]] uint32_t* memDescLen)
+    [[maybe_unused]] const EndpointDesc& endpointDesc, [[maybe_unused]] void* memHandle,
+    [[maybe_unused]] void** memDesc, [[maybe_unused]] uint32_t* memDescLen)
 {
     HCCL_INFO("UbMemRegedMemMgr MemoryExport is not supported.");
     return HCCL_SUCCESS;

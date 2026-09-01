@@ -16,6 +16,7 @@
 #include "aicpu/aicpu_ts_hccs_channel.h"
 #include "endpoint.h"
 #include "channel_param.h"
+#include "hccs_reged_mem_mgr.h"
 #undef private
 #undef protected
 
@@ -26,13 +27,6 @@ class StubAicpuTsHccsEndpoint : public AicpuTsHccsEndpoint {
 public:
     explicit StubAicpuTsHccsEndpoint(const EndpointDesc& desc) : AicpuTsHccsEndpoint(desc) {}
     HcclResult Init() override { return HCCL_SUCCESS; }
-    HcclResult ServerSocketListen(const uint32_t) override { return HCCL_SUCCESS; }
-    HcclResult RegisterMemory(HcommMem, const char*, void**) override { return HCCL_SUCCESS; }
-    HcclResult UnregisterMemory(void*) override { return HCCL_SUCCESS; }
-    HcclResult MemoryExport(void*, void**, uint32_t*) override { return HCCL_SUCCESS; }
-    HcclResult MemoryImport(const void*, uint32_t, HcommMem*) override { return HCCL_SUCCESS; }
-    HcclResult MemoryUnimport(const void*, uint32_t) override { return HCCL_SUCCESS; }
-    HcclResult GetAllMemHandles(void**, uint32_t*) override { return HCCL_SUCCESS; }
 };
 } // namespace
 
@@ -54,6 +48,7 @@ TEST_F(AicpuTsHccsChannelTest, UT_BuildHcclChannelHccsRes_WhenQosConfigured_Expe
     epDesc.loc.locType = ENDPOINT_LOC_TYPE_DEVICE;
     epDesc.loc.device.devPhyId = 3;
     StubAicpuTsHccsEndpoint stubEp(epDesc);
+    stubEp.regedMemMgr_ = std::make_shared<HccsRegedMemMgr>(nullptr);
 
     HcommChannelDesc desc{};
     desc.qos = 42;
@@ -78,8 +73,8 @@ TEST_F(AicpuTsHccsChannelTest, UT_BuildHcclChannelHccsRes_WhenQosConfigured_Expe
     MOCKER_CPP(&hccl::Transport::GetTransportAttr).stubs().will(invoke(StubGetTransportAttr));
     MOCKER(hrtGetDeviceType).stubs().with(outBound(DevType::DEV_TYPE_950)).will(returnValue(HCCL_SUCCESS));
     MOCKER(hrtGetDeviceIndexByPhyId).stubs().with(mockcpp::any()).will(returnValue(HCCL_SUCCESS));
-    MOCKER_CPP(&AicpuTsHccsEndpoint::GetRemoteIpcRmaBufferEx).stubs().will(returnValue(HCCL_SUCCESS));
-    MOCKER_CPP(&AicpuTsHccsEndpoint::GetLocalIpcRmaBufferEx).stubs().will(returnValue(HCCL_SUCCESS));
+    MOCKER_CPP(&HccsRegedMemMgr::GetRemoteIpcRmaBufferEx).stubs().will(returnValue(HCCL_SUCCESS));
+    MOCKER_CPP(&HccsRegedMemMgr::GetLocalIpcRmaBufferEx).stubs().will(returnValue(HCCL_SUCCESS));
 
     HcclChannelHccsRes res;
     HcclResult ret = ch.BuildHcclChannelHccsRes(res);

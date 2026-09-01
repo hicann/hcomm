@@ -22,9 +22,7 @@
 #include "mem_device_pub.h"
 #include "channel_param.h"
 #include "env_config/env_config_v2.h"
-#include "endpoint_map.h"
-
-#include "../hcomm_res_mgr.h"
+#include "hcomm_res_mgr.h"
 #include "param_check_pub.h"
 #include "comm_engine_utils.h"
 #include "exception_handler.h"
@@ -35,10 +33,6 @@
 #include "hcomm_adapter_runtime.h"
 
 using namespace hcomm;
-
-static HcommEndpointMap g_EndpointMap;
-
-HcommEndpointMap& GetEndpointMap() { return g_EndpointMap; }
 
 namespace {
 HcclResult RefreshCurrentDeviceContext()

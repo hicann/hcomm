@@ -10,22 +10,27 @@
 
 #include "endpoint_pair.h"
 #include "log.h"
-#include "roce_mem.h"
+#include "roce_reged_mem_mgr.h"
 #include "exchange_rdma_buffer_dto.h"
 #include "local_rdma_rma_buffer.h"
 #include "hccl_one_sided_data.h"
 
 namespace hcomm {
 
-RoceRegedMemMgr::RoceRegedMemMgr() { localRdmaRmaBufferMgr_ = std::make_unique<LocalRdmaRmaBufferMgr>(); }
+RoceRegedMemMgr::RoceRegedMemMgr(RdmaHandle rdmaHandle) : rdmaHandle_(rdmaHandle)
+{
+    localRdmaRmaBufferMgr_ = std::make_unique<LocalRdmaRmaBufferMgr>();
+}
 
-HcclResult RoceRegedMemMgr::RegisterMemory(HcommMem mem, const char* memTag, void** memHandle)
+HcclResult RoceRegedMemMgr::RegisterMemory(const HcommMem* mem, const char* memTag, void** memHandle)
 {
     HCCL_INFO("[%s] Begin", __FUNCTION__);
+    CHK_PTR_NULL(mem);
+    CHK_PTR_NULL(memHandle);
     CHK_PTR_NULL(localRdmaRmaBufferMgr_);
     std::lock_guard<std::mutex> lock(memMtx_);
     return RegisterMemoryImpl(
-        mem, memTag, memHandle, localRdmaRmaBufferMgr_, allRegisteredBuffers_, &handlesRecords_, "RoceRegedMemMgr",
+        *mem, memTag, memHandle, localRdmaRmaBufferMgr_, allRegisteredBuffers_, &handlesRecords_, "RoceRegedMemMgr",
         [&](auto& bufPtr, auto& parent) {
             return std::make_shared<Hccl::LocalRdmaRmaBuffer>(
                 bufPtr, rdmaHandle_, parent->GetLkey(), parent->GetRkey(), parent->GetMrHandle());
@@ -38,6 +43,7 @@ HcclResult RoceRegedMemMgr::RegisterMemory(HcommMem mem, const char* memTag, voi
 HcclResult RoceRegedMemMgr::UnregisterMemory(void* memHandle)
 {
     HCCL_INFO("[%s] Begin", __FUNCTION__);
+    CHK_PTR_NULL(memHandle);
     CHK_PTR_NULL(localRdmaRmaBufferMgr_);
     std::lock_guard<std::mutex> lock(memMtx_);
     return UnregisterMemoryImpl(
@@ -79,7 +85,7 @@ HcclResult RoceRegedMemMgr::GetMemDesc(const EndpointDesc endpointDesc, Hccl::Lo
 }
 
 HcclResult
-RoceRegedMemMgr::MemoryExport(const EndpointDesc endpointDesc, void* memHandle, void** memDesc, uint32_t* memDescLen)
+RoceRegedMemMgr::MemoryExport(const EndpointDesc& endpointDesc, void* memHandle, void** memDesc, uint32_t* memDescLen)
 {
     HCCL_INFO("[%s] Begin", __FUNCTION__);
     CHK_PTR_NULL(memHandle);
@@ -131,6 +137,8 @@ HcclResult RoceRegedMemMgr::GetParamsFromMemDesc(
 HcclResult RoceRegedMemMgr::MemoryImport(const void* memDesc, uint32_t descLen, HcommMem* outMem)
 {
     HCCL_INFO("[%s] Begin", __FUNCTION__);
+    CHK_PTR_NULL(memDesc);
+    CHK_PTR_NULL(outMem);
     std::lock_guard<std::mutex> lock(memMtx_);
 
     EndpointDesc endpointDesc;
@@ -167,6 +175,7 @@ HcclResult RoceRegedMemMgr::MemoryImport(const void* memDesc, uint32_t descLen, 
 HcclResult RoceRegedMemMgr::MemoryUnimport(const void* memDesc, uint32_t descLen)
 {
     HCCL_INFO("[%s] Begin", __FUNCTION__);
+    CHK_PTR_NULL(memDesc);
     std::lock_guard<std::mutex> lock(memMtx_);
 
     EndpointDesc endpointDesc;

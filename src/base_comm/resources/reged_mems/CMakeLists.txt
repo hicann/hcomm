@@ -9,10 +9,10 @@
 # -----------------------------------------------------------------------------------------------------------
 
 set(src_list
-    roce_mem.cc
-    aicpu_ts_roce_mem.cc
-    urma_mem.cc
-    ub_mem.cc
+    roce_reged_mem_mgr.cc
+    aicpu_ts_roce_reged_mem_mgr.cc
+    ub_reged_mem_mgr.cc
+    ub_mem_reged_mem_mgr.cc
     hccs_reged_mem_mgr.cc
     proc_reged_mem_mgr_cache.cc
 )

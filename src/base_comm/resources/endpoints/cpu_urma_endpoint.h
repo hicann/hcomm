@@ -18,6 +18,9 @@
 #include <unordered_map>
 
 #include "endpoint.h"
+#include "comm_queue_context/jetty_context.h"
+#include "server_socket_context/host_server_socket_context.h"
+#include "ub_reged_mem_mgr.h"
 #include "ccu_channel_ctx_pool.h"
 #include "externalinput_pub.h"
 
@@ -29,25 +32,26 @@ public:
 
     HcclResult Init() override;
 
-    HcclResult ServerSocketListen(const uint32_t port) override;
-    HcclResult ServerSocketStopListen(const uint32_t port) override;
-    inline HcclResult ServerSocketStopListenImpl(const uint32_t port);
-    HcclResult ServerSocketGetListenPort(uint32_t* port) override;
-
-    static std::unordered_map<Hccl::PortData, std::unique_ptr<Hccl::Socket>>& GetServerSocketMap();
-
-    std::shared_ptr<RegedMemMgr> GetRegedMemMgr() override { return regedMemMgr_; }
-
-    HcclResult RegisterMemory(HcommMem mem, const char* memTag, void** memHandle) override;
-    HcclResult UnregisterMemory(void* memHandle) override;
-    HcclResult MemoryExport(void* memHandle, void** memDesc, uint32_t* memDescLen) override;
-    HcclResult MemoryImport(const void* memDesc, uint32_t descLen, HcommMem* outMem) override;
-    HcclResult MemoryUnimport(const void* memDesc, uint32_t descLen) override;
-    HcclResult GetAllMemHandles(void** memHandles, uint32_t* memHandleNum) override;
+    RegedMemMgr* GetRegedMemMgr() override { return regedMemMgr_.get(); }
+    void* GetRdmaHandle() override { return ctxHandle_; }
+    bool IsCtxHandleValid() const override;
+    // 共享 Jetty 上下文访问入口：返回 CommQueueContext 基类视图，调用方按需 downcast JettyContext
+    CommQueueContext* GetCommQueueContext() override;
+    ServerSocketContext* GetServerSocketContext() override { return &serverSocketContext_; }
 
 private:
-    std::mutex portMutex_;
-    u32 dynamicPort_{HCCL_INVALID_PORT};
+    HcclResult ReleaseEndpointCtx();
+    HcclResult AttachCache(const MemMgrCacheKey& key, const std::function<std::shared_ptr<RegedMemMgr>()>& creator);
+    HcclResult ReleaseCache();
+
+    void* ctxHandle_{nullptr};
+    std::shared_ptr<EndpointCtx> endpointCtx_{};
+    std::shared_ptr<UbRegedMemMgr> regedMemMgr_{};
+    HostServerSocketContext serverSocketContext_{Hccl::ConnectProtoType::UB};
+    MemMgrCacheKey cacheKey_{};
+    std::shared_ptr<ProcRegedMemMgrCache> cacheKeepAlive_{};
+    std::unique_ptr<JettyContext> jettyContext_{nullptr};
+    std::once_flag jettyContextOnce_;
 };
 } // namespace hcomm
 

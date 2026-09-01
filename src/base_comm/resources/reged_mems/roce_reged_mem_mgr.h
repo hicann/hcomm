@@ -8,8 +8,8 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
-#ifndef ROCE_MEM_H
-#define ROCE_MEM_H
+#ifndef ROCE_REGED_MEM_MGR_H
+#define ROCE_REGED_MEM_MGR_H
 
 #include <memory>
 #include <vector>
@@ -34,13 +34,13 @@ public:
     using RemoteRdmaRmaBufferMgr
         = hcomm::RmaBufferMgr<hccl::BufferKey<uintptr_t, u64>, std::shared_ptr<Hccl::RemoteRdmaRmaBuffer>>;
 
-    RoceRegedMemMgr();
+    RoceRegedMemMgr(RdmaHandle rdmaHandle);
     ~RoceRegedMemMgr() = default;
 
-    HcclResult RegisterMemory(HcommMem mem, const char* memTag, void** memHandle) override;
+    HcclResult RegisterMemory(const HcommMem* mem, const char* memTag, void** memHandle) override;
     HcclResult UnregisterMemory(void* memHandle) override;
     HcclResult
-    MemoryExport(const EndpointDesc endpointDesc, void* memHandle, void** memDesc, uint32_t* memDescLen) override;
+    MemoryExport(const EndpointDesc& endpointDesc, void* memHandle, void** memDesc, uint32_t* memDescLen) override;
     HcclResult MemoryImport(const void* memDesc, uint32_t descLen, HcommMem* outMem) override;
     HcclResult MemoryUnimport(const void* memDesc, uint32_t descLen) override;
     HcclResult GetAllMemHandles(void** memHandles, uint32_t* memHandleNum) override;
@@ -48,7 +48,11 @@ public:
     HcclResult GetParamsFromMemDesc(
         const void* memDesc, uint32_t descLen, EndpointDesc& endpointDesc, Hccl::ExchangeRdmaBufferDto& dto);
 
+    RdmaHandle GetRdmaHandle() const { return rdmaHandle_; }
+
 private:
+    RdmaHandle rdmaHandle_{nullptr};
+    mutable std::mutex memMtx_;
     std::unique_ptr<LocalRdmaRmaBufferMgr> localRdmaRmaBufferMgr_{};
     std::vector<RegedBufferEntry<Hccl::LocalRdmaRmaBuffer>> allRegisteredBuffers_;
     std::vector<std::shared_ptr<Hccl::LocalRdmaRmaBuffer>> handlesRecords_;
@@ -56,4 +60,4 @@ private:
 };
 } // namespace hcomm
 
-#endif // ROCE_MEM_H
+#endif // ROCE_REGED_MEM_MGR_H

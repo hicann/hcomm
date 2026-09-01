@@ -59,7 +59,7 @@ static HcommResult EndpointDestroyStub(EndpointHandle handle)
 
 class EndpointMgrTest : public testing::Test {
 protected:
-    EndpointMgr mgr;
+    hccl::EndpointMgr mgr;
 
     void SetUp() override
     {
@@ -128,7 +128,7 @@ TEST_F(EndpointMgrTest, GetWithTag_NonEmptyTag_CreateEndpoint)
     EndpointHandle handle2 = nullptr;
     EndpointHandle handle1Again = nullptr;
     {
-        EndpointMgr scopedMgr;
+        hccl::EndpointMgr scopedMgr;
 
         // 不同 tag 创建不同 Endpoint
         ASSERT_EQ(scopedMgr.GetWithTag(desc, "tag_A", handle1), HCCL_SUCCESS);
@@ -161,7 +161,7 @@ TEST_F(EndpointMgrTest, GetWithTag_DestructorDestroysTaggedEndpoints)
 
     EndpointHandle createdHandle = nullptr;
     {
-        EndpointMgr scopedMgr;
+        hccl::EndpointMgr scopedMgr;
         EndpointHandle h = nullptr;
         ASSERT_EQ(scopedMgr.GetWithTag(desc, "tag_destructor", h), HCCL_SUCCESS);
         ASSERT_TRUE(s_liveEndpoints.count(h));
@@ -359,7 +359,7 @@ TEST_F(EndpointMgrTest, Destructor_UnregistersAllRegisteredHandles)
     desc.loc.locType = ENDPOINT_LOC_TYPE_DEVICE;
 
     {
-        EndpointMgr localMgr;
+        hccl::EndpointMgr localMgr;
         EndpointHandle epHandle = nullptr;
         ASSERT_EQ(localMgr.Get(desc, epHandle), HCCL_SUCCESS);
         ASSERT_NE(epHandle, nullptr);

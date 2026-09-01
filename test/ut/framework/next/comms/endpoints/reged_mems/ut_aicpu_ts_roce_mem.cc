@@ -18,7 +18,7 @@
 #include "local_rdma_rma_buffer.h"
 
 #define private public
-#include "aicpu_ts_roce_mem.h"
+#include "aicpu_ts_roce_reged_mem_mgr.h"
 #undef private
 
 using namespace hcomm;
@@ -40,7 +40,7 @@ TEST_F(AicpuTsRoceRegedMemMgrTest, Ut_RegisterMemory_When_NetDevNull_Returns_E_P
     mem.size = 4096U;
     mem.type = COMM_MEM_TYPE_DEVICE;
     void* handle = nullptr;
-    EXPECT_EQ(mgr.RegisterMemory(mem, "t", &handle), HCCL_E_PTR);
+    EXPECT_EQ(mgr.RegisterMemory(&mem, "t", &handle), HCCL_E_PTR);
 }
 
 TEST_F(AicpuTsRoceRegedMemMgrTest, Ut_MemoryExport_When_MemHandleNull_Returns_E_PTR)
@@ -182,11 +182,11 @@ TEST_F(AicpuTsRoceRegedMemMgrTest, Ut_RegisterMemory_WithNetDev_MockLocalRdmaIni
     mem.size = 4096U;
     mem.type = COMM_MEM_TYPE_DEVICE;
     void* h1 = nullptr;
-    ASSERT_EQ(mgr.RegisterMemory(mem, "t", &h1), HCCL_SUCCESS);
+    ASSERT_EQ(mgr.RegisterMemory(&mem, "t", &h1), HCCL_SUCCESS);
     ASSERT_NE(h1, nullptr);
 
     void* h2 = nullptr;
-    EXPECT_EQ(mgr.RegisterMemory(mem, "t", &h2), HCCL_SUCCESS);
+    EXPECT_EQ(mgr.RegisterMemory(&mem, "t", &h2), HCCL_SUCCESS);
     EXPECT_NE(h2, h1);
     auto* aliasBuffer = static_cast<hccl::LocalRdmaRmaBuffer*>(h2);
     EXPECT_TRUE(aliasBuffer->IsAlias());
@@ -210,7 +210,7 @@ TEST_F(AicpuTsRoceRegedMemMgrTest, Ut_RegisterMemory_When_LocalRdmaInitFails_Ret
     mem.size = 4096U;
     mem.type = COMM_MEM_TYPE_DEVICE;
     void* handle = nullptr;
-    EXPECT_EQ(mgr.RegisterMemory(mem, "init_fail", &handle), HCCL_E_INTERNAL);
+    EXPECT_EQ(mgr.RegisterMemory(&mem, "init_fail", &handle), HCCL_E_INTERNAL);
     EXPECT_EQ(handle, nullptr);
 }
 
@@ -230,11 +230,11 @@ TEST_F(AicpuTsRoceRegedMemMgrTest, Ut_RegisterMemory_When_AliasRegistered_Expect
     mem.type = COMM_MEM_TYPE_DEVICE;
 
     void* parentHandle = nullptr;
-    ASSERT_EQ(mgr.RegisterMemory(mem, "parent", &parentHandle), HCCL_SUCCESS);
+    ASSERT_EQ(mgr.RegisterMemory(&mem, "parent", &parentHandle), HCCL_SUCCESS);
     ASSERT_NE(parentHandle, nullptr);
 
     void* childHandle = nullptr;
-    ASSERT_EQ(mgr.RegisterMemory(mem, "child", &childHandle), HCCL_SUCCESS);
+    ASSERT_EQ(mgr.RegisterMemory(&mem, "child", &childHandle), HCCL_SUCCESS);
     ASSERT_NE(childHandle, nullptr);
     EXPECT_NE(childHandle, parentHandle);
     auto* childBuffer = static_cast<hccl::LocalRdmaRmaBuffer*>(childHandle);
@@ -260,14 +260,14 @@ TEST_F(AicpuTsRoceRegedMemMgrTest, Ut_UnregisterParentFirst_Expect_ParentSoftDel
     mem0.size = 4096U;
     mem0.type = COMM_MEM_TYPE_DEVICE;
     void* parentHandle = nullptr;
-    ASSERT_EQ(mgr.RegisterMemory(mem0, "parent", &parentHandle), HCCL_SUCCESS);
+    ASSERT_EQ(mgr.RegisterMemory(&mem0, "parent", &parentHandle), HCCL_SUCCESS);
     ASSERT_NE(parentHandle, nullptr);
     auto* parentBuf = static_cast<hccl::LocalRdmaRmaBuffer*>(parentHandle);
     EXPECT_FALSE(parentBuf->IsAlias());
 
     // 子集注册（alias）
     void* childHandle = nullptr;
-    ASSERT_EQ(mgr.RegisterMemory(mem0, "child", &childHandle), HCCL_SUCCESS);
+    ASSERT_EQ(mgr.RegisterMemory(&mem0, "child", &childHandle), HCCL_SUCCESS);
     ASSERT_NE(childHandle, nullptr);
     EXPECT_NE(childHandle, parentHandle);
     auto* childBuf = static_cast<hccl::LocalRdmaRmaBuffer*>(childHandle);
@@ -314,7 +314,7 @@ TEST_F(AicpuTsRoceRegedMemMgrTest, Ut_GetAllMemHandles_When_RecordsExist_Expect_
     hccl::NetDevContext netCtx;
     ASSERT_EQ(netCtx.Init(NicType::DEVICE_NIC_TYPE, 0, 0, localIp), HCCL_SUCCESS);
 
-    AicpuTsRoceRegedMemMgr mgr(reinterpret_cast<HcclNetDev>(&netCtx), nullptr);
+    AicpuTsRoceRegedMemMgr memMgr(reinterpret_cast<HcclNetDev>(&netCtx), nullptr);
     HcommMem mem{};
     mem.addr = reinterpret_cast<void*>(0xD000ULL);
     mem.size = 4096U;
@@ -322,25 +322,25 @@ TEST_F(AicpuTsRoceRegedMemMgrTest, Ut_GetAllMemHandles_When_RecordsExist_Expect_
 
     void* handles = nullptr;
     uint32_t count = 99U;
-    EXPECT_EQ(mgr.GetAllMemHandles(&handles, &count), HCCL_SUCCESS);
+    EXPECT_EQ(memMgr.GetAllMemHandles(&handles, &count), HCCL_SUCCESS);
     EXPECT_EQ(count, 0U);
 
     void* h1 = nullptr;
-    ASSERT_EQ(mgr.RegisterMemory(mem, "t1", &h1), HCCL_SUCCESS);
-    EXPECT_EQ(mgr.GetAllMemHandles(&handles, &count), HCCL_SUCCESS);
+    ASSERT_EQ(memMgr.RegisterMemory(&mem, "t1", &h1), HCCL_SUCCESS);
+    EXPECT_EQ(memMgr.GetAllMemHandles(&handles, &count), HCCL_SUCCESS);
     EXPECT_EQ(count, 1U);
     EXPECT_NE(handles, nullptr);
 
     void* h2 = nullptr;
-    ASSERT_EQ(mgr.RegisterMemory(mem, "t2", &h2), HCCL_SUCCESS);
-    EXPECT_EQ(mgr.GetAllMemHandles(&handles, &count), HCCL_SUCCESS);
+    ASSERT_EQ(memMgr.RegisterMemory(&mem, "t2", &h2), HCCL_SUCCESS);
+    EXPECT_EQ(memMgr.GetAllMemHandles(&handles, &count), HCCL_SUCCESS);
     EXPECT_EQ(count, 2U);
 
-    EXPECT_EQ(mgr.UnregisterMemory(h1), HCCL_SUCCESS);
-    EXPECT_EQ(mgr.GetAllMemHandles(&handles, &count), HCCL_SUCCESS);
+    EXPECT_EQ(memMgr.UnregisterMemory(h1), HCCL_SUCCESS);
+    EXPECT_EQ(memMgr.GetAllMemHandles(&handles, &count), HCCL_SUCCESS);
     EXPECT_EQ(count, 1U);
 
-    EXPECT_EQ(mgr.UnregisterMemory(h2), HCCL_SUCCESS);
-    EXPECT_EQ(mgr.GetAllMemHandles(&handles, &count), HCCL_SUCCESS);
+    EXPECT_EQ(memMgr.UnregisterMemory(h2), HCCL_SUCCESS);
+    EXPECT_EQ(memMgr.GetAllMemHandles(&handles, &count), HCCL_SUCCESS);
     EXPECT_EQ(count, 0U);
 }

@@ -93,7 +93,7 @@ private:
     const Hccl::SocketConfig* socketConfig_{nullptr};
     uint32_t devicePhyId_{};
 
-    // 共享 jetty 模式下从 Endpoint::SharedJettyCtx 取得的 PI/CI device 内存指针，
+    // 共享 jetty 模式下从 JettyContext::Ctx 取得的 PI/CI device 内存指针，
     // BuildChannelEntityToDevice 时绑给 transport，使同 endpoint 下多 channel 共用同一 PI/CI。
     void* sharedSqPiPtr_{nullptr};
     void* sharedSqCiPtr_{nullptr};

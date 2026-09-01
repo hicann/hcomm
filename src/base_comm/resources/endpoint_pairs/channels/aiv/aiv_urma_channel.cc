@@ -10,6 +10,7 @@
 
 #include "aiv_urma_channel.h"
 #include "endpoint.h"
+#include "comm_queue_context/jetty_context.h"
 #include "orion_adpt_utils.h"
 #include "acl_device_slab_guard.h"
 #include "shared_jetty_channel_helper.h"
@@ -467,7 +468,7 @@ AivUrmaChannel::AcquireSharedJettyInBuildConnection(const UbConnBuildContext& ct
                         taTimeOut = taTimeOut]() -> std::unique_ptr<Hccl::DevUbConnection> {
         return CreateSharedJettyConnection(rdmaHandle, ctxLoc, ctxRmt, qosPre, protocol, taTimeOut, sqDepth);
     };
-    Endpoint::SharedJettyCtx sharedCtx{};
+    JettyContext::Ctx sharedCtx{};
     CHK_RET(hcomm::AcquireSharedJettyForChannel(endpoint, connection, tempFactory, sharedCtx));
     // 保存共享 PI/CI 指针，供 BuildChannelEntityToDevice 绑给 transport
     sharedSqPiPtr_ = sharedCtx.sqPiPtr;

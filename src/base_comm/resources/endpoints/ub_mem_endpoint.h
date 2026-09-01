@@ -15,21 +15,25 @@
 #include <vector>
 #include <string>
 #include "endpoint.h"
+#include "ub_mem_reged_mem_mgr.h"
 
 namespace hcomm {
 class UbMemEndpoint : public Endpoint {
 public:
     explicit UbMemEndpoint(const EndpointDesc& endpointDesc);
-    // 构造函数
+    ~UbMemEndpoint() noexcept override;
     HcclResult Init() override;
-    HcclResult ServerSocketListen(const uint32_t port) override;
-    HcclResult RegisterMemory(HcommMem mem, const char* memTag, void** memHandle) override;
-    HcclResult UnregisterMemory(void* memHandle) override;
-    HcclResult MemoryExport(void* memHandle, void** memDesc, uint32_t* memDescLen) override;
-    HcclResult MemoryImport(const void* memDesc, uint32_t descLen, HcommMem* outMem) override;
-    HcclResult MemoryUnimport(const void* memDesc, uint32_t descLen) override;
-    HcclResult GetAllMemHandles(void** memHandles, uint32_t* memHandleNum) override;
-    std::shared_ptr<RegedMemMgr> GetRegedMemMgr() override { return regedMemMgr_; }
+    RegedMemMgr* GetRegedMemMgr() override { return regedMemMgr_.get(); }
+    void* GetRdmaHandle() override { return nullptr; }
+    bool IsCtxHandleValid() const override { return false; }
+
+private:
+    HcclResult AttachCache(const MemMgrCacheKey& key, const std::function<std::shared_ptr<RegedMemMgr>()>& creator);
+    HcclResult ReleaseCache();
+
+    std::shared_ptr<UbMemRegedMemMgr> regedMemMgr_{};
+    MemMgrCacheKey cacheKey_{};
+    std::shared_ptr<ProcRegedMemMgrCache> cacheKeepAlive_{};
 };
 
 } // namespace hcomm

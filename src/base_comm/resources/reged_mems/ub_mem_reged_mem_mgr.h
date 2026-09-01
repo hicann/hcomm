@@ -8,8 +8,8 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
-#ifndef UB_MEM_H
-#define UB_MEM_H
+#ifndef UB_MEM_REGED_MEM_MGR_H
+#define UB_MEM_REGED_MEM_MGR_H
 
 #include <memory>
 #include <vector>
@@ -31,18 +31,19 @@ public:
     UbMemRegedMemMgr();
     ~UbMemRegedMemMgr() = default;
 
-    HcclResult RegisterMemory(HcommMem mem, const char* memTag, void** memHandle) override;
+    HcclResult RegisterMemory(const HcommMem* mem, const char* memTag, void** memHandle) override;
     HcclResult UnregisterMemory(void* memHandle) override;
     HcclResult
-    MemoryExport(const EndpointDesc endpointDesc, void* memHandle, void** memDesc, uint32_t* memDescLen) override;
+    MemoryExport(const EndpointDesc& endpointDesc, void* memHandle, void** memDesc, uint32_t* memDescLen) override;
     HcclResult MemoryImport(const void* memDesc, uint32_t descLen, HcommMem* outMem) override;
     HcclResult MemoryUnimport(const void* memDesc, uint32_t descLen) override;
     HcclResult GetAllMemHandles(void** memHandles, uint32_t* memHandleNum) override;
 
 private:
+    mutable std::mutex memMtx_;
     std::unique_ptr<LocalIpcRmaBufferMgr> localIpcRmaBufferMgr_{};
     std::vector<RegedBufferEntry<Hccl::LocalIpcRmaBuffer>> allRegisteredBuffers_;
 };
 } // namespace hcomm
 
-#endif // UB_MEM_H
+#endif // UB_MEM_REGED_MEM_MGR_H

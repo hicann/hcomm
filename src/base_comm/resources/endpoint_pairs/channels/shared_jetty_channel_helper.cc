@@ -60,8 +60,8 @@ static HcclResult AllocAndZeroQueueIndex(void** ptr, uint64_t size, const char* 
 }
 
 // 首次创建共享 jetty：用临时 connection 走完整 jetty 创建流程，分配共享 PI/CI device 内存
-static HcclResult ProvideSharedJettyCtx(
-    const TempConnFactory& tempConnFactory, uint64_t sharedQueueIndexMemSize, Endpoint::SharedJettyCtx& ctx)
+static HcclResult
+ProvideSharedJettyCtx(const TempConnFactory& tempConnFactory, uint64_t sharedQueueIndexMemSize, JettyContext::Ctx& ctx)
 {
     std::unique_ptr<Hccl::DevUbConnection> tempConn = tempConnFactory();
     CHK_SMART_PTR_NULL(tempConn);
@@ -123,7 +123,7 @@ static HcclResult ProvideSharedJettyCtx(
 
 HcclResult AcquireSharedJettyForChannel(
     Endpoint* endpoint, Hccl::DevUbConnection* connection, const TempConnFactory& tempConnFactory,
-    Endpoint::SharedJettyCtx& outCtx)
+    JettyContext::Ctx& outCtx)
 {
     if (endpoint == nullptr || connection == nullptr) {
         return HCCL_E_PARA;
@@ -133,12 +133,14 @@ HcclResult AcquireSharedJettyForChannel(
     // 同 endpoint 下多 channel 共用这块 PI/CI device 内存，避免各 channel 各自分配指向同一 SQ
     // 导致生产者索引无法协调前进、WQE 互相覆盖、doorbell 不前进、notify 超时。
     constexpr uint64_t sharedQueueIndexMemSize = sizeof(void*);
-    auto provideCtx = [&tempConnFactory, sharedQueueIndexMemSize](Endpoint::SharedJettyCtx& ctx) -> HcclResult {
+    auto provideCtx = [&tempConnFactory, sharedQueueIndexMemSize](JettyContext::Ctx& ctx) -> HcclResult {
         return ProvideSharedJettyCtx(tempConnFactory, sharedQueueIndexMemSize, ctx);
     };
 
-    Endpoint::SharedJettyCtx ctx{};
-    HcclResult ret = endpoint->AcquireSharedJetty(provideCtx, ctx);
+    JettyContext::Ctx ctx{};
+    JettyContext* jettyCtx = dynamic_cast<JettyContext*>(endpoint->GetCommQueueContext());
+    CHK_PTR_NULL(jettyCtx);
+    HcclResult ret = jettyCtx->Acquire(provideCtx, ctx);
     CHK_PRT_RET(ret != HCCL_SUCCESS, HCCL_ERROR("[%s] Acquire shared jetty failed, ret[%d].", __func__, ret), ret);
     outCtx = ctx;
 
@@ -147,13 +149,16 @@ HcclResult AcquireSharedJettyForChannel(
     auto releaseCb = [](void* tag) {
         Endpoint* ep = static_cast<Endpoint*>(tag);
         if (ep != nullptr) {
-            (void)ep->ReleaseSharedJetty();
+            JettyContext* jc = dynamic_cast<JettyContext*>(ep->GetCommQueueContext());
+            if (jc != nullptr) {
+                (void)jc->Release();
+            }
         }
     };
     HcclResult injectRet = SetSharedJettyFieldsToConn(connection, ctx, endpoint, std::move(releaseCb));
     if (injectRet != HCCL_SUCCESS) {
         HCCL_ERROR("[%s] SetSharedJettyFields failed, ret[%d], rollback refCount.", __func__, injectRet);
-        (void)endpoint->ReleaseSharedJetty();
+        (void)jettyCtx->Release();
         return injectRet;
     }
     HCCL_INFO(

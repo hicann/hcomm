@@ -17,6 +17,8 @@
 #define protected public
 #include "shared_jetty_channel_helper.h"
 #include "endpoint.h"
+#include "urma_endpoint.h"
+#include "comm_queue_context/jetty_context.h"
 #include "dev_ub_connection.h"
 #include "shared_jetty_connection_adapter.h"
 #include "ut_shared_jetty_test_helper.h"
@@ -27,33 +29,24 @@ using namespace hcomm;
 using namespace Hccl;
 
 namespace {
-class StubEndpointForHelper : public Endpoint {
+class StubEndpointForHelper : public UrmaEndpoint {
 public:
-    StubEndpointForHelper() : Endpoint(MakeDesc()) { ctxHandle_ = reinterpret_cast<void*>(0x1); }
-
-    ~StubEndpointForHelper() override
+    StubEndpointForHelper() : UrmaEndpoint(MakeDesc())
     {
-        if (jettyContext_ != nullptr) {
-            (void)ReleaseSharedJetty();
-        }
+        // GetCommQueueContext 已上移为 Endpoint 基类虚函数（stub 经 UrmaEndpoint override 生效）；
+        // 此处预创建供测试断言，与 GetCommQueueContext() 首调的延迟创建效果等价。
+        jettyContext_ = std::make_unique<JettyContext>();
     }
 
     HcclResult Init() override { return HCCL_SUCCESS; }
-    HcclResult ServerSocketListen(const uint32_t) override { return HCCL_SUCCESS; }
-    HcclResult RegisterMemory(HcommMem, const char*, void**) override { return HCCL_SUCCESS; }
-    HcclResult UnregisterMemory(void*) override { return HCCL_SUCCESS; }
-    HcclResult MemoryExport(void*, void**, uint32_t*) override { return HCCL_SUCCESS; }
-    HcclResult MemoryImport(const void*, uint32_t, HcommMem*) override { return HCCL_SUCCESS; }
-    HcclResult MemoryUnimport(const void*, uint32_t) override { return HCCL_SUCCESS; }
-    HcclResult GetAllMemHandles(void**, uint32_t*) override { return HCCL_SUCCESS; }
 
 private:
     static EndpointDesc MakeDesc()
     {
         EndpointDesc desc{};
-        Hccl::IpAddress localIp("127.0.0.1");
         desc.protocol = COMM_PROTOCOL_UB_CTP;
         desc.commAddr.type = COMM_ADDR_TYPE_IP_V4;
+        Hccl::IpAddress localIp("127.0.0.1");
         desc.commAddr.addr = localIp.GetBinaryAddress().addr;
         desc.loc.locType = ENDPOINT_LOC_TYPE_DEVICE;
         desc.loc.device.devPhyId = 3;
@@ -101,7 +94,7 @@ TEST_F(SharedJettyChannelHelperTest, Ut_AcquireSharedJettyForChannel_When_NullEn
     auto factory = []() {
         return MakeTestJettyConnection();
     };
-    Endpoint::SharedJettyCtx outCtx;
+    JettyContext::Ctx outCtx;
     EXPECT_EQ(AcquireSharedJettyForChannel(nullptr, conn.get(), factory, outCtx), HCCL_E_PARA);
 }
 
@@ -111,7 +104,7 @@ TEST_F(SharedJettyChannelHelperTest, Ut_AcquireSharedJettyForChannel_When_NullCo
     auto factory = []() {
         return MakeTestJettyConnection();
     };
-    Endpoint::SharedJettyCtx outCtx;
+    JettyContext::Ctx outCtx;
     EXPECT_EQ(AcquireSharedJettyForChannel(&endpoint, nullptr, factory, outCtx), HCCL_E_PARA);
 }
 
@@ -122,7 +115,7 @@ TEST_F(SharedJettyChannelHelperTest, Ut_AcquireSharedJettyForChannel_When_FirstC
     uint32_t factoryCallCount = 0;
     auto factory = MakeCountingFactory(factoryCallCount);
 
-    Endpoint::SharedJettyCtx outCtx;
+    JettyContext::Ctx outCtx;
     EXPECT_EQ(AcquireSharedJettyForChannel(&endpoint, conn.get(), factory, outCtx), HCCL_SUCCESS);
     EXPECT_EQ(factoryCallCount, 1U);
     EXPECT_EQ(conn->jettyMode_, DevUbConnection::JettyMode::EXTERNAL_INJECT);
@@ -136,7 +129,7 @@ TEST_F(SharedJettyChannelHelperTest, Ut_AcquireSharedJettyForChannel_When_CacheH
     uint32_t factoryCallCount = 0;
     auto factory = MakeCountingFactory(factoryCallCount);
 
-    Endpoint::SharedJettyCtx outCtx;
+    JettyContext::Ctx outCtx;
     ASSERT_EQ(AcquireSharedJettyForChannel(&endpoint, conn1.get(), factory, outCtx), HCCL_SUCCESS);
     EXPECT_EQ(factoryCallCount, 1U);
 
@@ -153,11 +146,11 @@ TEST_F(SharedJettyChannelHelperTest, Ut_AcquireSharedJettyForChannel_When_Releas
         return MakeTestJettyConnection();
     };
 
-    Endpoint::SharedJettyCtx outCtx;
+    JettyContext::Ctx outCtx;
     ASSERT_EQ(AcquireSharedJettyForChannel(&endpoint, conn.get(), factory, outCtx), HCCL_SUCCESS);
 
-    EXPECT_EQ(endpoint.ReleaseSharedJetty(), HCCL_SUCCESS);
-    EXPECT_EQ(endpoint.ReleaseSharedJetty(), HCCL_SUCCESS);
+    EXPECT_EQ(endpoint.jettyContext_->Release(), HCCL_SUCCESS);
+    EXPECT_EQ(endpoint.jettyContext_->Release(), HCCL_SUCCESS);
 }
 
 TEST_F(SharedJettyChannelHelperTest, Ut_AcquireSharedJettyForChannel_When_ReleaseAndReacquire_Expect_Success)
@@ -168,9 +161,9 @@ TEST_F(SharedJettyChannelHelperTest, Ut_AcquireSharedJettyForChannel_When_Releas
     uint32_t factoryCallCount = 0;
     auto factory = MakeCountingFactory(factoryCallCount);
 
-    Endpoint::SharedJettyCtx outCtx;
+    JettyContext::Ctx outCtx;
     ASSERT_EQ(AcquireSharedJettyForChannel(&endpoint, conn1.get(), factory, outCtx), HCCL_SUCCESS);
-    EXPECT_EQ(endpoint.ReleaseSharedJetty(), HCCL_SUCCESS);
+    EXPECT_EQ(endpoint.jettyContext_->Release(), HCCL_SUCCESS);
 
     EXPECT_EQ(AcquireSharedJettyForChannel(&endpoint, conn2.get(), factory, outCtx), HCCL_SUCCESS);
     EXPECT_EQ(factoryCallCount, 2U);

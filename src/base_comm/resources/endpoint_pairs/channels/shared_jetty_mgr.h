@@ -29,7 +29,7 @@ namespace hcomm {
  *
  *       endpointHandle 作为不透明 key（builtin 路径为 Endpoint*，plugin 路径为 PluginEndpointCtx*），
  *       本管理器不做 static_cast 解引用，plugin/builtin 路径均安全。
- *       底层 jetty 句柄的缓存与引用计数由 Endpoint::JettyContext 管理（见 endpoint.h），
+ *       底层 jetty 句柄的缓存与引用计数由 JettyContext 管理（见 comm_queue_context/jetty_context.h），
  *       本管理器仅维护 channelHandle 集合用于销毁校验，不持有 jetty 句柄。
  *
  *       Endpoint/plugin 析构时调 UnregisterEndpoint 摘除记录，避免 endpointHandle 复用导致误判。

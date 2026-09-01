@@ -13,6 +13,7 @@
 
 #include <functional>
 #include "endpoint.h"
+#include "comm_queue_context/jetty_context.h"
 
 namespace hcomm {
 
@@ -32,17 +33,17 @@ namespace hcomm {
  * @param[in] rawConnection 不透明 connection 指针（构造时传 JettyMode::EXTERNAL_INJECT）
  * @param[in] ctx 已创建/复用的共享 jetty 上下文
  * @param[in] endpointTag Endpoint 不透明标签（透传给 releaseCb）
- * @param[in] releaseCb connection 销毁时回调（由调用方注入 Endpoint::ReleaseSharedJetty）
+ * @param[in] releaseCb connection 销毁时回调（由调用方注入 jetty 减引用）
  */
 HcclResult SetSharedJettyFieldsToConn(
-    void* rawConnection, const Endpoint::SharedJettyCtx& ctx, void* endpointTag, std::function<void(void*)> releaseCb);
+    void* rawConnection, const JettyContext::Ctx& ctx, void* endpointTag, std::function<void(void*)> releaseCb);
 
 /**
  * @brief 从已完成 jetty 创建的 connection 提取衍生字段（首次创建路径）
  * @param[in] rawConnection 不透明 connection 指针
  * @param[out] ctx 输出的 jetty 上下文（仅 jetty 相关字段, refCount 不填）
  */
-HcclResult ExtractJettyInfoFromConn(void* rawConnection, Endpoint::SharedJettyCtx& ctx);
+HcclResult ExtractJettyInfoFromConn(void* rawConnection, JettyContext::Ctx& ctx);
 
 /**
  * @brief 分离 connection 的 jetty 所有权，析构不再销毁 jetty（首次创建后调用）

@@ -265,6 +265,11 @@ TEST_F(DeviceResetCallbackTest, Ut_When_RdmaHandleManagerDeInit_WithJfcHandle_Ex
 TEST_F(DeviceResetCallbackTest, Ut_When_RdmaHandleManagerDeInit_WithMixedHandles_Expect_AllCleaned)
 {
     auto& mgr = Hccl::RdmaHandleManager::GetInstance();
+    // 隔离历史残留：前置用例经 mock handle（未登记 rdmaHandleMap，DeInit 收集不到）真实调用
+    // GetJfcHandle/GetDieAndFuncId 会在 per-handle map 留下条目；本用例对这三个 map 做 size 全量断言，先清空
+    mgr.jfcHandleMap.clear();
+    mgr.DieAndFuncIdMap.clear();
+    mgr.RtpEnableMap.clear();
     u32 devPhyId = 0;
     RdmaHandle fakeRdmaHandle = (RdmaHandle)0xEEEE;
     RdmaHandle fakeUbHandle = (RdmaHandle)0xFFFF;

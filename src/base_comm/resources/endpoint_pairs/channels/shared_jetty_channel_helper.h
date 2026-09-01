@@ -13,6 +13,7 @@
 
 #include "hcomm_res_defs.h"
 #include "endpoint.h"
+#include "comm_queue_context/jetty_context.h"
 #include "dev_ub_connection.h"
 #include "shared_jetty_connection_adapter.h"
 #include <functional>
@@ -40,7 +41,7 @@ using TempConnFactory = std::function<std::unique_ptr<Hccl::DevUbConnection>()>;
  */
 HcclResult AcquireSharedJettyForChannel(
     Endpoint* endpoint, Hccl::DevUbConnection* connection, const TempConnFactory& tempConnFactory,
-    Endpoint::SharedJettyCtx& outCtx);
+    JettyContext::Ctx& outCtx);
 
 } // namespace hcomm
 

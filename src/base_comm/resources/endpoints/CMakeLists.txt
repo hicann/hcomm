@@ -16,8 +16,6 @@ set(src_list
     aicpu_ts_roce_endpoint.cc
     aicputs_hccs_endpoint.cc
     endpoint.cc
-    jetty_context.cc
-    uboe_ub_rtp_endpoint_helper.cc
     uboe_endpoint.cc
     ub_rtp_endpoint.cc
 )
@@ -32,6 +30,9 @@ if(TARGET hcomm_base_obj)
     )
 endif()
 
+add_subdirectory(mgr)
 add_subdirectory(server_socket)
+add_subdirectory(server_socket_context)
+add_subdirectory(comm_queue_context)
 add_subdirectory(net_dev)
 add_subdirectory(dfx)

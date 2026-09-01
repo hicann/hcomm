@@ -11,19 +11,34 @@
 #ifndef UB_RTP_ENDPOINT_H
 #define UB_RTP_ENDPOINT_H
 
-#include "uboe_ub_rtp_endpoint_helper.h"
+#include <memory>
+#include "endpoint.h"
+#include "server_socket_context/ub_rtp_uboe_server_socket_context.h"
+#include "ub_reged_mem_mgr.h"
 
 namespace hcomm {
 /**
  * @note 职责：AICPU通信引擎+UB_RTP协议的通信设备Endpoint，管理通信设备上下文，以及设备上的注册内存。
  *       UB_RTP的Init直接使用EID地址（不做IP→EID转换），rdmaHandle通过EID直接获取。
  */
-class UbRtpEndpoint : public UboeUbRtpEndpointHelper {
+class UbRtpEndpoint : public Endpoint {
 public:
     explicit UbRtpEndpoint(const EndpointDesc& endpointDesc);
-    ~UbRtpEndpoint() = default;
+    ~UbRtpEndpoint() noexcept override;
 
     HcclResult Init() override;
+    RegedMemMgr* GetRegedMemMgr() override { return regedMemMgr_.get(); }
+    void* GetRdmaHandle() override { return ctxHandle_; }
+    bool IsCtxHandleValid() const override;
+    ServerSocketContext* GetServerSocketContext() override { return &serverSocketContext_; }
+
+private:
+    HcclResult ReleaseEndpointCtx();
+
+    void* ctxHandle_{nullptr};
+    std::shared_ptr<EndpointCtx> endpointCtx_{};
+    std::shared_ptr<UbRegedMemMgr> regedMemMgr_{};
+    UbRtpUboeServerSocketContext serverSocketContext_{}; // no-op 监听语义
 };
 
 } // namespace hcomm

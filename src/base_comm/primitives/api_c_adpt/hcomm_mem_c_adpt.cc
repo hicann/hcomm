@@ -10,6 +10,7 @@
 
 #include "hcomm_c_adpt.h"
 #include "hcomm_c_adpt_common.h"
+#include "hcomm_res_mgr.h"
 #include "hcomm_result_defs.h"
 #include "log.h"
 #include "endpoint.h"
@@ -18,57 +19,78 @@
 #include "hcomm_res_defs.h"
 #include "hcomm_res.h"
 #include "hcomm_mem_alloc.h"
+#include "hccs_reged_mem_mgr.h"
 
 using namespace hcomm;
+
+namespace {
+EndpointMgr& GetEndpointMgrWithInit()
+{
+    (void)HcommResMgrInit();
+    return HcommResMgr::GetInstance().GetEndpointMgr();
+}
+} // namespace
 
 HcommResult
 HcommMemReg(EndpointHandle endpointHandle, const char* memTag, const CommMem* mem, HcommMemHandle* memHandle)
 {
-    auto endpoint = GetEndpointMap().GetEndpoint(endpointHandle);
+    auto endpoint = GetEndpointMgrWithInit().Get(endpointHandle);
     CHK_PRT_RET(
         endpoint == nullptr, HCCL_ERROR("[%s] endpoint not found, endpointHandle[%p]", __func__, endpointHandle),
         HCCL_E_NOT_FOUND);
-    return static_cast<HcclResult>(
-        endpoint->GetNicOps()->registerMemory(endpoint->GetNicCtx(), mem, memTag, reinterpret_cast<void**>(memHandle)));
+    auto mgr = endpoint->GetRegedMemMgr();
+    CHK_PTR_NULL(mgr);
+    CHK_RET(RefreshEndpointContext(endpoint->GetEndpointDesc()));
+    return static_cast<HcclResult>(mgr->RegisterMemory(mem, memTag, reinterpret_cast<void**>(memHandle)));
 }
 
 HcommResult HcommMemUnreg(EndpointHandle endpointHandle, HcommMemHandle memHandle)
 {
-    auto endpoint = GetEndpointMap().GetEndpoint(endpointHandle);
+    auto endpoint = GetEndpointMgrWithInit().Get(endpointHandle);
     CHK_PRT_RET(
         endpoint == nullptr, HCCL_ERROR("[%s] endpoint not found, endpointHandle[%p]", __func__, endpointHandle),
         HCCL_E_NOT_FOUND);
-    return static_cast<HcclResult>(endpoint->GetNicOps()->unregisterMemory(endpoint->GetNicCtx(), memHandle));
+    auto mgr = endpoint->GetRegedMemMgr();
+    CHK_PTR_NULL(mgr);
+    CHK_RET(RefreshEndpointContext(endpoint->GetEndpointDesc()));
+    return static_cast<HcclResult>(mgr->UnregisterMemory(memHandle));
 }
 
 HcommResult
 HcommMemExport(EndpointHandle endpointHandle, HcommMemHandle memHandle, void** memDesc, uint32_t* memDescLen)
 {
-    auto endpoint = GetEndpointMap().GetEndpoint(endpointHandle);
+    auto endpoint = GetEndpointMgrWithInit().Get(endpointHandle);
     CHK_PRT_RET(
         endpoint == nullptr, HCCL_ERROR("[%s] endpoint not found, endpointHandle[%p]", __func__, endpointHandle),
         HCCL_E_NOT_FOUND);
-    return static_cast<HcclResult>(
-        endpoint->GetNicOps()->memoryExport(endpoint->GetNicCtx(), memHandle, memDesc, memDescLen));
+    auto mgr = endpoint->GetRegedMemMgr();
+    CHK_PTR_NULL(mgr);
+    CHK_RET(RefreshEndpointContext(endpoint->GetEndpointDesc()));
+    return static_cast<HcclResult>(mgr->MemoryExport(endpoint->GetEndpointDesc(), memHandle, memDesc, memDescLen));
 }
 
 HcommResult HcommMemImport(EndpointHandle endpointHandle, const void* memDesc, uint32_t descLen, CommMem* outMem)
 {
-    auto endpoint = GetEndpointMap().GetEndpoint(endpointHandle);
+    auto endpoint = GetEndpointMgrWithInit().Get(endpointHandle);
     CHK_PRT_RET(
         endpoint == nullptr, HCCL_ERROR("[%s] endpoint not found, endpointHandle[%p]", __func__, endpointHandle),
         HCCL_E_NOT_FOUND);
-    return static_cast<HcclResult>(
-        endpoint->GetNicOps()->memoryImport(endpoint->GetNicCtx(), memDesc, descLen, outMem));
+    auto mgr = endpoint->GetRegedMemMgr();
+    CHK_PTR_NULL(mgr);
+    CHK_RET(RefreshEndpointContext(endpoint->GetEndpointDesc()));
+    return static_cast<HcclResult>(mgr->MemoryImport(memDesc, descLen, outMem));
 }
 
 HcommResult HcommMemUnimport(EndpointHandle endpointHandle, const void* memDesc, uint32_t descLen)
 {
-    auto endpoint = GetEndpointMap().GetEndpoint(endpointHandle);
+    auto endpoint = GetEndpointMgrWithInit().Get(endpointHandle);
     CHK_PRT_RET(
         endpoint == nullptr, HCCL_ERROR("[%s] endpoint not found, endpointHandle[%p]", __func__, endpointHandle),
         HCCL_E_NOT_FOUND);
-    return static_cast<HcclResult>(endpoint->GetNicOps()->memoryUnimport(endpoint->GetNicCtx(), memDesc, descLen));
+    auto mgr = endpoint->GetRegedMemMgr();
+    CHK_PTR_NULL(mgr);
+    CHK_RET(RefreshEndpointContext(endpoint->GetEndpointDesc()));
+    return static_cast<HcclResult>(mgr->MemoryUnimport(memDesc, descLen));
 }
 
 /* 暂未实现 */
@@ -77,12 +99,18 @@ HcommResult HcommMemGrant(EndpointHandle endpointHandle, const HcommMemGrantInfo
     CHK_PTR_NULL(remoteGrantInfo);
     HCCL_INFO("[%s] START. endpointHandle[0x%llx].", __func__, endpointHandle);
 
-    auto endpoint = GetEndpointMap().GetEndpoint(endpointHandle);
+    auto endpoint = HcommResMgr::GetInstance().GetEndpointMgr().Get(endpointHandle);
     CHK_PRT_RET(
         endpoint == nullptr, HCCL_ERROR("[%s] endpoint not found, endpointHandle[0x%llx]", __func__, endpointHandle),
         HCCL_E_NOT_FOUND);
-    CHK_RET(endpoint->MemoryGrant(remoteGrantInfo));
-    return HCCL_SUCCESS;
+    auto mgr = endpoint->GetRegedMemMgr();
+    CHK_PTR_NULL(mgr);
+    // MemoryGrant 由 HccsRegedMemMgr 承载；非 HCCS 类 mgr 无此能力，跳过（与下移前基类默认 SUCCESS 行为一致）
+    auto* hccsMgr = dynamic_cast<HccsRegedMemMgr*>(mgr);
+    if (hccsMgr == nullptr) {
+        return HCCL_SUCCESS;
+    }
+    return hccsMgr->MemoryGrant(remoteGrantInfo);
 }
 
 /* 暂未实现 */
@@ -98,11 +126,13 @@ HcommResult HcommMemGetAllMemHandles(EndpointHandle endpointHandle, void** memHa
     CHK_PTR_NULL(memHandles);
     CHK_PTR_NULL(memHandleNum);
 
-    auto endpoint = GetEndpointMap().GetEndpoint(endpointHandle);
+    auto endpoint = HcommResMgr::GetInstance().GetEndpointMgr().Get(endpointHandle);
     CHK_PRT_RET(
         endpoint == nullptr, HCCL_ERROR("[%s] endpoint not found, endpointHandle[0x%llx]", __func__, endpointHandle),
         HCCL_E_NOT_FOUND);
-    CHK_RET(endpoint->GetAllMemHandles(memHandles, memHandleNum));
+    auto mgr = endpoint->GetRegedMemMgr();
+    CHK_PTR_NULL(mgr);
+    CHK_RET(mgr->GetAllMemHandles(memHandles, memHandleNum));
     return HCCL_SUCCESS;
 }
 

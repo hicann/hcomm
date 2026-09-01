@@ -19,6 +19,7 @@
 #include "hccl/hccl_types.h"
 #include "hcomm_res_defs.h"
 #include "rdma_handle_manager.h"
+#include "comm_queue_context.h"
 
 namespace hcomm {
 
@@ -27,7 +28,7 @@ namespace hcomm {
  *       Endpoint（控制面）持 unique_ptr<JettyContext> 延迟创建，控制面职责不因共享 jetty 特性膨胀。
  *       引用计数 + condition_variable 管理同 endpoint 下多 channel 复用，替代 sleep 轮询。
  */
-class JettyContext {
+class JettyContext : public CommQueueContext {
 public:
     struct SharedRemoteJettyCtx {
         std::vector<uint8_t> remoteQpKey{};

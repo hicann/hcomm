@@ -22,7 +22,7 @@ namespace hcomm {
 //       若将来 plugin 路径复用此函数，需将 acquireRemoteCb/publishRemoteCb 的构建提升到调用方，
 //       避免适配层直接强转 void* 为 Endpoint* 造成类型不匹配。
 HcclResult SetSharedJettyFieldsToConn(
-    void* rawConnection, const Endpoint::SharedJettyCtx& ctx, void* endpointTag, std::function<void(void*)> releaseCb)
+    void* rawConnection, const JettyContext::Ctx& ctx, void* endpointTag, std::function<void(void*)> releaseCb)
 {
     if (rawConnection == nullptr || endpointTag == nullptr) {
         return HCCL_E_PARA;
@@ -31,16 +31,19 @@ HcclResult SetSharedJettyFieldsToConn(
     auto acquireRemoteCb = [endpoint](
                                const uint8_t* remoteQpKey, uint32_t keySize, bool& needImport,
                                Hccl::TargetJettyHandle& handle, void*& handlePtr, uint32_t& tpn) -> HcclResult {
+        JettyContext* jc = dynamic_cast<JettyContext*>(endpoint->GetCommQueueContext());
+        CHK_PTR_NULL(jc);
         uint64_t cachedHandle = 0;
-        HcclResult ret
-            = endpoint->AcquireSharedRemoteJetty(remoteQpKey, keySize, needImport, cachedHandle, handlePtr, tpn);
+        HcclResult ret = jc->AcquireSharedRemoteJetty(remoteQpKey, keySize, needImport, cachedHandle, handlePtr, tpn);
         handle = static_cast<Hccl::TargetJettyHandle>(cachedHandle);
         return ret;
     };
     auto publishRemoteCb = [endpoint](
                                const uint8_t* remoteQpKey, uint32_t keySize, Hccl::TargetJettyHandle handle,
                                void* handlePtr, uint32_t tpn) -> HcclResult {
-        return endpoint->PublishSharedRemoteJetty(remoteQpKey, keySize, static_cast<uint64_t>(handle), handlePtr, tpn);
+        JettyContext* jc = dynamic_cast<JettyContext*>(endpoint->GetCommQueueContext());
+        CHK_PTR_NULL(jc);
+        return jc->PublishSharedRemoteJetty(remoteQpKey, keySize, static_cast<uint64_t>(handle), handlePtr, tpn);
     };
     auto* conn = static_cast<Hccl::DevUbConnection*>(rawConnection);
     return conn->SetSharedJettyFields(
@@ -49,7 +52,7 @@ HcclResult SetSharedJettyFieldsToConn(
         std::move(acquireRemoteCb), std::move(publishRemoteCb));
 }
 
-HcclResult ExtractJettyInfoFromConn(void* rawConnection, Endpoint::SharedJettyCtx& ctx)
+HcclResult ExtractJettyInfoFromConn(void* rawConnection, JettyContext::Ctx& ctx)
 {
     if (rawConnection == nullptr) {
         return HCCL_E_PARA;

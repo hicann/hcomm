@@ -443,7 +443,7 @@ HcclResult MyRank::Init(HcclMem cclBuffer, const uint32_t opExpansionMode, uint3
     }
 
     // 创建端点管理器
-    EXCEPTION_CATCH(endpointMgr_ = std::make_unique<hcomm::EndpointMgr>(), return HCCL_E_PTR);
+    EXCEPTION_CATCH(endpointMgr_ = std::make_unique<hccl::EndpointMgr>(), return HCCL_E_PTR);
 
     // rankPairMgr_初始化
     EXCEPTION_CATCH(rankPairMgr_ = std::make_unique<RankPairMgr>(rankIpPortMap_), return HCCL_E_PTR);

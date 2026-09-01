@@ -18,7 +18,9 @@
 #include "hccl_types.h"
 #include "adapter_rts_common.h"
 #include "endpoint.h"
+#include "urma_endpoint.h"
 #include "proc_reged_mem_mgr_cache.h"
+#include "log.h"
 #define private public
 #include "endpoint_monitor.h"
 #undef private
@@ -37,17 +39,35 @@ public:
     EndpointMonitor& g_monitor = *EndpointMonitor::GetHolder(0);
 };
 
-class UtStubEndpoint : public Endpoint {
+// GetAsyncEvents 已下移为 UrmaEndpoint 自有方法（基类无默认实现），monitor 按具体类型 downcast 访问；
+// 桩改继承 UrmaEndpoint，使 ProcessUbAsyncEvents 的 dynamic_cast 命中，GetAsyncEvents 经 MOCKER_CPP 打桩
+class UtStubEndpoint : public UrmaEndpoint {
 public:
-    explicit UtStubEndpoint(const EndpointDesc& endpointDesc) : Endpoint(endpointDesc) {}
-
-    using Endpoint::ReleaseCache;
+    explicit UtStubEndpoint(const EndpointDesc& endpointDesc) : UrmaEndpoint(endpointDesc) {}
+    ~UtStubEndpoint() noexcept override { (void)ReleaseCache(); }
 
     void HoldCacheForTest() { cacheKeepAlive_ = ProcRegedMemMgrCache::GetHolder(); }
+
+    // 对齐派生类 ReleaseCache 形态：判空返 HCCL_E_PTR，正常路径返 HCCL_SUCCESS
+    HcclResult ReleaseCache()
+    {
+        if (cacheKeepAlive_ == nullptr) {
+            HCCL_WARNING("[UtStubEndpoint][%s] cacheKeepAlive_ is null, nothing to release", __func__);
+            return HCCL_E_PTR;
+        }
+        cacheKeepAlive_->Release(cacheKey_);
+        cacheKeepAlive_.reset();
+        return HCCL_SUCCESS;
+    }
 
     HcclResult Init() { return HCCL_SUCCESS; }
 
     HcclResult ServerSocketListen(const uint32_t port) { return HCCL_SUCCESS; }
+
+    // Endpoint 新增纯虚接口，UtStubEndpoint 提供最小实现
+    RegedMemMgr* GetRegedMemMgr() override { return nullptr; }
+    void* GetRdmaHandle() override { return nullptr; }
+    bool IsCtxHandleValid() const override { return false; }
 
     // 注册内存
     HcclResult RegisterMemory(HcommMem mem, const char* memTag, void** memHandle) { return HCCL_SUCCESS; }
@@ -66,13 +86,9 @@ public:
 
     HcclResult GetAllMemHandles(void** memHandles, uint32_t* memHandleNum) { return HCCL_SUCCESS; }
 
-    HcclResult GetAsyncEvents(uint32_t devPhyId, struct AsyncEvent events[], uint32_t& num)
-    {
-        (void)devPhyId;
-        (void)events;
-        (void)num;
-        return HCCL_SUCCESS;
-    }
+private:
+    MemMgrCacheKey cacheKey_{};
+    std::shared_ptr<ProcRegedMemMgrCache> cacheKeepAlive_{};
 };
 
 TEST_F(EndpointMonitorTest, Ut_PrintUbAsyncEventsContext_When_ContextLenExceedMax_Expect_Return)
@@ -120,7 +136,7 @@ TEST_F(EndpointMonitorTest, Ut_ProcessUbAsyncEvents_CoverAllBranches)
     EXPECT_EQ(g_monitor.RegisterToEndpointMonitor(0, nullptr), HCCL_E_PTR);
 
     MOCKER(hrtGetDevicePhyIdByIndex).stubs().with(mockcpp::any(), outBound(devPhyId)).will(returnValue(HCCL_SUCCESS));
-    MOCKER_CPP_VIRTUAL(&myUtEndpoint, &UtStubEndpoint::GetAsyncEvents).stubs().will(returnValue(HCCL_E_NOT_SUPPORT));
+    MOCKER_CPP(&UrmaEndpoint::GetAsyncEvents).stubs().will(returnValue(HCCL_E_NOT_SUPPORT));
     EXPECT_EQ(g_monitor.RegisterToEndpointMonitor(0, reinterpret_cast<EndpointHandle>(&myUtEndpoint)), HCCL_SUCCESS);
     EXPECT_EQ(g_monitor.UnRegisterToEndpointMonitor(), HCCL_SUCCESS);
     EXPECT_EQ(g_monitor.epHandleSet_.size(), 0);
@@ -128,7 +144,7 @@ TEST_F(EndpointMonitorTest, Ut_ProcessUbAsyncEvents_CoverAllBranches)
 
     g_monitor.epHandleSet_.emplace(reinterpret_cast<u64>(&myUtEndpoint));
     MOCKER(hrtGetDevicePhyIdByIndex).stubs().with(mockcpp::any(), outBound(devPhyId)).will(returnValue(HCCL_SUCCESS));
-    MOCKER_CPP_VIRTUAL(&myUtEndpoint, &UtStubEndpoint::GetAsyncEvents)
+    MOCKER_CPP(&UrmaEndpoint::GetAsyncEvents)
         .stubs()
         .will(returnValue(HCCL_SUCCESS))
         .then(returnValue(HCCL_E_NOT_SUPPORT))
@@ -218,7 +234,7 @@ TEST_F(EndpointMonitorTest, Ut_ReleaseCache_When_NotAttached_Expect_SkipAndNotCa
     EndpointDesc desc;
     UtStubEndpoint ep(desc);
     MOCKER_CPP(&ProcRegedMemMgrCache::GetHolder).expects(never());
-    ep.ReleaseCache();
+    EXPECT_EQ(ep.ReleaseCache(), HCCL_E_PTR);
 }
 
 TEST_F(EndpointMonitorTest, Ut_ReleaseCache_When_Attached_Expect_ReleaseWithoutGetHolder)
@@ -227,7 +243,7 @@ TEST_F(EndpointMonitorTest, Ut_ReleaseCache_When_Attached_Expect_ReleaseWithoutG
     UtStubEndpoint ep(desc);
     ep.HoldCacheForTest();
     MOCKER_CPP(&ProcRegedMemMgrCache::GetHolder).expects(never());
-    ep.ReleaseCache();
+    EXPECT_EQ(ep.ReleaseCache(), HCCL_SUCCESS);
 }
 
 TEST_F(EndpointMonitorTest, Ut_Dtor_When_CacheAttached_Expect_NotCallGetHolder)

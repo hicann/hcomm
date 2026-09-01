@@ -11,18 +11,38 @@
 #ifndef UBOE_ENDPOINT_H
 #define UBOE_ENDPOINT_H
 
-#include "uboe_ub_rtp_endpoint_helper.h"
+#include <memory>
+#include "endpoint.h"
+#include "server_socket_context/ub_rtp_uboe_server_socket_context.h"
+#include "ub_reged_mem_mgr.h"
 
 namespace hcomm {
 /**
  * @note 职责：AICPU通信引擎+UBOE协议的通信设备Endpoint，管理通信设备上下文，以及设备上的注册内存。
  *       UBOE的Init需要做IP→EID转换。
  */
-class UboeEndpoint : public UboeUbRtpEndpointHelper {
+class UboeEndpoint : public Endpoint {
 public:
     explicit UboeEndpoint(const EndpointDesc& endpointDesc);
+    ~UboeEndpoint() noexcept override;
 
     HcclResult Init() override;
+    RegedMemMgr* GetRegedMemMgr() override { return regedMemMgr_.get(); }
+    void* GetRdmaHandle() override { return ctxHandle_; }
+    bool IsCtxHandleValid() const override;
+    ServerSocketContext* GetServerSocketContext() override { return &serverSocketContext_; }
+
+private:
+    HcclResult ReleaseEndpointCtx();
+    HcclResult AttachCache(const MemMgrCacheKey& key, const std::function<std::shared_ptr<RegedMemMgr>()>& creator);
+    HcclResult ReleaseCache();
+
+    void* ctxHandle_{nullptr};
+    std::shared_ptr<EndpointCtx> endpointCtx_{};
+    std::shared_ptr<UbRegedMemMgr> regedMemMgr_{};
+    UbRtpUboeServerSocketContext serverSocketContext_{}; // no-op 监听语义
+    MemMgrCacheKey cacheKey_{};
+    std::shared_ptr<ProcRegedMemMgrCache> cacheKeepAlive_{};
 };
 } // namespace hcomm
 

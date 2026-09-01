@@ -21,7 +21,7 @@
 #define private public
 #define protected public
 
-#include "roce_mem.h"
+#include "roce_reged_mem_mgr.h"
 
 #undef protected
 #undef private
@@ -56,7 +56,7 @@ static uint64_t GetRef(Mgr& mgr, const Key& key)
 
 TEST_F(RoceRegedMemMgrTest, Ut_GetParamsFromMemDesc_When_DescLenTooSmall_Expect_Return_Error)
 {
-    std::shared_ptr<RoceRegedMemMgr> roceRegedMemMgrPtr = std::make_shared<RoceRegedMemMgr>();
+    std::shared_ptr<RoceRegedMemMgr> roceRegedMemMgrPtr = std::make_shared<RoceRegedMemMgr>(nullptr);
     EndpointDesc endpointDesc;
     Hccl::ExchangeRdmaBufferDto dto;
 
@@ -70,14 +70,14 @@ TEST_F(RoceRegedMemMgrTest, Ut_GetParamsFromMemDesc_When_DescLenTooSmall_Expect_
 // 父+子集注册 → 先解注册子(alias) → 再解注册父
 TEST_F(RoceRegedMemMgrTest, ut_RoceRegedMemMgr_When_ParentChild_Expect_UnregisterChildFirst)
 {
-    RoceRegedMemMgr roceRegedMemMgr{};
+    RoceRegedMemMgr roceRegedMemMgr{nullptr};
     HcommMem mem0;
     mem0.type = CommMemType::COMM_MEM_TYPE_DEVICE;
     mem0.addr = (void*)0x1000;
     mem0.size = 4096;
     std::string memTag0 = "parent";
     void* memHandle0 = nullptr;
-    HcclResult ret = roceRegedMemMgr.RegisterMemory(mem0, memTag0.c_str(), &memHandle0);
+    HcclResult ret = roceRegedMemMgr.RegisterMemory(&mem0, memTag0.c_str(), &memHandle0);
     EXPECT_EQ(ret, HCCL_SUCCESS);
 
     auto* parentBuf = static_cast<Hccl::LocalRdmaRmaBuffer*>(memHandle0);
@@ -92,7 +92,7 @@ TEST_F(RoceRegedMemMgrTest, ut_RoceRegedMemMgr_When_ParentChild_Expect_Unregiste
     mem1.size = 1024;
     std::string memTag1 = "child";
     void* memHandle1 = nullptr;
-    ret = roceRegedMemMgr.RegisterMemory(mem1, memTag1.c_str(), &memHandle1);
+    ret = roceRegedMemMgr.RegisterMemory(&mem1, memTag1.c_str(), &memHandle1);
     EXPECT_EQ(ret, HCCL_SUCCESS);
     EXPECT_NE(memHandle1, memHandle0);
     EXPECT_EQ(GetRef(*roceRegedMemMgr.localRdmaRmaBufferMgr_, parentKey), 2u);
@@ -113,23 +113,23 @@ TEST_F(RoceRegedMemMgrTest, ut_RoceRegedMemMgr_When_ParentChild_Expect_Unregiste
 // 多次注册同一范围，各自解注册
 TEST_F(RoceRegedMemMgrTest, ut_RoceRegedMemMgr_When_MultipleSameRange_Expect_AllSuccess)
 {
-    RoceRegedMemMgr roceRegedMemMgr{};
+    RoceRegedMemMgr roceRegedMemMgr{nullptr};
     HcommMem mem;
     mem.type = CommMemType::COMM_MEM_TYPE_DEVICE;
     mem.addr = (void*)0x5000;
     mem.size = 2048;
 
     void *h1 = nullptr, *h2 = nullptr, *h3 = nullptr;
-    EXPECT_EQ(roceRegedMemMgr.RegisterMemory(mem, "t1", &h1), HCCL_SUCCESS);
+    EXPECT_EQ(roceRegedMemMgr.RegisterMemory(&mem, "t1", &h1), HCCL_SUCCESS);
     auto* parentBuf = static_cast<Hccl::LocalRdmaRmaBuffer*>(h1);
     hccl::BufferKey<uintptr_t, u64> parentKey(parentBuf->GetAddr(), static_cast<uint64_t>(parentBuf->GetSize()));
     EXPECT_EQ(GetRef(*roceRegedMemMgr.localRdmaRmaBufferMgr_, parentKey), 1u);
 
-    EXPECT_EQ(roceRegedMemMgr.RegisterMemory(mem, "t2", &h2), HCCL_SUCCESS);
+    EXPECT_EQ(roceRegedMemMgr.RegisterMemory(&mem, "t2", &h2), HCCL_SUCCESS);
     EXPECT_NE(h2, h1);
     EXPECT_EQ(GetRef(*roceRegedMemMgr.localRdmaRmaBufferMgr_, parentKey), 2u);
 
-    EXPECT_EQ(roceRegedMemMgr.RegisterMemory(mem, "t3", &h3), HCCL_SUCCESS);
+    EXPECT_EQ(roceRegedMemMgr.RegisterMemory(&mem, "t3", &h3), HCCL_SUCCESS);
     EXPECT_NE(h3, h1);
     EXPECT_EQ(GetRef(*roceRegedMemMgr.localRdmaRmaBufferMgr_, parentKey), 3u);
 
@@ -146,7 +146,7 @@ TEST_F(RoceRegedMemMgrTest, ut_RoceRegedMemMgr_When_MultipleSameRange_Expect_All
 
 TEST_F(RoceRegedMemMgrTest, Ut_MemoryExport_When_MemHandleUnregistered_Expect_NotFound)
 {
-    RoceRegedMemMgr roceRegedMemMgr{};
+    RoceRegedMemMgr roceRegedMemMgr{nullptr};
     EndpointDesc endpointDesc{};
 
     auto buf = std::make_shared<Hccl::Buffer>(0xD900, 0x100, HCCL_MEM_TYPE_DEVICE, "roce_export");
@@ -166,7 +166,7 @@ TEST_F(RoceRegedMemMgrTest, Ut_MemoryExport_When_MemHandleUnregistered_Expect_No
 
 TEST_F(RoceRegedMemMgrTest, Ut_GetParamsFromMemDesc_When_DescLenEqualSize_Expect_Return_Success)
 {
-    std::shared_ptr<RoceRegedMemMgr> roceRegedMemMgrPtr = std::make_shared<RoceRegedMemMgr>();
+    std::shared_ptr<RoceRegedMemMgr> roceRegedMemMgrPtr = std::make_shared<RoceRegedMemMgr>(nullptr);
     EndpointDesc endpointDesc;
     Hccl::ExchangeRdmaBufferDto dto;
 
@@ -182,13 +182,13 @@ TEST_F(RoceRegedMemMgrTest, Ut_GetParamsFromMemDesc_When_DescLenEqualSize_Expect
 // 父+子集注册 → 先解注册父(soft-delete) → 验证handlesRecords_和allBuffers_状态 → 再解注册子
 TEST_F(RoceRegedMemMgrTest, ut_RoceRegedMemMgr_When_UnregisterParentFirst_Expect_ParentSoftDeleted)
 {
-    RoceRegedMemMgr roceRegedMemMgr{};
+    RoceRegedMemMgr roceRegedMemMgr{nullptr};
     HcommMem mem0;
     mem0.type = CommMemType::COMM_MEM_TYPE_DEVICE;
     mem0.addr = (void*)0x7000;
     mem0.size = 4096;
     void* parentHandle = nullptr;
-    ASSERT_EQ(roceRegedMemMgr.RegisterMemory(mem0, "parent", &parentHandle), HCCL_SUCCESS);
+    ASSERT_EQ(roceRegedMemMgr.RegisterMemory(&mem0, "parent", &parentHandle), HCCL_SUCCESS);
     auto* parentBuf = static_cast<Hccl::LocalRdmaRmaBuffer*>(parentHandle);
     hccl::BufferKey<uintptr_t, u64> parentKey(parentBuf->GetAddr(), static_cast<uint64_t>(parentBuf->GetSize()));
     EXPECT_EQ(GetRef(*roceRegedMemMgr.localRdmaRmaBufferMgr_, parentKey), 1u);
@@ -200,7 +200,7 @@ TEST_F(RoceRegedMemMgrTest, ut_RoceRegedMemMgr_When_UnregisterParentFirst_Expect
     mem1.addr = (void*)0x7000;
     mem1.size = 512;
     void* childHandle = nullptr;
-    ASSERT_EQ(roceRegedMemMgr.RegisterMemory(mem1, "child", &childHandle), HCCL_SUCCESS);
+    ASSERT_EQ(roceRegedMemMgr.RegisterMemory(&mem1, "child", &childHandle), HCCL_SUCCESS);
     EXPECT_NE(childHandle, parentHandle);
     EXPECT_EQ(GetRef(*roceRegedMemMgr.localRdmaRmaBufferMgr_, parentKey), 2u);
     EXPECT_EQ(roceRegedMemMgr.handlesRecords_.size(), 2u);
@@ -249,7 +249,7 @@ TEST_F(RoceRegedMemMgrTest, ut_RoceRegedMemMgr_When_UnregisterParentFirst_Expect
 // GetAllMemHandles: 空记录 → 注册 → 多次注册 → 解注册 → 验证句柄数
 TEST_F(RoceRegedMemMgrTest, ut_RoceRegedMemMgr_When_GetAllMemHandles_Expect_CorrectCount)
 {
-    RoceRegedMemMgr roceRegedMemMgr{};
+    RoceRegedMemMgr roceRegedMemMgr{nullptr};
 
     void* handles = nullptr;
     uint32_t count = 99U;
@@ -262,14 +262,14 @@ TEST_F(RoceRegedMemMgrTest, ut_RoceRegedMemMgr_When_GetAllMemHandles_Expect_Corr
     mem.addr = (void*)0x8000;
     mem.size = 4096;
     void* h1 = nullptr;
-    ASSERT_EQ(roceRegedMemMgr.RegisterMemory(mem, "t1", &h1), HCCL_SUCCESS);
+    ASSERT_EQ(roceRegedMemMgr.RegisterMemory(&mem, "t1", &h1), HCCL_SUCCESS);
 
     EXPECT_EQ(roceRegedMemMgr.GetAllMemHandles(&handles, &count), HCCL_SUCCESS);
     EXPECT_EQ(count, 1U);
     EXPECT_NE(handles, nullptr);
 
     void* h2 = nullptr;
-    ASSERT_EQ(roceRegedMemMgr.RegisterMemory(mem, "t2", &h2), HCCL_SUCCESS);
+    ASSERT_EQ(roceRegedMemMgr.RegisterMemory(&mem, "t2", &h2), HCCL_SUCCESS);
 
     EXPECT_EQ(roceRegedMemMgr.GetAllMemHandles(&handles, &count), HCCL_SUCCESS);
     EXPECT_EQ(count, 2U);

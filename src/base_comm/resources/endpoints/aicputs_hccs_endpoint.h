@@ -13,9 +13,12 @@
 
 #include <cstdint>
 #include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 #include "endpoint.h"
+#include "server_socket_context/aicpu_ts_hccs_server_socket_context.h"
+#include "hccs_reged_mem_mgr.h"
 #include "hccl_ip_address.h"
 #include "remote_ipc_rma_buffer.h"
 
@@ -29,33 +32,27 @@ class AicpuTsHccsEndpoint : public Endpoint {
 public:
     explicit AicpuTsHccsEndpoint(const EndpointDesc& endpointDesc);
 
-    ~AicpuTsHccsEndpoint();
+    ~AicpuTsHccsEndpoint() override;
 
     HcclResult Init() override;
-    HcclResult ServerSocketListen(const uint32_t port) override;
-    HcclResult ServerSocketStopListen(const uint32_t port) override;
-    inline HcclResult ServerSocketStopListenImpl(const uint32_t port);
-    HcclResult RegisterMemory(HcommMem mem, const char* memTag, void** memHandle) override;
-    HcclResult UnregisterMemory(void* memHandle) override;
-    HcclResult MemoryExport(void* memHandle, void** memDesc, uint32_t* memDescLen) override;
-    HcclResult MemoryImport(const void* memDesc, uint32_t descLen, HcommMem* outMem) override;
-    HcclResult MemoryUnimport(const void* memDesc, uint32_t descLen) override;
-    HcclResult GetAllMemHandles(void** memHandles, uint32_t* memHandleNum) override;
 
-    HcclResult MemoryGrant(const HcommMemGrantInfo* remoteGrantInfo) override;
-    HcclResult MemoryEnableP2P(const EndpointDesc& remoteEndpointDesc);
-    HcclResult MemoryDisableP2P(const EndpointDesc& remoteEndpointDesc);
-    HcclResult MemoryOpenRemoteIpc();
-    HcclResult MemoryCloseRemoteIpc();
-    HcclResult GetRemoteIpcRmaBuffer(std::vector<CommMem>& remoteIpcRmaBufferVec);
-    HcclResult GetRemoteIpcRmaBufferEx(std::vector<HcclMemEx>& remoteIpcRmaBufferVecEx);
-    HcclResult GetLocalIpcRmaBufferEx(std::vector<HcclMemEx>& localIpcRmaBufferVecEx);
+    RegedMemMgr* GetRegedMemMgr() override { return regedMemMgr_.get(); }
+    void* GetRdmaHandle() override { return nullptr; }
+    bool IsCtxHandleValid() const override { return false; }
+
+    // 监听方法由 AicpuTsHccsServerSocketContext 承载（Init 内 emplace 后才有值）
+    ServerSocketContext* GetServerSocketContext() override
+    {
+        return serverSocketContext_.has_value() ? &serverSocketContext_.value() : nullptr;
+    }
 
 private:
-    u32 serverPort_{AICPU_CHANNEL_DEFAULT_PORT};
+    std::shared_ptr<HccsRegedMemMgr> regedMemMgr_{};
     hccl::HcclIpAddress devIpAddr_;
-    bool serverListened_{false};
     HcclNetDevCtx netDevCtx_{nullptr};
+    u32 serverPort_{AICPU_CHANNEL_DEFAULT_PORT};
+    // Init 内 locType 检查通过后 emplace（延迟构造）
+    std::optional<AicpuTsHccsServerSocketContext> serverSocketContext_{};
 };
 } // namespace hcomm
 #endif // AICPUTS_HCCS_ENDPOINT_H

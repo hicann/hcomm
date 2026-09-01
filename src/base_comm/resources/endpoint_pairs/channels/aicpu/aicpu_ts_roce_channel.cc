@@ -22,7 +22,8 @@
 #include "log.h"
 #include "endpoint.h"
 #include "../../../endpoints/aicpu_ts_roce_endpoint.h"
-#include "aicpu_ts_roce_mem.h"
+#include "server_socket_context/aicpu_ts_roce_server_socket_context.h"
+#include "aicpu_ts_roce_reged_mem_mgr.h"
 #include "adapter_rts_common.h"
 #include "channel_param.h"
 #include "dispatcher_ctx.h"
@@ -217,7 +218,10 @@ HcclResult AicpuTsRoceChannel::BuildServerDataSocket(
     AicpuTsRoceEndpoint* roceEp, const hccl::HcclIpAddress& remoteIp, uint32_t port, const std::string& socketTag)
 {
     HCCL_INFO("[AicpuTsRoceChannel][server] BuildDataSocket listen and accept");
-    CHK_RET(roceEp->ServerSocketListen(port));
+    // HcclSocket 自管理路径不使用 ipAddr，传默认地址占位；数据面方法经具体 context 类型访问
+    auto* roceCtx = static_cast<AicpuTsRoceServerSocketContext*>(roceEp->GetServerSocketContext());
+    CHK_PTR_NULL(roceCtx);
+    CHK_RET(roceCtx->ServerSocketListen(Hccl::IpAddress(), port));
     SocketWlistInfo wlistEntry{};
     wlistEntry.connLimit = 1U;
     const auto bin = remoteIp.GetBinaryAddress();
@@ -228,8 +232,8 @@ HcclResult AicpuTsRoceChannel::BuildServerDataSocket(
         mw != EOK, HCCL_ERROR("[AicpuTsRoceChannel][%s] memcpy_s whitelist tag failed", SocketRoleTag()),
         HCCL_E_MEMORY);
     const std::vector<SocketWlistInfo> wlistVec = {wlistEntry};
-    CHK_RET(roceEp->AddListenSocketWhiteList(port, wlistVec));
-    CHK_RET(roceEp->GetSocket(port, socketTag, dataSocket_));
+    CHK_RET(roceCtx->AddListenSocketWhiteList(port, wlistVec));
+    CHK_RET(roceCtx->GetSocket(port, socketTag, dataSocket_));
     CHK_SMART_PTR_NULL(dataSocket_);
     HCCL_INFO("[AicpuTsRoceChannel][server] BuildDataSocket accepted client connection");
     return HCCL_SUCCESS;
@@ -517,8 +521,8 @@ HcclResult AicpuTsRoceChannel::Serialize(std::shared_ptr<hccl::DeviceMem>& out)
 
     auto* ep = reinterpret_cast<Endpoint*>(endpointHandle_);
     CHK_PTR_NULL(ep);
-    auto mgr = std::dynamic_pointer_cast<AicpuTsRoceRegedMemMgr>(ep->GetRegedMemMgr());
-    CHK_SMART_PTR_NULL(mgr);
+    auto* mgr = dynamic_cast<AicpuTsRoceRegedMemMgr*>(ep->GetRegedMemMgr());
+    CHK_PTR_NULL(mgr);
     CHK_RET(mgr->GetAllMemDetails(localMd, remoteMd));
     CHK_RET(transport_->GetAiQpInfo(aiQpInfos));
     qpNum = static_cast<u32>(aiQpInfos.size());

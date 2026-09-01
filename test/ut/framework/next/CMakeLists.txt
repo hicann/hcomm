@@ -48,6 +48,11 @@ set(src_to_test_list
     comms/api_c_adpt/ut_hcomm_channel_config_test.cc
     comms/api_c_adpt/ut_hcomm_engine_ctx_test.cc
     comms/api_c_adpt/ut_hcomm_dfx_test.cc
+    # endpoint/RegedMemMgr 公共流程抽取归一 UT
+    comms/api_c_adpt/ut_endpoint_ctx.cc
+    comms/api_c_adpt/ut_hcomm_endpoint_mgr.cc
+    comms/endpoints/ut_server_socket_context.cc
+    comms/endpoints/reged_mems/ut_plugin_reged_mem_mgr.cc
     coll_comms/communicator/ut_coll_comm_test.cc
     coll_comms/communicator/group_schedule_mgr/ut_group_schedule_mgr.cc
     comms/endpoint_pairs/channels/ut_channel_process_test.cc

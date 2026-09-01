@@ -25,7 +25,7 @@
 #include "workflow_pub.h"
 #include "transport_pub.h"
 #include "mem_device_pub.h"
-#include "aicpu_ts_roce_mem.h"
+#include "aicpu_ts_roce_reged_mem_mgr.h"
 
 #define private public
 #include "aicpu/aicpu_ts_roce_channel.h"
@@ -42,13 +42,13 @@ public:
     }
 
     HcclResult Init() override { return HCCL_SUCCESS; }
-    HcclResult ServerSocketListen(const uint32_t) override { return HCCL_SUCCESS; }
-    HcclResult RegisterMemory(HcommMem, const char*, void**) override { return HCCL_SUCCESS; }
-    HcclResult UnregisterMemory(void*) override { return HCCL_SUCCESS; }
-    HcclResult MemoryExport(void*, void**, uint32_t*) override { return HCCL_SUCCESS; }
-    HcclResult MemoryImport(const void*, uint32_t, HcommMem*) override { return HCCL_SUCCESS; }
-    HcclResult MemoryUnimport(const void*, uint32_t) override { return HCCL_SUCCESS; }
-    HcclResult GetAllMemHandles(void**, uint32_t*) override { return HCCL_SUCCESS; }
+    void* GetRdmaHandle() override { return ctxHandle_; }
+    bool IsCtxHandleValid() const override { return ctxHandle_ != nullptr; }
+    // 内存方法在 RegedMemMgr 上，Endpoint 不再 override
+    RegedMemMgr* GetRegedMemMgr() override { return nullptr; }
+
+private:
+    void* ctxHandle_{nullptr};
 };
 
 HcclResult StubGetAllMemDetailsForSerialize(
@@ -96,22 +96,20 @@ class StubEndpointWithRoceMemMgr : public Endpoint {
 public:
     StubEndpointWithRoceMemMgr(const EndpointDesc& desc, void* rdmaHandle, std::shared_ptr<AicpuTsRoceRegedMemMgr> mgr)
         : Endpoint(desc),
-          mgr_(std::move(mgr))
+          mgr_(std::move(mgr)),
+          ctxHandle_(rdmaHandle)
     {
-        ctxHandle_ = rdmaHandle;
-        regedMemMgr_ = mgr_;
+        // regedMemMgr_ 移至各子类；GetRegedMemMgr() 直接返回 mgr_
     }
 
     HcclResult Init() override { return HCCL_SUCCESS; }
-    HcclResult ServerSocketListen(const uint32_t) override { return HCCL_SUCCESS; }
-    HcclResult RegisterMemory(HcommMem, const char*, void**) override { return HCCL_SUCCESS; }
-    HcclResult UnregisterMemory(void*) override { return HCCL_SUCCESS; }
-    HcclResult MemoryExport(void*, void**, uint32_t*) override { return HCCL_SUCCESS; }
-    HcclResult MemoryImport(const void*, uint32_t, HcommMem*) override { return HCCL_SUCCESS; }
-    HcclResult MemoryUnimport(const void*, uint32_t) override { return HCCL_SUCCESS; }
-    HcclResult GetAllMemHandles(void**, uint32_t*) override { return HCCL_SUCCESS; }
+    // 内存方法在 RegedMemMgr 上，Endpoint 不再 override
+    RegedMemMgr* GetRegedMemMgr() override { return mgr_.get(); }
+    void* GetRdmaHandle() override { return ctxHandle_; }
+    bool IsCtxHandleValid() const override { return ctxHandle_ != nullptr; }
 
 private:
+    void* ctxHandle_{nullptr};
     std::shared_ptr<AicpuTsRoceRegedMemMgr> mgr_;
 };
 } // namespace

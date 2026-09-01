@@ -8,8 +8,8 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
-#ifndef AICPU_TS_ROCE_MEM_H
-#define AICPU_TS_ROCE_MEM_H
+#ifndef AICPU_TS_ROCE_REGED_MEM_MGR_H
+#define AICPU_TS_ROCE_REGED_MEM_MGR_H
 
 #include <cstring>
 #include <map>
@@ -30,10 +30,10 @@ public:
     AicpuTsRoceRegedMemMgr(HcclNetDev netDev, RdmaHandle rdmaHandle);
     ~AicpuTsRoceRegedMemMgr() override = default;
 
-    HcclResult RegisterMemory(HcommMem mem, const char* memTag, void** memHandle) override;
+    HcclResult RegisterMemory(const HcommMem* mem, const char* memTag, void** memHandle) override;
     HcclResult UnregisterMemory(void* memHandle) override;
     HcclResult
-    MemoryExport(const EndpointDesc endpointDesc, void* memHandle, void** memDesc, uint32_t* memDescLen) override;
+    MemoryExport(const EndpointDesc& endpointDesc, void* memHandle, void** memDesc, uint32_t* memDescLen) override;
     HcclResult MemoryImport(const void* memDesc, uint32_t descLen, HcommMem* outMem) override;
     HcclResult MemoryUnimport(const void* memDesc, uint32_t descLen) override;
     HcclResult GetAllMemHandles(void** memHandles, uint32_t* memHandleNum) override;
@@ -54,12 +54,18 @@ private:
     HcclResult
     GetParamsFromMemDesc(const void* memDesc, uint32_t descLen, EndpointDesc& endpointDesc, std::string& rdmaBlob);
     void TrackRegisteredBuffer(const std::shared_ptr<hccl::LocalRdmaRmaBuffer>& localBuffer);
+    // 注销流程的记录清理：exportDescByBuffer_ 擦除、allRegisteredBuffers_ 按 IsInTree 判定擦除或标记、
+    // hcclBufRecords_ 移除该 handle 的条目。入参为本条注销涉及的两个 key 与 buffer 指针
+    void CleanupBufferRecords(
+        void* memHandle, hccl::LocalRdmaRmaBuffer* buffer, const hccl::BufferKey<uintptr_t, u64>& ownKey,
+        const hccl::BufferKey<uintptr_t, u64>& tempKey);
 
     HcclResult GatherLocalMemDetails(std::vector<RoceMemDetails>& localOut) const;
     HcclResult AppendLocalNotifyMemDetails(std::vector<RoceMemDetails>& localOut) const;
     void GatherRemoteMemDetails(std::vector<RoceMemDetails>& remoteOut) const;
 
     HcclNetDev netDev_{nullptr};
+    RdmaHandle rdmaHandle_{nullptr};
     std::shared_ptr<hccl::NetDevContext::LocalRdmaRmaBufferMgr> localRdmaRmaBufferMgr_{nullptr};
     std::vector<RegedBufferEntry<hccl::LocalRdmaRmaBuffer>> allRegisteredBuffers_;
     std::vector<HcclBuf> hcclBufRecords_;
@@ -68,4 +74,4 @@ private:
 };
 
 } // namespace hcomm
-#endif // AICPU_TS_ROCE_MEM_H
+#endif // AICPU_TS_ROCE_REGED_MEM_MGR_H

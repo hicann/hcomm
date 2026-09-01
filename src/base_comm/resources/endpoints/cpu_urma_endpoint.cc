@@ -10,24 +10,78 @@
 
 #include "cpu_urma_endpoint.h"
 #include <algorithm>
-#include "endpoint_mgr.h"
 #include "log.h"
-#include "urma_mem.h"
+#include "ub_reged_mem_mgr.h"
 #include "proc_reged_mem_mgr_cache.h"
 #include "adapter_rts_common.h"
 #include "server_socket_manager.h"
+#include "rdma_handle_manager.h"
 #include "hccp_peer_manager.h"
+#include "mgr/endpoint_ctx_mgr.h"
+#include "hcomm_res_mgr.h"
 
 namespace hcomm {
 CpuUrmaEndpoint::CpuUrmaEndpoint(const EndpointDesc& endpointDesc) : Endpoint(endpointDesc) {}
 
 CpuUrmaEndpoint::~CpuUrmaEndpoint() noexcept
 {
-    std::lock_guard<std::mutex> lock(portMutex_);
-    if (dynamicPort_ != HCCL_INVALID_PORT) {
-        ServerSocketStopListenImpl(dynamicPort_);
+    (void)ReleaseCache();
+    (void)ReleaseEndpointCtx();
+}
+
+bool CpuUrmaEndpoint::IsCtxHandleValid() const
+{
+    if (ctxHandle_ == nullptr) {
+        return false;
     }
-    dynamicPort_ = HCCL_INVALID_PORT;
+    return Hccl::RdmaHandleManager::GetInstance().IsHandleValid(static_cast<Hccl::RdmaHandle>(ctxHandle_));
+}
+
+CommQueueContext* CpuUrmaEndpoint::GetCommQueueContext()
+{
+    std::call_once(jettyContextOnce_, [this] {
+        jettyContext_ = std::make_unique<JettyContext>();
+    });
+    return jettyContext_.get();
+}
+
+HcclResult CpuUrmaEndpoint::ReleaseEndpointCtx()
+{
+    if (endpointCtx_ == nullptr) {
+        HCCL_WARNING("[CpuUrmaEndpoint][%s] endpointCtx_ is null, nothing to release", __func__);
+        return HCCL_E_PTR;
+    }
+    // 先放掉自身引用，当use_count 只剩 map 持有的 1 份时再触发 EndpointCtxMgr 移除
+    EndpointCtxKey key = endpointCtx_->key;
+    endpointCtx_.reset();
+    HcommResMgr::GetInstance().GetDeviceResMgr(key.devPhyId).GetEndpointCtxMgr().Release(key);
+    return HCCL_SUCCESS;
+}
+
+HcclResult
+CpuUrmaEndpoint::AttachCache(const MemMgrCacheKey& key, const std::function<std::shared_ptr<RegedMemMgr>()>& creator)
+{
+    cacheKey_ = key;
+    cacheKeepAlive_ = ProcRegedMemMgrCache::GetHolder();
+    // cache key 含 protocol 唯一决定具体 RegedMemMgr 类型，static_pointer_cast 转换安全
+    regedMemMgr_ = std::static_pointer_cast<UbRegedMemMgr>(cacheKeepAlive_->GetOrCreate(cacheKey_, creator));
+    if (regedMemMgr_ == nullptr) {
+        HCCL_ERROR("[CpuUrmaEndpoint][%s] regedMemMgr_ is null", __func__);
+        CHK_RET(ReleaseCache());
+        return HCCL_E_INTERNAL;
+    }
+    return HCCL_SUCCESS;
+}
+
+HcclResult CpuUrmaEndpoint::ReleaseCache()
+{
+    if (cacheKeepAlive_ == nullptr) {
+        HCCL_WARNING("[CpuUrmaEndpoint][%s] cacheKeepAlive_ is null, nothing to release", __func__);
+        return HCCL_E_PTR;
+    }
+    cacheKeepAlive_->Release(cacheKey_);
+    cacheKeepAlive_.reset();
+    return HCCL_SUCCESS;
 }
 
 HcclResult CpuUrmaEndpoint::Init()
@@ -50,134 +104,27 @@ HcclResult CpuUrmaEndpoint::Init()
         HCCL_ERROR("call hrtGetDevicePhyIdByIndex failed, deviceLogicId[%d], devPhyId[%u]", deviceLogicId, devPhyId);
         return ret;
     }
-    auto& rdmaHandleMgr = Hccl::RdmaHandleManager::GetInstance();
-    ctxHandle_ = static_cast<void*>(
-        rdmaHandleMgr.GetByAddr(devPhyId, Hccl::LinkProtoType::UB, ipAddr, Hccl::PortDeploymentType::HOST_NET));
-    CHK_PTR_NULL(ctxHandle_);
+    EndpointCtxKey ctxKey{devPhyId, COMM_PROTOCOL_UB_CTP, endpointDesc_.loc.locType, ipAddr};
+    CHK_RET(HcommResMgr::GetInstance()
+                .GetDeviceResMgr(ctxKey.devPhyId)
+                .GetEndpointCtxMgr()
+                .Acquire(ctxKey, false, endpointCtx_));
+    CHK_PTR_NULL(endpointCtx_);
+    ctxHandle_ = endpointCtx_->ctxHandle;
     HCCL_INFO(
         "CpuUrmaEndpoint::%s success, devPhyId[%u], ipAddr[%s], ctxHandle[%p]", __func__, devPhyId,
         ipAddr.Describe().c_str(), ctxHandle_);
 
     MemMgrCacheKey key{devPhyId, COMM_PROTOCOL_UB_CTP, ipAddr, LocTypeToPortType(endpointDesc_.loc.locType)};
     auto createMgr = [this]() {
-        auto mgr = std::make_shared<UbRegedMemMgr>();
-        mgr->rdmaHandle_ = ctxHandle_;
-        return mgr;
+        return std::make_shared<UbRegedMemMgr>(ctxHandle_);
     };
-    CHK_RET(AttachCache(key, createMgr));
-    return HCCL_SUCCESS;
-}
-
-HcclResult CpuUrmaEndpoint::ServerSocketListen(const uint32_t port)
-{
-    Hccl::IpAddress ipAddr{};
-    CHK_RET(CommAddrToIpAddress(endpointDesc_.commAddr, ipAddr));
-
-    s32 devId = 0;
-    CHK_RET(hrtGetDevice(&devId));
-    u32 devPhyId = 0;
-    CHK_RET(hrtGetDevicePhyIdByIndex(devId, devPhyId));
-
-    Hccl::DevNetPortType type = Hccl::DevNetPortType(Hccl::ConnectProtoType::UB);
-    Hccl::PortData localPort = Hccl::PortData(devPhyId, type, 0, ipAddr);
-
-    HCCL_INFO("[CpuUrmaEndpoint::%s] devicePhyId[%u] ipAddress[%s]", __func__, devPhyId, ipAddr.Describe().c_str());
-
-    uint32_t requestPort = port;
-    CHK_RET(ServerSocketManager::GetInstance().ServerSocketStartListen(
-        localPort, Hccl::NicType::HOST_NIC_TYPE, devPhyId, &requestPort));
-
-    return HCCL_SUCCESS;
-}
-
-inline HcclResult CpuUrmaEndpoint::ServerSocketStopListenImpl(const uint32_t port)
-{
-    Hccl::IpAddress ipAddr{};
-    CHK_RET(CommAddrToIpAddress(endpointDesc_.commAddr, ipAddr));
-
-    s32 devId = 0;
-    CHK_RET(hrtGetDevice(&devId));
-    u32 devPhyId = 0;
-    CHK_RET(hrtGetDevicePhyIdByIndex(devId, devPhyId));
-    Hccl::DevNetPortType type = Hccl::DevNetPortType(Hccl::ConnectProtoType::UB);
-    Hccl::PortData localPort = Hccl::PortData(devPhyId, type, 0, ipAddr);
-    CHK_RET(ServerSocketManager::GetInstance().ServerSocketStopListen(localPort, Hccl::NicType::HOST_NIC_TYPE, port));
-
-    return HCCL_SUCCESS;
-}
-
-HcclResult CpuUrmaEndpoint::ServerSocketStopListen(const uint32_t port) { return ServerSocketStopListenImpl(port); }
-
-HcclResult CpuUrmaEndpoint::ServerSocketGetListenPort(uint32_t* port)
-{
-    std::lock_guard<std::mutex> lock(portMutex_);
-    Hccl::IpAddress localIpAddr{};
-    CHK_RET(CommAddrToIpAddress(endpointDesc_.commAddr, localIpAddr));
-
-    s32 deviceId = 0;
-    CHK_RET(hrtGetDevice(&deviceId));
-    u32 devicePhyId = 0;
-    CHK_RET(hrtGetDevicePhyIdByIndex(deviceId, devicePhyId));
-
-    Hccl::DevNetPortType portType = Hccl::DevNetPortType(Hccl::ConnectProtoType::UB);
-    Hccl::PortData portData = Hccl::PortData(devicePhyId, portType, 0, localIpAddr);
-
-    HCCL_INFO(
-        "[CpuUrmaEndpoint::%s] devicePhyId[%u] ipAddress[%s]", __func__, devicePhyId, localIpAddr.Describe().c_str());
-
-    // 已有监听端口则直接返回
-    if (dynamicPort_ != HCCL_INVALID_PORT) {
-        *port = dynamicPort_;
-        HCCL_INFO("[CpuUrmaEndpoint::%s] already listening, return existing port[%u]", __func__, dynamicPort_);
-        return HCCL_SUCCESS;
+    ret = AttachCache(key, createMgr);
+    if (ret != HCCL_SUCCESS) {
+        HCCL_ERROR("[CpuUrmaEndpoint][%s] AttachCache failed, ret[%d]", __func__, ret);
+        CHK_RET(ReleaseEndpointCtx());
+        return ret;
     }
-
-    uint32_t requestPort = 0;
-    CHK_RET(ServerSocketManager::GetInstance().ServerSocketStartListen(
-        portData, Hccl::NicType::HOST_NIC_TYPE, devicePhyId, &requestPort));
-    if (requestPort == 0 || requestPort == HCCL_INVALID_PORT) {
-        HCCL_ERROR("[CpuUrmaEndpoint::%s] get listen port failed, port is invalid.", __func__);
-        return HCCL_E_NETWORK;
-    }
-    dynamicPort_ = requestPort;
-    *port = dynamicPort_;
-
-    return HCCL_SUCCESS;
-}
-
-HcclResult CpuUrmaEndpoint::RegisterMemory(HcommMem mem, const char* memTag, void** memHandle)
-{
-    CHK_RET(this->regedMemMgr_->RegisterMemory(mem, memTag, memHandle));
-    return HCCL_SUCCESS;
-}
-
-HcclResult CpuUrmaEndpoint::UnregisterMemory(void* memHandle)
-{
-    CHK_RET(this->regedMemMgr_->UnregisterMemory(memHandle));
-    return HCCL_SUCCESS;
-}
-
-HcclResult CpuUrmaEndpoint::MemoryExport(void* memHandle, void** memDesc, uint32_t* memDescLen)
-{
-    CHK_RET(this->regedMemMgr_->MemoryExport(this->endpointDesc_, memHandle, memDesc, memDescLen));
-    return HCCL_SUCCESS;
-}
-
-HcclResult CpuUrmaEndpoint::MemoryImport(const void* memDesc, uint32_t descLen, HcommMem* outMem)
-{
-    CHK_RET(this->regedMemMgr_->MemoryImport(memDesc, descLen, outMem));
-    return HCCL_SUCCESS;
-}
-
-HcclResult CpuUrmaEndpoint::MemoryUnimport(const void* memDesc, uint32_t descLen)
-{
-    CHK_RET(this->regedMemMgr_->MemoryUnimport(memDesc, descLen));
-    return HCCL_SUCCESS;
-}
-
-HcclResult CpuUrmaEndpoint::GetAllMemHandles(void** memHandles, uint32_t* memHandleNum)
-{
-    CHK_RET(this->regedMemMgr_->GetAllMemHandles(memHandles, memHandleNum));
     return HCCL_SUCCESS;
 }
 

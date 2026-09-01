@@ -18,18 +18,15 @@
 #include "hcomm_res_defs.h"
 #include "hcomm_channel.h"
 #include "channel_process.h"
-#include "endpoint_map.h"
+#include "../../../../../../src/base_comm/resources/endpoints/mgr/endpoint_mgr.h"
+#include "hcomm_c_adpt_common.h"
 #include "env_config/env_config_v2.h"
 #include "nic_plugin_manager.h"
 #include "orion_adpt_utils.h"
 
-// Test stub: StubEndpoint 需要非空的 nicOps_ 避免 GetNicOps() 返回 nullptr
-static int32_t StubGetListenPort(void* ctx, uint32_t* port)
-{
-    auto* endpoint = static_cast<hcomm::Endpoint*>(ctx);
-    return endpoint->ServerSocketGetListenPort(port);
-}
-static HcommNicEndpointOps g_stubEndpointOps = {
+// 内存方法从 Endpoint 移至 RegedMemMgr；EndpointMgr 收编 HcommEndpointMap；
+// SetNicEndpointCtx 移至 PluginEndpointHolder。StubEndpoint 不再 override 内存方法。
+[[maybe_unused]] static HcommNicEndpointOps g_stubEndpointOps = {
     {HCOMM_NIC_ENDPOINT_OPS_VERSION, HCOMM_NIC_ENDPOINT_OPS_MAGIC_WORD, sizeof(HcommNicEndpointOps), 0},
     nullptr,
     nullptr,
@@ -38,7 +35,7 @@ static HcommNicEndpointOps g_stubEndpointOps = {
     nullptr,
     nullptr,
     nullptr,
-    StubGetListenPort,
+    nullptr,
 };
 #include "hccp_peer_manager.h"
 #include "rdma_handle_manager.h"
@@ -780,15 +777,13 @@ TEST_F(HcommCAdptTest, ut_HcommEndpointGetListenPort_When_HandleInvalid_Expect_E
 
 class StubEndpoint final : public Endpoint {
 public:
-    explicit StubEndpoint() : Endpoint(EndpointDesc{}) { SetNicEndpointCtx(&g_stubEndpointOps, this); }
+    explicit StubEndpoint() : Endpoint(EndpointDesc{}) {}
     HcclResult Init() override { return HCCL_SUCCESS; }
-    HcclResult ServerSocketListen(const uint32_t port) override { return HCCL_SUCCESS; }
-    HcclResult RegisterMemory(HcommMem mem, const char* memTag, void** memHandle) override { return HCCL_SUCCESS; }
-    HcclResult UnregisterMemory(void* memHandle) override { return HCCL_SUCCESS; }
-    HcclResult MemoryExport(void* memHandle, void** memDesc, uint32_t* memDescLen) override { return HCCL_SUCCESS; }
-    HcclResult MemoryImport(const void* memDesc, uint32_t descLen, HcommMem* outMem) override { return HCCL_SUCCESS; }
-    HcclResult MemoryUnimport(const void* memDesc, uint32_t descLen) override { return HCCL_SUCCESS; }
-    HcclResult GetAllMemHandles(void** memHandles, uint32_t* memHandleNum) override { return HCCL_SUCCESS; }
+    // 内存方法在 RegedMemMgr 上，Endpoint 不再 override；此处返回空 RegedMemMgr。
+    RegedMemMgr* GetRegedMemMgr() override { return nullptr; }
+    void* GetRdmaHandle() override { return nullptr; }
+    bool IsCtxHandleValid() const override { return false; }
+    // ServerSocketGetListenPort 未 override → 走基类默认 HCCL_E_NOT_SUPPORT
 };
 
 TEST_F(HcommCAdptTest, ut_HcommEndpointGetListenPort_When_ServerSocketNotSupport_Expect_E_NOT_SUPPORT)
@@ -797,7 +792,8 @@ TEST_F(HcommCAdptTest, ut_HcommEndpointGetListenPort_When_ServerSocketNotSupport
     EndpointHandle endpointHandle = reinterpret_cast<EndpointHandle>(0x12345);
     StubEndpoint stubEndpoint;
 
-    MOCKER_CPP(&HcommEndpointMap::GetEndpoint, Endpoint * (HcommEndpointMap::*)(EndpointHandle))
+    // HcommEndpointMap 收编为 hcomm::EndpointMgr::Get
+    MOCKER_CPP(&hcomm::EndpointMgr::Get, Endpoint * (hcomm::EndpointMgr::*)(EndpointHandle))
         .stubs()
         .will(returnValue(static_cast<Endpoint*>(&stubEndpoint)));
 

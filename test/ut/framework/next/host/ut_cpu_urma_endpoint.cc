@@ -16,10 +16,10 @@
 #include "hcomm_c_adpt.h"
 #include "rdma_handle_manager.h"
 #include "ip_address.h"
-#include "hccp.h"
 #include "buffer.h"
+#include "hccp.h"
 #include "endpoint.h"
-#include "urma_mem.h"
+#include "ub_reged_mem_mgr.h"
 #include "adapter_rts_common.h"
 #include "server_socket_manager.h"
 #include "hccp_peer_manager.h"
@@ -28,15 +28,17 @@
 using namespace hcomm;
 
 namespace {
-class FakeRegedMemMgrForEndpointUt : public RegedMemMgr {
+// CpuUrmaEndpoint::regedMemMgr_ 为 shared_ptr<UbRegedMemMgr>，mock 需派生自 UbRegedMemMgr
+class FakeRegedMemMgrForEndpointUt : public UbRegedMemMgr {
 public:
-    HcclResult RegisterMemory(HcommMem, const char*, void** memHandle) override
+    FakeRegedMemMgrForEndpointUt() : UbRegedMemMgr(nullptr) {}
+    HcclResult RegisterMemory(const HcommMem*, const char*, void** memHandle) override
     {
         *memHandle = reinterpret_cast<void*>(0x42ULL);
         return HCCL_SUCCESS;
     }
     HcclResult UnregisterMemory(void*) override { return HCCL_SUCCESS; }
-    HcclResult MemoryExport(const EndpointDesc, void*, void**, uint32_t*) override { return HCCL_SUCCESS; }
+    HcclResult MemoryExport(const EndpointDesc&, void*, void**, uint32_t*) override { return HCCL_SUCCESS; }
     HcclResult MemoryImport(const void*, uint32_t, HcommMem*) override { return HCCL_SUCCESS; }
     HcclResult MemoryUnimport(const void*, uint32_t) override { return HCCL_SUCCESS; }
     HcclResult GetAllMemHandles(void**, uint32_t*) override { return HCCL_SUCCESS; }
@@ -60,7 +62,12 @@ protected:
         rdmaHandle = (void*)0x1000000;
 
         MOCKER(hrtGetDevice).stubs().will(returnValue(HCCL_SUCCESS));
-        MOCKER(hrtGetDevicePhyIdByIndex).stubs().with(mockcpp::any(), mockcpp::any()).will(returnValue(HCCL_SUCCESS));
+        // 出参 devPhyId 需赋合法值：批次1后它作为 GetDeviceResMgr(devPhyId) 的设备数组下标
+        unsigned int devicePhyId = 0U;
+        MOCKER(hrtGetDevicePhyIdByIndex)
+            .stubs()
+            .with(mockcpp::any(), outBound(devicePhyId))
+            .will(returnValue(HCCL_SUCCESS));
         MOCKER(&Hccl::RdmaHandleManager::GetByAddr).stubs().will(returnValue(rdmaHandle));
         MOCKER(RaSocketSetWhiteListStatus).stubs().will(returnValue(0));
     }
@@ -86,7 +93,8 @@ TEST_F(CpuUrmaEndpointTest, Ut_When_ServerSocketListen_Normal_Expect_HCCL_SUCCES
     auto endpoint = std::make_unique<CpuUrmaEndpoint>(endpointDesc);
     EXPECT_EQ(endpoint->Init(), HCCL_SUCCESS);
     MOCKER_CPP(&hcomm::ServerSocketManager::ServerSocketStartListen).stubs().will(returnValue(HCCL_SUCCESS));
-    EXPECT_EQ(endpoint->ServerSocketListen(60001), HCCL_SUCCESS);
+    // 监听 3 方法由 ServerSocketContext 承载，经 GetServerSocketContext() 访问
+    EXPECT_EQ(endpoint->GetServerSocketContext()->ServerSocketListen(Hccl::IpAddress("1.0.0.0"), 60001), HCCL_SUCCESS);
 }
 
 TEST_F(CpuUrmaEndpointTest, Ut_When_ServerSocketStopListen_Normal_Expect_HCCL_SUCCESS)
@@ -94,7 +102,8 @@ TEST_F(CpuUrmaEndpointTest, Ut_When_ServerSocketStopListen_Normal_Expect_HCCL_SU
     auto endpoint = std::make_unique<CpuUrmaEndpoint>(endpointDesc);
     EXPECT_EQ(endpoint->Init(), HCCL_SUCCESS);
     MOCKER_CPP(&hcomm::ServerSocketManager::ServerSocketStopListen).stubs().will(returnValue(HCCL_SUCCESS));
-    EXPECT_EQ(endpoint->ServerSocketStopListen(60001), HCCL_SUCCESS);
+    EXPECT_EQ(
+        endpoint->GetServerSocketContext()->ServerSocketStopListen(Hccl::IpAddress("1.0.0.0"), 60001), HCCL_SUCCESS);
 }
 
 TEST_F(CpuUrmaEndpointTest, Ut_When_RegisterMemory_Normal_Expect_HCCL_SUCCESS)
@@ -108,7 +117,8 @@ TEST_F(CpuUrmaEndpointTest, Ut_When_RegisterMemory_Normal_Expect_HCCL_SUCCESS)
     mem.addr = reinterpret_cast<void*>(0x1000U);
     mem.size = 10;
     void* memHandle = nullptr;
-    EXPECT_EQ(endpoint->RegisterMemory(mem, "test", &memHandle), HCCL_SUCCESS);
+    // RegisterMemory 在 RegedMemMgr 上
+    EXPECT_EQ(endpoint->GetRegedMemMgr()->RegisterMemory(&mem, "test", &memHandle), HCCL_SUCCESS);
 }
 
 TEST_F(CpuUrmaEndpointTest, Ut_When_UnregisterMemory_Normal_Expect_HCCL_SUCCESS)
@@ -118,7 +128,8 @@ TEST_F(CpuUrmaEndpointTest, Ut_When_UnregisterMemory_Normal_Expect_HCCL_SUCCESS)
 
     endpoint->regedMemMgr_ = std::make_shared<FakeRegedMemMgrForEndpointUt>();
     void* memHandle = (void*)0x12345678;
-    EXPECT_EQ(endpoint->UnregisterMemory(memHandle), HCCL_SUCCESS);
+    // UnregisterMemory 在 RegedMemMgr 上
+    EXPECT_EQ(endpoint->GetRegedMemMgr()->UnregisterMemory(memHandle), HCCL_SUCCESS);
 }
 
 TEST_F(CpuUrmaEndpointTest, Ut_When_ServerSocketGetListenPort_Normal_Expect_HCCL_SUCCESS)
@@ -132,5 +143,6 @@ TEST_F(CpuUrmaEndpointTest, Ut_When_ServerSocketGetListenPort_Normal_Expect_HCCL
         .stubs()
         .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBoundP(&portValue, sizeof(portValue)))
         .will(returnValue(HCCL_SUCCESS));
-    EXPECT_EQ(endpoint->ServerSocketGetListenPort(&port), HCCL_SUCCESS);
+    EXPECT_EQ(
+        endpoint->GetServerSocketContext()->ServerSocketGetListenPort(Hccl::IpAddress("1.0.0.0"), &port), HCCL_SUCCESS);
 }

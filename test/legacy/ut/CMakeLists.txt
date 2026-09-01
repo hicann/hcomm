@@ -84,9 +84,12 @@ target_include_directories(hccl_v2_utest PRIVATE
         ${HCCL_CODE_ROOT}/src/base_comm/resources/hccp/inc/network/
         ${HCCL_CODE_ROOT}/src/base_comm/resources/hccp/inc/
         ${HCCL_CODE_ROOT}/src/base_comm/resources/
+        ${HCCL_CODE_ROOT}/src/base_comm/resources/endpoints/
+        ${HCCL_CODE_ROOT}/src/base_comm/resources/reged_mems/
         ${HCCL_CODE_ROOT}/src/base_comm/common/
         ${HCCL_CODE_ROOT}/src/base_comm/common/debug/
         ${HCCL_CODE_ROOT}/src/base_comm/primitives/aicpu/task_cache
+        ${HCCL_CODE_ROOT}/src/base_comm/primitives/api_c_adpt/
         ${HCCL_CODE_ROOT}/src/base_comm/resources/comm_engine_res/threads
         ${HCCL_CODE_ROOT}/src/base_comm/dfx/
         ${HCCL_CODE_ROOT}/src/base_comm/resources/comm_engine_res/threads/

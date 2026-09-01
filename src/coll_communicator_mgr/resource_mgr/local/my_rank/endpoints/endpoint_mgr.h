@@ -20,7 +20,7 @@
 #include "../endpoint_pairs/endpoint_pair.h"
 #include "hccl_mem_defs.h"
 
-namespace hcomm {
+namespace hccl {
 
 /**
  * @brief endpoint 粒度的 tag→handle 映射。
@@ -120,6 +120,6 @@ private:
     std::mutex mutex_{};
 };
 
-} // namespace hcomm
+} // namespace hccl
 
 #endif // ENDPOINT_MGR_H

@@ -11,58 +11,32 @@
 #include "aicpu_ts_roce_endpoint.h"
 #include "log.h"
 #include "hccl_net_dev.h"
-#include "aicpu_ts_roce_mem.h"
+#include "aicpu_ts_roce_reged_mem_mgr.h"
 #include "adapter_rts_common.h"
 #include "hccl_network.h"
 #include "network_manager_pub.h"
-#include "hccl_socket.h"
 #include <exception>
 
 namespace hcomm {
-namespace {
-    constexpr uint32_t kDefaultRocePort = 16666;
-}
 
 AicpuTsRoceEndpoint::AicpuTsRoceEndpoint(const EndpointDesc& endpointDesc) : Endpoint(endpointDesc) {}
 
 AicpuTsRoceEndpoint::~AicpuTsRoceEndpoint()
 {
-    regedMemMgr_.reset();
     ctxHandle_ = nullptr;
-    ReleaseListenSocketRefs();
+    // 析构顺序保持：先释放serverSocketContext，再释放共享 netDev
+    if (serverSocketContext_.has_value()) {
+        serverSocketContext_->ReleaseListenSocketRefs();
+    }
     ReleaseSharedNetDev();
 }
 
-void AicpuTsRoceEndpoint::ReleaseListenSocketRefs()
+bool AicpuTsRoceEndpoint::IsCtxHandleValid() const
 {
-    std::lock_guard<std::mutex> lk(ListenSocketMapMutex());
-    HCCL_INFO(
-        "[ReleaseListenSocketRefs] netDevRefPhyId_[%u], listenRefKeys_.size[%zu]", netDevRefPhyId_,
-        listenRefKeys_.size());
-
-    std::vector<SocketMapKey> keys = std::move(listenRefKeys_);
-    auto& sockMap = GetServerSocketMap();
-    for (const auto& key : keys) {
-        auto it = sockMap.find(key);
-        if (it == sockMap.end()) {
-            HCCL_INFO("[ReleaseListenSocketRefs] key[dev=%u,port=%u] not found in sockMap", key.devicePhyId, key.port);
-            continue;
-        }
-        HCCL_INFO(
-            "[ReleaseListenSocketRefs] key[dev=%u,port=%u] refCount[%u] before decrement", key.devicePhyId, key.port,
-            it->second.refCount);
-        if (it->second.refCount > 0U) {
-            it->second.refCount--;
-        }
-        HCCL_INFO(
-            "[ReleaseListenSocketRefs] key[dev=%u,port=%u] refCount[%u] after decrement, socket shared_ptr "
-            "use_count[%ld]",
-            key.devicePhyId, key.port, it->second.refCount, it->second.socket.use_count());
-        if (it->second.refCount == 0U) {
-            HCCL_INFO("[ReleaseListenSocketRefs] erasing key[dev=%u,port=%u] from sockMap", key.devicePhyId, key.port);
-            (void)sockMap.erase(it);
-        }
-    }
+    // 本类 ctxHandle_ 来自 NetworkManager::GetRdmaHandleByIpAddr（生命周期由 NetworkManager 的
+    // nicSocketMap 管理），不进入 RdmaHandleManager::activeHandles_，因此不能用
+    // RdmaHandleManager::IsHandleValid 校验（对不在册句柄恒返回 false）；判空即为有效性校验。
+    return ctxHandle_ != nullptr;
 }
 
 std::mutex& AicpuTsRoceEndpoint::NetDevMapMutex()
@@ -130,7 +104,9 @@ void AicpuTsRoceEndpoint::ReleaseSharedNetDev()
     }
     netDev_ = nullptr;
     if (toClose != nullptr) {
-        if (!hasListenSocketRef_) {
+        // 监听引用状态迁移至 serverSocketContext_：未释放监听引用时不额外停止 NicSocketHandle
+        const bool hasListenRef = serverSocketContext_.has_value() && serverSocketContext_->HasListenSocketRef();
+        if (!hasListenRef) {
             ReleaseNicSocketHandle(toClose);
         }
         HCCL_INFO("[AicpuTsRoceEndpoint][ReleaseSharedNetDev] closing HcclNetDev for devicePhyId[%u]", key);
@@ -219,165 +195,18 @@ HcclResult AicpuTsRoceEndpoint::Init()
         return ret;
     }
 
+    serverSocketContext_.emplace(netDev_, netDevRefPhyId_);
     try {
         regedMemMgr_ = std::make_shared<AicpuTsRoceRegedMemMgr>(netDev_, ctxHandle_);
     } catch (std::exception& e) {
         HCCL_ERROR("[%s]Failed, exception caught:%s", __func__, e.what());
         ctxHandle_ = nullptr;
+        serverSocketContext_.reset();
         ReleaseSharedNetDev();
         return HCCL_E_PTR;
     }
-    this->regedMemMgr_->rdmaHandle_ = this->ctxHandle_;
 
     return HCCL_SUCCESS;
 }
 
-HcclResult AicpuTsRoceEndpoint::ServerSocketListen(const uint32_t port)
-{
-    const uint32_t listenPort = (port != 0U) ? port : kDefaultRocePort;
-    const SocketMapKey key{netDevRefPhyId_, listenPort};
-    std::lock_guard<std::mutex> lk(ListenSocketMapMutex());
-    if (ReuseListenSocketIfExist(key, "reuse serverSocket")) {
-        return HCCL_SUCCESS;
-    }
-
-    std::shared_ptr<hccl::HcclSocket> newServerSocket = nullptr;
-    EXCEPTION_CATCH(
-        newServerSocket = std::make_shared<hccl::HcclSocket>(static_cast<HcclNetDevCtx>(netDev_), listenPort),
-        return HCCL_E_PTR);
-    CHK_SMART_PTR_NULL(newServerSocket);
-
-    HcclResult ret = newServerSocket->Init();
-    if (ret != HCCL_SUCCESS) {
-        HCCL_ERROR("[AicpuTsRoceEndpoint][%s] HcclSocket Init failed, ret[%d]", __func__, ret);
-        return ret;
-    }
-
-    ret = newServerSocket->Listen();
-    if (ret != HCCL_SUCCESS) {
-        HCCL_ERROR("[AicpuTsRoceEndpoint][%s] HcclSocket Listen failed, ret[%d]", __func__, ret);
-        return ret;
-    }
-
-    auto& serverSocketMap = GetServerSocketMap();
-    serverSocketMap[key] = AicpuTsListenSocketSlot{newServerSocket, 1U};
-    listenRefKeys_.push_back(key);
-    hasListenSocketRef_ = true;
-    HCCL_INFO("[AicpuTsRoceEndpoint][%s] listen on key[dev=%u,port=%u] success", __func__, key.devicePhyId, key.port);
-    return HCCL_SUCCESS;
-}
-
-bool AicpuTsRoceEndpoint::ReuseListenSocketIfExist(const SocketMapKey& key, const char* logPrefix)
-{
-    auto& serverSocketMap = GetServerSocketMap();
-    auto it = serverSocketMap.find(key);
-    if (it == serverSocketMap.end() || it->second.socket == nullptr) {
-        return false;
-    }
-    it->second.refCount++;
-    listenRefKeys_.push_back(key);
-    hasListenSocketRef_ = true;
-    HCCL_INFO(
-        "[AicpuTsRoceEndpoint::%s] %s key[dev=%u,port=%u], ref[%u]", __func__, logPrefix, key.devicePhyId, key.port,
-        it->second.refCount);
-    return true;
-}
-
-std::mutex& AicpuTsRoceEndpoint::ListenSocketMapMutex()
-{
-    static std::mutex mutex;
-    return mutex;
-}
-
-std::unordered_map<SocketMapKey, AicpuTsListenSocketSlot, SocketMapKeyHash>& AicpuTsRoceEndpoint::GetServerSocketMap()
-{
-    static std::unordered_map<SocketMapKey, AicpuTsListenSocketSlot, SocketMapKeyHash> serverSocketMap;
-    return serverSocketMap;
-}
-
-HcclResult AicpuTsRoceEndpoint::AddListenSocketWhiteList(uint32_t port, const std::vector<SocketWlistInfo>& wlistInfos)
-{
-    if (wlistInfos.empty()) {
-        HCCL_ERROR("[AicpuTsRoceEndpoint][%s] empty whitelist", __func__);
-        return HCCL_E_PARA;
-    }
-    std::lock_guard<std::mutex> lk(ListenSocketMapMutex());
-    auto& sockMap = GetServerSocketMap();
-    const uint32_t listenPort = (port != 0U) ? port : kDefaultRocePort;
-    const SocketMapKey key{netDevRefPhyId_, listenPort};
-    auto it = sockMap.find(key);
-    if (it == sockMap.end() || it->second.socket == nullptr) {
-        HCCL_ERROR(
-            "[AicpuTsRoceEndpoint][%s] no listen socket for key[dev=%u,port=%u]", __func__, key.devicePhyId, key.port);
-        return HCCL_E_NOT_FOUND;
-    }
-    std::vector<SocketWlistInfo> mutableCopy = wlistInfos;
-    return it->second.socket->AddWhiteList(mutableCopy);
-}
-
-HcclResult AicpuTsRoceEndpoint::GetSocket(
-    [[maybe_unused]] uint32_t port, const std::string& tag, std::shared_ptr<hccl::HcclSocket>& outConnected)
-{
-    EXCEPTION_CATCH(
-        (outConnected = std::make_shared<hccl::HcclSocket>(
-             tag, static_cast<HcclNetDevCtx>(netDev_), hccl::HcclIpAddress(), 0,
-             hccl::HcclSocketRole::SOCKET_ROLE_SERVER)),
-        return HCCL_E_PTR);
-    CHK_SMART_PTR_NULL(outConnected);
-    CHK_RET(outConnected->Init());
-
-    return HCCL_SUCCESS;
-}
-
-HcclResult AicpuTsRoceEndpoint::AcceptDataSocket(
-    uint32_t port, const std::string& tag, std::shared_ptr<hccl::HcclSocket>& outConnected, uint32_t acceptTimeoutMs)
-{
-    std::lock_guard<std::mutex> lk(ListenSocketMapMutex());
-    auto& map = GetServerSocketMap();
-    const uint32_t listenPort = (port != 0U) ? port : kDefaultRocePort;
-    const SocketMapKey key{netDevRefPhyId_, listenPort};
-    auto it = map.find(key);
-    if (it == map.end() || it->second.socket == nullptr) {
-        HCCL_ERROR(
-            "[AicpuTsRoceEndpoint][%s] no listen socket for key[dev=%u,port=%u]", __func__, key.devicePhyId, key.port);
-        return HCCL_E_NOT_FOUND;
-    }
-    return it->second.socket->Accept(tag, outConnected, acceptTimeoutMs);
-}
-
-HcclResult AicpuTsRoceEndpoint::RegisterMemory(HcommMem mem, const char* memTag, void** memHandle)
-{
-    CHK_RET(this->regedMemMgr_->RegisterMemory(mem, memTag, memHandle));
-    return HCCL_SUCCESS;
-}
-
-HcclResult AicpuTsRoceEndpoint::UnregisterMemory(void* memHandle)
-{
-    CHK_RET(this->regedMemMgr_->UnregisterMemory(memHandle));
-    return HCCL_SUCCESS;
-}
-
-HcclResult AicpuTsRoceEndpoint::MemoryExport(void* memHandle, void** memDesc, uint32_t* memDescLen)
-{
-    CHK_RET(this->regedMemMgr_->MemoryExport(this->endpointDesc_, memHandle, memDesc, memDescLen));
-    return HCCL_SUCCESS;
-}
-
-HcclResult AicpuTsRoceEndpoint::MemoryImport(const void* memDesc, uint32_t descLen, HcommMem* outMem)
-{
-    CHK_RET(this->regedMemMgr_->MemoryImport(memDesc, descLen, outMem));
-    return HCCL_SUCCESS;
-}
-
-HcclResult AicpuTsRoceEndpoint::MemoryUnimport(const void* memDesc, uint32_t descLen)
-{
-    CHK_RET(this->regedMemMgr_->MemoryUnimport(memDesc, descLen));
-    return HCCL_SUCCESS;
-}
-
-HcclResult AicpuTsRoceEndpoint::GetAllMemHandles(void** memHandles, uint32_t* memHandleNum)
-{
-    CHK_RET(this->regedMemMgr_->GetAllMemHandles(memHandles, memHandleNum));
-    return HCCL_SUCCESS;
-}
 } // namespace hcomm

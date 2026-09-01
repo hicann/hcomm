@@ -17,7 +17,7 @@
 #define private public
 #define protected public
 
-#include "ub_mem.h"
+#include "ub_mem_reged_mem_mgr.h"
 
 #undef protected
 #undef private
@@ -60,7 +60,7 @@ TEST_F(UbMemRegedMemMgrTest, ut_UbMemRegedMemMgr_When_ParentChild_Expect_Unregis
     mem0.size = 8192;
     std::string memTag0 = "parent";
     void* memHandle0 = nullptr;
-    HcclResult ret = ubMemRegedMemMgr.RegisterMemory(mem0, memTag0.c_str(), &memHandle0);
+    HcclResult ret = ubMemRegedMemMgr.RegisterMemory(&mem0, memTag0.c_str(), &memHandle0);
     EXPECT_EQ(ret, HCCL_SUCCESS);
 
     auto* parentBuf = static_cast<Hccl::LocalIpcRmaBuffer*>(memHandle0);
@@ -75,7 +75,7 @@ TEST_F(UbMemRegedMemMgrTest, ut_UbMemRegedMemMgr_When_ParentChild_Expect_Unregis
     mem1.size = 512;
     std::string memTag1 = "child";
     void* memHandle1 = nullptr;
-    ret = ubMemRegedMemMgr.RegisterMemory(mem1, memTag1.c_str(), &memHandle1);
+    ret = ubMemRegedMemMgr.RegisterMemory(&mem1, memTag1.c_str(), &memHandle1);
     EXPECT_EQ(ret, HCCL_SUCCESS);
     EXPECT_NE(memHandle1, memHandle0);
     EXPECT_EQ(GetRef(*ubMemRegedMemMgr.localIpcRmaBufferMgr_, parentKey), 2u);
@@ -103,16 +103,16 @@ TEST_F(UbMemRegedMemMgrTest, ut_UbMemRegedMemMgr_When_MultipleSameRange_Expect_A
     mem.size = 4096;
 
     void *h1 = nullptr, *h2 = nullptr, *h3 = nullptr;
-    EXPECT_EQ(ubMemRegedMemMgr.RegisterMemory(mem, "t1", &h1), HCCL_SUCCESS);
+    EXPECT_EQ(ubMemRegedMemMgr.RegisterMemory(&mem, "t1", &h1), HCCL_SUCCESS);
     auto* parentBuf = static_cast<Hccl::LocalIpcRmaBuffer*>(h1);
     hccl::BufferKey<uintptr_t, u64> parentKey(parentBuf->GetAddr(), static_cast<uint64_t>(parentBuf->GetSize()));
     EXPECT_EQ(GetRef(*ubMemRegedMemMgr.localIpcRmaBufferMgr_, parentKey), 1u);
 
-    EXPECT_EQ(ubMemRegedMemMgr.RegisterMemory(mem, "t2", &h2), HCCL_SUCCESS);
+    EXPECT_EQ(ubMemRegedMemMgr.RegisterMemory(&mem, "t2", &h2), HCCL_SUCCESS);
     EXPECT_NE(h2, h1);
     EXPECT_EQ(GetRef(*ubMemRegedMemMgr.localIpcRmaBufferMgr_, parentKey), 2u);
 
-    EXPECT_EQ(ubMemRegedMemMgr.RegisterMemory(mem, "t3", &h3), HCCL_SUCCESS);
+    EXPECT_EQ(ubMemRegedMemMgr.RegisterMemory(&mem, "t3", &h3), HCCL_SUCCESS);
     EXPECT_NE(h3, h1);
     EXPECT_EQ(GetRef(*ubMemRegedMemMgr.localIpcRmaBufferMgr_, parentKey), 3u);
 
@@ -136,7 +136,7 @@ TEST_F(UbMemRegedMemMgrTest, ut_UbMemRegedMemMgr_When_NonOverlap_Expect_TwoParen
     mem0.addr = (void*)0x1000;
     mem0.size = 100;
     void* h0 = nullptr;
-    EXPECT_EQ(ubMemRegedMemMgr.RegisterMemory(mem0, "t0", &h0), HCCL_SUCCESS);
+    EXPECT_EQ(ubMemRegedMemMgr.RegisterMemory(&mem0, "t0", &h0), HCCL_SUCCESS);
     auto* buf0 = static_cast<Hccl::LocalIpcRmaBuffer*>(h0);
     hccl::BufferKey<uintptr_t, u64> key0(buf0->GetAddr(), static_cast<uint64_t>(buf0->GetSize()));
     EXPECT_EQ(GetRef(*ubMemRegedMemMgr.localIpcRmaBufferMgr_, key0), 1u);
@@ -147,7 +147,7 @@ TEST_F(UbMemRegedMemMgrTest, ut_UbMemRegedMemMgr_When_NonOverlap_Expect_TwoParen
     mem1.addr = (void*)0x2000;
     mem1.size = 100;
     void* h1 = nullptr;
-    EXPECT_EQ(ubMemRegedMemMgr.RegisterMemory(mem1, "t1", &h1), HCCL_SUCCESS);
+    EXPECT_EQ(ubMemRegedMemMgr.RegisterMemory(&mem1, "t1", &h1), HCCL_SUCCESS);
     auto* buf1 = static_cast<Hccl::LocalIpcRmaBuffer*>(h1);
     hccl::BufferKey<uintptr_t, u64> key1(buf1->GetAddr(), static_cast<uint64_t>(buf1->GetSize()));
     EXPECT_EQ(GetRef(*ubMemRegedMemMgr.localIpcRmaBufferMgr_, key1), 1u);
@@ -176,7 +176,7 @@ TEST_F(UbMemRegedMemMgrTest, ut_UbMemRegedMemMgr_When_UnregisterParentFirst_Expe
     mem0.addr = (void*)0x6000;
     mem0.size = 4096;
     void* parentHandle = nullptr;
-    EXPECT_EQ(ubMemRegedMemMgr.RegisterMemory(mem0, "parent", &parentHandle), HCCL_SUCCESS);
+    EXPECT_EQ(ubMemRegedMemMgr.RegisterMemory(&mem0, "parent", &parentHandle), HCCL_SUCCESS);
     auto* parentBuf = static_cast<Hccl::LocalIpcRmaBuffer*>(parentHandle);
     hccl::BufferKey<uintptr_t, u64> parentKey(parentBuf->GetAddr(), static_cast<uint64_t>(parentBuf->GetSize()));
     EXPECT_EQ(GetRef(*ubMemRegedMemMgr.localIpcRmaBufferMgr_, parentKey), 1u);
@@ -187,7 +187,7 @@ TEST_F(UbMemRegedMemMgrTest, ut_UbMemRegedMemMgr_When_UnregisterParentFirst_Expe
     mem1.addr = (void*)0x6000;
     mem1.size = 512;
     void* childHandle = nullptr;
-    EXPECT_EQ(ubMemRegedMemMgr.RegisterMemory(mem1, "child", &childHandle), HCCL_SUCCESS);
+    EXPECT_EQ(ubMemRegedMemMgr.RegisterMemory(&mem1, "child", &childHandle), HCCL_SUCCESS);
     EXPECT_NE(childHandle, parentHandle);
     EXPECT_EQ(GetRef(*ubMemRegedMemMgr.localIpcRmaBufferMgr_, parentKey), 2u);
     EXPECT_EQ(ubMemRegedMemMgr.allRegisteredBuffers_.size(), 2u);
@@ -239,19 +239,19 @@ TEST_F(UbMemRegedMemMgrTest, ut_UbMemRegedMemMgr_When_InvalidParams_Expect_Error
     mem0.type = CommMemType::COMM_MEM_TYPE_DEVICE;
     mem0.addr = nullptr;
     mem0.size = 4096;
-    EXPECT_EQ(ubMemRegedMemMgr.RegisterMemory(mem0, "t", &h), HCCL_E_PTR);
+    EXPECT_EQ(ubMemRegedMemMgr.RegisterMemory(&mem0, "t", &h), HCCL_E_PTR);
 
     HcommMem mem1{};
     mem1.type = CommMemType::COMM_MEM_TYPE_DEVICE;
     mem1.addr = (void*)0x1000;
     mem1.size = 0;
-    EXPECT_EQ(ubMemRegedMemMgr.RegisterMemory(mem1, "t", &h), HCCL_E_PARA);
+    EXPECT_EQ(ubMemRegedMemMgr.RegisterMemory(&mem1, "t", &h), HCCL_E_PARA);
 
     HcommMem mem2{};
     mem2.type = COMM_MEM_TYPE_INVALID;
     mem2.addr = (void*)0x1000;
     mem2.size = 4096;
-    EXPECT_EQ(ubMemRegedMemMgr.RegisterMemory(mem2, "t", &h), HCCL_E_PARA);
+    EXPECT_EQ(ubMemRegedMemMgr.RegisterMemory(&mem2, "t", &h), HCCL_E_PARA);
 }
 
 // UnregisterMemory: null memHandle → 返回错误

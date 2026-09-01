@@ -33,7 +33,7 @@
 #include "rank_table_crc_bridge.h"
 #include "hccl_channel_config.h"
 #include "shared_jetty_channel_pool.h"
-#include "endpoint_mgr.h"
+#include "endpoints/endpoint_mgr.h"
 #include "hcomm_res.h"
 #include "channel_config.h"
 #include "hcclCommDfx.h"
@@ -1111,7 +1111,7 @@ static HcclResult AcquireSharedJettyChannels(
 
     const EndpointDesc& localEp = channelDescs[0].localEndpoint;
     EndpointHandle epHandle = nullptr;
-    hcomm::EndpointMgr* endpointMgr = myRank->GetEndpointMgr();
+    hccl::EndpointMgr* endpointMgr = myRank->GetEndpointMgr();
     CHK_PTR_NULL(endpointMgr);
     // 共享 jetty 按 sharedQueueTag 区分 Endpoint：不同 tag 创建独立 Endpoint → 独立底层 jetty 资源。
     // 同一 tag 复用同一 Endpoint（JettyContext 引用计数复用）。

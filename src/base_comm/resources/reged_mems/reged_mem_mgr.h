@@ -34,14 +34,14 @@ public:
     virtual ~RegedMemMgr() = default;
 
     // 注册内存
-    virtual HcclResult RegisterMemory(HcommMem mem, const char* memTag, void** memHandle) = 0;
+    virtual HcclResult RegisterMemory(const HcommMem* mem, const char* memTag, void** memHandle) = 0;
 
     // 注销内存
     virtual HcclResult UnregisterMemory(void* memHandle) = 0;
 
     // 导出指定内存描述，用于交换
     virtual HcclResult
-    MemoryExport(const EndpointDesc endpointDesc, void* memHandle, void** memDesc, uint32_t* memDescLen)
+    MemoryExport(const EndpointDesc& endpointDesc, void* memHandle, void** memDesc, uint32_t* memDescLen)
         = 0;
 
     // 基于内存描述，导入获得内存
@@ -52,13 +52,8 @@ public:
 
     virtual HcclResult GetAllMemHandles(void** memHandles, uint32_t* memHandleNum) = 0;
 
-    // 授权
-    virtual HcclResult MemoryGrant([[maybe_unused]] const HcommMemGrantInfo* remoteGrantInfo) { return HCCL_SUCCESS; }
-
-    RdmaHandle rdmaHandle_{nullptr};
-
-    // 跨 Endpoint 并发访问 tree + allBuffers 保护
-    mutable std::mutex memMtx_;
+    // 不含数据成员——rdmaHandle_/memMtx_ 已移至各派生类 private
+    // protected 静态模板 helper 保留在 RegedMemMgr 基类中（RegisterMemoryImpl 等），各派生类直接调用
 
 protected:
     template <typename RmaBuffer>

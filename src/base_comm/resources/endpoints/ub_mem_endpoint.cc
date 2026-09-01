@@ -13,12 +13,40 @@
 #include "hccl/hccl_res.h"
 #include "adapter_rts_common.h"
 #include "server_socket_mgr.h"
-#include "ub_mem.h"
+#include "ub_mem_reged_mem_mgr.h"
 #include "proc_reged_mem_mgr_cache.h"
 #include "hccl_mem_defs.h"
 
 namespace hcomm {
 UbMemEndpoint::UbMemEndpoint(const EndpointDesc& endpointDesc) : Endpoint(endpointDesc) {}
+
+UbMemEndpoint::~UbMemEndpoint() noexcept { (void)ReleaseCache(); }
+
+HcclResult
+UbMemEndpoint::AttachCache(const MemMgrCacheKey& key, const std::function<std::shared_ptr<RegedMemMgr>()>& creator)
+{
+    cacheKey_ = key;
+    cacheKeepAlive_ = ProcRegedMemMgrCache::GetHolder();
+    // cache key 含 protocol 唯一决定具体 RegedMemMgr 类型，static_pointer_cast 转换安全
+    regedMemMgr_ = std::static_pointer_cast<UbMemRegedMemMgr>(cacheKeepAlive_->GetOrCreate(cacheKey_, creator));
+    if (regedMemMgr_ == nullptr) {
+        HCCL_ERROR("[UbMemEndpoint][%s] regedMemMgr_ is null", __func__);
+        CHK_RET(ReleaseCache());
+        return HCCL_E_INTERNAL;
+    }
+    return HCCL_SUCCESS;
+}
+
+HcclResult UbMemEndpoint::ReleaseCache()
+{
+    if (cacheKeepAlive_ == nullptr) {
+        HCCL_WARNING("[UbMemEndpoint][%s] cacheKeepAlive_ is null, nothing to release", __func__);
+        return HCCL_E_PTR;
+    }
+    cacheKeepAlive_->Release(cacheKey_);
+    cacheKeepAlive_.reset();
+    return HCCL_SUCCESS;
+}
 
 HcclResult UbMemEndpoint::Init()
 {
@@ -37,50 +65,5 @@ HcclResult UbMemEndpoint::Init()
     CHK_RET(AttachCache(key, createMgr));
 
     return HcclResult::HCCL_SUCCESS;
-}
-
-HcclResult UbMemEndpoint::ServerSocketListen(const uint32_t port)
-{
-    (void)port;
-    HCCL_INFO("UbMemEndpoint ServerSocketListen is not supported");
-    return HCCL_SUCCESS;
-}
-
-HcclResult UbMemEndpoint::RegisterMemory(HcommMem mem, const char* memTag, void** memHandle)
-{
-    CHK_RET(this->regedMemMgr_->RegisterMemory(mem, memTag, memHandle));
-    return HCCL_SUCCESS;
-}
-
-HcclResult UbMemEndpoint::UnregisterMemory(void* memHandle)
-{
-    CHK_RET(this->regedMemMgr_->UnregisterMemory(memHandle));
-    return HCCL_SUCCESS;
-}
-
-HcclResult UbMemEndpoint::MemoryExport(
-    [[maybe_unused]] void* memHandle, [[maybe_unused]] void** memDesc, [[maybe_unused]] uint32_t* memDescLen)
-{
-    HCCL_INFO("UbMemEndpoint MemoryExport is not supported");
-    return HCCL_SUCCESS;
-}
-
-HcclResult UbMemEndpoint::MemoryImport(
-    [[maybe_unused]] const void* memDesc, [[maybe_unused]] uint32_t descLen, [[maybe_unused]] HcommMem* outMem)
-{
-    HCCL_INFO("UbMemEndpoint MemoryImport is not supported");
-    return HCCL_SUCCESS;
-}
-
-HcclResult UbMemEndpoint::MemoryUnimport([[maybe_unused]] const void* memDesc, [[maybe_unused]] uint32_t descLen)
-{
-    HCCL_INFO("UbMemEndpoint MemoryUnimport is not supported");
-    return HCCL_SUCCESS;
-}
-
-HcclResult UbMemEndpoint::GetAllMemHandles([[maybe_unused]] void** memHandles, [[maybe_unused]] uint32_t* memHandleNum)
-{
-    HCCL_INFO("UbMemEndpoint GetAllMemHandles is not supported");
-    return HCCL_SUCCESS;
 }
 } // namespace hcomm

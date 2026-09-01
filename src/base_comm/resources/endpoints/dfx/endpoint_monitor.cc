@@ -9,6 +9,7 @@
  */
 
 #include "dfx/endpoint_monitor.h"
+#include "urma_endpoint.h"
 #include "hcom_common.h"
 
 #include <array>
@@ -178,7 +179,17 @@ void EndpointMonitor::ProcessUbAsyncEvents()
     for (auto it = epHandleSet_.begin(); it != epHandleSet_.end();) {
         u32 num = ASYNC_EVENT_MAX_NUM;
         Endpoint* localEpPtr = reinterpret_cast<Endpoint*>(*it);
-        HcclResult ret = localEpPtr->GetAsyncEvents(devPhyId_, events_, num);
+        // GetAsyncEvents 已下移为 UrmaEndpoint 自有方法（基类不感知）：monitor 仅注册 DEVICE 侧 UB endpoint，
+        // 按具体类型 downcast 后访问；非 Urma 类转失败属防御分支，跳过且不摘除句柄
+        auto* urmaEp = dynamic_cast<UrmaEndpoint*>(localEpPtr);
+        if (urmaEp == nullptr) {
+            HCCL_WARNING(
+                "[EndpointMonitor][%s] deviceId[%d] endpoint[%p] is not UrmaEndpoint, skip async events", __func__,
+                deviceLogicId_, localEpPtr);
+            ++it;
+            continue;
+        }
+        HcclResult ret = urmaEp->GetAsyncEvents(devPhyId_, events_, num);
         if (ret != HCCL_SUCCESS) {
             it = epHandleSet_.erase(it);
             HCCL_ERROR(

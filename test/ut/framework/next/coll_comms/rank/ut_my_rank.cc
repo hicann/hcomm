@@ -44,12 +44,12 @@ HcclResult GetAllMemoryStub(CommMems*, std::vector<HcclMem>& mems, std::vector<s
     return HCCL_SUCCESS;
 }
 HcclResult RegisterMemoryStub(
-    hcomm::EndpointMgr*, EndpointHandle, const std::vector<std::string>&, const std::vector<HcclMem>& mems, uint64_t)
+    hccl::EndpointMgr*, EndpointHandle, const std::vector<std::string>&, const std::vector<HcclMem>& mems, uint64_t)
 {
     return HCCL_SUCCESS;
 }
 HcclResult GetMemHandlesByTagsStub(
-    hcomm::EndpointMgr* mgr, EndpointHandle, const std::vector<std::string>& tags, std::vector<MemHandle>& memHandleVec)
+    hccl::EndpointMgr* mgr, EndpointHandle, const std::vector<std::string>& tags, std::vector<MemHandle>& memHandleVec)
 {
     for (size_t i = 0; i < tags.size(); i++) {
         memHandleVec.push_back((MemHandle)(0xCC11000 + i));
@@ -65,7 +65,7 @@ struct RegisterMemoryCallRecord {
 };
 static std::vector<RegisterMemoryCallRecord> s_registerMemoryCalls;
 HcclResult RegisterMemorySpyStub(
-    hcomm::EndpointMgr* mgr, EndpointHandle ep, const std::vector<std::string>& tags, const std::vector<HcclMem>& mems,
+    hccl::EndpointMgr* mgr, EndpointHandle ep, const std::vector<std::string>& tags, const std::vector<HcclMem>& mems,
     uint64_t version)
 {
     // 模拟真实 RegisterMemory：版本一致则跳过
@@ -142,8 +142,8 @@ protected:
             .with(mockcpp::any())
             .will(returnValue((Hccl::Socket*)0xab));
         MOCKER_CPP(&hccl::CommMems::GetAllMemory).stubs().will(invoke(GetAllMemoryStub));
-        MOCKER_CPP(&hcomm::EndpointMgr::RegisterMemory).stubs().will(invoke(RegisterMemoryStub));
-        MOCKER_CPP(&hcomm::EndpointMgr::GetMemHandlesByTags).stubs().will(invoke(GetMemHandlesByTagsStub));
+        MOCKER_CPP(&hccl::EndpointMgr::RegisterMemory).stubs().will(invoke(RegisterMemoryStub));
+        MOCKER_CPP(&hccl::EndpointMgr::GetMemHandlesByTags).stubs().will(invoke(GetMemHandlesByTagsStub));
         MOCKER(HcommCcuInsCreate).stubs().with(mockcpp::any()).will(returnValue(CcuResult::CCU_SUCCESS));
         MOCKER(HcommCcuInsCreateLegacy).stubs().with(mockcpp::any()).will(returnValue(CcuResult::CCU_SUCCESS));
         MOCKER_CPP(&hccl::MyRank::TryInitCcuInstance).stubs().will(returnValue(HCCL_SUCCESS));
@@ -1108,7 +1108,7 @@ TEST_F(MyRankTest, Ut_PrepareChannelMemHandles_RegisterMemoryFail)
     CreateCclBuffer(cclBuffer);
     EXPECT_EQ(myRank->Init(cclBuffer, 2, 2), HCCL_SUCCESS);
 
-    MOCKER_CPP(&hcomm::EndpointMgr::RegisterMemory).stubs().with(mockcpp::any()).will(returnValue(HCCL_E_INTERNAL));
+    MOCKER_CPP(&hccl::EndpointMgr::RegisterMemory).stubs().with(mockcpp::any()).will(returnValue(HCCL_E_INTERNAL));
 
     EndpointHandle epHandle = (EndpointHandle)0x1;
     std::vector<MemHandle> memHandleVec;
@@ -1158,8 +1158,8 @@ TEST_F(MyRankTest, Ut_BatchCreateChannels_RegisterMemoryPerEndpoint)
         .with(mockcpp::any())
         .will(returnValue((Hccl::Socket*)0xab));
     MOCKER_CPP(&hccl::CommMems::GetAllMemory).stubs().will(invoke(GetAllMemoryStub));
-    MOCKER_CPP(&hcomm::EndpointMgr::RegisterMemory).stubs().will(invoke(RegisterMemorySpyStub));
-    MOCKER_CPP(&hcomm::EndpointMgr::GetMemHandlesByTags).stubs().will(invoke(GetMemHandlesByTagsStub));
+    MOCKER_CPP(&hccl::EndpointMgr::RegisterMemory).stubs().will(invoke(RegisterMemorySpyStub));
+    MOCKER_CPP(&hccl::EndpointMgr::GetMemHandlesByTags).stubs().will(invoke(GetMemHandlesByTagsStub));
     MOCKER(hcomm::ChannelProcess::CreateChannelsLoop).stubs().will(returnValue(HCCL_SUCCESS));
 
     HcclMem cclBuffer;

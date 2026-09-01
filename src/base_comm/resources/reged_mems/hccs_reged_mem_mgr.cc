@@ -21,11 +21,12 @@ HccsRegedMemMgr::HccsRegedMemMgr(HcclNetDevCtx netDevCtx) { netDevCtx_ = netDevC
 
 HccsRegedMemMgr::~HccsRegedMemMgr() { allRegisteredBuffers_.clear(); }
 
-HcclResult HccsRegedMemMgr::RegisterMemory(HcommMem mem, [[maybe_unused]] const char* memTag, void** memHandle)
+HcclResult HccsRegedMemMgr::RegisterMemory(const HcommMem* mem, [[maybe_unused]] const char* memTag, void** memHandle)
 {
     HCCL_INFO("[%s] Begin", __FUNCTION__);
-    CHK_RET(ValidateMemParams(mem, memHandle));
-    HCCL_INFO("[%s] addr[%p] size[%u] start", __FUNCTION__, mem.addr, mem.size);
+    CHK_PTR_NULL(mem);
+    CHK_RET(ValidateMemParams(*mem, memHandle));
+    HCCL_INFO("[%s] addr[%p] size[%u] start", __FUNCTION__, mem->addr, mem->size);
 
     NetDevContext* netDevCtx = static_cast<NetDevContext*>(netDevCtx_);
     std::shared_ptr<LocalIpcRmaBufferMgr> localIpcRmaBufferMgr = netDevCtx->GetlocalIpcRmaBufferMgr();
@@ -33,20 +34,20 @@ HcclResult HccsRegedMemMgr::RegisterMemory(HcommMem mem, [[maybe_unused]] const 
 
     std::shared_ptr<hccl::LocalIpcRmaBuffer> localIpcRmaBuffer = nullptr;
     // LocalIpcRmaBuffer构造函数存在注册动作，在调用该构造函数前需检查是否注册过
-    hccl::BufferKey<uintptr_t, u64> memKey(reinterpret_cast<uintptr_t>(mem.addr), mem.size);
+    hccl::BufferKey<uintptr_t, u64> memKey(reinterpret_cast<uintptr_t>(mem->addr), mem->size);
     auto findPair = localIpcRmaBufferMgr->Find(memKey);
     if (findPair.first) {
         auto parentBuffer = findPair.second;
         EXCEPTION_CATCH(
             (localIpcRmaBuffer = std::make_shared<hccl::LocalIpcRmaBuffer>(
-                 netDevCtx_, mem.addr, mem.size, static_cast<RmaMemType>(mem.type), *parentBuffer)),
+                 netDevCtx_, mem->addr, mem->size, static_cast<RmaMemType>(mem->type), *parentBuffer)),
             return HCCL_E_PTR);
         CHK_RET(AddBuffer(localIpcRmaBufferMgr, parentBuffer));
-        HCCL_INFO("[HccsRegedMemMgr][RegisterMemory] alias created, key {%p, %llu}", mem.addr, mem.size);
+        HCCL_INFO("[HccsRegedMemMgr][RegisterMemory] alias created, key {%p, %llu}", mem->addr, mem->size);
     } else {
         EXCEPTION_CATCH(
             (localIpcRmaBuffer = std::make_shared<hccl::LocalIpcRmaBuffer>(
-                 netDevCtx_, mem.addr, mem.size, static_cast<RmaMemType>(mem.type))),
+                 netDevCtx_, mem->addr, mem->size, static_cast<RmaMemType>(mem->type))),
             return HCCL_E_PTR);
 
         HcclResult ret = localIpcRmaBuffer->Init();
@@ -56,7 +57,7 @@ HcclResult HccsRegedMemMgr::RegisterMemory(HcommMem mem, [[maybe_unused]] const 
         }
 
         CHK_RET(AddBuffer(localIpcRmaBufferMgr, localIpcRmaBuffer));
-        HCCL_INFO("[HccsRegedMemMgr][RegisterMemory]Register memory success! Add key {%p, %llu}", mem.addr, mem.size);
+        HCCL_INFO("[HccsRegedMemMgr][RegisterMemory]Register memory success! Add key {%p, %llu}", mem->addr, mem->size);
     }
 
     *memHandle = static_cast<void*>(localIpcRmaBuffer.get());
@@ -64,7 +65,7 @@ HcclResult HccsRegedMemMgr::RegisterMemory(HcommMem mem, [[maybe_unused]] const 
     handlesRecords_.push_back(localIpcRmaBuffer);
 
     HCCL_INFO(
-        "[%s] addr[%p] size[%u] memHandle[%p] allRegisteredBuffers_.size[%d]done", __FUNCTION__, mem.addr, mem.size,
+        "[%s] addr[%p] size[%u] memHandle[%p] allRegisteredBuffers_.size[%d]done", __FUNCTION__, mem->addr, mem->size,
         *memHandle, allRegisteredBuffers_.size());
     return HCCL_SUCCESS;
 }
@@ -218,7 +219,7 @@ HcclResult HccsRegedMemMgr::DeSerializeFromMemDesc(
 }
 
 HcclResult
-HccsRegedMemMgr::MemoryExport(const EndpointDesc endpointDesc, void* memHandle, void** memDesc, uint32_t* memDescLen)
+HccsRegedMemMgr::MemoryExport(const EndpointDesc& endpointDesc, void* memHandle, void** memDesc, uint32_t* memDescLen)
 {
     HCCL_INFO("[%s] Begin", __FUNCTION__);
     CHK_PTR_NULL(memHandle);

@@ -22,7 +22,7 @@
 
 #define private public
 #define protected public
-#include "jetty_context.h"
+#include "comm_queue_context/jetty_context.h"
 #undef private
 #undef protected
 

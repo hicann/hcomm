@@ -9,15 +9,40 @@
  */
 
 #include "ub_rtp_endpoint.h"
-#include "endpoint_mgr.h"
 #include "log.h"
 #include "hccl/hccl_res.h"
-#include "urma_mem.h"
+#include "ub_reged_mem_mgr.h"
 #include "adapter_rts_common.h"
+#include "rdma_handle_manager.h"
+#include "mgr/endpoint_ctx_mgr.h"
+#include "hcomm_res_mgr.h"
 
 namespace hcomm {
 
-UbRtpEndpoint::UbRtpEndpoint(const EndpointDesc& endpointDesc) : UboeUbRtpEndpointHelper(endpointDesc) {}
+UbRtpEndpoint::UbRtpEndpoint(const EndpointDesc& endpointDesc) : Endpoint(endpointDesc) {}
+
+UbRtpEndpoint::~UbRtpEndpoint() noexcept { (void)ReleaseEndpointCtx(); }
+
+bool UbRtpEndpoint::IsCtxHandleValid() const
+{
+    if (ctxHandle_ == nullptr) {
+        return false;
+    }
+    return Hccl::RdmaHandleManager::GetInstance().IsHandleValid(static_cast<Hccl::RdmaHandle>(ctxHandle_));
+}
+
+HcclResult UbRtpEndpoint::ReleaseEndpointCtx()
+{
+    if (endpointCtx_ == nullptr) {
+        HCCL_WARNING("[UbRtpEndpoint][%s] endpointCtx_ is null, nothing to release", __func__);
+        return HCCL_E_PTR;
+    }
+    // 先放掉自身引用，再触发 EndpointCtxMgr 移除
+    EndpointCtxKey key = endpointCtx_->key;
+    endpointCtx_.reset();
+    HcommResMgr::GetInstance().GetDeviceResMgr(key.devPhyId).GetEndpointCtxMgr().Release(key);
+    return HCCL_SUCCESS;
+}
 
 HcclResult UbRtpEndpoint::Init()
 {
@@ -43,18 +68,21 @@ HcclResult UbRtpEndpoint::Init()
     endpointDesc_.loc.device.devPhyId = devPhyId;
 
     Hccl::HccpHdcManager::GetInstance().Init(deviceLogicId);
-    // UB_RTP 直接用 EID 地址获取 rdmaHandle，不做 IP→EID 查询
-    auto& rdmaHandleMgr = Hccl::RdmaHandleManager::GetInstance();
-    EXCEPTION_CATCH(
-        ctxHandle_ = static_cast<void*>(rdmaHandleMgr.GetByIp(endpointDesc_.loc.device.devPhyId, eidAddr)),
-        return HCCL_E_PARA);
-    CHK_PTR_NULL(ctxHandle_);
+    EndpointCtxKey ctxKey{devPhyId, COMM_PROTOCOL_UB_CTP, endpointDesc_.loc.locType, eidAddr};
+    CHK_RET(HcommResMgr::GetInstance()
+                .GetDeviceResMgr(ctxKey.devPhyId)
+                .GetEndpointCtxMgr()
+                .Acquire(ctxKey, false, endpointCtx_));
+    CHK_PTR_NULL(endpointCtx_);
+    ctxHandle_ = endpointCtx_->ctxHandle;
     HCCL_INFO(
         "%s success, devPhyId[%u], eidAddr[%s], ctxHandle[%p]", __func__, devPhyId, eidAddr.Describe().c_str(),
         ctxHandle_);
 
-    EXCEPTION_CATCH(regedMemMgr_ = std::make_unique<UbRegedMemMgr>(), return HCCL_E_INTERNAL);
-    regedMemMgr_->rdmaHandle_ = ctxHandle_;
+    EXCEPTION_CATCH(regedMemMgr_ = std::make_shared<UbRegedMemMgr>(ctxHandle_), {
+        CHK_RET(ReleaseEndpointCtx());
+        return HCCL_E_INTERNAL;
+    });
 
     return HcclResult::HCCL_SUCCESS;
 }

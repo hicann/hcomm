@@ -12,7 +12,7 @@
 #include <algorithm>
 #include "hcomm_c_adpt.h"
 
-namespace hcomm {
+namespace hccl {
 
 TaggedMemMap::~TaggedMemMap()
 {
@@ -208,4 +208,4 @@ HcclResult EndpointMgr::UnregMemByTag(const std::string& tag)
 
 bool EndpointMgr::IsDescExist(EndpointDesc epDesc) { return endpointMap_.find(epDesc) != endpointMap_.end(); }
 
-} // namespace hcomm
+} // namespace hccl

@@ -8,8 +8,8 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
-#ifndef HCCS_MEM_H
-#define HCCS_MEM_H
+#ifndef HCCS_REGED_MEM_MGR_H
+#define HCCS_REGED_MEM_MGR_H
 
 #include <memory>
 #include <vector>
@@ -35,10 +35,10 @@ public:
     HccsRegedMemMgr(HcclNetDevCtx netDevCtx);
     ~HccsRegedMemMgr() override;
 
-    HcclResult RegisterMemory(HcommMem mem, const char* memTag, void** memHandle) override;
+    HcclResult RegisterMemory(const HcommMem* mem, const char* memTag, void** memHandle) override;
     HcclResult UnregisterMemory(void* memHandle) override;
     HcclResult
-    MemoryExport(const EndpointDesc endpointDesc, void* memHandle, void** memDesc, uint32_t* memDescLen) override;
+    MemoryExport(const EndpointDesc& endpointDesc, void* memHandle, void** memDesc, uint32_t* memDescLen) override;
     HcclResult MemoryImport(const void* memDesc, uint32_t descLen, HcommMem* outMem) override;
     HcclResult MemoryUnimport(const void* memDesc, uint32_t descLen) override;
     HcclResult GetAllMemHandles(void** memHandles, uint32_t* memHandleNum) override;
@@ -66,7 +66,6 @@ private:
     AddMem(hccl::BufferKey<uintptr_t, u64>& memKey, std::shared_ptr<hccl::RemoteIpcRmaBuffer>& remoteIpcRmaBuffer);
     HcclResult DeleteMem(hccl::BufferKey<uintptr_t, u64>& memKey);
 
-private:
     HcclNetDevCtx netDevCtx_{};
     std::vector<RegedBufferEntry<hccl::LocalIpcRmaBuffer>> allRegisteredBuffers_;
     std::vector<std::shared_ptr<hccl::LocalIpcRmaBuffer>> handlesRecords_;
@@ -75,4 +74,4 @@ private:
 };
 } // namespace hcomm
 
-#endif // HCCS_MEM_H
+#endif // HCCS_REGED_MEM_MGR_H

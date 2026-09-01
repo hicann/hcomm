@@ -11,6 +11,12 @@
 #include "gtest/gtest.h"
 #include <mockcpp/mokc.h>
 #include <mockcpp/mockcpp.hpp>
+// 本文件经 hcomm_res_mgr.h -> resources/endpoints/mgr/endpoint_mgr.h -> endpoint.h -> reged_mem_mgr.h
+// 引入 base_comm 头, 其 EXCEPTION_CATCH 宏要求 pub_inc 版 log.h(仅 catch std::exception);
+// 若 ascend950/common 版 log.h 先被包含, 其同名宏引用 namespace Hccl 的 HcclException,
+// 在 namespace hcomm 中不可见导致编译失败。两版 log.h 的 include guard 同为 LOG_H,
+// 先包含者生效, 故在所有业务头之前显式包含 pub_inc 版 log.h。
+#include "../../../../../src/legacy/ascend910/pub_inc/log.h"
 #include "tp_manager.h"
 #include "hccp.h"
 #include "orion_adapter_hccp.h"
