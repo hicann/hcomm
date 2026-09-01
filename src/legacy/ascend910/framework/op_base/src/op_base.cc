@@ -4033,6 +4033,8 @@ HcclResult HcclAlltoAllInner(
         info.recvbuff = const_cast<void*>(recvBuf);
         info.sendCount = sendCount;
         info.recvCount = recvCount;
+        info.sendType = sendType;
+        info.recvType = recvType;
         info.comm = comm;
         info.stream = stream;
         CHK_RET(taskAppend(comm, info));
