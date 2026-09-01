@@ -125,6 +125,7 @@ public:
     virtual HcclResult Write(void* dst, const void* src, uint64_t len) = 0;
     virtual HcclResult Read(void* dst, const void* src, uint64_t len) = 0;
     virtual HcclResult ChannelFence() = 0;
+    virtual HcclResult ChannelDrain() { return HCCL_E_NOT_SUPPORT; }
 
     // ------------------ NIC插件相关 ------------------
     void SetNicChannelCtx(HcommNicChannelOps* nicOps, void* nicCtx)

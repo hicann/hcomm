@@ -1332,7 +1332,7 @@ HcclResult HostCpuRoceChannel::FindRemoteBuffer(const uint64_t addr, const uint6
     return HCCL_E_NOT_FOUND;
 }
 
-HcclResult HostCpuRoceChannel::WaitForFenceCompletion()
+HcclResult HostCpuRoceChannel::WaitForWqeCompletion()
 {
     const std::vector<Hccl::QpInfo> qpInfo = GetQpInfos();
     CHK_PRT_RET(qpInfo.empty(), HCCL_ERROR("[HostCpuRoceChannel::%s] qpInfos is Empty", __func__), HCCL_E_ROCE_CONNECT);
@@ -1343,69 +1343,83 @@ HcclResult HostCpuRoceChannel::WaitForFenceCompletion()
         }
     }
     if (fenceCount == qpInfo.size()) {
-        fenceFlag_ = true;
         HCCL_INFO("[HostCpuRoceChannel::%s] SUCCESS. elements in wqeNums_ are 0.", __func__);
         return HCCL_SUCCESS;
     }
 
-    auto timeout = std::chrono::milliseconds(
-        static_cast<uint64_t>(Hccl::EnvConfig::GetInstance().GetRtsConfig().GetExecTimeOut())
-        * 1000ULL); // 乘1000转为毫秒
+    const uint64_t timeoutMs
+        = static_cast<uint64_t>(Hccl::EnvConfig::GetInstance().GetRtsConfig().GetExecTimeOut()) * 1000ULL;
     for (uint32_t i = 0; i < qpInfo.size(); i++) {
-        std::vector<struct ibv_wc> wc(wqeNums_[i]);
-        CHK_PRT_RET(
-            qpInfo[i].sendCq == nullptr, HCCL_ERROR("[HostCpuRoceChannel::%s] qp[%u] sendCq is null", __func__, i),
-            HCCL_E_INTERNAL);
-        CHK_PRT_RET(
-            qpInfo[i].qp == nullptr, HCCL_ERROR("[HostCpuRoceChannel::%s] qp[%u] is null", __func__, i),
-            HCCL_E_INTERNAL);
-        CHK_PRT_RET(
-            qpInfo[i].sendCq->context == nullptr,
-            HCCL_ERROR("[HostCpuRoceChannel::%s] qp[%u] sendCq->context is null", __func__, i), HCCL_E_INTERNAL);
-
-        auto startTime = std::chrono::steady_clock::now();
-        while (true) {
-            int actualNum = IbvPollCq(qpInfo[i].sendCq, wqeNums_[i], wc.data());
-            if (actualNum < 0) {
-                HCCL_ERROR(
-                    "[HostCpuRoceChannel::%s] qp[%u] ibv_poll_cq failed. actualNum: %d.", __func__, i, actualNum);
-                return HCCL_E_NETWORK;
-            }
-
-            if (actualNum > wqeNums_[i]) {
-                HCCL_ERROR(
-                    "[HostCpuRoceChannel::%s] qp[%u] ibv_poll_cq polled more completions (%d) than expected (%d).",
-                    __func__, i, actualNum, wqeNums_[i]);
-                return HCCL_E_INTERNAL;
-            } else if (actualNum > 0) {
-                for (int j = 0; j < actualNum; j++) {
-                    if (wc[j].status != IBV_WC_SUCCESS) {
-                        HCCL_ERROR(
-                            "[HostCpuRoceChannel::%s] ibv_poll_cq error. wc[%d] status[%d], opcode[%d], vendorErr[%u], "
-                            "byteLen[%u], wcFlags[%u], sl[%u]. qpInfo[%d].qp->qp_num[%u]",
-                            __func__, j, wc[j].status, wc[j].opcode, wc[j].vendor_err, wc[j].byte_len, wc[j].wc_flags,
-                            wc[j].sl, i, qpInfo[i].qp->qp_num);
-                        return HCCL_E_NETWORK;
-                    }
-                }
-                wqeNums_[i] -= actualNum; // 减去已经完成的数量，继续等待剩余的完成
-                if (wqeNums_[i] == 0) {
-                    break; // 所有的wqe都已经完成，退出循环
-                }
-                startTime = std::chrono::steady_clock::now(); // 有进展，重置超时计时
-            }
-
-            if ((std::chrono::steady_clock::now() - startTime) >= timeout) {
-                HCCL_ERROR(
-                    "[HostCpuRoceChannel][%s] qp[%u] call ibv_poll_cq timeout, remaining wqeNum[%u].", __func__, i,
-                    wqeNums_[i]);
-                return HCCL_E_TIMEOUT;
-            }
-        }
-        wqeNums_[i] = 0; // 所有的wqe都已经完成，重置计数器
-        HCCL_INFO("[HostCpuRoceChannel::%s] SUCCESS. wqeNums_[%u]=%d.", __func__, i, wqeNums_[i]);
+        CHK_RET(WaitForSingleQpWqeCompletion(qpInfo[i], i, timeoutMs));
     }
-    fenceFlag_ = true;
+    return HCCL_SUCCESS;
+}
+
+HcclResult HostCpuRoceChannel::CheckQpInfoForPolling(const Hccl::QpInfo& qpInfo, uint32_t qpIdx) const
+{
+    CHK_PRT_RET(
+        qpInfo.sendCq == nullptr, HCCL_ERROR("[HostCpuRoceChannel::%s] qp[%u] sendCq is null", __func__, qpIdx),
+        HCCL_E_INTERNAL);
+    CHK_PRT_RET(
+        qpInfo.qp == nullptr, HCCL_ERROR("[HostCpuRoceChannel::%s] qp[%u] is null", __func__, qpIdx), HCCL_E_INTERNAL);
+    CHK_PRT_RET(
+        qpInfo.sendCq->context == nullptr,
+        HCCL_ERROR("[HostCpuRoceChannel::%s] qp[%u] sendCq->context is null", __func__, qpIdx), HCCL_E_INTERNAL);
+    return HCCL_SUCCESS;
+}
+
+HcclResult HostCpuRoceChannel::CheckPollCqResult(
+    const Hccl::QpInfo& qpInfo, uint32_t qpIdx, int actualNum, const struct ibv_wc* wc) const
+{
+    if (actualNum < 0) {
+        HCCL_ERROR("[HostCpuRoceChannel::%s] qp[%u] ibv_poll_cq failed. actualNum: %d.", __func__, qpIdx, actualNum);
+        return HCCL_E_NETWORK;
+    }
+    if (actualNum > wqeNums_[qpIdx]) {
+        HCCL_ERROR(
+            "[HostCpuRoceChannel::%s] qp[%u] ibv_poll_cq polled more completions (%d) than expected (%d).", __func__,
+            qpIdx, actualNum, wqeNums_[qpIdx]);
+        return HCCL_E_INTERNAL;
+    }
+    for (int i = 0; i < actualNum; i++) {
+        if (wc[i].status != IBV_WC_SUCCESS) {
+            HCCL_ERROR(
+                "[HostCpuRoceChannel::%s] ibv_poll_cq error. wc[%d] status[%d], opcode[%d], vendorErr[%u], "
+                "byteLen[%u], wcFlags[%u], sl[%u]. qpInfo[%u].qp->qp_num[%u]",
+                __func__, i, wc[i].status, wc[i].opcode, wc[i].vendor_err, wc[i].byte_len, wc[i].wc_flags, wc[i].sl,
+                qpIdx, qpInfo.qp->qp_num);
+            return HCCL_E_NETWORK;
+        }
+    }
+    return HCCL_SUCCESS;
+}
+
+HcclResult
+HostCpuRoceChannel::WaitForSingleQpWqeCompletion(const Hccl::QpInfo& qpInfo, uint32_t qpIdx, uint64_t timeoutMs)
+{
+    CHK_RET(CheckQpInfoForPolling(qpInfo, qpIdx));
+    std::vector<struct ibv_wc> wc(wqeNums_[qpIdx]);
+    const auto timeout = std::chrono::milliseconds(timeoutMs);
+    auto startTime = std::chrono::steady_clock::now();
+    while (true) {
+        const int actualNum = IbvPollCq(qpInfo.sendCq, wqeNums_[qpIdx], wc.data());
+        CHK_RET(CheckPollCqResult(qpInfo, qpIdx, actualNum, wc.data()));
+        if (actualNum > 0) {
+            wqeNums_[qpIdx] -= actualNum;
+            if (wqeNums_[qpIdx] == 0) {
+                break;
+            }
+            startTime = std::chrono::steady_clock::now();
+        }
+        CHK_PRT_RET(
+            (std::chrono::steady_clock::now() - startTime) >= timeout,
+            HCCL_ERROR(
+                "[HostCpuRoceChannel][%s] qp[%u] call ibv_poll_cq timeout, remaining wqeNum[%u].", __func__, qpIdx,
+                wqeNums_[qpIdx]),
+            HCCL_E_TIMEOUT);
+    }
+    wqeNums_[qpIdx] = 0;
+    HCCL_INFO("[HostCpuRoceChannel::%s] SUCCESS. wqeNums_[%u]=%d.", __func__, qpIdx, wqeNums_[qpIdx]);
     return HCCL_SUCCESS;
 }
 
@@ -1415,10 +1429,11 @@ HcclResult HostCpuRoceChannel::ChannelFence()
     Hccl::TaskParam taskParam{};
     taskParam.beginTime = hccl::DlProfFunction::GetInstance().dlMsprofSysCycleTime();
     HCCL_INFO("[HostCpuRoceChannel::%s] ChannelFence start, wqeNums_[0]=%d", __func__, wqeNums_[0]);
-    HcclResult ret = WaitForFenceCompletion();
+    HcclResult ret = WaitForWqeCompletion();
     if (ret != HCCL_SUCCESS) {
         return ret;
     }
+    fenceFlag_ = true;
 
     taskParam.taskType = Hccl::TaskParamType::TASK_DPU_CHANNEL_FENCE;
     taskParam.taskPara.Notify.notifyID = INVALID_U64;
@@ -1428,6 +1443,13 @@ HcclResult HostCpuRoceChannel::ChannelFence()
         return dfxCallback_(taskParam, reinterpret_cast<u64>(this));
     }
     return HCCL_SUCCESS;
+}
+
+HcclResult HostCpuRoceChannel::ChannelDrain()
+{
+    std::lock_guard<std::mutex> lock(sendCq_mutex);
+    HCCL_INFO("[HostCpuRoceChannel::%s] ChannelDrain start, qpNum[%zu]", __func__, wqeNums_.size());
+    return WaitForWqeCompletion();
 }
 
 HcclResult HostCpuRoceChannel::GetNotifyNum(uint32_t* notifyNum) const

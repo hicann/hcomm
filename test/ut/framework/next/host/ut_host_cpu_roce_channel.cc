@@ -164,6 +164,7 @@ protected:
 
     virtual void TearDown()
     {
+        unsetenv("HCCL_DFS_CONFIG");
         GlobalMockObject::verify();
         std::cout << "A Test case in HostCpuRoceChannelTest TearDown" << std::endl;
         delete fakeSocket;
@@ -809,6 +810,7 @@ TEST_F(HostCpuRoceChannelTest, Ut_ChannelFence_When_WqeNumIsZero_Expect_HCCL_SUC
     impl_->wqeNums_ = {0};
     HcclResult ret = impl_->ChannelFence();
     EXPECT_EQ(ret, HCCL_SUCCESS);
+    EXPECT_TRUE(impl_->fenceFlag_);
 }
 
 TEST_F(HostCpuRoceChannelTest, Ut_ChannelFence_When_PollExcessCqe_Expect_HCCL_E_INTERNAL)
@@ -834,6 +836,77 @@ TEST_F(HostCpuRoceChannelTest, Ut_ChannelFence_When_PollCqFailed_Expect_HCCL_E_N
     MOCKER_CPP(&HostCpuRoceChannel::IbvPollCq).stubs().will(returnValue(-1));
     HcclResult ret = impl_->ChannelFence();
     EXPECT_EQ(ret, HCCL_E_NETWORK);
+}
+
+TEST_F(HostCpuRoceChannelTest, Ut_ChannelDrain_When_WqeNumIsZero_Expect_NoFenceFlagSideEffect)
+{
+    SetupSuccessfulConnectionMocks();
+    auto impl_ = CreateInitAndConnect();
+    impl_->wqeNums_ = {0};
+    SetupOneValidQpInfoMock();
+
+    impl_->fenceFlag_ = false;
+    EXPECT_EQ(impl_->ChannelDrain(), HCCL_SUCCESS);
+    EXPECT_FALSE(impl_->fenceFlag_);
+
+    impl_->fenceFlag_ = true;
+    EXPECT_EQ(impl_->ChannelDrain(), HCCL_SUCCESS);
+    EXPECT_TRUE(impl_->fenceFlag_);
+}
+
+TEST_F(HostCpuRoceChannelTest, Ut_ChannelDrain_When_WqePending_Expect_PollToZeroWithoutFenceFlag)
+{
+    SetupSuccessfulConnectionMocks();
+    auto impl_ = CreateInitAndConnect();
+    impl_->wqeNums_ = {2};
+    impl_->fenceFlag_ = false;
+    SetupOneValidQpInfoMock();
+    setenv("HCCL_DFS_CONFIG", "task_exception:on", 1);
+    MOCKER_CPP(&Hccl::EnvRtsConfig::GetExecTimeOut).stubs().will(returnValue(static_cast<uint32_t>(1)));
+    MOCKER_CPP(&HostCpuRoceChannel::IbvPollCq).stubs().will(returnValue(2));
+
+    EXPECT_EQ(impl_->ChannelDrain(), HCCL_SUCCESS);
+    EXPECT_EQ(impl_->wqeNums_[0], 0);
+    EXPECT_FALSE(impl_->fenceFlag_);
+}
+
+TEST_F(HostCpuRoceChannelTest, Ut_ChannelDrain_When_PollExcessCqe_Expect_HCCL_E_INTERNAL)
+{
+    SetupSuccessfulConnectionMocks();
+    auto impl_ = CreateInitAndConnect();
+    impl_->wqeNums_ = {2};
+    SetupOneValidQpInfoMock();
+    setenv("HCCL_DFS_CONFIG", "task_exception:on", 1);
+    MOCKER_CPP(&Hccl::EnvRtsConfig::GetExecTimeOut).stubs().will(returnValue(static_cast<uint32_t>(1)));
+    MOCKER_CPP(&HostCpuRoceChannel::IbvPollCq).stubs().will(returnValue(5));
+
+    EXPECT_EQ(impl_->ChannelDrain(), HCCL_E_INTERNAL);
+}
+
+TEST_F(HostCpuRoceChannelTest, Ut_ChannelDrain_When_PollCqFailed_Expect_HCCL_E_NETWORK)
+{
+    SetupSuccessfulConnectionMocks();
+    auto impl_ = CreateInitAndConnect();
+    impl_->wqeNums_ = {1};
+    SetupOneValidQpInfoMock();
+    setenv("HCCL_DFS_CONFIG", "task_exception:on", 1);
+    MOCKER_CPP(&Hccl::EnvRtsConfig::GetExecTimeOut).stubs().will(returnValue(static_cast<uint32_t>(1)));
+    MOCKER_CPP(&HostCpuRoceChannel::IbvPollCq).stubs().will(returnValue(-1));
+
+    EXPECT_EQ(impl_->ChannelDrain(), HCCL_E_NETWORK);
+}
+
+TEST_F(HostCpuRoceChannelTest, Ut_ChannelDrain_When_NoCqeUntilTimeout_Expect_HCCL_E_TIMEOUT)
+{
+    SetupSuccessfulConnectionMocks();
+    auto impl_ = CreateInitAndConnect();
+    impl_->wqeNums_ = {1};
+    SetupOneValidQpInfoMock();
+    MOCKER_CPP(&HostCpuRoceChannel::IbvPollCq).stubs().will(returnValue(0));
+    setenv("HCCL_DFS_CONFIG", "task_exception:on", 1);
+    MOCKER_CPP(&Hccl::EnvRtsConfig::GetExecTimeOut).stubs().will(returnValue(static_cast<uint32_t>(0)));
+
+    EXPECT_EQ(impl_->ChannelDrain(), HCCL_E_TIMEOUT);
 }
 
 TEST_F(HostCpuRoceChannelTest, Ut_Write_When_Normal_Expect_HCCL_SUCCESS)

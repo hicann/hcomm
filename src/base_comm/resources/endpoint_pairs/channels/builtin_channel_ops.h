@@ -223,6 +223,26 @@ inline int32_t BuiltinFenceOnThread(void* ctx, ThreadHandle thread)
 
 inline int32_t BuiltinFence(void* ctx) { return BuiltinFenceOnThread(ctx, 0); }
 
+inline int32_t BuiltinDrainOnThread(void* ctx, ThreadHandle thread)
+{
+    HCCL_INFO("[%s] START. thread[0x%llx], channel[0x%llx].", __func__, thread, ctx);
+
+    HcclResult ret = HCCL_SUCCESS;
+    DevType devType;
+    CHK_RET(hrtGetDeviceType(devType));
+    if (devType == DevType::DEV_TYPE_950 || devType == DevType::DEV_TYPE_960) {
+        auto* const channelPtr = reinterpret_cast<hcomm::Channel*>(ctx);
+        CHK_PTR_NULL(channelPtr);
+        ret = channelPtr->ChannelDrain();
+    } else {
+        ret = HCCL_E_NOT_SUPPORT;
+    }
+    CHK_PRT_RET(
+        ret != HCCL_SUCCESS, HCCL_ERROR("[%s] FAIL. thread[0x%llx], channel[0x%llx].", __func__, thread, ctx), ret);
+    HCCL_INFO("[%s] SUCCESS.", __func__);
+    return HCCL_SUCCESS;
+}
+
 // 以下接口内置不支持，复用 nic_plugin_manager.cc 中的 DefaultChannel* 默认实现
 
 inline HcommNicChannelOps g_BuiltinChannelOps = {
@@ -250,7 +270,7 @@ inline HcommNicChannelOps g_BuiltinChannelOps = {
     hcomm::DefaultChannelBatchTransferOnThread,                // batchTransferOnThread
     BuiltinFence,                                              // fence
     BuiltinFenceOnThread,                                      // fenceOnThread
-    hcomm::DefaultChannelDrainOnThread,                        // drainOnThread
+    BuiltinDrainOnThread,                                      // drainOnThread
 };
 
 #endif // BUILTIN_CHANNEL_OPS_H

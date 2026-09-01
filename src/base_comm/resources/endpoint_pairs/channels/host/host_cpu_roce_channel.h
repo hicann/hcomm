@@ -57,10 +57,15 @@ public:
     HcclResult Write(void* dst, const void* src, uint64_t len) override;
     HcclResult Read(void* dst, const void* src, uint64_t len) override;
     HcclResult ChannelFence() override;
+    HcclResult ChannelDrain() override;
     HcclResult GetHcclBuffer(void*& addr, uint64_t& size);
 
 private:
-    HcclResult WaitForFenceCompletion();
+    HcclResult WaitForWqeCompletion();
+    HcclResult WaitForSingleQpWqeCompletion(const Hccl::QpInfo& qpInfo, uint32_t qpIdx, uint64_t timeoutMs);
+    HcclResult CheckQpInfoForPolling(const Hccl::QpInfo& qpInfo, uint32_t qpIdx) const;
+    HcclResult
+    CheckPollCqResult(const Hccl::QpInfo& qpInfo, uint32_t qpIdx, int actualNum, const struct ibv_wc* wc) const;
 
     virtual HcclResult Clean() override;
     HcclResult Resume() override;

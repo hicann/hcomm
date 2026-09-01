@@ -789,21 +789,32 @@ int32_t HcommFenceOnThread(ThreadHandle thread)
 
 int32_t HcommChannelDrainOnThread(ThreadHandle thread, ChannelHandle channel)
 {
+    HCCL_INFO("[%s] START. thread[0x%llx], channel[0x%llx].", __func__, thread, channel);
+
+    int32_t ret = HCCL_SUCCESS;
     if (IS_PLUGIN_HANDLE(channel)) {
         auto* ch = CHANNEL_FROM_HANDLE(channel);
         CHK_PTR_NULL(ch);
-        return ch->GetNicOps()->drainOnThread(ch->GetNicCtx(), thread);
+        ret = ch->GetNicOps()->drainOnThread(ch->GetNicCtx(), thread);
+    } else {
+        DevType devType;
+        CHK_RET(hrtGetDeviceType(devType));
+        if (devType == DevType::DEV_TYPE_950 || devType == DevType::DEV_TYPE_960) {
+            auto* ch = CHANNEL_FROM_HANDLE(channel);
+            CHK_PTR_NULL(ch);
+            ret = ch->GetNicOps()->drainOnThread(ch->GetNicCtx(), thread);
+        } else {
+            Thread* const threadPtr = reinterpret_cast<Thread*>(thread);
+            CHK_PTR_NULL(threadPtr);
+            Stream* stream = GetStream(thread);
+            CHK_PTR_NULL(stream);
+            ret = HcclRemoteDrain(stream, reinterpret_cast<void*>(channel));
+        }
     }
-
-    Thread* const threadPtr = reinterpret_cast<Thread*>(thread);
-    CHK_PTR_NULL(threadPtr);
-    Stream* stream = GetStream(thread);
-    CHK_PTR_NULL(stream);
-
-    HcclResult ret = HcclRemoteDrain(stream, reinterpret_cast<void*>(channel));
     CHK_PRT_RET(
         ret != HCCL_SUCCESS, HCCL_ERROR("[%s] FAIL. thread[0x%llx], channel[0x%llx].", __func__, thread, channel), ret);
 
+    HCCL_INFO("[%s] SUCCESS.", __func__);
     return HCCL_SUCCESS;
 }
 

@@ -21,8 +21,10 @@
 #include "hcomm_nic_plugin.h"
 #include "hcomm_primitives.h"
 #include "hcomm_res.h"
+#include "new/hccl_primitive_remote.h"
 #include "builtin_channel_ops.h"
 #include "channel_process.h"
+#include "cpu_ts_thread.h"
 #include "host_cpu_roce_channel.h"
 #include "nic_plugin_holder.h"
 #include "nic_plugin_manager.h"
@@ -668,4 +670,42 @@ TEST_F(UtCpuHcommPluginChannelOps, Ut_BuiltinChannel_Expect_DispatchToBuiltinOps
 
     HcommChannelDestroy(&chHandle, 1);
     HcommEndpointDestroy(epHandle);
+}
+
+TEST_F(UtCpuHcommPluginChannelOps, Ut_BuiltinDrainOn950WithThread_Expect_DispatchToChannelDrain)
+{
+    hccl::CpuTsThread threadOnHost{hccl::StreamType::STREAM_TYPE_ONLINE, 1, hccl::NotifyLoadType::DEVICE_NOTIFY};
+    threadOnHost.stream_.reset(new (std::nothrow) hccl::Stream());
+    const ThreadHandle thread = reinterpret_cast<ThreadHandle>(&threadOnHost);
+    EndpointHandle epHandle = reinterpret_cast<EndpointHandle>(0x01);
+    HcommChannelDesc channelDesc{};
+    hcomm::HostCpuRoceChannel channelOnHost{epHandle, channelDesc};
+    channelOnHost.SetNicChannelCtx(const_cast<HcommNicChannelOps*>(&g_BuiltinChannelOps), &channelOnHost);
+    const ChannelHandle channel = reinterpret_cast<ChannelHandle>(&channelOnHost);
+    DevType devType = DevType::DEV_TYPE_950;
+
+    MOCKER(&hrtGetDeviceType).stubs().with(outBound(devType)).will(returnValue(HCCL_SUCCESS));
+    MOCKER(&HcclRemoteDrain).expects(never());
+    MOCKER_CPP_VIRTUAL(channelOnHost, &hcomm::HostCpuRoceChannel::ChannelDrain)
+        .expects(once())
+        .will(returnValue(HCCL_SUCCESS));
+
+    EXPECT_EQ(HcommChannelDrainOnThread(thread, channel), HCCL_SUCCESS);
+}
+
+TEST_F(UtCpuHcommPluginChannelOps, Ut_BuiltinDrainOn950WithoutThread_Expect_DispatchToChannelDrain)
+{
+    EndpointHandle epHandle = reinterpret_cast<EndpointHandle>(0x01);
+    HcommChannelDesc channelDesc{};
+    hcomm::HostCpuRoceChannel channelOnHost{epHandle, channelDesc};
+    channelOnHost.SetNicChannelCtx(const_cast<HcommNicChannelOps*>(&g_BuiltinChannelOps), &channelOnHost);
+    const ChannelHandle channel = reinterpret_cast<ChannelHandle>(&channelOnHost);
+    DevType devType = DevType::DEV_TYPE_950;
+
+    MOCKER(&hrtGetDeviceType).stubs().with(outBound(devType)).will(returnValue(HCCL_SUCCESS));
+    MOCKER_CPP_VIRTUAL(channelOnHost, &hcomm::HostCpuRoceChannel::ChannelDrain)
+        .expects(once())
+        .will(returnValue(HCCL_SUCCESS));
+
+    EXPECT_EQ(HcommChannelDrainOnThread(0, channel), HCCL_SUCCESS);
 }

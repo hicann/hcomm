@@ -29,6 +29,7 @@
 #include "urma_api.h"
 #include "dlurma_function.h"
 #include "hcomm_adapter_urma.h"
+#include "env_config/env_config_v2.h"
 
 using namespace hcomm;
 
@@ -105,6 +106,7 @@ protected:
 
     virtual void TearDown()
     {
+        unsetenv("HCCL_DFS_CONFIG");
         GlobalMockObject::verify();
         std::cout << "A Test case in HostCpuUrmaChannelTest TearDown" << std::endl;
         delete fakeSocket;
@@ -321,4 +323,109 @@ TEST_F(HostCpuUrmaChannelTest, Ut_When_ChannelFence_HasWqe_PollFails_Expect_Netw
 
     HcclResult ret = impl->ChannelFence();
     EXPECT_EQ(ret, HCCL_E_NETWORK);
+}
+
+TEST_F(HostCpuUrmaChannelTest, Ut_When_ChannelDrain_NoWqe_Expect_SuccessWithoutFenceFlag)
+{
+    MOCKER(HcommEndpointStartListen).stubs().will(returnValue(static_cast<HcommResult>(HCCL_SUCCESS)));
+    MOCKER(&Hccl::RdmaHandleManager::GetByAddr).stubs().will(returnValue(rdmaHandle_));
+    MOCKER(RaSocketSetWhiteListStatus).stubs().will(returnValue(0));
+
+    auto impl = std::make_unique<HostCpuUrmaChannel>(endpointHandle, channelDesc);
+    ASSERT_EQ(impl->Init(), HCCL_SUCCESS);
+
+    EXPECT_EQ(impl->ChannelDrain(), HCCL_SUCCESS);
+    EXPECT_EQ(impl->wqeNum_, 0U);
+    EXPECT_FALSE(impl->fenceFlag_);
+}
+
+TEST_F(HostCpuUrmaChannelTest, Ut_When_ChannelDrain_HasWqe_Expect_PollAllWithoutFenceFlag)
+{
+    MOCKER(HcommEndpointStartListen).stubs().will(returnValue(static_cast<HcommResult>(HCCL_SUCCESS)));
+    MOCKER(&Hccl::RdmaHandleManager::GetByAddr).stubs().will(returnValue(rdmaHandle_));
+    MOCKER(RaSocketSetWhiteListStatus).stubs().will(returnValue(0));
+
+    auto impl = std::make_unique<HostCpuUrmaChannel>(endpointHandle, channelDesc);
+    ASSERT_EQ(impl->Init(), HCCL_SUCCESS);
+
+    impl->wqeNum_ = 2;
+    setenv("HCCL_DFS_CONFIG", "task_exception:on", 1);
+    MOCKER_CPP(&Hccl::EnvRtsConfig::GetExecTimeOut).stubs().will(returnValue(static_cast<uint32_t>(1)));
+    MOCKER(HrtUrmaPollJfc).stubs().will(returnValue(1)).then(returnValue(1));
+
+    EXPECT_EQ(impl->ChannelDrain(), HCCL_SUCCESS);
+    EXPECT_EQ(impl->wqeNum_, 0U);
+    EXPECT_FALSE(impl->fenceFlag_);
+}
+
+TEST_F(HostCpuUrmaChannelTest, Ut_When_ChannelFence_HasWqe_Expect_PollAllAndSetFenceFlag)
+{
+    MOCKER(HcommEndpointStartListen).stubs().will(returnValue(static_cast<HcommResult>(HCCL_SUCCESS)));
+    MOCKER(&Hccl::RdmaHandleManager::GetByAddr).stubs().will(returnValue(rdmaHandle_));
+    MOCKER(RaSocketSetWhiteListStatus).stubs().will(returnValue(0));
+
+    auto impl = std::make_unique<HostCpuUrmaChannel>(endpointHandle, channelDesc);
+    ASSERT_EQ(impl->Init(), HCCL_SUCCESS);
+
+    impl->wqeNum_ = 1;
+    setenv("HCCL_DFS_CONFIG", "task_exception:on", 1);
+    MOCKER_CPP(&Hccl::EnvRtsConfig::GetExecTimeOut).stubs().will(returnValue(static_cast<uint32_t>(1)));
+    MOCKER(HrtUrmaPollJfc).stubs().will(returnValue(1));
+
+    EXPECT_EQ(impl->ChannelFence(), HCCL_SUCCESS);
+    EXPECT_EQ(impl->wqeNum_, 0U);
+    EXPECT_TRUE(impl->fenceFlag_);
+}
+
+TEST_F(HostCpuUrmaChannelTest, Ut_When_ChannelDrain_PollFails_Expect_NetworkError)
+{
+    MOCKER(HcommEndpointStartListen).stubs().will(returnValue(static_cast<HcommResult>(HCCL_SUCCESS)));
+    MOCKER(&Hccl::RdmaHandleManager::GetByAddr).stubs().will(returnValue(rdmaHandle_));
+    MOCKER(RaSocketSetWhiteListStatus).stubs().will(returnValue(0));
+
+    auto impl = std::make_unique<HostCpuUrmaChannel>(endpointHandle, channelDesc);
+    ASSERT_EQ(impl->Init(), HCCL_SUCCESS);
+
+    impl->wqeNum_ = 1;
+    setenv("HCCL_DFS_CONFIG", "task_exception:on", 1);
+    MOCKER_CPP(&Hccl::EnvRtsConfig::GetExecTimeOut).stubs().will(returnValue(static_cast<uint32_t>(1)));
+    MOCKER(HrtUrmaPollJfc).stubs().will(returnValue(-1));
+
+    EXPECT_EQ(impl->ChannelDrain(), HCCL_E_NETWORK);
+    EXPECT_EQ(impl->wqeNum_, 1U);
+    EXPECT_FALSE(impl->fenceFlag_);
+}
+
+TEST_F(HostCpuUrmaChannelTest, Ut_When_ChannelDrain_PollExcessCqe_Expect_InternalError)
+{
+    MOCKER(HcommEndpointStartListen).stubs().will(returnValue(static_cast<HcommResult>(HCCL_SUCCESS)));
+    MOCKER(&Hccl::RdmaHandleManager::GetByAddr).stubs().will(returnValue(rdmaHandle_));
+    MOCKER(RaSocketSetWhiteListStatus).stubs().will(returnValue(0));
+
+    auto impl = std::make_unique<HostCpuUrmaChannel>(endpointHandle, channelDesc);
+    ASSERT_EQ(impl->Init(), HCCL_SUCCESS);
+
+    impl->wqeNum_ = 1;
+    setenv("HCCL_DFS_CONFIG", "task_exception:on", 1);
+    MOCKER_CPP(&Hccl::EnvRtsConfig::GetExecTimeOut).stubs().will(returnValue(static_cast<uint32_t>(1)));
+    MOCKER(HrtUrmaPollJfc).stubs().will(returnValue(2));
+
+    EXPECT_EQ(impl->ChannelDrain(), HCCL_E_INTERNAL);
+}
+
+TEST_F(HostCpuUrmaChannelTest, Ut_When_ChannelDrain_NoCqeUntilTimeout_Expect_Timeout)
+{
+    MOCKER(HcommEndpointStartListen).stubs().will(returnValue(static_cast<HcommResult>(HCCL_SUCCESS)));
+    MOCKER(&Hccl::RdmaHandleManager::GetByAddr).stubs().will(returnValue(rdmaHandle_));
+    MOCKER(RaSocketSetWhiteListStatus).stubs().will(returnValue(0));
+
+    auto impl = std::make_unique<HostCpuUrmaChannel>(endpointHandle, channelDesc);
+    ASSERT_EQ(impl->Init(), HCCL_SUCCESS);
+
+    impl->wqeNum_ = 1;
+    MOCKER(HrtUrmaPollJfc).stubs().will(returnValue(0));
+    setenv("HCCL_DFS_CONFIG", "task_exception:on", 1);
+    MOCKER_CPP(&Hccl::EnvRtsConfig::GetExecTimeOut).stubs().will(returnValue(static_cast<uint32_t>(0)));
+
+    EXPECT_EQ(impl->ChannelDrain(), HCCL_E_TIMEOUT);
 }

@@ -44,6 +44,7 @@ public:
     HcclResult Write(void* dst, const void* src, uint64_t len) override;
     HcclResult Read(void* dst, const void* src, uint64_t len) override;
     HcclResult ChannelFence() override;
+    HcclResult ChannelDrain() override;
 
     HcclResult Clean() override;
     HcclResult Resume() override;
@@ -59,6 +60,7 @@ private:
     HcclResult GetSplitNum(uint64_t len, uint64_t maxJettyWrDataLen, uint64_t& splitNum);
     HcclResult
     GetLocalAndRemoteSeg(urma_opcode_t opcode, void* dst, const void* src, uint64_t len, u64& localSeg, u64& remoteSeg);
+    HcclResult WaitForWqeCompletion();
 
 private:
     // --------------------- 入参 ---------------------

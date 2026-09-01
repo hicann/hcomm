@@ -361,12 +361,10 @@ HcclResult hcomm::HostCpuUrmaChannel::Read(void* dst, const void* src, uint64_t 
     return HCCL_SUCCESS;
 }
 
-HcclResult hcomm::HostCpuUrmaChannel::ChannelFence()
+HcclResult HostCpuUrmaChannel::WaitForWqeCompletion()
 {
-    std::lock_guard<std::mutex> lock(fenceMutex_);
-    HCCL_INFO("[HostCpuUrmaChannel::%s] start, wqeNum_ = %u va[%llu]", __func__, wqeNum_, connections_[0]->GetCqVa());
     CHK_PRT_RET(
-        wqeNum_ == 0, HCCL_INFO("[HostCpuUrmaChannel::%s] no need to fence since no wqeNum[%u].", __func__),
+        wqeNum_ == 0, HCCL_INFO("[HostCpuUrmaChannel::%s] no need to wait since wqeNum_ is 0.", __func__),
         HCCL_SUCCESS);
     std::vector<urma_cr_t> wc(wqeNum_);
 
@@ -408,8 +406,26 @@ HcclResult hcomm::HostCpuUrmaChannel::ChannelFence()
     }
 
     wqeNum_ = 0; // 所有wqe都已完成，重置计算器
+    return HCCL_SUCCESS;
+}
+
+HcclResult hcomm::HostCpuUrmaChannel::ChannelFence()
+{
+    std::lock_guard<std::mutex> lock(fenceMutex_);
+    HCCL_INFO("[HostCpuUrmaChannel::%s] start, wqeNum_ = %u va[%llu]", __func__, wqeNum_, connections_[0]->GetCqVa());
+    CHK_PRT_RET(
+        wqeNum_ == 0, HCCL_INFO("[HostCpuUrmaChannel::%s] no need to fence since no wqeNum[%u].", __func__),
+        HCCL_SUCCESS);
+    CHK_RET(WaitForWqeCompletion());
     fenceFlag_ = true;
     return HCCL_SUCCESS;
+}
+
+HcclResult HostCpuUrmaChannel::ChannelDrain()
+{
+    std::lock_guard<std::mutex> lock(fenceMutex_);
+    HCCL_INFO("[HostCpuUrmaChannel::%s] start, wqeNum_ = %u", __func__, wqeNum_);
+    return WaitForWqeCompletion();
 }
 
 HcclResult hcomm::HostCpuUrmaChannel::Clean()
