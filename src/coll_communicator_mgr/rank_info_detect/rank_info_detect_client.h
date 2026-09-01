@@ -75,7 +75,7 @@ private:
     void SelectAvailableHostAddr(nlohmann::json& addrJson);
     void UpdateSelectedHostAddr(
         nlohmann::json& addrJson, const std::vector<IpAddress>& candidates, std::size_t selectedIndex) const;
-    void ProbeHostRoceAddr(const IpAddress& hostAddr, bool& isAvailable) const;
+    s32 ProbeHostRoceAddr(const IpAddress& hostAddr) const;
     void ConstructSingleRank(RankTableInfo& localRankTable);
     HcclResult GetLocalTlsStatus(TlsStatus& tlsStatus) const;
     HcclResult GetLocalHostDpuTlsStatus(TlsStatus& tlsStatus) const;

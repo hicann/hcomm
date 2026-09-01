@@ -34,7 +34,9 @@ protected:
 // 测试HcclNetDevOpenV2
 TEST(HcclNetDevV2Test, ReturnsSuccessWhenDeviceAddedSuccessfully)
 {
-    MOCKER(Hccl::HrtRaRdmaInit).stubs().will(returnValue(Hccl::RdmaHandle()));
+    MOCKER(Hccl::HrtRaRdmaInit, Hccl::RdmaHandle(Hccl::HrtNetworkMode, Hccl::RaInterface&))
+        .stubs()
+        .will(returnValue(Hccl::RdmaHandle()));
     HcclNetDev netDev = nullptr;
     HcclNetDevInfos info;
     info.devicePhyId = 0;
@@ -47,7 +49,9 @@ TEST(HcclNetDevV2Test, ReturnsSuccessWhenDeviceAddedSuccessfully)
 
 TEST(HcclNetDevV2Test, ReturnsSuccessWhenDeviceAddedSuccessfully_1)
 {
-    MOCKER(Hccl::HrtRaRdmaInit).stubs().will(returnValue(Hccl::RdmaHandle()));
+    MOCKER(Hccl::HrtRaRdmaInit, Hccl::RdmaHandle(Hccl::HrtNetworkMode, Hccl::RaInterface&))
+        .stubs()
+        .will(returnValue(Hccl::RdmaHandle()));
     HcclNetDev netDev = nullptr;
     HcclNetDevInfos info;
     info.devicePhyId = 0;
@@ -61,7 +65,9 @@ TEST(HcclNetDevV2Test, ReturnsSuccessWhenDeviceAddedSuccessfully_1)
 TEST(HcclNetDevV2Test, ReturnsSuccessWhenAddressIsIPv4)
 {
     HcclAddress addr;
-    MOCKER(Hccl::HrtRaRdmaInit).stubs().will(returnValue(Hccl::RdmaHandle()));
+    MOCKER(Hccl::HrtRaRdmaInit, Hccl::RdmaHandle(Hccl::HrtNetworkMode, Hccl::RaInterface&))
+        .stubs()
+        .will(returnValue(Hccl::RdmaHandle()));
     HcclNetDev netDev = nullptr;
     HcclNetDevInfos info;
     info.devicePhyId = 0;

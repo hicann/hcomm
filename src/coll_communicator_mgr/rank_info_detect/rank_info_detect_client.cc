@@ -18,7 +18,6 @@
 #include "host_buffer.h"
 #include "binary_stream.h"
 #include "hccp_peer_manager.h"
-#include "hcomm_res.h"
 #include "orion_adapter_hccp.h"
 #include "orion_adapter_rts.h"
 #include "host_socket_handle_manager.h"
@@ -37,21 +36,6 @@ namespace {
     constexpr const char* BACKUP_ADDR_FIELD = "backup_addr";
     constexpr const char* ADDR_FIELD = "addr";
     constexpr const char* ADDR_TYPE_FIELD = "addr_type";
-
-    void FillCommAddr(CommAddr& commAddr, const IpAddress& ipAddr)
-    {
-        const s32 family = ipAddr.GetFamily();
-        if (family == AF_INET) {
-            commAddr.type = COMM_ADDR_TYPE_IP_V4;
-            commAddr.addr = ipAddr.GetBinaryAddress().addr;
-        } else if (family == AF_INET6) {
-            commAddr.type = COMM_ADDR_TYPE_IP_V6;
-            commAddr.addr6 = ipAddr.GetBinaryAddress().addr6;
-        } else {
-            THROW<InvalidParamsException>(
-                StringFormat("[%s] invalid commAddrType, hostAddr[%s].", __func__, ipAddr.Describe().c_str()));
-        }
-    }
 
     void BuildHostAddrCandidates(const nlohmann::json& addrJson, std::vector<IpAddress>& candidates)
     {
@@ -392,48 +376,24 @@ void RankInfoDetectClient::ConstructRankTable(RankTableInfo& localRankTable)
     HCCL_INFO("[RankInfoDetectClient::%s] end.", __func__);
 }
 
-void RankInfoDetectClient::ProbeHostRoceAddr(const IpAddress& hostAddr, bool& isAvailable) const
+s32 RankInfoDetectClient::ProbeHostRoceAddr(const IpAddress& hostAddr) const
 {
-    isAvailable = false;
     // hostAddr 来自 netLayer3 的 rank_addr_list，是 RoCE 数据通信地址；它不同于 RootInfoDetect
     // 使用的 rootHandle.ip，后者只负责控制面 socket 建链。
-    EndpointDesc endpointDesc{};
-    const HcommResult initRet = EndpointDescInit(&endpointDesc, 1);
-    CHK_PRT_THROW(
-        initRet != HCCL_SUCCESS, HCCL_ERROR("[%s] EndpointDescInit failed, ret[%d].", __func__, initRet),
-        InternalException, StringFormat("[%s] EndpointDescInit failed, ret[%d]", __func__, initRet));
-    endpointDesc.protocol = COMM_PROTOCOL_ROCE;
-    endpointDesc.loc.locType = ENDPOINT_LOC_TYPE_HOST;
-    const std::string msgFillCommAddr = "fill host RoCE endpoint address failed";
-    TRY_CATCH_THROW(InvalidParamsException, msgFillCommAddr, FillCommAddr(endpointDesc.commAddr, hostAddr););
-
-    EndpointHandle endpointHandle = nullptr;
-    const HcommResult createRet = HcommEndpointCreate(&endpointDesc, &endpointHandle);
-    // 仅网络错误允许上层继续尝试备用地址，其他错误按不可恢复异常立即终止。
-    if (createRet == HCCL_E_NETWORK) {
-        HCCL_WARNING(
-            "[%s] host addr is unavailable, hostAddr[%s], ret[%d].", __func__, hostAddr.Describe().c_str(), createRet);
-        return;
-    } else if (createRet != HCCL_SUCCESS) {
-        HCCL_ERROR(
-            "[%s] HcommEndpointCreate failed, hostAddr[%s], ret[%d].", __func__, hostAddr.Describe().c_str(),
-            createRet);
-        THROW<InternalException>(StringFormat("[%s] HcommEndpointCreate failed, ret[%d]", __func__, createRet));
+    RaInterface raInterface{devPhyId_, hostAddr};
+    RdmaHandle rdmaHandle = nullptr;
+    const s32 ret = HrtRaRdmaInit(HrtNetworkMode::PEER, raInterface, rdmaHandle);
+    if (ret != 0) {
+        return ret;
     }
-    if (endpointHandle != nullptr) {
-        // Endpoint 仅用于可用性探测，不参与后续通信，探测成功后立即释放。
-        const HcommResult destroyRet = HcommEndpointDestroy(endpointHandle);
-        CHK_PRT_THROW(
-            destroyRet != HCCL_SUCCESS,
-            HCCL_ERROR(
-                "[%s] HcommEndpointDestroy failed, hostAddr[%s], ret[%d].", __func__, hostAddr.Describe().c_str(),
-                destroyRet),
-            InternalException, StringFormat("[%s] HcommEndpointDestroy failed, ret[%d]", __func__, destroyRet));
+    if (rdmaHandle != nullptr) {
+        // RDMA handle 仅用于可用性探测，不参与后续通信，探测成功后立即释放。
+        HrtRaRdmaDeInit(rdmaHandle, HrtNetworkMode::PEER);
     }
-    isAvailable = true;
     HCCL_INFO(
         "[%s] host addr probe success, devPhyId[%u], rankId[%u], hostAddr[%s].", __func__, devPhyId_, rankId_,
         hostAddr.Describe().c_str());
+    return 0;
 }
 
 void RankInfoDetectClient::SelectLocalHostBackupAddr(nlohmann::json& localDevInfoJson)
@@ -470,28 +430,31 @@ void RankInfoDetectClient::SelectAvailableHostAddr(nlohmann::json& addrJson)
         "candidateSize[%zu].",
         __func__, devPhyId_, rankId_, candidates.front().Describe().c_str(), candidates.size() - 1, candidates.size());
 
-    // HCCL_E_NETWORK 是可恢复错误，通过 isAvailable 继续尝试下一个候选地址；
-    // 其他异常不在此处恢复。
     for (std::size_t idx = 0; idx < candidates.size(); ++idx) {
-        bool isAvailable = false;
-        ProbeHostRoceAddr(candidates[idx], isAvailable);
-        if (isAvailable) {
+        const s32 ret = ProbeHostRoceAddr(candidates[idx]);
+        if (ret == 0) {
             UpdateSelectedHostAddr(addrJson, candidates, idx);
             return;
         }
-        if (idx == candidates.size() - 1) {
-            RPT_INPUT_ERR(
-                true, "EI0016", std::vector<std::string>({"value", "variable", "expect"}),
-                std::vector<std::string>(
-                    {candidates[idx].Describe(), "host addr candidates",
-                     "at least one available host addr for rank connections"}));
-            THROW<NetworkApiException>(StringFormat("[%s] all host addr candidates are unavailable", __func__));
+        if (ret == HCCP_ELINKDOWN) {
+            HCCL_RUN_WARNING(
+                "[%s] host addr[%s] is linkdown, try next candidate, devPhyId[%u], rankId[%u], candidateIndex[%zu].",
+                __func__, candidates[idx].Describe().c_str(), devPhyId_, rankId_, idx);
+            continue;
         }
-        HCCL_WARNING(
-            "[%s] host addr is unavailable, try next candidate, "
-            "devPhyId[%u], rankId[%u], candidateAddr[%s], candidateIndex[%zu].",
-            __func__, devPhyId_, rankId_, candidates[idx].Describe().c_str(), idx);
+        HCCL_ERROR(
+            "[%s] host addr[%s] probe failed with non-linkdown error, ret[%d], devPhyId[%u], rankId[%u], "
+            "candidateIndex[%zu].",
+            __func__, candidates[idx].Describe().c_str(), ret, devPhyId_, rankId_, idx);
+        THROW<NetworkApiException>(StringFormat(
+            "[%s] host addr candidate is unavailable due to non-linkdown error, devPhyId[%u], rankId[%u], "
+            "hostAddr[%s], candidateIndex[%zu], ret[%d]",
+            __func__, devPhyId_, rankId_, candidates[idx].Describe().c_str(), idx, ret));
     }
+    HCCL_RUN_WARNING(
+        "[%s] all host addr candidates are linkdown, keep primary address and continue, "
+        "devPhyId[%u], rankId[%u], primaryAddr[%s], candidateSize[%zu].",
+        __func__, devPhyId_, rankId_, candidates.front().Describe().c_str(), candidates.size());
 }
 
 void RankInfoDetectClient::UpdateSelectedHostAddr(
@@ -808,6 +771,27 @@ void RankInfoDetectClient::HostListenPortDetect(NewRankInfo& rankInfo)
                 }
                 HCCL_DEBUG("[SocketManager::%s] find the host rdma link %s", __func__, link->Describe().c_str());
                 const IpAddress& hostIp = rankLevelInfo.rankAddrs[0].addr;
+                const bool isHostSocketPortRangeConfigured
+                    = !EnvConfig::GetInstance().GetHostNicConfig().GetHostSocketPortRange().empty();
+                if (isHostSocketPortRangeConfigured) {
+                    // Primary/backup candidate selection is completed by SelectLocalHostBackupAddr.
+                    // This check only validates the selected address for host socket listening.
+                    // It does not switch candidates: linkdown skips listening; other errors terminate initialization.
+                    const s32 probeRet = ProbeHostRoceAddr(hostIp);
+                    if (probeRet == HCCP_ELINKDOWN) {
+                        HCCL_RUN_WARNING(
+                            "[RankInfoDetectClient::%s] host dpu address[%s] is linkdown, skip host socket listen and "
+                            "continue communication domain initialization.",
+                            __func__, hostIp.Describe().c_str());
+                        return;
+                    }
+                    CHK_PRT_THROW(
+                        probeRet != 0,
+                        HCCL_ERROR(
+                            "[RankInfoDetectClient::%s] probe host dpu address[%s] failed, ret[%d].", __func__,
+                            hostIp.Describe().c_str(), probeRet),
+                        NetworkApiException, "probe host dpu address failed");
+                }
                 uint32_t hostPort = 0;
                 SetupHostListenPort(devLogicId, devPhyId, hostIp, hostPort);
                 rankInfo.hostPort = hostPort;

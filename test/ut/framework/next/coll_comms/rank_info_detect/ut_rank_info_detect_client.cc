@@ -13,11 +13,11 @@
 #include <mockcpp/mockcpp.hpp>
 #include "hccp_peer_manager.h"
 #include "timeout_exception.h"
+#include <cerrno>
 #include "orion_adapter_rts.h"
 #include "invalid_params_exception.h"
 #include "network_api_exception.h"
 #include "host_socket_handle_manager.h"
-#include "hcomm_res.h"
 #include "whitelist.h"
 #include "hccp_peer_manager.h"
 #include "dev_type.h"
@@ -52,6 +52,7 @@
 #include "rank_graph_test_data_builder.h"
 #include "preempt_port_manager_v2.h"
 #include "socket_manager.h"
+#include "orion_adapter_hccp.h"
 
 extern "C" int TopoAddrInfoGetSize(int phyId, size_t* size);
 extern "C" int TopoAddrInfoGet(int phyId, char* rankInfo, size_t* bufSize);
@@ -192,6 +193,35 @@ void BuildHostRdmaTopo(PhyTopoBuilder* builder, const std::string& topoPath)
     (void)topoPath;
     PhyTopo::GetInstance()->Clear();
     PhyTopoBuilder::GetInstance().RecoverBuild(test::MakeHostRdmaTopo());
+}
+
+EnvHostNicConfig BuildHostPortRangeConfig()
+{
+    EnvHostNicConfig fakeConfig;
+    std::vector<SocketPortRange> portRanges{SocketPortRange{50000, 50001}};
+    fakeConfig.hcclHostSocketPortRange = CfgField<std::vector<SocketPortRange>>{
+        "HCCL_HOST_SOCKET_PORT_RANGE", portRanges, [](const std::string& s) -> std::vector<SocketPortRange> {
+            return CastSocketPortRange(s, "HCCL_HOST_SOCKET_PORT_RANGE");
+        }};
+    fakeConfig.hcclHostSocketPortRange.isParsed = true;
+    fakeConfig.hcclIfBasePort = CfgField<u32>{"HCCL_IF_BASE_PORT", HCCL_INVALID_PORT, Str2T<u32>};
+    fakeConfig.hcclIfBasePort.isParsed = true;
+    return fakeConfig;
+}
+
+NewRankInfo BuildHostRdmaRankInfo()
+{
+    NewRankInfo rankInfo;
+    rankInfo.rankId = 0;
+    rankInfo.deviceId = 0;
+    rankInfo.localId = 0;
+    AddressInfo addrInfo;
+    addrInfo.addr = IpAddress("192.168.1.101");
+    RankLevelInfo levelInfo;
+    levelInfo.netLayer = 3;
+    levelInfo.rankAddrs.push_back(addrInfo);
+    rankInfo.rankLevelInfos.push_back(levelInfo);
+    return rankInfo;
 }
 
 void MockTopoPathAndBuild(void (*buildFunc)(PhyTopoBuilder*, const std::string&))
@@ -408,34 +438,14 @@ TEST_F(RankInfoDetectClientTest, Ut_ConstructRankTable_When_Normal_Expect_Succes
 
 TEST_F(RankInfoDetectClientTest, Ut_SelectLocalHostBackupAddr_When_BackupAddrAvailable_Expect_SelectBackup)
 {
-    nlohmann::json localDevInfoJson = nlohmann::json::parse(R"({
-        "rank_id": 0,
-        "device_id": 0,
-        "local_id": 0,
-        "level_list": [
-            {
-                "net_layer": 3,
-                "net_instance_id": "cluster",
-                "net_type": "CLOS",
-                "net_attr": "",
-                "rank_addr_list": [
-                    {
-                        "addr_type": "IPV4",
-                        "addr": "192.168.1.101",
-                        "backup_addr": ["192.168.1.102", "192.168.1.103"],
-                        "ports": ["d2h"],
-                        "plane_id": "roce"
-                    }
-                ]
-            }
-        ]
-    })");
+    nlohmann::json localDevInfoJson = BuildLocalDevInfoWithBackupAddrs(
+        "IPV4", "192.168.1.101", nlohmann::json::array({"192.168.1.102", "192.168.1.103"}), 3, "d2h");
 
-    MOCKER(HcommEndpointCreate)
+    MOCKER(HrtRaRdmaInit, s32(HrtNetworkMode, RaInterface&, RdmaHandle&))
         .expects(exactly(2))
-        .with(mockcpp::any(), mockcpp::any())
-        .will(returnValue(static_cast<HcommResult>(HCCL_E_NETWORK)))
-        .then(returnValue(static_cast<HcommResult>(HCCL_SUCCESS)));
+        .with(mockcpp::any(), mockcpp::any(), mockcpp::any())
+        .will(returnValue(HCCP_ELINKDOWN))
+        .then(returnValue(0));
 
     EXPECT_NO_THROW(rankInfoDetectClient_->SelectLocalHostBackupAddr(localDevInfoJson));
     EXPECT_EQ(localDevInfoJson["level_list"][0]["rank_addr_list"][0]["addr"].get<std::string>(), "192.168.1.102");
@@ -469,10 +479,10 @@ TEST_F(
 {
     nlohmann::json localDevInfoJson = BuildLocalDevInfoWithBackupAddrs(
         "IPV4", "192.168.1.101", nlohmann::json::array({"192.168.1.102", "192.168.1.103"}));
-    MOCKER(HcommEndpointCreate)
+    MOCKER(HrtRaRdmaInit, s32(HrtNetworkMode, RaInterface&, RdmaHandle&))
         .expects(exactly(1))
-        .with(mockcpp::any(), mockcpp::any())
-        .will(returnValue(static_cast<HcommResult>(HCCL_SUCCESS)));
+        .with(mockcpp::any(), mockcpp::any(), mockcpp::any())
+        .will(returnValue(0));
 
     EXPECT_NO_THROW(rankInfoDetectClient_->SelectLocalHostBackupAddr(localDevInfoJson));
     EXPECT_EQ(GetSelectedHostAddr(localDevInfoJson), "192.168.1.101");
@@ -484,12 +494,12 @@ TEST_F(
 {
     nlohmann::json localDevInfoJson = BuildLocalDevInfoWithBackupAddrs(
         "IPV4", "192.168.1.101", nlohmann::json::array({"192.168.1.102", "192.168.1.103"}));
-    MOCKER(HcommEndpointCreate)
+    MOCKER(HrtRaRdmaInit, s32(HrtNetworkMode, RaInterface&, RdmaHandle&))
         .expects(exactly(3))
-        .with(mockcpp::any(), mockcpp::any())
-        .will(returnValue(static_cast<HcommResult>(HCCL_E_NETWORK)))
-        .then(returnValue(static_cast<HcommResult>(HCCL_E_NETWORK)))
-        .then(returnValue(static_cast<HcommResult>(HCCL_SUCCESS)));
+        .with(mockcpp::any(), mockcpp::any(), mockcpp::any())
+        .will(returnValue(HCCP_ELINKDOWN))
+        .then(returnValue(HCCP_ELINKDOWN))
+        .then(returnValue(0));
 
     EXPECT_NO_THROW(rankInfoDetectClient_->SelectLocalHostBackupAddr(localDevInfoJson));
     EXPECT_EQ(GetSelectedHostAddr(localDevInfoJson), "192.168.1.103");
@@ -501,10 +511,10 @@ TEST_F(
 {
     nlohmann::json localDevInfoJson
         = BuildLocalDevInfoWithBackupAddrs("IPV4", "192.168.1.101", nlohmann::json::array());
-    MOCKER(HcommEndpointCreate)
+    MOCKER(HrtRaRdmaInit, s32(HrtNetworkMode, RaInterface&, RdmaHandle&))
         .expects(exactly(1))
-        .with(mockcpp::any(), mockcpp::any())
-        .will(returnValue(static_cast<HcommResult>(HCCL_SUCCESS)));
+        .with(mockcpp::any(), mockcpp::any(), mockcpp::any())
+        .will(returnValue(0));
 
     EXPECT_NO_THROW(rankInfoDetectClient_->SelectLocalHostBackupAddr(localDevInfoJson));
     EXPECT_EQ(GetSelectedHostAddr(localDevInfoJson), "192.168.1.101");
@@ -514,11 +524,11 @@ TEST_F(RankInfoDetectClientTest, Ut_SelectLocalHostBackupAddr_When_Ipv6PrimaryUn
 {
     nlohmann::json localDevInfoJson = BuildLocalDevInfoWithBackupAddrs(
         "IPV6", "2001:db8::1", nlohmann::json::array({"2001:db8::2", "2001:db8::3"}));
-    MOCKER(HcommEndpointCreate)
+    MOCKER(HrtRaRdmaInit, s32(HrtNetworkMode, RaInterface&, RdmaHandle&))
         .expects(exactly(2))
-        .with(mockcpp::any(), mockcpp::any())
-        .will(returnValue(static_cast<HcommResult>(HCCL_E_NETWORK)))
-        .then(returnValue(static_cast<HcommResult>(HCCL_SUCCESS)));
+        .with(mockcpp::any(), mockcpp::any(), mockcpp::any())
+        .will(returnValue(HCCP_ELINKDOWN))
+        .then(returnValue(0));
 
     EXPECT_NO_THROW(rankInfoDetectClient_->SelectLocalHostBackupAddr(localDevInfoJson));
     EXPECT_EQ(GetSelectedHostAddr(localDevInfoJson), "2001:db8::2");
@@ -548,18 +558,17 @@ TEST_F(RankInfoDetectClientTest, Ut_SelectLocalHostBackupAddr_When_BackupAddrEle
     EXPECT_THROW(rankInfoDetectClient_->SelectLocalHostBackupAddr(localDevInfoJson), InvalidParamsException);
 }
 
-TEST_F(
-    RankInfoDetectClientTest,
-    Ut_SelectLocalHostBackupAddr_When_PrimaryProbeParameterError_Expect_ThrowInternalException)
+TEST_F(RankInfoDetectClientTest, Ut_SelectLocalHostBackupAddr_When_PrimaryProbeError_Expect_ThrowImmediately)
 {
     nlohmann::json localDevInfoJson = BuildLocalDevInfoWithBackupAddrs(
         "IPV4", "192.168.1.101", nlohmann::json::array({"192.168.1.102", "192.168.1.103"}));
-    MOCKER(HcommEndpointCreate)
+    MOCKER(HrtRaRdmaInit, s32(HrtNetworkMode, RaInterface&, RdmaHandle&))
         .expects(exactly(1))
-        .with(mockcpp::any(), mockcpp::any())
-        .will(returnValue(static_cast<HcommResult>(HCCL_E_PARA)));
+        .with(mockcpp::any(), mockcpp::any(), mockcpp::any())
+        .will(returnValue(-EINVAL));
 
-    EXPECT_THROW(rankInfoDetectClient_->SelectLocalHostBackupAddr(localDevInfoJson), InternalException);
+    EXPECT_THROW(rankInfoDetectClient_->SelectLocalHostBackupAddr(localDevInfoJson), NetworkApiException);
+    EXPECT_EQ(GetSelectedHostAddr(localDevInfoJson), "192.168.1.101");
 }
 
 TEST_F(RankInfoDetectClientTest, Ut_SelectLocalHostBackupAddr_When_NoBackupAddr_Expect_KeepPrimaryWithoutProbe)
@@ -567,7 +576,7 @@ TEST_F(RankInfoDetectClientTest, Ut_SelectLocalHostBackupAddr_When_NoBackupAddr_
     nlohmann::json localDevInfoJson
         = BuildLocalDevInfoWithBackupAddrs("IPV4", "192.168.1.101", nlohmann::json::array());
     localDevInfoJson["level_list"][0]["rank_addr_list"][0].erase("backup_addr");
-    MOCKER(HcommEndpointCreate).expects(never());
+    MOCKER(HrtRaRdmaInit, s32(HrtNetworkMode, RaInterface&, RdmaHandle&)).expects(never());
 
     EXPECT_NO_THROW(rankInfoDetectClient_->SelectLocalHostBackupAddr(localDevInfoJson));
     EXPECT_EQ(GetSelectedHostAddr(localDevInfoJson), "192.168.1.101");
@@ -577,11 +586,11 @@ TEST_F(RankInfoDetectClientTest, Ut_SelectLocalHostBackupAddr_When_Layer4HasBack
 {
     nlohmann::json localDevInfoJson
         = BuildLocalDevInfoWithBackupAddrs("IPV4", "192.168.1.101", nlohmann::json::array({"192.168.1.102"}), 4);
-    MOCKER(HcommEndpointCreate)
+    MOCKER(HrtRaRdmaInit, s32(HrtNetworkMode, RaInterface&, RdmaHandle&))
         .expects(exactly(2))
-        .with(mockcpp::any(), mockcpp::any())
-        .will(returnValue(static_cast<HcommResult>(HCCL_E_NETWORK)))
-        .then(returnValue(static_cast<HcommResult>(HCCL_SUCCESS)));
+        .with(mockcpp::any(), mockcpp::any(), mockcpp::any())
+        .will(returnValue(HCCP_ELINKDOWN))
+        .then(returnValue(0));
 
     EXPECT_NO_THROW(rankInfoDetectClient_->SelectLocalHostBackupAddr(localDevInfoJson));
     EXPECT_EQ(GetSelectedHostAddr(localDevInfoJson), "192.168.1.102");
@@ -589,7 +598,7 @@ TEST_F(RankInfoDetectClientTest, Ut_SelectLocalHostBackupAddr_When_Layer4HasBack
 
 TEST_F(RankInfoDetectClientTest, Ut_SelectLocalHostBackupAddr_When_Layer0To2HaveBackupAddr_Expect_KeepPrimary)
 {
-    MOCKER(HcommEndpointCreate).expects(never());
+    MOCKER(HrtRaRdmaInit, s32(HrtNetworkMode, RaInterface&, RdmaHandle&)).expects(never());
     for (u32 netLayer = 0; netLayer <= 2; ++netLayer) {
         nlohmann::json localDevInfoJson = BuildLocalDevInfoWithBackupAddrs(
             "IPV4", "192.168.1.101", nlohmann::json::array({"192.168.1.102"}), netLayer);
@@ -603,11 +612,11 @@ TEST_F(RankInfoDetectClientTest, Ut_SelectLocalHostBackupAddr_When_Layer3PortsAr
 {
     nlohmann::json localDevInfoJson = BuildLocalDevInfoWithBackupAddrs(
         "IPV4", "192.168.1.101", nlohmann::json::array({"192.168.1.102"}), 3, "unrelated-port");
-    MOCKER(HcommEndpointCreate)
+    MOCKER(HrtRaRdmaInit, s32(HrtNetworkMode, RaInterface&, RdmaHandle&))
         .expects(exactly(2))
-        .with(mockcpp::any(), mockcpp::any())
-        .will(returnValue(static_cast<HcommResult>(HCCL_E_NETWORK)))
-        .then(returnValue(static_cast<HcommResult>(HCCL_SUCCESS)));
+        .with(mockcpp::any(), mockcpp::any(), mockcpp::any())
+        .will(returnValue(HCCP_ELINKDOWN))
+        .then(returnValue(0));
 
     EXPECT_NO_THROW(rankInfoDetectClient_->SelectLocalHostBackupAddr(localDevInfoJson));
     EXPECT_EQ(GetSelectedHostAddr(localDevInfoJson), "192.168.1.102");
@@ -635,56 +644,34 @@ TEST_F(RankInfoDetectClientTest, Ut_SelectLocalHostBackupAddr_When_Layer3HasMult
             ]
         }]
     })");
-    MOCKER(HcommEndpointCreate)
+    MOCKER(HrtRaRdmaInit, s32(HrtNetworkMode, RaInterface&, RdmaHandle&))
         .expects(exactly(4))
-        .with(mockcpp::any(), mockcpp::any())
-        .will(returnValue(static_cast<HcommResult>(HCCL_E_NETWORK)))
-        .then(returnValue(static_cast<HcommResult>(HCCL_SUCCESS)))
-        .then(returnValue(static_cast<HcommResult>(HCCL_E_NETWORK)))
-        .then(returnValue(static_cast<HcommResult>(HCCL_SUCCESS)));
+        .with(mockcpp::any(), mockcpp::any(), mockcpp::any())
+        .will(returnValue(HCCP_ELINKDOWN))
+        .then(returnValue(0))
+        .then(returnValue(HCCP_ELINKDOWN))
+        .then(returnValue(0));
 
     EXPECT_NO_THROW(rankInfoDetectClient_->SelectLocalHostBackupAddr(localDevInfoJson));
     EXPECT_EQ(localDevInfoJson["level_list"][0]["rank_addr_list"][0]["addr"].get<std::string>(), "192.168.1.11");
     EXPECT_EQ(localDevInfoJson["level_list"][0]["rank_addr_list"][1]["addr"].get<std::string>(), "192.168.2.11");
 }
 
-TEST_F(RankInfoDetectClientTest, Ut_SelectLocalHostBackupAddr_When_ProbeReturnsNotSupport_Expect_ThrowInternalException)
+TEST_F(RankInfoDetectClientTest, Ut_SelectBackupAddr_When_ProbeReturnsOtherError_Expect_ThrowNetworkApiException)
 {
-    nlohmann::json localDevInfoJson = nlohmann::json::parse(R"({
-        "rank_id": 0,
-        "device_id": 0,
-        "local_id": 0,
-        "level_list": [
-            {
-                "net_layer": 3,
-                "net_instance_id": "cluster",
-                "net_type": "CLOS",
-                "net_attr": "",
-                "rank_addr_list": [
-                    {
-                        "addr_type": "IPV4",
-                        "addr": "192.168.1.101",
-                        "backup_addr": ["192.168.1.102"],
-                        "ports": ["d2h"],
-                        "plane_id": "roce"
-                    }
-                ]
-            }
-        ]
-    })");
+    nlohmann::json localDevInfoJson
+        = BuildLocalDevInfoWithBackupAddrs("IPV4", "192.168.1.101", nlohmann::json::array({"192.168.1.102"}), 3, "d2h");
 
-    MOCKER(HcommEndpointCreate)
+    MOCKER(HrtRaRdmaInit, s32(HrtNetworkMode, RaInterface&, RdmaHandle&))
         .expects(exactly(1))
-        .with(mockcpp::any(), mockcpp::any())
-        .will(returnValue(static_cast<HcommResult>(HCCL_E_NOT_SUPPORT)));
+        .with(mockcpp::any(), mockcpp::any(), mockcpp::any())
+        .will(returnValue(-EOPNOTSUPP));
 
-    EXPECT_THROW(rankInfoDetectClient_->SelectLocalHostBackupAddr(localDevInfoJson), InternalException);
+    EXPECT_THROW(rankInfoDetectClient_->SelectLocalHostBackupAddr(localDevInfoJson), NetworkApiException);
     EXPECT_EQ(localDevInfoJson["level_list"][0]["rank_addr_list"][0]["addr"].get<std::string>(), "192.168.1.101");
 }
 
-TEST_F(
-    RankInfoDetectClientTest,
-    Ut_SelectLocalHostBackupAddr_When_AllCandidatesReturnNetworkError_Expect_ThrowNetworkApiException)
+TEST_F(RankInfoDetectClientTest, Ut_SelectLocalHostBackupAddr_When_AllCandidatesLinkDown_Expect_KeepPrimaryAndContinue)
 {
     nlohmann::json localDevInfoJson = nlohmann::json::parse(R"({
         "local_id": 0,
@@ -703,37 +690,35 @@ TEST_F(
         ]
     })");
 
-    MOCKER(HcommEndpointCreate)
+    MOCKER(HrtRaRdmaInit, s32(HrtNetworkMode, RaInterface&, RdmaHandle&))
         .expects(exactly(3))
-        .with(mockcpp::any(), mockcpp::any())
-        .will(returnValue(static_cast<HcommResult>(HCCL_E_NETWORK)));
+        .with(mockcpp::any(), mockcpp::any(), mockcpp::any())
+        .will(returnValue(HCCP_ELINKDOWN));
 
-    g_clientCapturedErrorCode.clear();
-    MOCKER(RptInputErr).stubs().will(invoke(StubClientRptInputErr));
-
-    EXPECT_THROW(rankInfoDetectClient_->SelectLocalHostBackupAddr(localDevInfoJson), NetworkApiException);
-    EXPECT_EQ(g_clientCapturedErrorCode, "EI0016");
+    EXPECT_NO_THROW(rankInfoDetectClient_->SelectLocalHostBackupAddr(localDevInfoJson));
+    EXPECT_EQ(GetSelectedHostAddr(localDevInfoJson), "192.168.1.101");
 }
 
 TEST_F(
     RankInfoDetectClientTest,
-    Ut_SelectLocalHostBackupAddr_When_BackupAddrCountAtLimitAndAllUnavailable_Expect_ThrowNetworkApiException)
+    Ut_SelectLocalHostBackupAddr_When_BackupAddrCountAtLimitAndAllLinkDown_Expect_KeepPrimaryAndContinue)
 {
     nlohmann::json localDevInfoJson
         = BuildLocalDevInfoWithBackupAddrs("IPV4", "192.168.1.101", BuildIpv4BackupAddrs(MAX_VALUE_BACKUP_ADDR_SIZE));
-    MOCKER(HcommEndpointCreate)
+    MOCKER(HrtRaRdmaInit, s32(HrtNetworkMode, RaInterface&, RdmaHandle&))
         .expects(exactly(MAX_VALUE_BACKUP_ADDR_SIZE + 1U))
-        .with(mockcpp::any(), mockcpp::any())
-        .will(returnValue(static_cast<HcommResult>(HCCL_E_NETWORK)));
+        .with(mockcpp::any(), mockcpp::any(), mockcpp::any())
+        .will(returnValue(HCCP_ELINKDOWN));
 
-    EXPECT_THROW(rankInfoDetectClient_->SelectLocalHostBackupAddr(localDevInfoJson), NetworkApiException);
+    EXPECT_NO_THROW(rankInfoDetectClient_->SelectLocalHostBackupAddr(localDevInfoJson));
+    EXPECT_EQ(GetSelectedHostAddr(localDevInfoJson), "192.168.1.101");
 }
 
 TEST_F(RankInfoDetectClientTest, Ut_SelectLocalHostBackupAddr_When_BackupAddrCountExceedsLimit_Expect_ThrowBeforeProbe)
 {
     nlohmann::json localDevInfoJson = BuildLocalDevInfoWithBackupAddrs(
         "IPV4", "192.168.1.101", BuildIpv4BackupAddrs(MAX_VALUE_BACKUP_ADDR_SIZE + 1U));
-    MOCKER(HcommEndpointCreate).expects(never());
+    MOCKER(HrtRaRdmaInit, s32(HrtNetworkMode, RaInterface&, RdmaHandle&)).expects(never());
 
     EXPECT_THROW(rankInfoDetectClient_->SelectLocalHostBackupAddr(localDevInfoJson), InvalidParamsException);
 }
@@ -760,70 +745,26 @@ TEST_F(RankInfoDetectClientTest, Ut_SelectLocalHostBackupAddr_When_BackupAddrIsN
     EXPECT_THROW(rankInfoDetectClient_->SelectLocalHostBackupAddr(localDevInfoJson), InvalidParamsException);
 }
 
-TEST_F(RankInfoDetectClientTest, Ut_ProbeHostRoceAddr_When_EndpointCreated_Expect_DestroyAndNoThrow)
+TEST_F(RankInfoDetectClientTest, Ut_ProbeHostRoceAddr_When_LinkDown_Expect_ReturnRawError)
 {
-    int endpoint = 0;
-    EndpointHandle endpointHandle = static_cast<EndpointHandle>(&endpoint);
-    MOCKER(HcommEndpointCreate)
+    MOCKER(HrtRaRdmaInit, s32(HrtNetworkMode, RaInterface&, RdmaHandle&))
         .expects(exactly(1))
-        .with(mockcpp::any(), outBoundP(&endpointHandle))
-        .will(returnValue(static_cast<HcommResult>(HCCL_SUCCESS)));
-    MOCKER(HcommEndpointDestroy)
-        .expects(exactly(1))
-        .with(endpointHandle)
-        .will(returnValue(static_cast<HcommResult>(HCCL_SUCCESS)));
+        .with(mockcpp::any(), mockcpp::any(), mockcpp::any())
+        .will(returnValue(HCCP_ELINKDOWN));
 
-    bool isAvailable = false;
-    EXPECT_NO_THROW(rankInfoDetectClient_->ProbeHostRoceAddr(IpAddress("192.168.1.101", AF_INET), isAvailable));
-    EXPECT_TRUE(isAvailable);
+    const s32 ret = rankInfoDetectClient_->ProbeHostRoceAddr(IpAddress("192.168.1.101", AF_INET));
+    EXPECT_EQ(ret, HCCP_ELINKDOWN);
 }
 
-TEST_F(RankInfoDetectClientTest, Ut_ProbeHostRoceAddr_When_EndpointCreateReturnsNetworkError_Expect_MarkUnavailable)
+TEST_F(RankInfoDetectClientTest, Ut_ProbeHostRoceAddr_When_OtherError_Expect_ReturnRawError)
 {
-    MOCKER(HcommEndpointCreate)
+    MOCKER(HrtRaRdmaInit, s32(HrtNetworkMode, RaInterface&, RdmaHandle&))
         .expects(exactly(1))
-        .with(mockcpp::any(), mockcpp::any())
-        .will(returnValue(static_cast<HcommResult>(HCCL_E_NETWORK)));
+        .with(mockcpp::any(), mockcpp::any(), mockcpp::any())
+        .will(returnValue(-EOPNOTSUPP));
 
-    bool isAvailable = true;
-    EXPECT_NO_THROW(rankInfoDetectClient_->ProbeHostRoceAddr(IpAddress("192.168.1.101", AF_INET), isAvailable));
-    EXPECT_FALSE(isAvailable);
-}
-
-TEST_F(RankInfoDetectClientTest, Ut_ProbeHostRoceAddr_When_Ipv6EndpointCreated_Expect_NoThrow)
-{
-    int endpoint = 0;
-    EndpointHandle endpointHandle = static_cast<EndpointHandle>(&endpoint);
-    MOCKER(HcommEndpointCreate)
-        .expects(exactly(1))
-        .with(mockcpp::any(), outBoundP(&endpointHandle))
-        .will(returnValue(static_cast<HcommResult>(HCCL_SUCCESS)));
-    MOCKER(HcommEndpointDestroy)
-        .expects(exactly(1))
-        .with(endpointHandle)
-        .will(returnValue(static_cast<HcommResult>(HCCL_SUCCESS)));
-
-    bool isAvailable = false;
-    EXPECT_NO_THROW(rankInfoDetectClient_->ProbeHostRoceAddr(IpAddress("2001:db8::1", AF_INET6), isAvailable));
-    EXPECT_TRUE(isAvailable);
-}
-
-TEST_F(RankInfoDetectClientTest, Ut_ProbeHostRoceAddr_When_EndpointDestroyFails_Expect_ThrowInternal)
-{
-    int endpoint = 0;
-    EndpointHandle endpointHandle = static_cast<EndpointHandle>(&endpoint);
-    MOCKER(HcommEndpointCreate)
-        .expects(exactly(1))
-        .with(mockcpp::any(), outBoundP(&endpointHandle))
-        .will(returnValue(static_cast<HcommResult>(HCCL_SUCCESS)));
-    MOCKER(HcommEndpointDestroy)
-        .expects(exactly(1))
-        .with(endpointHandle)
-        .will(returnValue(static_cast<HcommResult>(HCCL_E_INTERNAL)));
-
-    bool isAvailable = false;
-    EXPECT_THROW(
-        rankInfoDetectClient_->ProbeHostRoceAddr(IpAddress("192.168.1.101", AF_INET), isAvailable), InternalException);
+    const s32 ret = rankInfoDetectClient_->ProbeHostRoceAddr(IpAddress("192.168.1.101", AF_INET));
+    EXPECT_EQ(ret, -EOPNOTSUPP);
 }
 
 TEST_F(RankInfoDetectClientTest, Ut_ParseRankTable_When_FailedAgentIdListNotEmpty_Expect_EI0015Report)
@@ -1104,6 +1045,7 @@ TEST_F(RankInfoDetectClientTest, Ut_HostListenPortDetect_BasePort_Expect_HostPor
     fakeConfig.hcclIfBasePort = CfgField<u32>{"HCCL_IF_BASE_PORT", 50000, Str2T<u32>};
     fakeConfig.hcclIfBasePort.isParsed = true;
     MOCKER_CPP(&EnvConfig::GetHostNicConfig).stubs().will(returnValue(fakeConfig));
+    MOCKER(HrtRaRdmaInit, s32(HrtNetworkMode, RaInterface&, RdmaHandle&)).expects(never());
 
     NewRankInfo rankInfo;
     rankInfo.rankId = 0;
@@ -1131,6 +1073,57 @@ TEST_F(RankInfoDetectClientTest, Ut_HostListenPortDetect_BasePort_Expect_HostPor
     // Cleanup: TearDown resets hostSocket_
     rankInfoDetectClient_->SocketTearDown(0);
     PhyTopo::GetInstance()->Clear(); // 清理上一次测试的拓扑状态
+}
+
+TEST_F(RankInfoDetectClientTest, Ut_HostListenPortDetect_PortRange_Expect_ListenOnDpuAddr)
+{
+    // Given: host port range is configured and the topology provides the DPU address.
+    EnvHostNicConfig fakeConfig = BuildHostPortRangeConfig();
+    MOCKER_CPP(&EnvConfig::GetHostNicConfig).stubs().will(returnValue(fakeConfig));
+    MOCKER(HrtRaRdmaInit, s32(HrtNetworkMode, RaInterface&, RdmaHandle&))
+        .expects(exactly(1))
+        .with(mockcpp::any(), mockcpp::any(), mockcpp::any())
+        .will(returnValue(0));
+
+    NewRankInfo rankInfo = BuildHostRdmaRankInfo();
+
+    MockTopoPathAndBuild(BuildHostRdmaTopo);
+
+    // When: the DPU address is available.
+    EXPECT_NO_THROW(rankInfoDetectClient_->HostListenPortDetect(rankInfo));
+
+    // Then: listen on the DPU address and allocate a port from the configured range.
+    ASSERT_NE(rankInfoDetectClient_->hostSocket_, nullptr);
+    EXPECT_EQ(
+        rankInfoDetectClient_->hostSocket_->GetLocalIp().Describe(),
+        rankInfo.rankLevelInfos[0].rankAddrs[0].addr.Describe());
+    EXPECT_GE(rankInfo.hostPort, 50000u);
+    EXPECT_LE(rankInfo.hostPort, 50001u);
+
+    rankInfoDetectClient_->SocketTearDown(0);
+    PhyTopo::GetInstance()->Clear();
+}
+
+TEST_F(RankInfoDetectClientTest, Ut_HostListenPortDetect_DpuAddrLinkDown_Expect_SkipListen)
+{
+    // Given: host port range is configured, but the DPU address is linkdown.
+    EnvHostNicConfig fakeConfig = BuildHostPortRangeConfig();
+    MOCKER_CPP(&EnvConfig::GetHostNicConfig).stubs().will(returnValue(fakeConfig));
+    MOCKER(HrtRaRdmaInit, s32(HrtNetworkMode, RaInterface&, RdmaHandle&))
+        .expects(exactly(1))
+        .with(mockcpp::any(), mockcpp::any(), mockcpp::any())
+        .will(returnValue(HCCP_ELINKDOWN));
+
+    NewRankInfo rankInfo = BuildHostRdmaRankInfo();
+
+    MockTopoPathAndBuild(BuildHostRdmaTopo);
+
+    // When & Then: skip listening and continue communication domain initialization.
+    EXPECT_NO_THROW(rankInfoDetectClient_->HostListenPortDetect(rankInfo));
+    EXPECT_EQ(rankInfo.hostPort, DEFAULT_VALUE_TCPPORT);
+    EXPECT_EQ(rankInfoDetectClient_->hostSocket_, nullptr);
+
+    PhyTopo::GetInstance()->Clear();
 }
 
 TEST_F(RankInfoDetectClientTest, Ut_HostListenPortDetect_NoHostLink_Expect_HostPortUnchanged)

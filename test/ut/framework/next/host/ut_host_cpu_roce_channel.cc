@@ -131,7 +131,10 @@ protected:
         MOCKER(hrtGetDeviceType).stubs().with(outBound(devType)).will(returnValue(HCCL_SUCCESS));
         // MOCKER(hrtGetDeviceType).stubs().with(outBound(dev)).will(returnValue(HCCL_SUCCESS));
         RdmaHandle rdmaHandle = (void*)0x1000000;
-        MOCKER(Hccl::HrtRaRdmaInit).stubs().with(mockcpp::any(), mockcpp::any()).will(returnValue(rdmaHandle));
+        MOCKER(Hccl::HrtRaRdmaInit, Hccl::RdmaHandle(Hccl::HrtNetworkMode, Hccl::RaInterface&))
+            .stubs()
+            .with(mockcpp::any(), mockcpp::any())
+            .will(returnValue(rdmaHandle));
         MOCKER(HcommEndpointStartListen).stubs().will(returnValue(static_cast<HcommResult>(HCCL_SUCCESS)));
         EndpointDesc endpointDesc{};
         endpointDesc.protocol = COMM_PROTOCOL_ROCE;

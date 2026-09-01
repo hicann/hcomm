@@ -296,6 +296,11 @@ HcclResult HrtGetMainboardId(uint32_t deviceLogicId, HcclMainboardId& hcclMainbo
 }
 
 RdmaHandle HrtRaRdmaInit(HrtNetworkMode netMode, RaInterface& in) { return (RdmaHandle)0x12345678; }
+s32 HrtRaRdmaInit(HrtNetworkMode, RaInterface&, RdmaHandle& rdmaHandle)
+{
+    rdmaHandle = reinterpret_cast<RdmaHandle>(0x12345678);
+    return 0;
+}
 
 void HrtGetSocVer(std::string& socName) { socName = "Ascend958B"; }
 

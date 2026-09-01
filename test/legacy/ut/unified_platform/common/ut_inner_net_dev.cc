@@ -40,7 +40,9 @@ protected:
 TEST_F(InnerNetDevTest, InnerNetDev_ShouldInitializeMembers_WhenConstructedWithNetDevInfo)
 {
     Hccl::RdmaHandle handle = reinterpret_cast<Hccl::RdmaHandle>(0x123);
-    MOCKER(Hccl::HrtRaRdmaInit).stubs().will(returnValue(handle));
+    MOCKER(Hccl::HrtRaRdmaInit, Hccl::RdmaHandle(Hccl::HrtNetworkMode, Hccl::RaInterface&))
+        .stubs()
+        .will(returnValue(handle));
     Hccl::NetDevInfo info
         = {0, Hccl::PortDeploymentType::DEV_NET, Hccl::LinkProtoType::RDMA, 0, Hccl::IpAddress("1.0.0.0")};
     Hccl::InnerNetDev netDev(info);
@@ -61,7 +63,9 @@ TEST_F(InnerNetDevTest, InnerNetDev_ShouldInitializeMembers_WhenConstructedWithN
 TEST_F(InnerNetDevTest, InnerNetDev_ShouldSetAndReturnRdmaHandle_WhenSetRdmaHandleCalled)
 {
     Hccl::RdmaHandle rdmaHandle = reinterpret_cast<Hccl::RdmaHandle>(0x123);
-    MOCKER(Hccl::HrtRaRdmaInit).stubs().will(returnValue(rdmaHandle));
+    MOCKER(Hccl::HrtRaRdmaInit, Hccl::RdmaHandle(Hccl::HrtNetworkMode, Hccl::RaInterface&))
+        .stubs()
+        .will(returnValue(rdmaHandle));
     Hccl::NetDevInfo info
         = {0, Hccl::PortDeploymentType::DEV_NET, Hccl::LinkProtoType::RDMA, 0, Hccl::IpAddress("1.0.0.0")};
     Hccl::InnerNetDev netDev(info);
@@ -79,7 +83,9 @@ TEST_F(InnerNetDevTest, InnerNetDev_ShouldSetAndReturnRdmaHandle_WhenSetRdmaHand
 TEST_F(InnerNetDevTest, InnerNetDev_ShouldSetAndReturnUbMode_WhenSetUbModeCalled)
 {
     Hccl::RdmaHandle handle = reinterpret_cast<Hccl::RdmaHandle>(0x123);
-    MOCKER(Hccl::HrtRaRdmaInit).stubs().will(returnValue(handle));
+    MOCKER(Hccl::HrtRaRdmaInit, Hccl::RdmaHandle(Hccl::HrtNetworkMode, Hccl::RaInterface&))
+        .stubs()
+        .will(returnValue(handle));
     Hccl::NetDevInfo info
         = {0, Hccl::PortDeploymentType::DEV_NET, Hccl::LinkProtoType::RDMA, 0, Hccl::IpAddress("1.0.0.0")};
     Hccl::InnerNetDev netDev(info);
@@ -97,7 +103,9 @@ TEST_F(InnerNetDevTest, InnerNetDev_ShouldSetAndReturnUbMode_WhenSetUbModeCalled
 TEST_F(InnerNetDevTest, InnerNetDev_ShouldSetAndReturnDieId_WhenSetDieIdCalled)
 {
     Hccl::RdmaHandle handle = reinterpret_cast<Hccl::RdmaHandle>(0x123);
-    MOCKER(Hccl::HrtRaRdmaInit).stubs().will(returnValue(handle));
+    MOCKER(Hccl::HrtRaRdmaInit, Hccl::RdmaHandle(Hccl::HrtNetworkMode, Hccl::RaInterface&))
+        .stubs()
+        .will(returnValue(handle));
     Hccl::NetDevInfo info
         = {0, Hccl::PortDeploymentType::DEV_NET, Hccl::LinkProtoType::RDMA, 0, Hccl::IpAddress("1.0.0.0")};
     Hccl::InnerNetDev netDev(info);
@@ -115,7 +123,9 @@ TEST_F(InnerNetDevTest, InnerNetDev_ShouldSetAndReturnDieId_WhenSetDieIdCalled)
 TEST_F(InnerNetDevTest, InnerNetDev_ShouldSetAndReturnFuncId_WhenSetFuncIdCalled)
 {
     Hccl::RdmaHandle handle = reinterpret_cast<Hccl::RdmaHandle>(0x123);
-    MOCKER(Hccl::HrtRaRdmaInit).stubs().will(returnValue(handle));
+    MOCKER(Hccl::HrtRaRdmaInit, Hccl::RdmaHandle(Hccl::HrtNetworkMode, Hccl::RaInterface&))
+        .stubs()
+        .will(returnValue(handle));
     Hccl::NetDevInfo info
         = {0, Hccl::PortDeploymentType::DEV_NET, Hccl::LinkProtoType::RDMA, 0, Hccl::IpAddress("1.0.0.0")};
     Hccl::InnerNetDev netDev(info);
@@ -133,7 +143,9 @@ TEST_F(InnerNetDevTest, InnerNetDev_ShouldSetAndReturnFuncId_WhenSetFuncIdCalled
 TEST_F(InnerNetDevTest, InnerNetDev_ShouldSetAndReturnTokenHandle_WhenSetTokenHandleCalled)
 {
     Hccl::RdmaHandle handle = reinterpret_cast<Hccl::RdmaHandle>(0x123);
-    MOCKER(Hccl::HrtRaRdmaInit).stubs().will(returnValue(handle));
+    MOCKER(Hccl::HrtRaRdmaInit, Hccl::RdmaHandle(Hccl::HrtNetworkMode, Hccl::RaInterface&))
+        .stubs()
+        .will(returnValue(handle));
     Hccl::NetDevInfo info
         = {0, Hccl::PortDeploymentType::DEV_NET, Hccl::LinkProtoType::RDMA, 0, Hccl::IpAddress("1.0.0.0")};
     Hccl::InnerNetDev netDev(info);
@@ -151,7 +163,9 @@ TEST_F(InnerNetDevTest, InnerNetDev_ShouldSetAndReturnTokenHandle_WhenSetTokenHa
 TEST_F(InnerNetDevTest, InnerNetDev_ShouldSetAndReturnTokenId_WhenSetTokenIdCalled)
 {
     Hccl::RdmaHandle handle = reinterpret_cast<Hccl::RdmaHandle>(0x123);
-    MOCKER(Hccl::HrtRaRdmaInit).stubs().will(returnValue(handle));
+    MOCKER(Hccl::HrtRaRdmaInit, Hccl::RdmaHandle(Hccl::HrtNetworkMode, Hccl::RaInterface&))
+        .stubs()
+        .will(returnValue(handle));
     Hccl::NetDevInfo info
         = {0, Hccl::PortDeploymentType::DEV_NET, Hccl::LinkProtoType::RDMA, 0, Hccl::IpAddress("1.0.0.0")};
     Hccl::InnerNetDev netDev(info);
@@ -169,7 +183,9 @@ TEST_F(InnerNetDevTest, InnerNetDev_ShouldSetAndReturnTokenId_WhenSetTokenIdCall
 TEST_F(InnerNetDevTest, InnerNetDev_ShouldReturnJfcHandle_WhenGetJfcHandleCalled)
 {
     Hccl::RdmaHandle rdmahandle = reinterpret_cast<Hccl::RdmaHandle>(0x123);
-    MOCKER(Hccl::HrtRaRdmaInit).stubs().will(returnValue(rdmahandle));
+    MOCKER(Hccl::HrtRaRdmaInit, Hccl::RdmaHandle(Hccl::HrtNetworkMode, Hccl::RaInterface&))
+        .stubs()
+        .will(returnValue(rdmahandle));
     Hccl::JfcHandle jfcHandle = 1;
     MOCKER(Hccl::HrtRaUbCreateJfc).stubs().will(returnValue(jfcHandle));
     Hccl::NetDevInfo info

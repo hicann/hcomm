@@ -319,6 +319,7 @@ constexpr u32 RDMA_MEM_KEY_MAX_LEN = 64; // 最大的memKey长度
 constexpr u32 RDMA_MEM_KEY_LEN_ROCE = 4; // 暂定ROCE k的ey长度为4， 未来从HCCP新接口获取key真实长度
 
 RdmaHandle HrtRaRdmaInit(HrtNetworkMode netMode, RaInterface& in);
+s32 HrtRaRdmaInit(HrtNetworkMode netMode, RaInterface& in, RdmaHandle& rdmaHandle);
 void HrtRaRdmaDeInit(RdmaHandle rdmaHandle, HrtNetworkMode netMode);
 
 void HrtRaGetNotifyBaseAddr(RdmaHandle rdmaHandle, u64* va, u64* size);

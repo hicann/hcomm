@@ -1146,6 +1146,19 @@ RdmaHandle HrtRaRdmaInit(HrtNetworkMode netMode, RaInterface& in)
     return rdmaHandle;
 }
 
+s32 HrtRaRdmaInit(HrtNetworkMode netMode, RaInterface& in, RdmaHandle& rdmaHandle)
+{
+    rdmaHandle = nullptr;
+    int mode = HRT_NETWORK_MODE_MAP.at(netMode);
+    unsigned int notifyType = netMode == HrtNetworkMode::PEER ? NO_USE : NOTIFY;
+    HCCL_INFO("[HrtRaRdmaInit] Input params: mode=%d, phyId=%u", mode, in.phyId);
+    struct rdev rdevInfo {};
+    rdevInfo.phyId = in.phyId;
+    rdevInfo.family = in.address.GetFamily();
+    rdevInfo.localIp = IpAddressToHccpIpAddr(in.address);
+    return RaRdevInit(mode, notifyType, rdevInfo, &rdmaHandle);
+}
+
 void HrtRaRdmaDeInit(RdmaHandle rdmaHandle, HrtNetworkMode netMode)
 {
     CHECK_NULLPTR(rdmaHandle, "[HrtRaRdmaDeInit] rdmaHandle is nullptr!");
