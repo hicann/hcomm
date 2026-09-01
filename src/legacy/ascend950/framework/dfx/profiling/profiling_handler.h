@@ -201,6 +201,7 @@ private:
 
     void CallProfRegHostApi() const;
     void ReportStoragedCompactInfo();
+    void ReportStoragedNodeBasicInfo();
     void ReportMc2AdditionInfo();
 
     void CallProfRegTaskTypeApi() const;
@@ -264,6 +265,7 @@ private:
     std::queue<MsprofApi> cachedTaskApiInfo_{};
     std::queue<MsprofApi> cachedAclApiInfo_{};
     std::queue<MsprofCompactInfo> cacheHcclOpInfo_{};
+    std::queue<MsprofCompactInfo> cacheNodeBasicInfo_{};
     std::queue<MsprofAdditionalInfo> cacheHcclAdditionInfo_{};
     std::atomic<uint64_t> cachedAlgTypeHashId_{0};
 
@@ -272,6 +274,7 @@ private:
     std::mutex cachedTaskApiInfoMutex_;
     std::mutex cachedAclApiInfoMutex_;
     std::mutex cacheHcclOpInfoMutex_;
+    std::mutex cacheNodeBasicInfoMutex_;
     std::mutex cacheHcclAdditionInfoMutex_;
 };
 } // namespace Hccl
