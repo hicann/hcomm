@@ -16,9 +16,9 @@ namespace Hccl {
 int HcclCheckLogLevel(int logLevel)
 {
     if (logLevel == HCCL_LOG_RUN_INFO) {
-        return CheckLogLevel(HCCL | RUN_LOG_MASK, DLOG_INFO);
+        return CheckLogLevel(static_cast<u32>(HCCL) | RUN_LOG_MASK, DLOG_INFO);
     } else if (logLevel == HCCL_LOG_RUN_WARN) {
-        return CheckLogLevel(HCCL | RUN_LOG_MASK, DLOG_WARN);
+        return CheckLogLevel(static_cast<u32>(HCCL) | RUN_LOG_MASK, DLOG_WARN);
     } else {
         return CheckLogLevel(HCCL, logLevel);
     }
