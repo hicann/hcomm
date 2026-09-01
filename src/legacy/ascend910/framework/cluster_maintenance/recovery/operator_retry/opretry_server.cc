@@ -190,7 +190,7 @@ HcclResult OpRetryServerHandleError::ProcessEvent(RetryContext* retryCtx)
         std::chrono::steady_clock::time_point curTime = std::chrono::steady_clock::now();
         const auto elapsed = std::chrono::duration_cast<std::chrono::seconds>(curTime - startTime);
         if (elapsed > timeout) {
-            HCCL_ERROR("[OpRetry][Server] OpRetryServerHandleError timeout");
+            HCCL_ERROR("[OpRetry][Server]aicpu can not retry, opname is inconsistent");
             for (auto& it : retryCtx->serverSockets_) {
                 auto tag = std::string(reinterpret_cast<const char*>(it.second.retryInfo.opInfo.opId.tag));
                 HCCL_ERROR(
