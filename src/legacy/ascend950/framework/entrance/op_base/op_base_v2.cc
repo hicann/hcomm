@@ -951,12 +951,17 @@ HcclResult HcclCreateSubCommConfigV2(
     }
     HCCL_RUN_INFO("Entry-HcclCreateSubCommConfig V950 config->hcclBufferSize[%u] MB", config->hcclBufferSize);
 
+    // 用临时副本承接 config，默认值修正施加在副本上，避免污染调用方入参（重复调用时入参被改写导致报错）
+    shared_ptr<HcclCommConfig> hcclConf;
+    EXCEPTION_CATCH((hcclConf = make_shared<HcclCommConfig>()), return HCCL_E_PTR);
+    CHK_SAFETY_FUNC_RET(memcpy_s(hcclConf.get(), sizeof(HcclCommConfig), config, sizeof(HcclCommConfig)));
+
     CHK_PRT_RET(
-        UNLIKELY(config->hcclBufferSize == 0),
+        UNLIKELY(hcclConf->hcclBufferSize == 0),
         HCCL_ERROR("HcclCreateSubCommConfigV2 config: hcclBufferSize is 0 MB, invalid para"), HCCL_E_PARA);
-    if (config->hcclBufferSize == HCCL_COMM_BUFFSIZE_CONFIG_NOT_SET) {
-        config->hcclBufferSize = 0;
-        HCCL_INFO("[HcclCreateSubCommConfigV2] set default HCCL BUFFER is 200 MB");
+    if (hcclConf->hcclBufferSize == HCCL_COMM_BUFFSIZE_CONFIG_NOT_SET) {
+        hcclConf->hcclBufferSize = 0;
+        HCCL_INFO("[HcclCreateSubCommConfigV2] set default HCCL BUFFER");
     }
     Hccl::HcclCommunicator* communicator = static_cast<Hccl::HcclCommunicator*>(*comm);
 
@@ -1006,12 +1011,11 @@ HcclResult HcclCreateSubCommConfigV2(
     Hccl::CommParams commParams{
         subCommIdStr, static_cast<Hccl::RankId>(subCommRankId), rankNum, opbasedCommInfoV2.commParams.myRank,
         opbasedCommInfoV2.commParams.devType};
-    CheckHcclDeterministic(config->hcclDeterministic);
+    CheckHcclDeterministic(hcclConf->hcclDeterministic);
     // 默认全都开启确定性计算
-    config->hcclDeterministic = 1;
-    HcclCommConfig hcclConf = *config;
+    hcclConf->hcclDeterministic = 1;
     std::shared_ptr<Hccl::HcclCommunicator> subCommunicator
-        = make_shared<Hccl::HcclCommunicator>(commParams, &hcclConf);
+        = make_shared<Hccl::HcclCommunicator>(commParams, hcclConf.get());
 
     std::vector<u32> rankIdsVec(rankNum);
     for (uint32_t i = 0; i < rankNum; ++i) {
@@ -1023,7 +1027,7 @@ HcclResult HcclCreateSubCommConfigV2(
     s32 logicDevId = HrtGetDevice();
     s32 devPhyId = HrtGetDevicePhyIdByIndex(logicDevId);
     do {
-        ret = communicator->CreateSubComm(commParams, rankIdsVec, subCommunicator, hcclConf);
+        ret = communicator->CreateSubComm(commParams, rankIdsVec, subCommunicator, *hcclConf);
         CHK_PRT_BREAK(
             ret != HcclResult::HCCL_SUCCESS,
             HCCL_ERROR("[%s]communicator->CreateSubComm failed, errNo[0x%016llx]", __func__, HCCL_ERROR_CODE(ret)),
