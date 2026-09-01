@@ -13,7 +13,7 @@
 
 #include <cstdint>
 
-#include "unified_platform/pub_inc/config_plf_log.h"
+#include "unified_platform/pub_inc/config_plf_log_v2.h"
 #include "sqe_v82.h"
 #include "udma_data_struct.h"
 

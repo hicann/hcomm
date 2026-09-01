@@ -8,8 +8,8 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
-#ifndef CONFIG_PLF_LOG_H
-#define CONFIG_PLF_LOG_H
+#ifndef CONFIG_PLF_LOG_V2_H
+#define CONFIG_PLF_LOG_V2_H
 
 #include "log.h"
 #include "plf_debug_config.h"
@@ -39,4 +39,4 @@
         }                                                                                                     \
     } while (0)
 
-#endif // CONFIG_PLF_LOG_H
+#endif // CONFIG_PLF_LOG_V2_H

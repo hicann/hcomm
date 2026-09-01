@@ -14,7 +14,7 @@
 #include "hcclCommTaskExceptionLite.h"
 #include "coll_comm_aicpu_destroy_func.h"
 #include "aicpu_indop_env.h"
-#include "unified_platform/pub_inc/config_plf_log.h"
+#include "unified_platform/pub_inc/config_plf_log_v2.h"
 #include "dlhal_function_v2.h"
 #include "profiling_command_handle_lite.h"
 #include "adapter_hal_pub.h"

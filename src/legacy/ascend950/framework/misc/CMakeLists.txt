@@ -10,4 +10,3 @@
 
 add_subdirectory(mask_event)
 add_subdirectory(json_parser)
-add_subdirectory(whitelist)

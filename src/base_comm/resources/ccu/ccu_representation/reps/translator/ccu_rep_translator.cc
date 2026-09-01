@@ -29,7 +29,7 @@
 #include "ccu_ins_generator_v2.h"
 #include "../../../ccu_device/ccu_res_specs.h"
 
-#include "unified_platform/pub_inc/config_plf_log.h"
+#include "unified_platform/pub_inc/config_plf_log_v2.h"
 
 #include "microcode_optimizer.h"
 

@@ -8,7 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
-#include "unified_platform/pub_inc/config_plf_log.h"
+#include "unified_platform/pub_inc/config_plf_log_v2.h"
 
 namespace Hccl {
 

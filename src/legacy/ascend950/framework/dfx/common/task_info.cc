@@ -11,7 +11,7 @@
 #include <sstream>
 #include "task_info.h"
 #include "log.h"
-#include "unified_platform/pub_inc/config_plf_log.h"
+#include "unified_platform/pub_inc/config_plf_log_v2.h"
 #include "string_util.h"
 #include "const_val.h"
 #include "reduce_op.h"

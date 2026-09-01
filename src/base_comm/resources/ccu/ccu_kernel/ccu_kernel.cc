@@ -43,7 +43,7 @@
 
 #include "ccu_ins_generator_base.h"
 #include "ccu_ins_generator_v1.h"
-#include "unified_platform/pub_inc/config_plf_log.h"
+#include "unified_platform/pub_inc/config_plf_log_v2.h"
 
 namespace hcomm {
 

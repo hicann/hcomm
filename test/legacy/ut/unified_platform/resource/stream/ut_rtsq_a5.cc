@@ -16,7 +16,7 @@
 #define protected public
 #include "rtsq_a5.h"
 #include "binary_stream.h"
-#include "unified_platform/pub_inc/config_plf_log.h"
+#include "unified_platform/pub_inc/config_plf_log_v2.h"
 #include "env_config_v2.h"
 #include "sqe.h"
 #include "ascend_hal.h"

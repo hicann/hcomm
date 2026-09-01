@@ -139,6 +139,8 @@ set(src_to_test_list
     coll_comms/rank_info_detect/ut_rank_info_detect_client.cc
     coll_comms/rank_info_detect/ut_rank_info_detect_service.cc
     coll_comms/rank_info_detect/ut_rankinfo_dispatcher.cc
+    coll_comms/rank_info_detect/ut_whitelist.cc
+    coll_comms/rank_info_detect/whitelist_test.cc
     ${HCCL_CODE_ROOT}/test/legacy/ut/framework/env_config/env_config_stub.cc
     coll_comms/team/hcomm/ut_hcomm_team_test.cc
 )

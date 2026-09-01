@@ -25,7 +25,8 @@
 #include "coll_comm_config.h"
 #include "coll_comm_mgr.h"
 #include "env_config/env_config_v2.h"
-#include "unified_platform/pub_inc/config_plf_log.h"
+#include "config_plf_log.h"
+#include "plf_debug_config.h"
 #include "dlprof_function.h"
 
 namespace hccl {

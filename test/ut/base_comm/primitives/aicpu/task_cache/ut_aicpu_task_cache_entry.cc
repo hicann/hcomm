@@ -27,7 +27,7 @@
 #include "udma_data_struct.h"
 #include "ub_jetty_lite.h"
 #include "ip_address.h"
-#include "unified_platform/pub_inc/config_plf_log.h"
+#include "unified_platform/pub_inc/config_plf_log_v2.h"
 #include "stream_lite.h"
 
 #undef private

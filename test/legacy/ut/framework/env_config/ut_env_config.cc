@@ -25,7 +25,7 @@
 #include "invalid_params_exception.h"
 #include "env_func.h"
 #include "plf_debug_config.h"
-#include "unified_platform/pub_inc/config_plf_log.h"
+#include "unified_platform/pub_inc/config_plf_log_v2.h"
 
 using namespace Hccl;
 

@@ -28,7 +28,7 @@
 #include "hccl_diag.h"
 #include "channel.h"
 #include "aicpu_ts_channel_helper.h"
-#include "unified_platform/pub_inc/config_plf_log.h"
+#include "unified_platform/pub_inc/config_plf_log_v2.h"
 
 using Hccl::PLF_DATA_OP;
 

@@ -38,7 +38,7 @@
 
 #include "ccu_assist_v1.h"
 
-#include "unified_platform/pub_inc/config_plf_log.h"
+#include "unified_platform/pub_inc/config_plf_log_v2.h"
 using Hccl::PLF_TASK;
 
 CcuResult HcommCcuKernelRegisterStart(CcuInsHandle insHandle)

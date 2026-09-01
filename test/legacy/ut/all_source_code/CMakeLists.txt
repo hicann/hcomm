@@ -92,7 +92,7 @@ target_sources(hccl_v2_utest
         ${HCOMM_DIR}/src/base_comm/common/debug/plf_debug_config.cc
 
         ${HCCL_V2_CODE_ROOT}/framework/misc/json_parser/json_parser.cc
-        ${HCCL_V2_CODE_ROOT}/framework/misc/whitelist/whitelist.cc
+        ${HCOMM_DIR}/src/coll_communicator_mgr/rank_info_detect/whitelist.cc
         ${HCCL_V2_CODE_ROOT}/framework/misc/mask_event/mask_event.cc
 
         ${HCCL_V2_CODE_ROOT}/framework/resource_manager/transport/ub_memory_transport_mgr.cc
