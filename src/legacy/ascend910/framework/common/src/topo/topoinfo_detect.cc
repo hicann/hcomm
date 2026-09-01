@@ -9,7 +9,13 @@
  */
 
 #include "topoinfo_detect.h"
+#include <cerrno>
 #include <string>
+#include <sys/ioctl.h>
+#include <sys/socket.h>
+#include <net/if.h>
+#include <unistd.h>
+#include "adapter_hccp.h"
 #include "adapter_rts_common.h"
 #include "hccl_whitelist.h"
 #include "hccl_socket.h"
@@ -222,6 +228,19 @@ HcclResult TopoInfoDetect::SetupServer(HcclRootHandle& rootInfo)
     CHK_RET(GetRootHostIP(whitelist, hostIP, devicePhysicID_));
     SetBootstrapHostIP(hostIP);
 
+    HcclResult ret = CheckHostNicLinkUp(hostIP);
+    // HrtRaRdmaInit将HCCP_ELINKDOWN转换为HCCL_E_AGAIN返回
+    if (ret != HCCL_SUCCESS) {
+        HCCL_ERROR(
+            "[Setup][Server]host NIC link is down, deviceLogicID[%d], devicePhysicID[%u], hostIP[%s], ret[%d].",
+            deviceLogicID_, devicePhysicID_, hostIP.GetReadableAddress(), ret);
+        return ret;
+    }
+
+    HCCL_INFO(
+        "[Setup][Server]host NIC status check success, deviceLogicID[%d], devicePhysicID[%u], hostIP[%s].",
+        deviceLogicID_, devicePhysicID_, hostIP.GetReadableAddress());
+
     u32 deviceNum = 0;
     CHK_RET(hrtGetDeviceCount(&deviceNum));
     CHK_PRT_RET(
@@ -244,7 +263,7 @@ HcclResult TopoInfoDetect::SetupServer(HcclRootHandle& rootInfo)
     } else {
         portRanges = GetExternalInputHostSocketPortRange();
     }
-    HcclResult ret = StartRootNetwork(hostIP, hostPort, portRanges);
+    ret = StartRootNetwork(hostIP, hostPort, portRanges);
     CHK_PRT_RET(
         ret != HCCL_SUCCESS,
         HCCL_ERROR(
@@ -507,6 +526,52 @@ HcclResult TopoInfoDetect::PrepareHandle(HcclRankHandle& rankHandle, std::vector
     return HCCL_SUCCESS;
 }
 
+HcclResult TopoInfoDetect::CheckHostNicLinkUp(const HcclIpAddress& hostIP) const
+{
+    const s32 family = hostIP.GetFamily();
+    CHK_PRT_RET(
+        (family != AF_INET) && (family != AF_INET6),
+        HCCL_ERROR(
+            "[Check][HostNicLink]address family[%d] is invalid, hostIP[%s].", family, hostIP.GetReadableAddress()),
+        HCCL_E_PARA);
+
+    const string ifName = hostIP.GetIfName();
+    CHK_PRT_RET(
+        ifName.empty() || (ifName.length() >= static_cast<size_t>(IFNAMSIZ)),
+        HCCL_ERROR("[Check][HostNicLink]interface name[%s] is invalid, length[%zu].", ifName.c_str(), ifName.length()),
+        HCCL_E_PARA);
+
+    struct ifreq ifr = {};
+    CHK_SAFETY_FUNC_RET(strncpy_s(ifr.ifr_name, sizeof(ifr.ifr_name), ifName.c_str(), ifName.length()));
+
+    const int fd = socket(family, SOCK_DGRAM, 0);
+    CHK_PRT_RET(
+        fd < 0,
+        HCCL_ERROR(
+            "[Check][HostNicLink]create socket failed, family[%d], interface[%s], errno[%d].", family, ifName.c_str(),
+            errno),
+        HCCL_E_SYSCALL);
+
+    if (ioctl(fd, SIOCGIFFLAGS, &ifr) < 0) {
+        const s32 errorNo = errno;
+        (void)close(fd);
+        HCCL_ERROR(
+            "[Check][HostNicLink]get interface flags failed, family[%d], interface[%s], errno[%d].", family,
+            ifName.c_str(), errorNo);
+        return HCCL_E_SYSCALL;
+    }
+    if (close(fd) != 0) {
+        HCCL_ERROR(
+            "[Check][HostNicLink]close socket failed, family[%d], interface[%s], errno[%d].", family, ifName.c_str(),
+            errno);
+        return HCCL_E_SYSCALL;
+    }
+    if (!(ifr.ifr_flags & IFF_UP) || !(ifr.ifr_flags & IFF_RUNNING)) {
+        return HCCL_E_NETWORK; // 网卡 down
+    }
+    return HCCL_SUCCESS;
+}
+
 HcclResult TopoInfoDetect::SetupAgent(
     u32 rankSize, u32 myrank, const HcclRootHandle& rootInfo, const HcclRankHandle& rankHandle,
     const CommConfig& commConfig)
@@ -530,9 +595,20 @@ HcclResult TopoInfoDetect::SetupAgent(
     CHK_RET(GetLocalHostIP(hostIP, devicePhysicID_));
 
     SetBootstrapHostIP(hostIP);
+    HcclResult ret = CheckHostNicLinkUp(hostIP);
+    if (ret != HCCL_SUCCESS) {
+        HCCL_ERROR(
+            "[Setup][Agent]host NIC link is down, deviceLogicID[%d], devicePhysicID[%u], hostIP[%s], ret[%d].",
+            deviceLogicID_, devicePhysicID_, hostIP.GetReadableAddress(), ret);
+        return ret;
+    }
+
+    HCCL_INFO(
+        "[Setup][Agent]host NIC status check success, deviceLogicID[%d], devicePhysicID[%u], hostIP[%s].",
+        deviceLogicID_, devicePhysicID_, hostIP.GetReadableAddress());
 
     bool bInitDevNic = rankSize != 1 ? true : false;
-    HcclResult ret = StartNetwork(hostIP, bInitDevNic);
+    ret = StartNetwork(hostIP, bInitDevNic);
     CHK_PRT_RET(
         ret != HCCL_SUCCESS, HCCL_ERROR("[Setup][Agent]topo detect agent start network failed! rank[%u]", myrank), ret);
 

@@ -19,6 +19,8 @@ public:
         BaseInit::SetUp();
         // 将建链超时时间设置为1s，减少测试用例运行时间
         MOCKER(GetExternalInputHcclLinkTimeOut).stubs().with(mockcpp::any()).will(returnValue(1));
+        // 白名单及环境变量用例不依赖 CI runner 的真实网卡状态
+        MOCKER_CPP(&TopoInfoDetect::CheckHostNicLinkUp).stubs().with(mockcpp::any()).will(returnValue(HCCL_SUCCESS));
     }
     void TearDown() override
     {
@@ -31,6 +33,15 @@ public:
         GlobalMockObject::verify();
     }
 };
+
+TEST(TopoInfoDetectTest, Ut_CheckHostNicLinkUp_When_IPv6Loopback_Expect_ReturnIsHCCL_SUCCESS)
+{
+    const TopoInfoDetect topoInfoDetect;
+    const HcclIpAddress hostIP("::1%lo");
+
+    EXPECT_EQ(hostIP.GetFamily(), AF_INET6);
+    EXPECT_EQ(topoInfoDetect.CheckHostNicLinkUp(hostIP), HCCL_SUCCESS);
+}
 
 TEST_F(HcclGetRootInfoTest, Ut_HcclGetRootInfo_When_RootInfoIsNull_Expect_ReturnIsHCCL_E_PTR)
 {

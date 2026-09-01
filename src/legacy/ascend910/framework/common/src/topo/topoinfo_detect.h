@@ -31,6 +31,7 @@ public:
     HcclResult SetupAgent(
         u32 rankSize, u32 myrank, const HcclRootHandle& rootInfo, const HcclRankHandle& rankHandle,
         const CommConfig& commConfig); // 分层建链时使用的SetupAgent
+    HcclResult CheckHostNicLinkUp(const HcclIpAddress& hostIP) const;
     HcclResult PrepareHandle(HcclRankHandle& rankHandle, std::vector<HcclIpAddress>& whitelist); // 准备要发送的agent
     HcclResult SetupRank(std::shared_ptr<HcclSocket>& agentConnRoot); // 分层建链时获得每个GroupLeader的监听端口
     HcclResult SetupAgentByMasterInfo(HcclIpAddress& localHostIp, const HcclRootHandle& rootInfo);
