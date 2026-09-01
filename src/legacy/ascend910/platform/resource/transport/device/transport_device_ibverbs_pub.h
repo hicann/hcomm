@@ -93,7 +93,7 @@ public:
 
     HcclResult AddWrList(
         void* dstMemPtr, const void* srcMemPtr, u64 srcMemSize, u32 srcKey, u32 dstKey, WqeType wqeType, WrAuxInfo& aux,
-        std::vector<WrInformation>& wrInfoVec);
+        std::vector<WrInformation>& wrInfoVec, bool isLast = true);
     HcclResult GetMemInfo(UserMemType memType, void** dstMemPtr, unsigned int* dstKey, u64& dstMemSize);
     HcclResult TxPayLoad(
         UserMemType dstMemType, u64 dstOffset, const void* src, u64 len, WqeType wqeType, WrAuxInfo& aux,
@@ -123,7 +123,7 @@ public:
 
     HcclResult ConstructPayLoadWqe(
         void* dstMemPtr, u32 dstKey, const void* src, u32 srcKey, u64 len, WqeType wqeType, WrAuxInfo& aux,
-        std::vector<WrInformation>& wrInfoVec, u32 txSendDataTimes);
+        std::vector<WrInformation>& wrInfoVec, u32 txSendDataTimes, bool isLast = true);
     HcclResult WriteCommon(
         const void* remoteAddr, const void* localAddr, u64 length, Stream& stream, WqeType wqeType,
         struct WrAuxInfo& aux);

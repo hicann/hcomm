@@ -320,16 +320,14 @@ HcclResult TransportDeviceRoceMem::RdmaPostSend(
         sendWr[index].sg_list = &sge[index];
         sendWr[index].wr.rdma.remote_addr = remoteMems[index].addr;
         sendWr[index].wr.rdma.rkey = remoteMems[index].key;
-        sendWr[index].next = (index == last) ? nullptr : &sendWr[index + 1]; // 第一个WR指向第二个WR
-        sendWr[index].send_flags = (index == last) ?
-                                       (fence ? (IBV_SEND_SIGNALED | IBV_SEND_FENCE) : IBV_SEND_SIGNALED) :
-                                       0; // 最后一个WR才需要回复CQE
+        sendWr[index].next = (index == last) ? nullptr : &sendWr[index + 1];         // 第一个WR指向第二个WR
+        sendWr[index].send_flags = fence ? (IBV_SEND_SIGNALED | IBV_SEND_FENCE) : 0; // addfence时才需要回复CQE
         sendWr[index].opcode = static_cast<enum ibv_wr_opcode>(opCode);
         HCCL_DEBUG(
             "[TransportDeviceRoceMem][RdmaPostSend] Direct ibv_post_send[%llu], opcode=[0x%x], "
-            "remote_addr=[0x%llx], size=[%u], fence[%u]",
+            "remote_addr=[0x%llx], size=[%u], fence[%u], send_flags[%d]",
             wrIdOffset_.load(), sendWr[index].opcode, sendWr[index].wr.rdma.remote_addr, sendWr[index].sg_list->length,
-            fence);
+            fence, sendWr[index].send_flags);
     }
 
     struct ibv_send_wr* badWr = nullptr;

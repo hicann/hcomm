@@ -387,13 +387,13 @@ HcclResult TransportRoceMem::TransportRdmaWithType(
         wr[0].dstAddr = remoteStartAddr;
         wr[0].rkey = remoteRdmaRmaBuffer->GetKey();
         wr[0].op = static_cast<u32>(rdmaOp);
-        wr[0].sendFlags = remainingBytes > MAX_RDMA_WQE_SIZE ? 0 : RA_SEND_SIGNALED;
+        wr[0].sendFlags = 0;
 
         struct SendWrRsp opRsp[WR_NUM];
 
         HCCL_DEBUG(
-            "Op type[%d], wr.wrId[%llu], src addr[%p], dest addr[%p], len[%u]", rdmaOp, wr[0].wrId,
-            localRmaBufferSlice.addr, remoteRmaBufferSlice.addr, wr[0].memList.len);
+            "Op type[%d], wr.wrId[%llu], src addr[%p], dest addr[%p], len[%u], sendflags[%d]", rdmaOp, wr[0].wrId,
+            localRmaBufferSlice.addr, remoteRmaBufferSlice.addr, wr[0].memList.len, wr[0].sendFlags);
         u32 completeNum = 0;
         CHK_RET(HrtRaSendNormalWrlist(dataQpInfo_.qpHandle, wr, opRsp, WR_NUM, &completeNum));
         CHK_RET(DoorBellSend(dataQpInfo_.qpMode, wr[0], opRsp[0], stream));
@@ -513,8 +513,9 @@ HcclResult TransportRoceMem::AddOpFence(const rtStream_t& stream)
     CHK_RET(DoorBellSend(dataQpInfo_.qpMode, wr[0], opRsp[0], stream));
     CHK_RET(WaitOpFence(stream));
     HCCL_DEBUG(
-        "[AddOpFence] wr.wrId[%llu], local addr[%p], remote addr[%p], len[%u], lkey[%u], rkey[%u]", wr[0].wrId,
-        rdmaSignal_[0].addr, notifyMemMsg_[opType].addr, wr[0].memList.len, wr[0].memList.lkey, wr[0].rkey);
+        "[AddOpFence] wr.wrId[%llu], local addr[%p], remote addr[%p], len[%u], lkey[%u], rkey[%u], sendFlags[%d]",
+        wr[0].wrId, rdmaSignal_[0].addr, notifyMemMsg_[opType].addr, wr[0].memList.len, wr[0].memList.lkey, wr[0].rkey,
+        wr[0].sendFlags);
     return HCCL_SUCCESS;
 }
 

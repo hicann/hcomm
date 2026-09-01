@@ -372,7 +372,7 @@ HcclResult TransportDeviceIbverbs::BuildMemDetailsRmaMgrs()
 
 HcclResult TransportDeviceIbverbs::AddWrList(
     void* dstMemPtr, const void* srcMemPtr, u64 srcMemSize, u32 srcKey, u32 dstKey, WqeType wqeType, WrAuxInfo& aux,
-    std::vector<WrInformation>& wrInfoVec)
+    std::vector<WrInformation>& wrInfoVec, bool isLast)
 {
     HCCL_DEBUG("TransportDeviceIbverbs AddWrList start");
     if (srcMemSize == 0) {
@@ -381,7 +381,7 @@ HcclResult TransportDeviceIbverbs::AddWrList(
     WrInformation wrInfoTmp;
     wrInfoTmp.wrData.dstAddr = static_cast<u64>(reinterpret_cast<uintptr_t>(dstMemPtr));
     wrInfoTmp.wrData.rkey = dstKey;
-    wrInfoTmp.wrData.sendFlags = fence_ ? (RA_SEND_SIGNALED | RA_SEND_FENCE) : RA_SEND_SIGNALED;
+    wrInfoTmp.wrData.sendFlags = fence_ ? (RA_SEND_SIGNALED | RA_SEND_FENCE) : (isLast ? RA_SEND_SIGNALED : 0);
     fence_ = false;
     wrInfoTmp.wrData.immData = 0;
     wrInfoTmp.wrData.wrId = 0;
@@ -414,8 +414,8 @@ HcclResult TransportDeviceIbverbs::AddWrList(
     }
     CHK_RET(GetWrDataAddr(dstMemPtr, wqeType, wrInfoTmp.wrDataAddr, wrInfoTmp.notifyId));
     HCCL_DEBUG(
-        "wrInfoTmp dst_addr[0x%llx] memList addr[0x%llx] len[%llu]", wrInfoTmp.wrData.dstAddr,
-        wrInfoTmp.wrData.memList.addr, srcMemSize);
+        "wrInfoTmp dst_addr[0x%llx] memList addr[0x%llx] len[%llu] isLast[%u]", wrInfoTmp.wrData.dstAddr,
+        wrInfoTmp.wrData.memList.addr, srcMemSize, isLast);
     wrInfoVec.push_back(wrInfoTmp);
     HCCL_DEBUG("TransportDeviceIbverbs AddWrList end");
     return HCCL_SUCCESS;
@@ -452,7 +452,7 @@ TransportDeviceIbverbs::GetMemInfo(UserMemType memType, void** dstMemPtr, unsign
 
 HcclResult TransportDeviceIbverbs::ConstructPayLoadWqe(
     void* dstMemPtr, u32 dstKey, const void* src, u32 srcKey, u64 len, WqeType wqeType, WrAuxInfo& aux,
-    std::vector<WrInformation>& wrInfoVec, u32 txSendDataTimes)
+    std::vector<WrInformation>& wrInfoVec, u32 txSendDataTimes, bool isLast)
 {
     HcclResult ret;
     // 发送数据Wqe
@@ -463,7 +463,7 @@ HcclResult TransportDeviceIbverbs::ConstructPayLoadWqe(
         void* txdstMemPtr = reinterpret_cast<void*>(reinterpret_cast<char*>(dstMemPtr) + txSendDataOffset);
 
         const void* txsrcMemPtr = reinterpret_cast<const void*>(reinterpret_cast<const char*>(src) + txSendDataOffset);
-        ret = AddWrList(txdstMemPtr, txsrcMemPtr, txSendDataSize, srcKey, dstKey, wqeType, aux, wrInfoVec);
+        ret = AddWrList(txdstMemPtr, txsrcMemPtr, txSendDataSize, srcKey, dstKey, wqeType, aux, wrInfoVec, isLast);
         CHK_PRT_RET(
             ret != HCCL_SUCCESS,
             HCCL_ERROR(
@@ -1472,6 +1472,7 @@ TransportDeviceIbverbs::BatchTransferImpl(const HcommBatchTransferDesc* transfer
             remoteAddr, length, static_cast<int>(wqeType));
 
         if (localAddr != nullptr) {
+            bool isLast = (i == descNum - 1);
             u32 txSendDataTimes = (length == 0) ? 1 : (length + RDMA_SEND_MAX_SIZE - 1) / RDMA_SEND_MAX_SIZE;
             RdmaAddrKeyResolveParam resolve{};
             resolve.remoteAddr = remoteAddr;
@@ -1480,7 +1481,7 @@ TransportDeviceIbverbs::BatchTransferImpl(const HcommBatchTransferDesc* transfer
             CHK_RET(ResolveRdmaAddrsAndKeys(resolve));
             CHK_RET(ConstructPayLoadWqe(
                 resolve.transRemoteAddr, resolve.dstKey, resolve.transLocalAddr, resolve.srcKey, length, wqeType, aux,
-                wrInfoVec, txSendDataTimes));
+                wrInfoVec, txSendDataTimes, isLast));
         }
     }
 
