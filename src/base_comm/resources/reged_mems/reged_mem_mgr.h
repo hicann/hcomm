@@ -222,13 +222,13 @@ protected:
                   return entry.first.get() == buffer;
               });
         if (it != allBuffers.end()) {
+            if (outRecords != nullptr) {
+                outRecords->erase(std::remove(outRecords->begin(), outRecords->end(), it->first), outRecords->end());
+            }
             if (!mgr->IsInTree(ownKey)) {
                 allBuffers.erase(it);
             } else {
                 it->second = true;
-            }
-            if (outRecords != nullptr) {
-                outRecords->erase(std::remove(outRecords->begin(), outRecords->end(), it->first), outRecords->end());
             }
         }
         return HCCL_SUCCESS;
