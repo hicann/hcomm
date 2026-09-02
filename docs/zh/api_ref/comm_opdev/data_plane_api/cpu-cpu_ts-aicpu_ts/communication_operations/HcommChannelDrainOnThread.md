@@ -43,9 +43,18 @@ int32_t：接口成功返回0，其他失败。
 
 ## 约束说明
 
-- A2/A3 AI CPU侧调用时，通信引擎为AICPU_TS。
-- A2/A3 AI CPU侧仅支持通信协议RoCE。
-- A5 Host CPU侧调用时，申请入参`channel`使用的通信引擎须为`COMM_ENGINE_CPU`，且`channelDesc.remoteEndpoint.protocol`须为`COMM_PROTOCOL_ROCE`或`COMM_PROTOCOL_UB_CTP`。
+<!-- npu="A3,910b" id6 -->
+- 针对如下产品，在AI CPU侧调用此接口时，通信引擎为AICPU_TS，仅支持通信协议RoCE。
+    <!-- npu="A3" id7 -->
+    - Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+    <!-- end id7 -->
+    <!-- npu="910b" id8 -->
+    - Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+    <!-- end id8 -->
+<!-- end id6 -->
+<!-- npu="950" id9 -->
+- 针对Ascend 950PR/Ascend 950DT，在Host CPU侧调用时，申请入参`channel`使用的通信引擎须为`COMM_ENGINE_CPU`，且`channelDesc.remoteEndpoint.protocol`须为`COMM_PROTOCOL_ROCE`或`COMM_PROTOCOL_UB_CTP`。
+<!-- end id9 -->
 - 同一个`ChannelHandle`不支持多线程并发访问。
 
 ## 调用示例
