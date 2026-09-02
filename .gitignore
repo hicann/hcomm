@@ -40,3 +40,7 @@ CLAUDE.md
 # Logs
 /logs/
 *.log
+
+oat_reports/
+
+log/
