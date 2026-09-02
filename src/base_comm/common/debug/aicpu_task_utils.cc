@@ -10,6 +10,8 @@
 
 #include "aicpu_task_utils.h"
 
+using Hccl::GetPlfDebugConfigValue;
+using Hccl::PLF_TASK;
 using Hccl::Rt91095StarsMemcpySqe;
 using Hccl::Rt91095StarsNotifySqe;
 using Hccl::Rt91095StarsSqeHeader;
@@ -19,6 +21,11 @@ using Hccl::UdmaSqeCommon;
 using Hccl::UdmaSqeWrite;
 using Hccl::UdmaSqeWriteWithNotify;
 using Hccl::UdmaSqOpcode;
+#ifdef HCCL_V2 // hccl_v2
+using Hccl::HCCL_LOG_DEBUG;
+using Hccl::HCCL_LOG_INFO;
+using Hccl::HcclCheckLogLevel;
+#endif
 
 namespace hcomm {
 
@@ -100,7 +107,7 @@ HcclResult AicpuTaskUtils::DumpWqeContent(const uint8_t* wqePtr)
     // 注意: UdmaSqOpcode::UDMA_OPC_READ/UDMA_OPC_WRITE均使用UdmaSqeWrite
     if ((UNLIKELY(GetPlfDebugConfigValue() & PLF_TASK)) || UNLIKELY(HcclCheckLogLevel(HCCL_LOG_INFO))) {
         CHK_PTR_NULL(wqePtr);
-        UdmaSqeCommon* wqeCommonPtr = (UdmaSqeCommon*)(wqePtr);
+        const UdmaSqeCommon* wqeCommonPtr = static_cast<const UdmaSqeCommon*>(static_cast<const void*>(wqePtr));
         const uint8_t wqeCode = static_cast<uint8_t>(wqeCommonPtr->opcode);
         switch (wqeCode) {
             case UdmaSqOpcode::UDMA_OPC_READ:
@@ -162,7 +169,7 @@ inline HcclResult AicpuTaskUtils::DumpReadWriteWqe_(const uint8_t* wqePtr)
 
 inline HcclResult AicpuTaskUtils::DumpWriteWithNotifyWqe_(const uint8_t* wqePtr)
 {
-    UdmaSqeCommon* wqeCommonPtr = (UdmaSqeCommon*)wqePtr;
+    const UdmaSqeCommon* wqeCommonPtr = static_cast<const UdmaSqeCommon*>(static_cast<const void*>(wqePtr));
     UdmaSqeWriteWithNotify* udmaSqeWriteWithNotify = (UdmaSqeWriteWithNotify*)wqePtr;
     constexpr uint64_t UINT32_BIT_WIDTH = 32;
     const uint64_t rmtAddr

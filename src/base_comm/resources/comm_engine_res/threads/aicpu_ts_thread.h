@@ -67,8 +67,9 @@ public:
 
     Hccl::TaskInfoCircularQueue* GetTaskInfos() const;
     HcclResult GetTaskInfoCount(u32& count) const;
-    void SetReportStreamTaskCallback(std::function<void(Hccl::TaskInfoCircularQueue*)> callback);
-    void SetGetLatestDfxOpInfoCallback(std::function<const void*()> callback);
+    void SetReportStreamTaskCallback(std::function<void(Hccl::TaskInfoCircularQueue*)> callback) const;
+
+    void SetGetLatestDfxOpInfoCallback(std::function<const void*()> callback) const;
 
 private:
     struct HcclStreamInfo {

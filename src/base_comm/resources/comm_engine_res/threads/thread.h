@@ -172,7 +172,7 @@ HcclResult StoreThreadHandles(
     aclrtBinHandle binHandle);
 HcclResult FreeThreads(const ThreadHandle* threads, uint32_t threadNum, aclrtBinHandle binHandle);
 HcclResult SupplementThreadNotify(ThreadHandle handle, uint32_t notifyNum);
-HcclResult FillThreadD2HMap(ThreadHandle* deviceThreadHandles, ThreadHandle* hostThreadHandles, uint32_t listNum);
+HcclResult FillThreadD2HMap(const ThreadHandle* deviceThreadHandles, ThreadHandle* hostThreadHandles, uint32_t listNum);
 /**
  * @brief 按句柄查全局线程表，获取对应的 shared_ptr<Thread>
  * @param[in] handle 线程句柄

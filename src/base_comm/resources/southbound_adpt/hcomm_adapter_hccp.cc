@@ -641,18 +641,22 @@ HcclResult HrtRaDumpJettyContext(JettyHandle jettyHandle, u32 jettyId)
         HCCL_ERROR("[HrtRaDumpJettyContext] invalid context len=%u, jettyId[%u]", len, jettyId), HCCL_E_INTERNAL);
 
     constexpr u32 bytesPerLine = 64;
+    constexpr u32 kHexCharsPerByte = 2;
     for (u32 offset = 0; offset < len; offset += bytesPerLine) {
         u32 bytesThisLine = std::min(len - offset, bytesPerLine);
 
-        char hexBuf[bytesPerLine * 2 + 1] = {0};
+        char hexBuf[bytesPerLine * kHexCharsPerByte + 1] = {0};
         for (u32 i = 0; i < bytesThisLine; i++) {
-            int sret = snprintf_s(hexBuf + i * 2, sizeof(hexBuf) - i * 2, 2U, "%02x", context[offset + i]);
+            int sret = snprintf_s(
+                hexBuf + i * kHexCharsPerByte, sizeof(hexBuf) - i * kHexCharsPerByte, kHexCharsPerByte, "%02x",
+                context[offset + i]);
             CHK_PRT_RET(
                 sret <= 0,
                 HCCL_ERROR(
                     "[HrtRaDumpJettyContext] snprintf_s failed, dest[%p], destMax[%zu], count[%u], "
                     "contextVal[%u], ret[%d].",
-                    static_cast<void*>(hexBuf + i * 2), sizeof(hexBuf) - i * 2, 2U, context[offset + i], sret),
+                    static_cast<void*>(hexBuf + i * kHexCharsPerByte), sizeof(hexBuf) - i * kHexCharsPerByte,
+                    kHexCharsPerByte, context[offset + i], sret),
                 HCCL_E_INTERNAL);
         }
 

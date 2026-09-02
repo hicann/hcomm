@@ -244,7 +244,7 @@ HcclResult CreateAndInitThreads(const ThreadCreateParams& params, vector<shared_
     return HCCL_SUCCESS;
 }
 
-HcclResult FillThreadD2HMap(ThreadHandle* deviceThreadHandles, ThreadHandle* hostThreadHandles, uint32_t listNum)
+HcclResult FillThreadD2HMap(const ThreadHandle* deviceThreadHandles, ThreadHandle* hostThreadHandles, uint32_t listNum)
 {
     int32_t deviceId = 0;
     CHK_RET(hrtGetDevice(&deviceId));

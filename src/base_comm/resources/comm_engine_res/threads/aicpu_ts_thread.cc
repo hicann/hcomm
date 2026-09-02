@@ -318,7 +318,7 @@ HcclResult AicpuTsThread::LocalCopy(void* dst, const void* src, uint64_t size) c
         },
         [this](
             [[maybe_unused]] void* dst, [[maybe_unused]] const void* src, [[maybe_unused]] uint64_t size,
-            [[maybe_unused]] uint64_t beginTime, uint32_t taskId, uint32_t sqId, Hccl::RtsqBase* rtsq) {
+            [[maybe_unused]] uint64_t beginTime, uint32_t taskId, uint32_t sqId, const Hccl::RtsqBase* rtsq) {
             Hccl::StreamLite* sl = static_cast<Hccl::StreamLite*>(GetStreamLitePtr());
             auto* slot = sl->NextTaskSlot();
             slot->taskType = Hccl::TaskParamTypeVal::TASK_SDMA;
@@ -346,7 +346,7 @@ HcclResult AicpuTsThread::LocalReduce(
         },
         [this, &dataType, &reduceOp](
             void* dst, const void* src, uint64_t size, [[maybe_unused]] uint64_t beginTime, uint32_t taskId,
-            uint32_t sqId, Hccl::RtsqBase* rtsq) {
+            uint32_t sqId, const Hccl::RtsqBase* rtsq) {
             Hccl::StreamLite* sl = static_cast<Hccl::StreamLite*>(GetStreamLitePtr());
             auto* slot = sl->NextTaskSlot();
             slot->taskType = Hccl::TaskParamTypeVal::TASK_REDUCE_INLINE;
@@ -585,7 +585,7 @@ HcclResult AicpuTsThread::GetTaskInfoCount(u32& count) const
     return HCCL_SUCCESS;
 }
 
-void AicpuTsThread::SetReportStreamTaskCallback(std::function<void(Hccl::TaskInfoCircularQueue*)> callback)
+void AicpuTsThread::SetReportStreamTaskCallback(std::function<void(Hccl::TaskInfoCircularQueue*)> callback) const
 {
     Hccl::StreamLite* streamLite = static_cast<Hccl::StreamLite*>(GetStreamLitePtr());
     if (streamLite != nullptr) {
@@ -593,7 +593,7 @@ void AicpuTsThread::SetReportStreamTaskCallback(std::function<void(Hccl::TaskInf
     }
 }
 
-void AicpuTsThread::SetGetLatestDfxOpInfoCallback(std::function<const void*()> callback)
+void AicpuTsThread::SetGetLatestDfxOpInfoCallback(std::function<const void*()> callback) const
 {
     Hccl::StreamLite* streamLite = static_cast<Hccl::StreamLite*>(GetStreamLitePtr());
     if (streamLite != nullptr) {

@@ -10,8 +10,6 @@
 
 #ifndef RES_PUB_H
 #define RES_PUB_H
-#include <vector>
-#include <functional>
 #include "hccl/hccl_types.h"
 #include "hccl/base.h"
 constexpr u32 INVALID_U32 = UINT32_MAX;

@@ -22,6 +22,14 @@
 #include "rmt_rma_buf_slice_lite.h"
 #include "sqe_v82.h"
 
+using Hccl::GetPlfDebugConfigValue;
+using Hccl::PLF_TASK;
+#ifdef HCCL_V2 // hccl_v2
+using Hccl::HCCL_LOG_DEBUG;
+using Hccl::HCCL_LOG_INFO;
+using Hccl::HcclCheckLogLevel;
+#endif
+
 namespace hcomm {
 
 AddrRefreshInfo::AddrRefreshInfo() : needRefresh(false), memIdx(0), offset(0) {}

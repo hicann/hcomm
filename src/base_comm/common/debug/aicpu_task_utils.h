@@ -17,26 +17,6 @@
 #include "sqe_v82.h"
 #include "udma_data_struct.h"
 
-using Hccl::GetPlfDebugConfigValue;
-using Hccl::PLF_TASK;
-
-#ifdef HCCL_V2 // hccl_v2
-// log
-using Hccl::CallDlog;
-using Hccl::CallDlogMemError;
-using Hccl::CallDlogNoSzFormat;
-using Hccl::CallDlogPrintError;
-using Hccl::HCCL_LOG_DEBUG;
-using Hccl::HCCL_LOG_ERROR;
-using Hccl::HCCL_LOG_INFO;
-using Hccl::HCCL_LOG_WARN;
-using Hccl::HCCL_MODULE_ID;
-using Hccl::HcclCheckLogLevel;
-using Hccl::HcclSubModuleID;
-using Hccl::LOG_TMPBUF_SIZE;
-using Hccl::SYSTEM_RESERVE_ERROR;
-#endif
-
 // 确认ptr应该为空
 #define CHK_PTR_NOTNULL(ptr)                                                                                     \
     do {                                                                                                         \

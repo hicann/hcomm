@@ -169,8 +169,9 @@ __attribute__((unused)) static SimpoBuilderT *SimpoBuilderInit(void)
     }
     (void)memset_s(builder, sizeof(SimpoBuilderT), 0, sizeof(SimpoBuilderT));
     builder->isBigEndian = g_uiSimpoEndianIsBig;
-    *(((uint8_t *)&(builder->msgHead)) + 3) = ((g_uiSimpoEndianIsBig != 0) ? 1
-                                                                           : 0); /* 第3个字节表示消息来自大端或小端 */
+    const uint8_t kEndianFlagByteOffset = 3;
+    *(((uint8_t *)&(builder->msgHead)) +
+        kEndianFlagByteOffset) = ((g_uiSimpoEndianIsBig != 0) ? 1 : 0); /* 第3个字节表示消息来自大端或小端 */
 #if (VOS_BYTE_ORDER == VOS_BIG_ENDIAN)
     builder->dopraEndian = 1;
 #else
