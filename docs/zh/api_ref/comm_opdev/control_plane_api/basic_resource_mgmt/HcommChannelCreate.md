@@ -51,7 +51,7 @@ HcommResult：接口成功返回0，其他失败。
 - 当HcommChannelDesc中exchangeAllMems为false时，必须配置memHandles和memHandleNum。
 - AIV直驱URMA场景下，本端与远端参与交换的内存数量必须一致，否则Channel创建失败。
 - 当前CommEngine配置为CCU时，仅支持交换1份memHandle。
-- 当前CommEngine配置为CCU时，不支持外部配置NotifyNum，默认为8个CCU Notify。
+- 当前CommEngine配置为CCU时，不支持外部配置NotifyNum，默认为4个CCU Notify。
 - 当前各CommEngine支持的通信协议与芯片型号有关，具体如下：
 
   <!-- npu="950" id6 -->

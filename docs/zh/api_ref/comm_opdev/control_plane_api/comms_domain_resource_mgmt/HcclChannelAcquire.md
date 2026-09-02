@@ -46,7 +46,7 @@ HcclResult HcclChannelAcquire(HcclComm comm, CommEngine engine, const HcclChanne
 
 ## 约束说明
 
-1. 当前CommEngine配置为CCU时，不支持外部配置NotifyNum，默认分配8个CCU Notify。
+1. 当前CommEngine配置为CCU时，不支持外部配置NotifyNum，默认分配4个CCU Notify。
 
 2. 当前CommEngine配置为CCU时，不支持交换额外自定义内存，仅支持交换通信域的HcclBuffer。
 
@@ -119,7 +119,7 @@ for (uint32_t idx = 0; idx < listSize; idx++) {
   channelDesc.remoteEndpoint.commAddr = link.dstEndpointDesc.commAddr;
   channelDesc.remoteEndpoint.loc   = link.dstEndpointDesc.loc;
   channelDesc.channelProtocol     = link.linkAttr.linkProtocol;
-  channelDesc.notifyNum = 8; // 由用户按需指定Notify数量
+  channelDesc.notifyNum = 4; // 由用户按需指定Notify数量
 
   channelDescVec[idx] = channelDesc;
 }

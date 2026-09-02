@@ -93,7 +93,6 @@ HcommResult HcommMemUnimport(EndpointHandle endpointHandle, const void* memDesc,
     return static_cast<HcclResult>(mgr->MemoryUnimport(memDesc, descLen));
 }
 
-/* 暂未实现 */
 HcommResult HcommMemGrant(EndpointHandle endpointHandle, const HcommMemGrantInfo* remoteGrantInfo)
 {
     CHK_PTR_NULL(remoteGrantInfo);

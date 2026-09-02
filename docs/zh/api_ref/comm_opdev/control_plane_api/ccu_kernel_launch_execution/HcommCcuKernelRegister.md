@@ -62,7 +62,6 @@ CcuResult HcommCcuKernelRegister(CcuInsHandle insHandle, uint32_t dieId,
 - 同一实例的同一轮注册内可多次调用本接口，每次调用注册一个独立的Kernel。
 - `argNum`当前仅支持`0`或`1`；为`1`时仅`kernelArgs[0]`生效，其余元素被忽略。
 - `kernelArgs[0]`指向的标量在注册阶段即被读取，并固化为立即数。若某个标量的值需在每次启动时动态指定，须通过`taskArgs`数组与Kernel内的`CcuLoadArg`接口传入，而不是通过`kernelArgs`。
-- `dieId`为预留参数，当前实现未使用。
 - 本接口只能在Host侧调用，不能嵌套调用（即Kernel函数体内不能再次调用本接口）。
 
 ## 调用示例
@@ -85,7 +84,7 @@ CcuResult MyKernel(CcuKernelArg arg)
 
 // insHandle 从通信域中获取
 CcuInsHandle insHandle = 0;
-uint32_t dieId = 0;                     // 预留参数，当前实现未使用
+uint32_t dieId = 0;                     // 指定Kernel运行的die
 MyKernelArg arg = { .loopCount = 10 };
 const void *kernelArgs[] = { &arg };    // 入参指针数组
 uint32_t argNum = 1;                    // 当前仅支持0 或1
@@ -93,7 +92,7 @@ CcuKernelHandle kernelHandle = 0;
 
 CcuResult ret = HcommCcuKernelRegister(
     insHandle,
-    dieId,                          // 预留die id，传0 即可
+    dieId,                          // 指定Kernel运行的die
     "MyKernel",                     // Kernel 名称，用于调试，可为空
     (const void *)MyKernel,         // Kernel 函数指针
     kernelArgs,                     // Kernel 入参指针数组
