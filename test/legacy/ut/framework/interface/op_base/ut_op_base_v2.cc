@@ -2528,6 +2528,132 @@ TEST_F(OpbaseTestV2, Ut_HcclCommInitRootInfoConfigV2_When_ProviderFails_Expect_R
     EXPECT_EQ(HcclCommInitRootInfoConfigV2(nRanks, &rootInfo, rank, &config, &comm), HCCL_E_INTERNAL);
 }
 
+namespace {
+// 捕获 RptInputErr 上报内容, 用于断言通信域重复创建时触发 EI0003 规范报错
+std::string g_dupRptErrorCode;
+std::vector<std::string> g_dupRptKeys;
+std::vector<std::string> g_dupRptValues;
+
+void stub_RptInputErr_capture(std::string error_code, std::vector<std::string> key, std::vector<std::string> value)
+{
+    g_dupRptErrorCode = error_code;
+    g_dupRptKeys = key;
+    g_dupRptValues = value;
+}
+} // namespace
+
+// op_base_v2.cc 内部接口(未在头文件中声明): 其查重分支被 HcclCommInitRootInfoConfigV2 入口查重遮蔽,
+// 公共接口无法触达, 此处声明用于直接测试
+HcclResult CreateCommConfigRootInfo(
+    uint32_t rank, const HcclCommConfig* config, const std::string& identifier, const RankTableInfo& ranktable,
+    HcclComm* comm);
+
+// 相同 identifier 重复创建通信域: CommInitRootInfo 查重命中, 上报 EI0003 并返回 HCCL_E_PARA
+TEST_F(OpbaseTestV2, Ut_HcclCommInitRootInfoV2_When_DuplicateCreation_Expect_Return_HCCL_E_PARA)
+{
+    // when
+    MOCKER(HrtGetDeviceType).stubs().with(mockcpp::any()).will(returnValue((DevType)DevType::DEV_TYPE_950));
+    MOCKER(HrtGetDeviceCount).stubs().will(returnValue(1));
+    MOCKER_CPP(&HcclCommunicator::Init, HcclResult(HcclCommunicator::*)(const RankTableInfo&))
+        .stubs()
+        .with(mockcpp::any())
+        .will(returnValue(HCCL_SUCCESS));
+    MOCKER_CPP(&CommunicatorImpl::SetCommExecuteConfig).stubs().will(ignoreReturnValue());
+    MOCKER(RptInputErr).stubs().will(invoke(stub_RptInputErr_capture));
+    CommManager::GetInstance(0).GetCommInfoV2().hcclGroupMap.clear();
+    CommManager::GetInstance(0).GetCommInfoV2().pComm = nullptr;
+
+    // then: 首次创建成功, 不触发规范报错
+    uint32_t nRanks = 1;
+    HcclRootInfo rootInfo{};
+    uint32_t rank = 0;
+    HcclComm commFirst{};
+    std::string identifier{};
+    g_dupRptErrorCode.clear();
+    EXPECT_EQ(HcclCommInitRootInfoV2(nRanks, &rootInfo, rank, &commFirst, identifier), HCCL_SUCCESS);
+    EXPECT_TRUE(g_dupRptErrorCode.empty());
+
+    // 相同 rootInfo(即相同 identifier)重复创建: 查重命中, 上报 EI0003 并返回 HCCL_E_PARA
+    HcclComm commSecond{};
+    EXPECT_EQ(HcclCommInitRootInfoV2(nRanks, &rootInfo, rank, &commSecond, identifier), HCCL_E_PARA);
+    EXPECT_EQ(g_dupRptErrorCode, "EI0003");
+    ASSERT_EQ(g_dupRptValues.size(), 4); // ccl_op/value/parameter/expect
+    EXPECT_EQ(g_dupRptValues[0], "HcclCommInitRootInfo");
+    EXPECT_EQ(g_dupRptValues[2], "identifier");
+
+    // 清理现场, 避免残留通信域信息影响后续用例
+    CommManager::GetInstance(0).GetCommInfoV2().hcclGroupMap.clear();
+    CommManager::GetInstance(0).GetCommInfoV2().pComm = nullptr;
+}
+
+// 相同 identifier 重复创建通信域(带 config): HcclCommInitRootInfoConfigV2 查重命中,
+// 上报 EI0003 并返回 HCCL_E_PARA
+TEST_F(OpbaseTestV2, Ut_HcclCommInitRootInfoConfigV2_When_DuplicateCreation_Expect_Return_HCCL_E_PARA)
+{
+    // when
+    MOCKER(HrtGetDeviceType).stubs().with(mockcpp::any()).will(returnValue((DevType)DevType::DEV_TYPE_950));
+    MOCKER(HrtGetDeviceCount).stubs().will(returnValue(1));
+    MOCKER_CPP(&HcclCommunicator::Init, HcclResult(HcclCommunicator::*)(const RankTableInfo&))
+        .stubs()
+        .with(mockcpp::any())
+        .will(returnValue(HCCL_SUCCESS));
+    MOCKER_CPP(&CommunicatorImpl::SetCommExecuteConfig).stubs().will(ignoreReturnValue());
+    MOCKER(RptInputErr).stubs().will(invoke(stub_RptInputErr_capture));
+    CommManager::GetInstance(0).GetCommInfoV2().hcclGroupMap.clear();
+    CommManager::GetInstance(0).GetCommInfoV2().pComm = nullptr;
+
+    // then: 首次创建成功, 不触发规范报错
+    uint32_t nRanks{2};
+    HcclRootInfo rootInfo{};
+    uint32_t rank{};
+    HcclComm commFirst{};
+    HcclCommConfig config{};
+    string worldgroup = "ut_dup_rootinfo_config";
+    PrepareCommConfig(config, 200, worldgroup, 1, 0);
+    g_dupRptErrorCode.clear();
+    EXPECT_EQ(HcclCommInitRootInfoConfigV2(nRanks, &rootInfo, rank, &config, &commFirst), HCCL_SUCCESS);
+    EXPECT_TRUE(g_dupRptErrorCode.empty());
+
+    // 相同 config(即相同 identifier)重复创建: 查重命中, 上报 EI0003 并返回 HCCL_E_PARA
+    HcclComm commSecond{};
+    EXPECT_EQ(HcclCommInitRootInfoConfigV2(nRanks, &rootInfo, rank, &config, &commSecond), HCCL_E_PARA);
+    EXPECT_EQ(g_dupRptErrorCode, "EI0003");
+    ASSERT_EQ(g_dupRptValues.size(), 4); // ccl_op/value/parameter/expect
+    EXPECT_EQ(g_dupRptValues[0], "HcclCommInitRootInfo");
+    EXPECT_EQ(g_dupRptValues[1], worldgroup);
+    EXPECT_EQ(g_dupRptValues[2], "identifier");
+
+    // 清理现场, 避免残留通信域信息影响后续用例
+    CommManager::GetInstance(0).GetCommInfoV2().hcclGroupMap.clear();
+    CommManager::GetInstance(0).GetCommInfoV2().pComm = nullptr;
+}
+
+// 相同 identifier 重复创建通信域: CreateCommConfigRootInfo 查重命中,
+// 上报 EI0003 并返回 HCCL_E_PARA(该分支位于接口内部, 需预置 map 后直接调用)
+TEST_F(OpbaseTestV2, Ut_CreateCommConfigRootInfo_When_DuplicateCreation_Expect_Return_HCCL_E_PARA)
+{
+    // 预置 identifier 已存在的通信域信息
+    MOCKER(RptInputErr).stubs().will(invoke(stub_RptInputErr_capture));
+    const string dupIdentifier = "ut_dup_createcommconfig_rootinfo";
+    HcclGroupParamsV2 params{};
+    CommManager::GetInstance(0).GetCommInfoV2().hcclGroupMap[dupIdentifier] = params;
+
+    uint32_t rank{};
+    HcclCommConfig config{};
+    HcclCommConfigInit(&config);
+    HcclComm comm{};
+    g_dupRptErrorCode.clear();
+    EXPECT_EQ(CreateCommConfigRootInfo(rank, &config, dupIdentifier, RankTableInfo{}, &comm), HCCL_E_PARA);
+    EXPECT_EQ(g_dupRptErrorCode, "EI0003");
+    ASSERT_EQ(g_dupRptValues.size(), 4); // ccl_op/value/parameter/expect
+    EXPECT_EQ(g_dupRptValues[0], "HcclCommInitRootInfo");
+    EXPECT_EQ(g_dupRptValues[1], dupIdentifier);
+    EXPECT_EQ(g_dupRptValues[2], "identifier");
+
+    // 清理现场, 避免残留通信域信息影响后续用例
+    CommManager::GetInstance(0).GetCommInfoV2().hcclGroupMap.clear();
+}
+
 TEST_F(OpbaseTestV2, Ut_HcclCommInitAllV2_When_InputValue_Expect_Return_HCCL_SUCCESS)
 {
     // when

@@ -225,8 +225,12 @@ HcclResult CreateCommConfigRootInfo(
 {
     // check
     HcclCommInfoV2& opbasedCommInfoV2 = GetCommInfoV2();
+    bool commExists = opbasedCommInfoV2.hcclGroupMap.find(identifier) != opbasedCommInfoV2.hcclGroupMap.end();
+    RPT_INPUT_ERR(
+        commExists, "EI0003", vector<string>({"ccl_op", "value", "parameter", "expect"}),
+        vector<string>({"HcclCommInitRootInfo", identifier, "identifier", "an identifier that is not in use"}));
     CHK_PRT_RET(
-        opbasedCommInfoV2.hcclGroupMap.find(identifier) != opbasedCommInfoV2.hcclGroupMap.end(),
+        commExists,
         HCCL_ERROR(
             "[HcclCommInitRootInfoConfigV2]errNo[0x%016llx] The comm name[%s] already exists in Group2Comm map.",
             HCCL_ERROR_CODE(HCCL_E_PARA), identifier.c_str()),
@@ -1797,8 +1801,12 @@ CommInitRootInfo(u32 nRanks, u32 rank, const HcclRootHandleV2& rootHandle, const
     CHK_RET(CallSingletons());
     // check
     HcclCommInfoV2& opbasedCommInfoV2 = GetCommInfoV2();
+    bool commExists = opbasedCommInfoV2.hcclGroupMap.find(identifier) != opbasedCommInfoV2.hcclGroupMap.end();
+    RPT_INPUT_ERR(
+        commExists, "EI0003", vector<string>({"ccl_op", "value", "parameter", "expect"}),
+        vector<string>({"HcclCommInitRootInfo", identifier, "identifier", "an identifier that is not in use"}));
     CHK_PRT_RET(
-        opbasedCommInfoV2.hcclGroupMap.find(identifier) != opbasedCommInfoV2.hcclGroupMap.end(),
+        commExists,
         HCCL_ERROR(
             "[CreateCommConfig] errNo[0x%016llx] The rootHandle[%s] already exists in Group2Comm map.",
             HCCL_ERROR_CODE(HCCL_E_PARA), identifier.c_str()),
@@ -1957,8 +1965,12 @@ HcclResult HcclCommInitRootInfoConfigV2(
     // 临时规避，在初始化通信域前声明单例保证时序
     CHK_RET(CallSingletons());
     HcclCommInfoV2& opbasedCommInfoV2 = GetCommInfoV2();
+    bool commExists = opbasedCommInfoV2.hcclGroupMap.find(identifier) != opbasedCommInfoV2.hcclGroupMap.end();
+    RPT_INPUT_ERR(
+        commExists, "EI0003", vector<string>({"ccl_op", "value", "parameter", "expect"}),
+        vector<string>({"HcclCommInitRootInfo", identifier, "identifier", "an identifier that is not in use"}));
     CHK_PRT_RET(
-        opbasedCommInfoV2.hcclGroupMap.find(identifier) != opbasedCommInfoV2.hcclGroupMap.end(),
+        commExists,
         HCCL_ERROR(
             "[HcclCommInitRootInfoConfigV2]errNo[0x%016llx] The comm name[%s] already exists in Group2Comm map.",
             HCCL_ERROR_CODE(HCCL_E_PARA), identifier.c_str()),
