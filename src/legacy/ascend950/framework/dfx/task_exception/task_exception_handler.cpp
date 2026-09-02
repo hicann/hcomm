@@ -853,7 +853,7 @@ void TaskExceptionHandler::PrintAicpuErrorMessage(rtExceptionInfo_t* exceptionIn
                     static_cast<u32>(errorMessage.ubCqeStatus), errorMessage.locEid.Describe().c_str(),
                     errorMessage.rmtEid.Describe().c_str());
                 auto addr = IpAddress(errorMessage.locEid);
-                u32 devPhyId = HrtGetDevicePhyIdByIndex(exceptionInfo->deviceid);
+                u32 devPhyId = HrtGetDevicePhyIdByUserDevId(exceptionInfo->deviceid);
                 auto rdmaHandle = RdmaHandleManager::GetInstance().GetByIp(devPhyId, addr);
                 PrintUbRegisters(static_cast<s32>(exceptionInfo->deviceid), rdmaHandle);
             }

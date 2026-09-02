@@ -42,7 +42,7 @@ CcuCtpConnection::CcuCtpConnection(
 HcclResult CcuConnection::Init()
 {
     devLogicId = HrtGetDevice();
-    uint32_t devPhyId = HrtGetDevicePhyIdByIndex(devLogicId);
+    uint32_t devPhyId = HrtGetDevicePhyIdByUserDevId(devLogicId);
 
     auto& rdmaHandleMgr = RdmaHandleManager::GetInstance();
     rdmaHandle = rdmaHandleMgr.GetByIp(devPhyId, locAddr_);

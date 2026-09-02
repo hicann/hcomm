@@ -11,6 +11,7 @@
 #include "gtest/gtest.h"
 #include <mockcpp/mokc.h>
 #include <mockcpp/mockcpp.hpp>
+#include "test_mock_setup.h"
 #define private public
 #include "communicator_impl.h"
 #include "rdma_handle_manager.h"
@@ -127,22 +128,7 @@ TEST_F(CcuTransportGroupMgrTest, Test_CcuTransportGroupMgr_001)
     RdmaHandle rdmaHandle = new int(1);
     u32 jettyNum = 1; // 当前迭代，jettyNum默认为1
     u32 sqSize = 128; // 当前迭代，默认使用MS，故sqSize固定为128。sqSize就是jetty深度
-
-    MOCKER(CcuDeviceManager::AllocXn).defaults().will(returnValue(HcclResult::HCCL_SUCCESS));
-    MOCKER(CcuDeviceManager::AllocCke).defaults().will(returnValue(HcclResult::HCCL_SUCCESS));
-    MOCKER(CcuDeviceManager::ConfigChannel).defaults().will(returnValue(HcclResult::HCCL_SUCCESS));
-
-    MOCKER(CcuDeviceManager::ReleaseXn).defaults().will(returnValue(HcclResult::HCCL_SUCCESS));
-    MOCKER(CcuDeviceManager::ReleaseCke).defaults().will(returnValue(HcclResult::HCCL_SUCCESS));
-    MOCKER(HrtGetDevice).defaults().will(returnValue(0));
-    MOCKER(HrtRaUbUnimportJetty).defaults().will(returnValue(0));
-    MOCKER(HrtGetDeviceType).defaults().will(returnValue(DevType::DEV_TYPE_950));
-    MOCKER(HrtGetDevicePhyIdByIndex).defaults().will(returnValue(static_cast<DevId>(0)));
-    MOCKER(HrtRaUbCreateJetty).defaults().will(returnValue(HrtRaUbJettyCreatedOutParam()));
-    MOCKER(HraGetDieAndFuncId).defaults().will(returnValue(std::pair<uint32_t, uint32_t>(0, 0)));
-    MOCKER(HrtRaUbCreateJfc).defaults().will(returnValue(jfcHandle));
-    MOCKER(RaUbImportJetty).defaults().will(returnValue(HrtRaUbJettyImportedOutParam()));
-    MOCKER(HrtRaUbLocalMemReg).defaults().will(returnValue(HrtRaUbLocalMemRegOutParam()));
+    SETUP_CCU_TRANSPORT_MOCKS();
 
     // 创建utConnection
     CcuChannelInfo channelInfo;
@@ -301,22 +287,7 @@ TEST_F(CcuTransportGroupMgrTest, Test_CcuTransportGroupMgr_003)
     RdmaHandle rdmaHandle = new int(1);
     u32 jettyNum = 1; // 当前迭代，jettyNum默认为1
     u32 sqSize = 128; // 当前迭代，默认使用MS，故sqSize固定为128。sqSize就是jetty深度
-
-    MOCKER(CcuDeviceManager::AllocXn).defaults().will(returnValue(HcclResult::HCCL_SUCCESS));
-    MOCKER(CcuDeviceManager::AllocCke).defaults().will(returnValue(HcclResult::HCCL_SUCCESS));
-    MOCKER(CcuDeviceManager::ConfigChannel).defaults().will(returnValue(HcclResult::HCCL_SUCCESS));
-
-    MOCKER(CcuDeviceManager::ReleaseXn).defaults().will(returnValue(HcclResult::HCCL_SUCCESS));
-    MOCKER(CcuDeviceManager::ReleaseCke).defaults().will(returnValue(HcclResult::HCCL_SUCCESS));
-    MOCKER(HrtGetDevice).defaults().will(returnValue(0));
-    MOCKER(HrtRaUbUnimportJetty).defaults().will(returnValue(0));
-    MOCKER(HrtGetDeviceType).defaults().will(returnValue(DevType::DEV_TYPE_950));
-    MOCKER(HrtGetDevicePhyIdByIndex).defaults().will(returnValue(static_cast<DevId>(0)));
-    MOCKER(HrtRaUbCreateJetty).defaults().will(returnValue(HrtRaUbJettyCreatedOutParam()));
-    MOCKER(HraGetDieAndFuncId).defaults().will(returnValue(std::pair<uint32_t, uint32_t>(0, 0)));
-    MOCKER(HrtRaUbCreateJfc).defaults().will(returnValue(jfcHandle));
-    MOCKER(RaUbImportJetty).defaults().will(returnValue(HrtRaUbJettyImportedOutParam()));
-    MOCKER(HrtRaUbLocalMemReg).defaults().will(returnValue(HrtRaUbLocalMemRegOutParam()));
+    SETUP_CCU_TRANSPORT_MOCKS();
 
     // 创建utConnection
     CcuChannelInfo channelInfo;
@@ -411,22 +382,7 @@ TEST_F(CcuTransportGroupMgrTest, Test_CcuTransportGroupMgr_004)
     RdmaHandle rdmaHandle = new int(1);
     u32 jettyNum = 1; // 当前迭代，jettyNum默认为1
     u32 sqSize = 128; // 当前迭代，默认使用MS，故sqSize固定为128。sqSize就是jetty深度
-
-    MOCKER(CcuDeviceManager::AllocXn).defaults().will(returnValue(HcclResult::HCCL_SUCCESS));
-    MOCKER(CcuDeviceManager::AllocCke).defaults().will(returnValue(HcclResult::HCCL_SUCCESS));
-    MOCKER(CcuDeviceManager::ConfigChannel).defaults().will(returnValue(HcclResult::HCCL_SUCCESS));
-
-    MOCKER(CcuDeviceManager::ReleaseXn).defaults().will(returnValue(HcclResult::HCCL_SUCCESS));
-    MOCKER(CcuDeviceManager::ReleaseCke).defaults().will(returnValue(HcclResult::HCCL_SUCCESS));
-    MOCKER(HrtGetDevice).defaults().will(returnValue(0));
-    MOCKER(HrtRaUbUnimportJetty).defaults().will(returnValue(0));
-    MOCKER(HrtGetDeviceType).defaults().will(returnValue(DevType::DEV_TYPE_950));
-    MOCKER(HrtGetDevicePhyIdByIndex).defaults().will(returnValue(static_cast<DevId>(0)));
-    MOCKER(HrtRaUbCreateJetty).defaults().will(returnValue(HrtRaUbJettyCreatedOutParam()));
-    MOCKER(HraGetDieAndFuncId).defaults().will(returnValue(std::pair<uint32_t, uint32_t>(0, 0)));
-    MOCKER(HrtRaUbCreateJfc).defaults().will(returnValue(jfcHandle));
-    MOCKER(RaUbImportJetty).defaults().will(returnValue(HrtRaUbJettyImportedOutParam()));
-    MOCKER(HrtRaUbLocalMemReg).defaults().will(returnValue(HrtRaUbLocalMemRegOutParam()));
+    SETUP_CCU_TRANSPORT_MOCKS();
 
     // 创建utConnection
     CcuChannelInfo channelInfo;
@@ -580,22 +536,7 @@ TEST_F(CcuTransportGroupMgrTest, Test_CcuTransportGroupMgr_006)
     RdmaHandle rdmaHandle = new int(1);
     u32 jettyNum = 1; // 当前迭代，jettyNum默认为1
     u32 sqSize = 128; // 当前迭代，默认使用MS，故sqSize固定为128。sqSize就是jetty深度
-
-    MOCKER(CcuDeviceManager::AllocXn).defaults().will(returnValue(HcclResult::HCCL_SUCCESS));
-    MOCKER(CcuDeviceManager::AllocCke).defaults().will(returnValue(HcclResult::HCCL_SUCCESS));
-    MOCKER(CcuDeviceManager::ConfigChannel).defaults().will(returnValue(HcclResult::HCCL_SUCCESS));
-
-    MOCKER(CcuDeviceManager::ReleaseXn).defaults().will(returnValue(HcclResult::HCCL_SUCCESS));
-    MOCKER(CcuDeviceManager::ReleaseCke).defaults().will(returnValue(HcclResult::HCCL_SUCCESS));
-    MOCKER(HrtGetDevice).defaults().will(returnValue(0));
-    MOCKER(HrtRaUbUnimportJetty).defaults().will(returnValue(0));
-    MOCKER(HrtGetDeviceType).defaults().will(returnValue(DevType::DEV_TYPE_950));
-    MOCKER(HrtGetDevicePhyIdByIndex).defaults().will(returnValue(static_cast<DevId>(0)));
-    MOCKER(HrtRaUbCreateJetty).defaults().will(returnValue(HrtRaUbJettyCreatedOutParam()));
-    MOCKER(HraGetDieAndFuncId).defaults().will(returnValue(std::pair<uint32_t, uint32_t>(0, 0)));
-    MOCKER(HrtRaUbCreateJfc).defaults().will(returnValue(jfcHandle));
-    MOCKER(RaUbImportJetty).defaults().will(returnValue(HrtRaUbJettyImportedOutParam()));
-    MOCKER(HrtRaUbLocalMemReg).defaults().will(returnValue(HrtRaUbLocalMemRegOutParam()));
+    SETUP_CCU_TRANSPORT_MOCKS();
 
     // 创建utConnection
     CcuChannelInfo channelInfo;
@@ -762,22 +703,7 @@ TEST_F(CcuTransportGroupMgrTest, GetAllTransportGroups)
     RdmaHandle rdmaHandle = new int(1);
     u32 jettyNum = 1; // 当前迭代，jettyNum默认为1
     u32 sqSize = 128; // 当前迭代，默认使用MS，故sqSize固定为128。sqSize就是jetty深度
-
-    MOCKER(CcuDeviceManager::AllocXn).defaults().will(returnValue(HcclResult::HCCL_SUCCESS));
-    MOCKER(CcuDeviceManager::AllocCke).defaults().will(returnValue(HcclResult::HCCL_SUCCESS));
-    MOCKER(CcuDeviceManager::ConfigChannel).defaults().will(returnValue(HcclResult::HCCL_SUCCESS));
-
-    MOCKER(CcuDeviceManager::ReleaseXn).defaults().will(returnValue(HcclResult::HCCL_SUCCESS));
-    MOCKER(CcuDeviceManager::ReleaseCke).defaults().will(returnValue(HcclResult::HCCL_SUCCESS));
-    MOCKER(HrtGetDevice).defaults().will(returnValue(0));
-    MOCKER(HrtRaUbUnimportJetty).defaults().will(returnValue(0));
-    MOCKER(HrtGetDeviceType).defaults().will(returnValue(DevType::DEV_TYPE_950));
-    MOCKER(HrtGetDevicePhyIdByIndex).defaults().will(returnValue(static_cast<DevId>(0)));
-    MOCKER(HrtRaUbCreateJetty).defaults().will(returnValue(HrtRaUbJettyCreatedOutParam()));
-    MOCKER(HraGetDieAndFuncId).defaults().will(returnValue(std::pair<uint32_t, uint32_t>(0, 0)));
-    MOCKER(HrtRaUbCreateJfc).defaults().will(returnValue(jfcHandle));
-    MOCKER(RaUbImportJetty).defaults().will(returnValue(HrtRaUbJettyImportedOutParam()));
-    MOCKER(HrtRaUbLocalMemReg).defaults().will(returnValue(HrtRaUbLocalMemRegOutParam()));
+    SETUP_CCU_TRANSPORT_MOCKS();
 
     // 创建utConnection
     CcuChannelInfo channelInfo;
@@ -932,20 +858,7 @@ TEST_F(CcuTransportGroupMgrTest, should_return_ccuTransportGroup_when_calling_Re
     u32 jettyNum = 1; // 当前迭代，jettyNum默认为1
     u32 sqSize = 128; // 当前迭代，默认使用MS，故sqSize固定为128。sqSize就是jetty深度
 
-    MOCKER(CcuDeviceManager::AllocXn).defaults().will(returnValue(HcclResult::HCCL_SUCCESS));
-    MOCKER(CcuDeviceManager::AllocCke).defaults().will(returnValue(HcclResult::HCCL_SUCCESS));
-    MOCKER(CcuDeviceManager::ConfigChannel).defaults().will(returnValue(HcclResult::HCCL_SUCCESS));
-
-    MOCKER(CcuDeviceManager::ReleaseXn).defaults().will(returnValue(HcclResult::HCCL_SUCCESS));
-    MOCKER(CcuDeviceManager::ReleaseCke).defaults().will(returnValue(HcclResult::HCCL_SUCCESS));
-    MOCKER(HrtGetDevice).defaults().will(returnValue(0));
-    MOCKER(HrtRaUbUnimportJetty).defaults().will(returnValue(0));
-    MOCKER(HrtGetDevicePhyIdByIndex).defaults().will(returnValue(static_cast<s32>(0)));
-    MOCKER(HrtRaUbCreateJetty).defaults().will(returnValue(HrtRaUbJettyCreatedOutParam()));
-    MOCKER(HraGetDieAndFuncId).defaults().will(returnValue(std::pair<uint32_t, uint32_t>(0, 0)));
-    MOCKER(HrtRaUbCreateJfc).defaults().will(returnValue(jfcHandle));
-    MOCKER(RaUbImportJetty).defaults().will(returnValue(HrtRaUbJettyImportedOutParam()));
-    MOCKER(HrtRaUbLocalMemReg).defaults().will(returnValue(HrtRaUbLocalMemRegOutParam()));
+    SETUP_CCU_TRANSPORT_MOCKS();
 
     // 创建utConnection
     CcuChannelInfo channelInfo;
@@ -1043,20 +956,7 @@ TEST_F(CcuTransportGroupMgrTest, should_throw_if_transportGroup_init_fail_when_c
     u32 jettyNum = 1; // 当前迭代，jettyNum默认为1
     u32 sqSize = 128; // 当前迭代，默认使用MS，故sqSize固定为128。sqSize就是jetty深度
 
-    MOCKER(CcuDeviceManager::AllocXn).defaults().will(returnValue(HcclResult::HCCL_SUCCESS));
-    MOCKER(CcuDeviceManager::AllocCke).defaults().will(returnValue(HcclResult::HCCL_SUCCESS));
-    MOCKER(CcuDeviceManager::ConfigChannel).defaults().will(returnValue(HcclResult::HCCL_SUCCESS));
-
-    MOCKER(CcuDeviceManager::ReleaseXn).defaults().will(returnValue(HcclResult::HCCL_SUCCESS));
-    MOCKER(CcuDeviceManager::ReleaseCke).defaults().will(returnValue(HcclResult::HCCL_SUCCESS));
-    MOCKER(HrtGetDevice).defaults().will(returnValue(0));
-    MOCKER(HrtRaUbUnimportJetty).defaults().will(returnValue(0));
-    MOCKER(HrtGetDevicePhyIdByIndex).defaults().will(returnValue(static_cast<s32>(0)));
-    MOCKER(HrtRaUbCreateJetty).defaults().will(returnValue(HrtRaUbJettyCreatedOutParam()));
-    MOCKER(HraGetDieAndFuncId).defaults().will(returnValue(std::pair<uint32_t, uint32_t>(0, 0)));
-    MOCKER(HrtRaUbCreateJfc).defaults().will(returnValue(jfcHandle));
-    MOCKER(RaUbImportJetty).defaults().will(returnValue(HrtRaUbJettyImportedOutParam()));
-    MOCKER(HrtRaUbLocalMemReg).defaults().will(returnValue(HrtRaUbLocalMemRegOutParam()));
+    SETUP_CCU_TRANSPORT_MOCKS();
 
     // 创建utConnection
     CcuChannelInfo channelInfo;
@@ -1155,20 +1055,7 @@ TEST_F(CcuTransportGroupMgrTest, should_no_throw_if_linkgroup_empty_when_calling
     u32 jettyNum = 1; // 当前迭代，jettyNum默认为1
     u32 sqSize = 128; // 当前迭代，默认使用MS，故sqSize固定为128。sqSize就是jetty深度
 
-    MOCKER(CcuDeviceManager::AllocXn).defaults().will(returnValue(HcclResult::HCCL_SUCCESS));
-    MOCKER(CcuDeviceManager::AllocCke).defaults().will(returnValue(HcclResult::HCCL_SUCCESS));
-    MOCKER(CcuDeviceManager::ConfigChannel).defaults().will(returnValue(HcclResult::HCCL_SUCCESS));
-
-    MOCKER(CcuDeviceManager::ReleaseXn).defaults().will(returnValue(HcclResult::HCCL_SUCCESS));
-    MOCKER(CcuDeviceManager::ReleaseCke).defaults().will(returnValue(HcclResult::HCCL_SUCCESS));
-    MOCKER(HrtGetDevice).defaults().will(returnValue(0));
-    MOCKER(HrtRaUbUnimportJetty).defaults().will(returnValue(0));
-    MOCKER(HrtGetDevicePhyIdByIndex).defaults().will(returnValue(static_cast<s32>(0)));
-    MOCKER(HrtRaUbCreateJetty).defaults().will(returnValue(HrtRaUbJettyCreatedOutParam()));
-    MOCKER(HraGetDieAndFuncId).defaults().will(returnValue(std::pair<uint32_t, uint32_t>(0, 0)));
-    MOCKER(HrtRaUbCreateJfc).defaults().will(returnValue(jfcHandle));
-    MOCKER(RaUbImportJetty).defaults().will(returnValue(HrtRaUbJettyImportedOutParam()));
-    MOCKER(HrtRaUbLocalMemReg).defaults().will(returnValue(HrtRaUbLocalMemRegOutParam()));
+    SETUP_CCU_TRANSPORT_MOCKS();
 
     // 创建utConnection
     CcuChannelInfo channelInfo;

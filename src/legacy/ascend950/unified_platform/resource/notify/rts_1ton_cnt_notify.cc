@@ -16,7 +16,7 @@ namespace Hccl {
 
 Rts1ToNCntNotify::Rts1ToNCntNotify()
     : deviceId(HrtGetDevice()),
-      devPhyId(HrtGetDevicePhyIdByIndex(HrtGetDevice())),
+      devPhyId(HrtGetDevicePhyIdByUserDevId(HrtGetDevice())),
       handle(HrtCntNotifyCreate(deviceId)),
       id(HrtGetCntNotifyId(handle))
 {}

@@ -57,7 +57,7 @@ protected:
 
 pair<unique_ptr<CcuConnection>, vector<unique_ptr<CcuJetty>>> MockMakeCcuConnection(TpProtocol tpProtocol)
 {
-    MOCKER(HrtGetDevicePhyIdByIndex).stubs().with(mockcpp::any()).will(returnValue(MAX_MODULE_DEVICE_NUM - 1));
+    MOCKER(HrtGetDevicePhyIdByUserDevId).stubs().with(mockcpp::any()).will(returnValue(MAX_MODULE_DEVICE_NUM - 1));
 
     HcclResult OkResult = HcclResult::HCCL_SUCCESS;
     HcclResult AgainResult = HcclResult::HCCL_E_AGAIN;

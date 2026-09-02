@@ -27,20 +27,7 @@ static constexpr int32_t RT_NOT_SUPPORT = 207000;
 
 rtError_t rtDevBinaryUnRegister(void* hdl);
 
-class AdapterRtsTest : public testing::Test {
-protected:
-    static void SetUpTestCase() { std::cout << "AdapterRts tests set up." << std::endl; }
-
-    static void TearDownTestCase() { std::cout << "AdapterRts tests tear down." << std::endl; }
-
-    virtual void SetUp() { std::cout << "A Test case in AdapterRts SetUP" << std::endl; }
-
-    virtual void TearDown()
-    {
-        GlobalMockObject::verify();
-        std::cout << "A Test case in AdapterRts TearDown" << std::endl;
-    }
-};
+#include "adapter_rts_test_common.h"
 
 TEST_F(AdapterRtsTest, HrtGetSocVer_return_nok)
 {
@@ -61,7 +48,7 @@ TEST_F(AdapterRtsTest, HrtGetDeviceType_return_nok)
     EXPECT_THROW(HrtGetDeviceType(), RuntimeApiException);
 }
 
-TEST_F(AdapterRtsTest, HrtGetDevicePhyIdByIndex_return_zero)
+TEST_F(AdapterRtsTest, HrtGetDevicePhyIdByUserDevId_return_zero)
 {
     // Given
     DevType fakeDeviceType = DevType::DEV_TYPE_NOSOC;
@@ -70,41 +57,41 @@ TEST_F(AdapterRtsTest, HrtGetDevicePhyIdByIndex_return_zero)
     // when
     u32 devicePhyId = 1;
     u32 deviceLogicId = 1;
-    devicePhyId = HrtGetDevicePhyIdByIndex(deviceLogicId);
+    devicePhyId = HrtGetDevicePhyIdByUserDevId(deviceLogicId);
 
     u32 result = 0;
     // then
     EXPECT_EQ(result, devicePhyId);
 }
 
-TEST_F(AdapterRtsTest, HrtGetDevicePhyIdByIndex_return_ok)
+TEST_F(AdapterRtsTest, HrtGetDevicePhyIdByUserDevId_return_ok)
 {
     // Given
     DevType fakeDeviceType = DevType::DEV_TYPE_910A2;
     MOCKER(HrtGetDeviceType).stubs().with(mockcpp::any()).will(returnValue(fakeDeviceType));
 
     int32_t fakeDevicePhyId = 0;
-    MOCKER(aclrtGetPhyDevIdByLogicDevId)
+    MOCKER(aclrtGetPhyDevIdByUserDevId)
         .stubs()
         .with(mockcpp::any(), outBoundP(&fakeDevicePhyId, sizeof(fakeDevicePhyId)))
         .will(returnValue(RT_ERROR_NONE));
     // when
     int32_t deviceLogicId = 1;
-    u32 devicePhyId = HrtGetDevicePhyIdByIndex(deviceLogicId);
+    u32 devicePhyId = HrtGetDevicePhyIdByUserDevId(deviceLogicId);
 
     // then
     EXPECT_EQ(fakeDevicePhyId, devicePhyId);
 }
 
-TEST_F(AdapterRtsTest, HrtGetDevicePhyIdByIndex_return_nok)
+TEST_F(AdapterRtsTest, HrtGetDevicePhyIdByUserDevId_return_nok)
 {
     // Given
-    MOCKER(aclrtGetPhyDevIdByLogicDevId).stubs().will(returnValue(1));
+    MOCKER(aclrtGetPhyDevIdByUserDevId).stubs().will(returnValue(1));
 
     // when
 
     // then
-    EXPECT_THROW(HrtGetDevicePhyIdByIndex(32), RuntimeApiException);
+    EXPECT_THROW(HrtGetDevicePhyIdByUserDevId(32), RuntimeApiException);
 }
 
 TEST_F(AdapterRtsTest, HrtDeviceGetBareTgid_return_ok)

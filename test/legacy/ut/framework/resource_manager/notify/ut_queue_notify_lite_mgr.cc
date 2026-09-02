@@ -43,7 +43,7 @@ TEST_F(QueueNotifyLiteMgrTest, test_parse_packed_data)
 
     MOCKER(HrtGetDevice).stubs().will(returnValue(1));
     MOCKER(HrtNotifyCreate).stubs().will(returnValue((void*)(0)));
-    MOCKER(HrtGetDevicePhyIdByIndex).stubs().will(returnValue(1));
+    MOCKER(HrtGetDevicePhyIdByUserDevId).stubs().will(returnValue(1));
     MOCKER(HrtGetNotifyID).stubs().will(returnValue(1)).then(returnValue(2)).then(returnValue(3));
 
     QId fakePostQid = 1;

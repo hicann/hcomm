@@ -32,7 +32,7 @@ void HccpPeerManager::Init(s32 deviceLogicId)
         return;
     }
     HRaInitConfig cfg;
-    cfg.phyId = HrtGetDevicePhyIdByIndex(deviceLogicId);
+    cfg.phyId = HrtGetDevicePhyIdByUserDevId(deviceLogicId);
     cfg.mode = HrtNetworkMode::PEER;
     HrtRaInit(cfg);
 
@@ -63,7 +63,7 @@ void HccpPeerManager::DeInit(s32 deviceLogicId)
     // 若引用计数为0, 则释放资源
     if (count == 0) {
         HRaInitConfig cfg;
-        cfg.phyId = HrtGetDevicePhyIdByIndex(deviceLogicId);
+        cfg.phyId = HrtGetDevicePhyIdByUserDevId(deviceLogicId);
         cfg.mode = HrtNetworkMode::PEER;
         HrtRaDeInit(cfg);
         instances_.erase(deviceLogicId);
@@ -84,7 +84,7 @@ void HccpPeerManager::DeInitAll()
                             "devLogicId[%d] ref[%u]",
                             __func__, instance.first, count));
         HRaInitConfig cfg;
-        cfg.phyId = HrtGetDevicePhyIdByIndex(instance.first);
+        cfg.phyId = HrtGetDevicePhyIdByUserDevId(instance.first);
         cfg.mode = HrtNetworkMode::PEER;
         HrtRaDeInit(cfg);
         HCCL_INFO("[HccpPeerManager::%s] devLogicId [%d] ra deinit success.", __func__, instance.first);

@@ -92,6 +92,20 @@ public:
     }
 };
 
+#define SETUP_COLL_SERVICE_DEFAULT_MOCKS()                                                     \
+    do {                                                                                       \
+        MOCKER(HrtGetDevice).stubs().will(returnValue(0));                                     \
+        MOCKER(HrtGetDevicePhyIdByUserDevId).stubs().will(returnValue(static_cast<DevId>(1))); \
+        DevType devType = DevType::DEV_TYPE_950;                                               \
+        MOCKER(HrtGetDeviceType).stubs().will(returnValue(devType));                           \
+        MOCKER(HrtIpcSetMemoryName).stubs();                                                   \
+        MOCKER(HrtDevMemAlignWithPage).stubs();                                                \
+        MOCKER(HrtIpcDestroyMemoryName).stubs();                                               \
+        std::unique_ptr<RdmaHandle> handle = std::make_unique<RdmaHandle>();                   \
+        RdmaHandle handlePtr = handle.get();                                                   \
+        MOCKER(HrtRaUbCtxInit).stubs().with(mockcpp::any()).will(returnValue(handlePtr));      \
+    } while (0)
+
 TEST_F(CollServiceDefaultImplTest, test_base_register_op_base_buf)
 {
     CommunicatorImpl comm;
@@ -395,7 +409,7 @@ TEST_F(CollServiceDefaultImplTest, test_base_register_offload_buf)
     MOCKER(memset_s).stubs().with(mockcpp::any()).will(returnValue(0));
 
     MOCKER(HrtGetDevice).stubs().will(returnValue(0));
-    MOCKER(HrtGetDevicePhyIdByIndex).stubs().will(returnValue(static_cast<DevId>(1)));
+    MOCKER(HrtGetDevicePhyIdByUserDevId).stubs().will(returnValue(static_cast<DevId>(1)));
     DevType devType = DevType::DEV_TYPE_950;
     MOCKER(HrtGetDeviceType).stubs().will(returnValue(devType));
     MOCKER(HrtIpcSetMemoryName).stubs();
@@ -501,7 +515,7 @@ TEST_F(CollServiceDefaultImplTest, test_init)
     MOCKER(HrtRaUbCtxInit).stubs().with(mockcpp::any()).will(returnValue(handlePtr));
 
     MOCKER(HrtGetDevice).stubs().will(returnValue(1));
-    MOCKER(HrtGetDevicePhyIdByIndex).stubs().will(returnValue(static_cast<DevId>(1)));
+    MOCKER(HrtGetDevicePhyIdByUserDevId).stubs().will(returnValue(static_cast<DevId>(1)));
     DevType devType = DevType::DEV_TYPE_950;
     MOCKER(HrtGetDeviceType).stubs().will(returnValue(devType));
     MOCKER(HrtIpcSetMemoryName).stubs();
@@ -535,17 +549,7 @@ TEST_F(CollServiceDefaultImplTest, test_init)
 
 TEST_F(CollServiceDefaultImplTest, test_load_with_op_based_mode)
 {
-    MOCKER(HrtGetDevice).stubs().will(returnValue(0));
-    MOCKER(HrtGetDevicePhyIdByIndex).stubs().will(returnValue(static_cast<DevId>(1)));
-    DevType devType = DevType::DEV_TYPE_950;
-    MOCKER(HrtGetDeviceType).stubs().will(returnValue(devType));
-    MOCKER(HrtIpcSetMemoryName).stubs();
-    MOCKER(HrtDevMemAlignWithPage).stubs();
-    MOCKER(HrtIpcDestroyMemoryName).stubs();
-
-    std::unique_ptr<RdmaHandle> handle = std::make_unique<RdmaHandle>();
-    RdmaHandle handlePtr = handle.get();
-    MOCKER(HrtRaUbCtxInit).stubs().with(mockcpp::any()).will(returnValue(handlePtr));
+    SETUP_COLL_SERVICE_DEFAULT_MOCKS();
 
     GenRankTableFile4p();
     GenTopoFile();
@@ -620,29 +624,18 @@ TEST_F(CollServiceDefaultImplTest, test_load_with_op_based_mode)
 
     StreamManager streamManager(&comm);
 
-    service.LoadWithOpBasedMode(op, std::move(make_unique<Stream>((void*)1)));
-    CollOpParams opAdaptor;
-    opAdaptor.opType = OpType::ALLREDUCE;
-    comm.ExecAlgSelect(opAdaptor, OpMode::OPBASE);
-    service.LoadWithOpBasedMode(op, std::move(make_unique<Stream>((void*)1)));
-    opAdaptor.opType = OpType::SEND;
-    comm.ExecAlgSelect(opAdaptor, OpMode::OPBASE);
+    for (auto opType : {OpType::ALLREDUCE, OpType::SEND}) {
+        service.LoadWithOpBasedMode(op, std::move(make_unique<Stream>((void*)1)));
+        CollOpParams opAdaptor;
+        opAdaptor.opType = opType;
+        comm.ExecAlgSelect(opAdaptor, OpMode::OPBASE);
+    }
     service.LoadWithOpBasedMode(op, std::move(make_unique<Stream>((void*)1)));
 }
 
 TEST_F(CollServiceDefaultImplTest, test_load_with_offload_mode)
 {
-    MOCKER(HrtGetDevice).stubs().will(returnValue(0));
-    MOCKER(HrtGetDevicePhyIdByIndex).stubs().will(returnValue(static_cast<DevId>(1)));
-    DevType devType = DevType::DEV_TYPE_950;
-    MOCKER(HrtGetDeviceType).stubs().will(returnValue(devType));
-    MOCKER(HrtIpcSetMemoryName).stubs();
-    MOCKER(HrtDevMemAlignWithPage).stubs();
-    MOCKER(HrtIpcDestroyMemoryName).stubs();
-
-    std::unique_ptr<RdmaHandle> handle = std::make_unique<RdmaHandle>();
-    RdmaHandle handlePtr = handle.get();
-    MOCKER(HrtRaUbCtxInit).stubs().with(mockcpp::any()).will(returnValue(handlePtr));
+    SETUP_COLL_SERVICE_DEFAULT_MOCKS();
 
     GenRankTableFile4p();
     GenTopoFile();
@@ -828,7 +821,7 @@ TEST_F(CollServiceDefaultImplTest, AddCountTask)
 TEST_F(CollServiceDefaultImplTest, test_load_with_offload_mode_with_task)
 {
     MOCKER(HrtGetDevice).stubs().will(returnValue(0));
-    MOCKER(HrtGetDevicePhyIdByIndex).stubs().will(returnValue(static_cast<DevId>(1)));
+    MOCKER(HrtGetDevicePhyIdByUserDevId).stubs().will(returnValue(static_cast<DevId>(1)));
     DevType devType = DevType::DEV_TYPE_950;
     MOCKER(HrtGetDeviceType).stubs().will(returnValue(devType));
     MOCKER(HrtIpcSetMemoryName).stubs();

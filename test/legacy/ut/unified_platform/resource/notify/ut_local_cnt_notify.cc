@@ -11,6 +11,7 @@
 #include "gtest/gtest.h"
 #include <mockcpp/mokc.h>
 #include <mockcpp/mockcpp.hpp>
+#include "test_mock_setup.h"
 #include <cstring>
 #define private public
 #include "local_cnt_notify.h"
@@ -38,11 +39,7 @@ protected:
 
 TEST_F(LocalCntNotifyTest, getExchangeDto_test)
 {
-    MOCKER(HrtGetDeviceType).stubs().will(returnValue(DevType::DEV_TYPE_910A2));
-    MOCKER(HrtGetDevice).stubs().will(returnValue(0));
-    MOCKER(HrtGetDevicePhyIdByIndex).stubs().will(returnValue(static_cast<DevId>(1)));
-    MOCKER(HrtCntNotifyCreate).stubs().will(returnValue((void*)(fakeNotifyHandleAddr)));
-    MOCKER(HrtGetCntNotifyId).stubs().will(returnValue(fakeNotifyId));
+    SETUP_CNT_NOTIFY_MOCKS();
 
     int a = 0;
     RtsCntNotify rtsCntNotify;
@@ -55,11 +52,7 @@ TEST_F(LocalCntNotifyTest, getExchangeDto_test)
 TEST_F(LocalCntNotifyTest, Ut_When_DestroyAllDone_ThenDestructLocalCntNotify_Expect_SkipUnregNoCrash)
 {
     // given
-    MOCKER(HrtGetDeviceType).stubs().will(returnValue(DevType::DEV_TYPE_910A2));
-    MOCKER(HrtGetDevice).stubs().will(returnValue(0));
-    MOCKER(HrtGetDevicePhyIdByIndex).stubs().will(returnValue(static_cast<DevId>(1)));
-    MOCKER(HrtCntNotifyCreate).stubs().will(returnValue((void*)(fakeNotifyHandleAddr)));
-    MOCKER(HrtGetCntNotifyId).stubs().will(returnValue(fakeNotifyId));
+    SETUP_CNT_NOTIFY_MOCKS();
     pair<u64, u32> notifyInfoPair(1, 1);
     MOCKER_CPP(&RdmaHandleManager::GetTokenIdInfo).stubs().will(returnValue(notifyInfoPair));
     HrtRaUbLocalMemRegOutParam regOut;
@@ -88,11 +81,7 @@ TEST_F(LocalCntNotifyTest, Ut_When_DestroyAllDone_ThenDestructLocalCntNotify_Exp
 
 TEST_F(LocalCntNotifyTest, Ut_When_RdmaHandleValid_ThenDestructLocalCntNotify_Expect_UnregAndPutTokenIdInfo)
 {
-    MOCKER(HrtGetDeviceType).stubs().will(returnValue(DevType::DEV_TYPE_910A2));
-    MOCKER(HrtGetDevice).stubs().will(returnValue(0));
-    MOCKER(HrtGetDevicePhyIdByIndex).stubs().will(returnValue(static_cast<DevId>(1)));
-    MOCKER(HrtCntNotifyCreate).stubs().will(returnValue((void*)(fakeNotifyHandleAddr)));
-    MOCKER(HrtGetCntNotifyId).stubs().will(returnValue(fakeNotifyId));
+    SETUP_CNT_NOTIFY_MOCKS();
     pair<u64, u32> notifyInfoPair(1, 1);
     MOCKER_CPP(&RdmaHandleManager::GetTokenIdInfo).stubs().will(returnValue(notifyInfoPair));
     HrtRaUbLocalMemRegOutParam regOut;

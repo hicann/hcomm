@@ -105,7 +105,7 @@ void CcuComponent::Init()
         return;
     }
 
-    devPhyId = HrtGetDevicePhyIdByIndex(devLogicId);
+    devPhyId = HrtGetDevicePhyIdByUserDevId(devLogicId);
     CheckDiesEnable();
     for (uint8_t dieId = 0; dieId < MAX_CCU_IODIE_NUM; dieId++) {
         CleanDieCkes(dieId);
@@ -206,7 +206,7 @@ static HcclResult FindOneUsableEid(const uint32_t devLogicId, const uint8_t dieI
 
     std::string name;
     bool findFlag = false;
-    u32 devPhyId = HrtGetDevicePhyIdByIndex(devLogicId);
+    u32 devPhyId = HrtGetDevicePhyIdByUserDevId(devLogicId);
 
     // 如果无法查询设备是否为uboe设备，报错退出
     CHK_RET(HrtGetUboeFlagEnable(devPhyId));

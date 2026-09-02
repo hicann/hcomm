@@ -17,7 +17,7 @@ namespace Hccl {
 
 RtsCntNotify::RtsCntNotify()
     : deviceId(HrtGetDevice()),
-      devPhyId(HrtGetDevicePhyIdByIndex(HrtGetDevice())),
+      devPhyId(HrtGetDevicePhyIdByUserDevId(HrtGetDevice())),
       handle(HrtCntNotifyCreate(deviceId)),
       id(HrtGetCntNotifyId(handle))
 {

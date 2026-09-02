@@ -284,7 +284,7 @@ unique_ptr<RankGraph> RankGraphBuilder::Build(const string& ranktableM, const st
 std::unique_ptr<RankTableInfo> RankGraphBuilder::GetRankTableInfo() { return nullptr; }
 
 s32 HrtGetDevice() { return 1; }
-u32 HrtGetDevicePhyIdByIndex(s32 deviceLogicId) { return 1U; }
+u32 HrtGetDevicePhyIdByUserDevId(s32 deviceLogicId) { return 1U; }
 
 DevType HrtGetDeviceType() { return DevType::DEV_TYPE_950; }
 

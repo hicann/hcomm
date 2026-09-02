@@ -46,7 +46,7 @@ CcuCtpConnection::CcuCtpConnection(
 
 HcclResult CcuConnection::Init()
 {
-    TRY_CATCH_RETURN(devLogicId = HrtGetDevice(); uint32_t devPhyId = HrtGetDevicePhyIdByIndex(devLogicId);
+    TRY_CATCH_RETURN(devLogicId = HrtGetDevice(); uint32_t devPhyId = HrtGetDevicePhyIdByUserDevId(devLogicId);
 
                      auto& rdmaHandleMgr = RdmaHandleManager::GetInstance();
                      rdmaHandle = rdmaHandleMgr.GetByIp(devPhyId, locAddr_);

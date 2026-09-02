@@ -157,7 +157,7 @@ protected:
 
     virtual void SetUp()
     {
-        MOCKER(HrtGetDevicePhyIdByIndex).defaults().will(returnValue(static_cast<DevId>(0)));
+        MOCKER(HrtGetDevicePhyIdByUserDevId).defaults().will(returnValue(static_cast<DevId>(0)));
         void* rdmaHandle = (void*)0x200;
         MOCKER(HrtRaUbCtxInit).stubs().with(mockcpp::any(), mockcpp::any()).will(returnValue(rdmaHandle));
         MOCKER(RaGetInterfaceVersion).defaults().will(returnValue(static_cast<s32>(-1)));

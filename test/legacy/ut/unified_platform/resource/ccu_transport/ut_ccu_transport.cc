@@ -79,7 +79,7 @@ constexpr uint32_t DEFAULT_CCU_RESOURCE_NUM = 16; // 根据业务代码调整
 using TransportTuple = tuple<unique_ptr<CcuTransport>, unique_ptr<Socket>, vector<unique_ptr<CcuJetty>>>;
 TransportTuple MockMakeCcuTransport(bool allocCkeUnavailFlag, bool allocXnUnavailFlag)
 {
-    MOCKER(HrtGetDevicePhyIdByIndex)
+    MOCKER(HrtGetDevicePhyIdByUserDevId)
         .stubs()
         .with(mockcpp::any())
         .will(returnValue(static_cast<s32>(MAX_MODULE_DEVICE_NUM - 1)));

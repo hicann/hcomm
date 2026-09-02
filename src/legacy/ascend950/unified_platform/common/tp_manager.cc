@@ -357,7 +357,7 @@ void TpManager::Init()
         return;
     }
 
-    devPhyId = HrtGetDevicePhyIdByIndex(devLogicId);
+    devPhyId = HrtGetDevicePhyIdByUserDevId(devLogicId);
     initFlag = true;
 }
 

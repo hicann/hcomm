@@ -146,7 +146,7 @@ TEST(DevUbConnectionTest, rma_net_connection_prepare_write_tasks_in_offload_mode
     MOCKER(HrtStreamCreateWithFlags).stubs().with(mockcpp::any(), mockcpp::any()).will(returnValue(ptr));
     MOCKER(HrtGetStreamId).stubs().with(mockcpp::any()).will(returnValue(0));
     MOCKER(HrtGetDevice).stubs().will(returnValue(0));
-    MOCKER(HrtGetDevicePhyIdByIndex).stubs().will(returnValue(static_cast<DevId>(1)));
+    MOCKER(HrtGetDevicePhyIdByUserDevId).stubs().will(returnValue(static_cast<DevId>(1)));
     Stream stream;
     devUbConnection.AddNop(stream);
 
@@ -298,7 +298,7 @@ TEST(DevUbConnectionTest, IfNeedUpdatingUbCi_true)
 
 TEST(DevUbConnectionTest, tp_import_test)
 {
-    MOCKER(HrtGetDevicePhyIdByIndex).defaults().will(returnValue(static_cast<DevId>(0)));
+    MOCKER(HrtGetDevicePhyIdByUserDevId).defaults().will(returnValue(static_cast<DevId>(0)));
     // construct DevUbConnection
     RdmaHandle rdmaHandle = (void*)0x1000000;
 

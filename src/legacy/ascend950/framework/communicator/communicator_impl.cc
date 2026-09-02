@@ -1267,7 +1267,7 @@ void CommunicatorImpl::InitCommonData(const CommParams& commParams)
     devType = commParams.devType;
     isWorldGroup = commParams.isWorldGroup;
     devLogicId = HrtGetDevice();
-    devPhyId = HrtGetDevicePhyIdByIndex(devLogicId);
+    devPhyId = HrtGetDevicePhyIdByUserDevId(devLogicId);
 }
 
 void CommunicatorImpl::CheckRankGraph() const
@@ -1340,8 +1340,8 @@ void CommunicatorImpl::CheckRankGraphAddrs() const
 
 u32 GetLocalDieId(PortData&& port, LinkProtocol linkProtocol)
 {
-    auto devLogicId = HrtGetDevice();
-    uint32_t devPhyId = HrtGetDevicePhyIdByIndex(devLogicId);
+    auto userDevId = HrtGetDevice();
+    uint32_t devPhyId = HrtGetDevicePhyIdByUserDevId(userDevId);
 
     auto& rdmaHandleMgr = RdmaHandleManager::GetInstance();
     auto rdmaHandle = rdmaHandleMgr.Get(devPhyId, port, linkProtocol);
@@ -1387,8 +1387,8 @@ std::string CommunicatorImpl::GetTopoFilePath()
                         topoFilePath = GetJsonProperty(parseJson, "topo_file_path"););
     } else {
         const size_t bufSize = 1024;
-        auto devLogicId = HrtGetDevice();
-        auto devPhyId = HrtGetDevicePhyIdByIndex(devLogicId);
+        auto userDevId = HrtGetDevice();
+        auto devPhyId = HrtGetDevicePhyIdByUserDevId(userDevId);
         std::vector<char> buffer(bufSize, '\0');
         int result = TopoAddrInfoGetTopoFilePath(devPhyId, buffer.data(), buffer.size());
         CHK_PRT_THROW(

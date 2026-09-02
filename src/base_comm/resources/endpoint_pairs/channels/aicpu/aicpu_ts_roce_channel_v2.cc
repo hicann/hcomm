@@ -387,8 +387,8 @@ HcclResult AicpuTsRoceChannelV2::BuildNotifyValueBuffer()
 
 HcclResult AicpuTsRoceChannelV2::Init()
 {
-    s32 devLogicId = Hccl::HrtGetDevice();
-    devicePhyId_ = Hccl::HrtGetDevicePhyIdByIndex(static_cast<u32>(devLogicId));
+    s32 userDevId = Hccl::HrtGetDevice();
+    devicePhyId_ = Hccl::HrtGetDevicePhyIdByUserDevId(static_cast<u32>(userDevId));
 
     CHK_RET(ParseInputParam());
     if (channelDesc_.exchangeAllMems && channelDesc_.role != HCOMM_SOCKET_ROLE_CLIENT) {

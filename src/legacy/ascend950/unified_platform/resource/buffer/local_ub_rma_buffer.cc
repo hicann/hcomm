@@ -181,8 +181,8 @@ u32 GetUbToken()
 {
     std::lock_guard<std::mutex> lock(ubTokenMutex);
     if (!isInitialized) {
-        s32 devLogicId = HrtGetDevice();
-        u32 devPhyId = HrtGetDevicePhyIdByIndex(devLogicId);
+        s32 userDevId = HrtGetDevice();
+        u32 devPhyId = HrtGetDevicePhyIdByUserDevId(userDevId);
         HrtRaGetSecRandom(&token, devPhyId);
         isInitialized = true;
     }

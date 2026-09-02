@@ -368,7 +368,7 @@ HcclResult
 GetEidByAnyEidInfo(s32 deviceLogicId, const HrtDevEidInfo& eidInfo, const IpAddress& ipV4Address, IpAddress& eidAddress)
 {
     // 根据eidInfo初始化rdmaHandle
-    HrtRaUbCtxInitParam in(HrtNetworkMode::HDC, HrtGetDevicePhyIdByIndex(deviceLogicId), eidInfo.ipAddress);
+    HrtRaUbCtxInitParam in(HrtNetworkMode::HDC, HrtGetDevicePhyIdByUserDevId(deviceLogicId), eidInfo.ipAddress);
     RdmaHandle rdmaHandle = HrtRaUbCtxInit(in);
 
     // 调用ra_get_eid_by_ip转换ipAddress为eid
@@ -403,7 +403,7 @@ void RdmaHandleManager::UboeIpv4ToEid(const IpAddress& ipV4Address, IpAddress& e
     }
 
     s32 deviceLogicId = HrtGetDevice();
-    HRaInfo info(HrtNetworkMode::HDC, HrtGetDevicePhyIdByIndex(deviceLogicId));
+    HRaInfo info(HrtNetworkMode::HDC, HrtGetDevicePhyIdByUserDevId(deviceLogicId));
     vector<HrtDevEidInfo> eidInfoList = HrtRaGetDevEidInfoList(info);
     if (eidInfoList.empty()) {
         HCCL_WARNING("[RdmaHandleManager::%s] Get EidInfoList empty, deviceLogicId=%d", __func__, deviceLogicId);

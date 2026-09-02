@@ -11,6 +11,7 @@
 #include "gtest/gtest.h"
 #include <mockcpp/mokc.h>
 #include <mockcpp/mockcpp.hpp>
+#include "test_mock_setup.h"
 #define private public
 #include "rts_1ton_cnt_notify.h"
 #undef private
@@ -37,11 +38,7 @@ protected:
 
 TEST_F(Rts1ToNCntNotifyTest, rts1toncntnotify_getuniqueid_test)
 {
-    MOCKER(HrtGetDeviceType).stubs().will(returnValue(DevType::DEV_TYPE_910A2));
-    MOCKER(HrtGetDevice).stubs().will(returnValue(0));
-    MOCKER(HrtGetDevicePhyIdByIndex).stubs().will(returnValue(static_cast<DevId>(1)));
-    MOCKER(HrtCntNotifyCreate).stubs().will(returnValue((void*)(fakeNotifyHandleAddr)));
-    MOCKER(HrtGetCntNotifyId).stubs().will(returnValue(fakeNotifyId));
+    SETUP_CNT_NOTIFY_MOCKS();
 
     Rts1ToNCntNotify rts1ToNCntNotify;
     rts1ToNCntNotify.id = fakeNotifyId;

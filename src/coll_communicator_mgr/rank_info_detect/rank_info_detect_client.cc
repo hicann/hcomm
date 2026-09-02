@@ -95,8 +95,8 @@ namespace {
     std::string QueryTopoFilePathByDevice()
     {
         const size_t bufSize = 1024;
-        auto devLogicId = HrtGetDevice();
-        auto devPhyId = HrtGetDevicePhyIdByIndex(devLogicId);
+        auto userDevId = HrtGetDevice();
+        auto devPhyId = HrtGetDevicePhyIdByUserDevId(userDevId);
         std::vector<char> buffer(bufSize, '\0');
         int result = TopoAddrInfoGetTopoFilePath(devPhyId, buffer.data(), buffer.size());
         CHK_PRT_THROW(

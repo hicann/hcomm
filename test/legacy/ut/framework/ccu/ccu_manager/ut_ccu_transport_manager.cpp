@@ -127,7 +127,7 @@ HcclResult CcuJettyMgrPrepareCreateStub(CcuJettyMgr* self, const std::vector<Lin
 
 void MockCcuTransportMgrDevs()
 {
-    MOCKER(HrtGetDevicePhyIdByIndex)
+    MOCKER(HrtGetDevicePhyIdByUserDevId)
         .stubs()
         .with(mockcpp::any())
         .will(returnValue(static_cast<DevId>(MAX_MODULE_DEVICE_NUM - 1)));

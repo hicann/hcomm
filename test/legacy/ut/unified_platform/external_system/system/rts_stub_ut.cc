@@ -118,6 +118,7 @@ rtError_t rtGetDeviceIndexByPhyId(uint32_t phyId, uint32_t* devIndex) { return R
 
 aclError aclrtGetPhyDevIdByLogicDevId(const int32_t logicDevId, int32_t* const phyDevId) { return RT_ERROR_NONE; }
 
+aclError aclrtGetUserDevIdByPhyDevId(const int32_t phyDevId, int32_t* const userDevId) { return RT_ERROR_NONE; }
 aclError aclrtGetPhyDevIdByUserDevId(const int32_t userDevId, int32_t* const phyDevId) { return RT_ERROR_NONE; }
 
 rtError_t rtGetPhyDeviceInfo(uint32_t phyId, int32_t moduleType, int32_t infoType, int64_t* val)

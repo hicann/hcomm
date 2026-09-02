@@ -2113,7 +2113,7 @@ public:
         MOCKER(hrtGetDevicePhyIdByIndex)
             .stubs()
             .with(mockcpp::any(), mockcpp::any(), mockcpp::any())
-            .will(invoke(MockHrtGetDevicePhyIdByIndex));
+            .will(invoke(MockHrtGetDevicePhyIdByUserDevId));
         constexpr hcomm::CcuVersion fakeCcuVersion = hcomm::CcuVersion::CCU_V1;
         MockCcuNetworkDeviceDefault(TEST_DEVICE_LOGIC_ID);
         ASSERT_EQ(MockCcuResourcesDefault(TEST_DEVICE_LOGIC_ID, fakeCcuVersion), HcclResult::HCCL_SUCCESS);

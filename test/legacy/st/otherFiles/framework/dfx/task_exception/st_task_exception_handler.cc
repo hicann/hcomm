@@ -29,6 +29,7 @@
 #include "ccu_transport_manager.h"
 #include "mc2_global_mirror_tasks.h"
 #include "mc2_compont.h"
+#include "task_exception_test_common.h"
 #undef private
 #undef protected
 
@@ -568,11 +569,7 @@ TEST_F(TaskExceptionHandlerTest, test_process_when_task_more_than_50)
     }
 
     // 调用 TaskExceptionHandler::Process() 打印异常DFX信息
-    rtExceptionInfo_t exceptionInfo{};
-    exceptionInfo.deviceid = 0;
-    exceptionInfo.streamid = 0;
-    exceptionInfo.taskid = 60; // 当前异常TaskId 60
-    TaskExceptionHandler::Process(&exceptionInfo);
+    SetupAndProcessCcuException();
 
     globalMirrorTasks.DestroyQueue(0, 0); // diveceId 0, streamId 0
 }
@@ -712,7 +709,7 @@ TEST_F(TaskExceptionHandlerTest, test_process_ccu)
     // 打桩清除TaskKill状态, 清除表项, 清除CKE操作
     MOCKER(CcuCleanDieCkes).stubs().will(returnValue(HcclResult::HCCL_SUCCESS));
     MOCKER_CPP(&CcuComponent::Init).stubs();
-    MOCKER(HrtGetDevicePhyIdByIndex).stubs().will(returnValue(0));
+    MOCKER(HrtGetDevicePhyIdByUserDevId).stubs().will(returnValue(0));
     MOCKER(HrtRaTlvRequestForCustomChannel).stubs();
 
     // 调用 TaskExceptionHandler::Process() 打印异常DFX信息
@@ -791,7 +788,7 @@ TEST_F(TaskExceptionHandlerTest, test_process_mc2)
     // 打桩清除TaskKill状态, 清除表项, 清除CKE操作
     MOCKER(CcuCleanDieCkes).stubs().will(returnValue(HcclResult::HCCL_SUCCESS));
     MOCKER_CPP(&CcuComponent::Init).stubs();
-    MOCKER(HrtGetDevicePhyIdByIndex).stubs().will(returnValue(0));
+    MOCKER(HrtGetDevicePhyIdByUserDevId).stubs().will(returnValue(0));
     MOCKER(HrtRaTlvRequestForCustomChannel).stubs();
 
     TaskExceptionHandler::Process(&exceptionInfo);

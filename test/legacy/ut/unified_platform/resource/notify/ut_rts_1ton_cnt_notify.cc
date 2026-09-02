@@ -11,6 +11,7 @@
 #include "gtest/gtest.h"
 #include <mockcpp/mokc.h>
 #include <mockcpp/mockcpp.hpp>
+#include "test_mock_setup.h"
 #define private public
 #define protected public
 #include "rts_1ton_cnt_notify.h"
@@ -60,11 +61,7 @@ TEST_F(Rts1ToNCntNotifyTest, rts1toncntnotify_construct_ok)
 TEST_F(Rts1ToNCntNotifyTest, rts1toncntnotify_postbits_submit_test)
 {
     // Given
-    MOCKER(HrtGetDeviceType).stubs().will(returnValue(DevType::DEV_TYPE_910A2));
-    MOCKER(HrtGetDevice).stubs().will(returnValue(0));
-    MOCKER(HrtGetDevicePhyIdByIndex).stubs().will(returnValue(static_cast<DevId>(1)));
-    MOCKER(HrtCntNotifyCreate).stubs().will(returnValue((void*)(fakeNotifyHandleAddr)));
-    MOCKER(HrtGetCntNotifyId).stubs().will(returnValue(fakeNotifyId));
+    SETUP_CNT_NOTIFY_MOCKS();
 
     // When
     Rts1ToNCntNotify rts1ToNCntNotify;
@@ -78,11 +75,7 @@ TEST_F(Rts1ToNCntNotifyTest, rts1toncntnotify_postbits_submit_test)
 TEST_F(Rts1ToNCntNotifyTest, rts1toncntnotify_waitvalue_submit_test)
 {
     // Given
-    MOCKER(HrtGetDeviceType).stubs().will(returnValue(DevType::DEV_TYPE_910A2));
-    MOCKER(HrtGetDevice).stubs().will(returnValue(0));
-    MOCKER(HrtGetDevicePhyIdByIndex).stubs().will(returnValue(static_cast<DevId>(1)));
-    MOCKER(HrtCntNotifyCreate).stubs().will(returnValue((void*)(fakeNotifyHandleAddr)));
-    MOCKER(HrtGetCntNotifyId).stubs().will(returnValue(fakeNotifyId));
+    SETUP_CNT_NOTIFY_MOCKS();
 
     // When
     Rts1ToNCntNotify rts1ToNCntNotify;
@@ -95,11 +88,7 @@ TEST_F(Rts1ToNCntNotifyTest, rts1toncntnotify_waitvalue_submit_test)
 
 TEST_F(Rts1ToNCntNotifyTest, rts1toncntnotify_getuniqueid_test)
 {
-    MOCKER(HrtGetDeviceType).stubs().will(returnValue(DevType::DEV_TYPE_910A2));
-    MOCKER(HrtGetDevice).stubs().will(returnValue(0));
-    MOCKER(HrtGetDevicePhyIdByIndex).stubs().will(returnValue(static_cast<DevId>(1)));
-    MOCKER(HrtCntNotifyCreate).stubs().will(returnValue((void*)(fakeNotifyHandleAddr)));
-    MOCKER(HrtGetCntNotifyId).stubs().will(returnValue(fakeNotifyId));
+    SETUP_CNT_NOTIFY_MOCKS();
 
     Rts1ToNCntNotify rts1ToNCntNotify;
     rts1ToNCntNotify.id = fakeNotifyId;

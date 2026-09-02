@@ -14,7 +14,7 @@
 #include "binary_stream.h"
 namespace Hccl {
 
-RtsNotify::RtsNotify(bool devUsed) : devPhyId(HrtGetDevicePhyIdByIndex(HrtGetDevice())), devUsed(devUsed)
+RtsNotify::RtsNotify(bool devUsed) : devPhyId(HrtGetDevicePhyIdByUserDevId(HrtGetDevice())), devUsed(devUsed)
 {
     s32 deviceID = HrtGetDevice();
 

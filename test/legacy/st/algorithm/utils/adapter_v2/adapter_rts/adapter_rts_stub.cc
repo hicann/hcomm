@@ -68,7 +68,7 @@ void HrtGetSocVer(char_t* chipVer, const u32 size)
 
 void HrtUbDevQueryInfo(rtUbDevQueryCmd cmd, void* devInfo) {}
 
-u32 HrtGetDevicePhyIdByIndex(s32 deviceLogicId) { return deviceLogicId; }
+u32 HrtGetDevicePhyIdByUserDevId(s32 deviceLogicId) { return deviceLogicId; }
 
 void* HrtMalloc(u64 size, aclrtMemType_t memType)
 {

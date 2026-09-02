@@ -145,7 +145,7 @@ static CcuResSpecInfo CheckResSpecifications(const int32_t devLogicId, const uin
 
 HcclResult CcuResSpecifications::Init_()
 {
-    TRY_CATCH_RETURN(devPhyId = HrtGetDevicePhyIdByIndex(devLogicId); ccuVersion = CheckCcuVersion();
+    TRY_CATCH_RETURN(devPhyId = HrtGetDevicePhyIdByUserDevId(devLogicId); ccuVersion = CheckCcuVersion();
                      auto tlvHandle = HccpTlvHdcManager::GetInstance().GetTlvHandle(devLogicId);
                      auto memTypeBitmap = GetCombinedMemTypeBitmap(); auto count = GetMemTypeVector().size();
                      for (uint8_t dieId = 0; dieId < MAX_CCU_IODIE_NUM; dieId++) {

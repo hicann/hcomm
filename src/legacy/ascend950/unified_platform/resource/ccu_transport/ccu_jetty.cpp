@@ -26,7 +26,7 @@ CcuJetty::CcuJetty(const IpAddress& ipAddr, const CcuJettyInfo& jettyInfo) : ipA
 {
     devLogicId_ = HrtGetDevice();
     Hccl::CqCreateInfo cqInfo{};
-    uint32_t devPhyId = HrtGetDevicePhyIdByIndex(devLogicId_);
+    uint32_t devPhyId = HrtGetDevicePhyIdByUserDevId(devLogicId_);
     auto& rdmaHandleMgr = RdmaHandleManager::GetInstance();
     rdmaHandle_ = rdmaHandleMgr.GetByIp(devPhyId, ipAddr);
     const auto jfcHandle = rdmaHandleMgr.GetJfcHandle(rdmaHandle_, cqInfo, HrtUbJfcMode::CCU_POLL);

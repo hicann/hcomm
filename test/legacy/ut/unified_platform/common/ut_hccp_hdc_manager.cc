@@ -35,7 +35,7 @@ TEST_F(HccpHdcManagerTest, hccp_hdc_manager_getInstance)
     // Given
     DevId fakedevPhyId = 3;
     DevId fakedevPhyId1 = 4;
-    MOCKER(HrtGetDevicePhyIdByIndex)
+    MOCKER(HrtGetDevicePhyIdByUserDevId)
         .stubs()
         .with(mockcpp::any())
         .will(returnValue(fakedevPhyId))
@@ -58,7 +58,7 @@ TEST_F(HccpHdcManagerTest, hccp_hdc_manager_init)
     s32 deviceLogicId1 = 1;
     s32 deviceLogicId2 = 2;
     DevId fakedevPhyId = 3;
-    MOCKER(HrtGetDevicePhyIdByIndex).stubs().with(mockcpp::any()).will(returnValue(fakedevPhyId));
+    MOCKER(HrtGetDevicePhyIdByUserDevId).stubs().with(mockcpp::any()).will(returnValue(fakedevPhyId));
     // when
     HccpHdcManager::GetInstance().Init(deviceLogicId);
     auto res1 = HccpHdcManager::GetInstance().GetSet();

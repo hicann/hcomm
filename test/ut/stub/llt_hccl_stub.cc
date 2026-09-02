@@ -2095,6 +2095,19 @@ aclError aclrtGetPhyDevIdByUserDevId(int32_t userDevId, int32_t* const phyDevId)
     return aclrtGetPhyDevIdByLogicDevId(userDevId, phyDevId);
 }
 
+aclError aclrtGetUserDevIdByPhyDevId(const int32_t phyDevId, int32_t* const userDevId)
+{
+    if (gBoardId == 0x2000) {
+        *userDevId = phyDevId / 2;
+        return ACL_SUCCESS;
+    }
+    *userDevId = phyDevId;
+    if (gDevPhyId) {
+        *userDevId = static_cast<int32_t>(gDevPhyId);
+    }
+    return ACL_SUCCESS;
+}
+
 rtError_t rtsGetLogicDevIdByPhyDevId(int32_t phyDevId, int32_t* const logicDevId)
 {
     if (gBoardId == 0x2000) {

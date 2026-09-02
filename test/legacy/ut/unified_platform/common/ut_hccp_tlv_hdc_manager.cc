@@ -43,7 +43,7 @@ protected:
 TEST_F(HccpTlvHdcManagerTest, should_successfully_init_HccpTlvHdcManager)
 {
     u32 deviceLogicId = 0;
-    MOCKER(HrtGetDevicePhyIdByIndex).stubs().with(mockcpp::any()).will(returnValue(static_cast<DevId>(0)));
+    MOCKER(HrtGetDevicePhyIdByUserDevId).stubs().with(mockcpp::any()).will(returnValue(static_cast<DevId>(0)));
     MOCKER(RaTlvInit).stubs().will(returnValue(0));
     HccpTlvHdcManager::GetInstance().Init(deviceLogicId);
 }

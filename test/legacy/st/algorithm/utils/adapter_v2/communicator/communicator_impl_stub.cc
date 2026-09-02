@@ -42,7 +42,7 @@ constexpr u64 HCCL_CCL_COMM_FIXED_CALC_BUFFER_SIZE = (1 * 1024 * 1024); // 指�
 u32 GetLocalDieId(IpAddress&& portAddr)
 {
     auto devLogicId = HrtGetDevice();
-    uint32_t devPhyId = HrtGetDevicePhyIdByIndex(devLogicId);
+    uint32_t devPhyId = HrtGetDevicePhyIdByUserDevId(devLogicId);
 
     auto& rdmaHandleMgr = RdmaHandleManager::GetInstance();
     auto rdmaHandle = rdmaHandleMgr.GetByIp(devPhyId, portAddr);
@@ -321,7 +321,7 @@ void CommunicatorImpl::InitCommonData(const CommParams& commParams, const HcclCo
     devType = commParams.devType;
     isWorldGroup = commParams.isWorldGroup;
     devLogicId = HrtGetDevice();
-    devPhyId = HrtGetDevicePhyIdByIndex(devLogicId);
+    devPhyId = HrtGetDevicePhyIdByUserDevId(devLogicId);
     config = commConfig;
     cclBufferSize = config.hcclBufferSize;
     // 设定devType，初始化能力，算法及其他模块通过Get获取能力

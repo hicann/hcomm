@@ -82,10 +82,10 @@ HcclResult HDCommunicate::VerifyDeviceMemoryRegisterSupport()
     size_t outputLen = 0;
     struct supportFeaturePara input = {};
     struct supportFeaturePara output = {};
-    s32 deviceId = HrtGetDevice();
+    s32 userDevId = HrtGetDevice();
     s32 logicDevId = 0;
     // 调用驱动接口前需将userDevId转换为logicDevId
-    CHK_RET(HrtGetLogicDevIdByUserDevId(deviceId, logicDevId));
+    CHK_RET(HrtGetLogicDevIdByUserDevId(userDevId, logicDevId));
     deviceLogicId = static_cast<u32>(logicDevId);
     input.support_feature = CTRL_SUPPORT_PCIE_BAR_MEM_MASK;
     input.devid = static_cast<unsigned int>(logicDevId);

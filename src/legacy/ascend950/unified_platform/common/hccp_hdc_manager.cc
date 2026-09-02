@@ -30,7 +30,7 @@ void HccpHdcManager::Init(u32 deviceLogicId)
     HrtOpenTsdProcess(deviceLogicId);
 
     HRaInitConfig cfg;
-    cfg.phyId = HrtGetDevicePhyIdByIndex(deviceLogicId);
+    cfg.phyId = HrtGetDevicePhyIdByUserDevId(deviceLogicId);
     cfg.mode = HrtNetworkMode::HDC;
     HrtRaInit(cfg);
 
@@ -52,7 +52,7 @@ void HccpHdcManager::DeInit(u32 deviceLogicId)
     instances.erase(deviceLogicId);
 
     HRaInitConfig cfg;
-    cfg.phyId = HrtGetDevicePhyIdByIndex(deviceLogicId);
+    cfg.phyId = HrtGetDevicePhyIdByUserDevId(deviceLogicId);
     cfg.mode = HrtNetworkMode::HDC;
     DECTOR_TRY_CATCH("HccpHdcManager", HrtRaDeInit(cfg));
     HCCL_INFO("[HccpHdcManager::%s] devLogicId [%u] ra deinit success.", __func__, deviceLogicId);
@@ -73,7 +73,7 @@ void HccpHdcManager::DestroyAll()
         HCCL_INFO("HccpHdcManager deinit");
 
         HRaInitConfig cfg;
-        cfg.phyId = HrtGetDevicePhyIdByIndex(deviceLogicId);
+        cfg.phyId = HrtGetDevicePhyIdByUserDevId(deviceLogicId);
         cfg.mode = HrtNetworkMode::HDC;
         DECTOR_TRY_CATCH("HccpHdcManager", HrtRaDeInit(cfg));
         DECTOR_TRY_CATCH("HccpHdcManager", HrtResetDevice(deviceLogicId));

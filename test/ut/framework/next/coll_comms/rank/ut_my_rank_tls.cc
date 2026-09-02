@@ -30,6 +30,12 @@ HcclResult StubHrtGetDeviceSuccess(s32* deviceLogicId)
     return HCCL_SUCCESS;
 }
 
+HcclResult StubHrtGetDevicePhyIdByUserDevIdSuccess(u32, u32& devicePhyId, bool)
+{
+    devicePhyId = 8;
+    return HCCL_SUCCESS;
+}
+
 HcclResult StubHrtGetDevicePhyIdByIndexSuccess(u32, u32& devicePhyId, bool)
 {
     devicePhyId = 8;
@@ -93,7 +99,7 @@ TEST_F(MyRankTlsTest, Ut_GetLocalTlsStatus_When_HrtGetDeviceFails_Expect_ReturnS
     EXPECT_EQ(ret, HCCL_E_RUNTIME);
 }
 
-TEST_F(MyRankTlsTest, Ut_GetLocalTlsStatus_When_HrtGetDevicePhyIdByIndexFails_Expect_ReturnSameError)
+TEST_F(MyRankTlsTest, Ut_GetLocalTlsStatus_When_HrtGetDevicePhyIdByUserDevIdFails_Expect_ReturnSameError)
 {
     Hccl::TlsStatus tlsStatus = Hccl::TlsStatus::UNKNOWN;
 
@@ -111,7 +117,7 @@ TEST_F(MyRankTlsTest, Ut_GetLocalTlsStatus_When_AllDependenciesSucceed_Expect_Re
     g_expectedTlsStatus = Hccl::TlsStatus::ENABLE;
 
     MOCKER(hrtGetDevice).stubs().will(invoke(StubHrtGetDeviceSuccess));
-    MOCKER(hrtGetDevicePhyIdByIndex).stubs().will(invoke(StubHrtGetDevicePhyIdByIndexSuccess));
+    MOCKER(hrtGetDevicePhyIdByIndex).stubs().will(invoke(StubHrtGetDevicePhyIdByUserDevIdSuccess));
     MOCKER(Hccl::HrtRaGetTlsStatus).stubs().will(invoke(StubMyRankHrtRaGetTlsStatus));
 
     HcclResult ret = myRank_->GetLocalTlsStatus(ENDPOINT_LOC_TYPE_DEVICE, tlsStatus);

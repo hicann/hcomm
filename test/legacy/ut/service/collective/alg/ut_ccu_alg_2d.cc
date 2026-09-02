@@ -87,6 +87,26 @@ AllocCkeStub(const int32_t deviceLogicId, const uint8_t dieId, const uint32_t nu
 HcclResult
 AllocXnStub(const int32_t deviceLogicId, const uint8_t dieId, const uint32_t num, std::vector<ResInfo>& xnInfos);
 
+void MockDoOnce() {}
+
+HcclResult
+AllocCkeStub(const int32_t deviceLogicId, const uint8_t dieId, const uint32_t num, std::vector<ResInfo>& ckeInfos)
+{
+    ckeInfos.clear();
+    ResInfo ckeInfo(0, num);
+    ckeInfos.push_back(ckeInfo);
+    return HcclResult::HCCL_SUCCESS;
+}
+
+HcclResult
+AllocXnStub(const int32_t deviceLogicId, const uint8_t dieId, const uint32_t num, std::vector<ResInfo>& xnInfos)
+{
+    xnInfos.clear();
+    ResInfo xnInfo(0, num);
+    xnInfos.push_back(xnInfo);
+    return HcclResult::HCCL_SUCCESS;
+}
+
 TEST_F(CcuMesh2DTest, CCU_A2A_Mesh_template)
 {
     // 创建需求资源
@@ -377,7 +397,7 @@ HcclResult CcuResourceMangerGetLoopChannelIdStub(
 TEST_F(CcuMesh2DTest, CCU_A2A_Mesh_sole_context)
 {
     MOCKER(HrtGetDevice).stubs().will(returnValue(0));
-    MOCKER(HrtGetDevicePhyIdByIndex).stubs().will(returnValue(static_cast<DevId>(0)));
+    MOCKER(HrtGetDevicePhyIdByUserDevId).stubs().will(returnValue(static_cast<DevId>(0)));
     MOCKER(CcuDeviceManager::ReleaseCke).stubs().will(returnValue(HcclResult::HCCL_SUCCESS));
     MOCKER_CPP(&CcuTransportGroup::CheckTransports).stubs().with(mockcpp::any()).will(returnValue(true));
     MOCKER_CPP(&CcuTransportGroup::CheckTransportCntCke).stubs().will(returnValue(HcclResult::HCCL_SUCCESS));

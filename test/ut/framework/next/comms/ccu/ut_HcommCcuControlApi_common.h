@@ -90,7 +90,7 @@ inline HcclResult MockHrtGetDevice(int32_t* deviceLogicId)
     return HcclResult::HCCL_SUCCESS;
 }
 
-inline HcclResult MockHrtGetDevicePhyIdByIndex(uint32_t deviceLogicId, uint32_t& devicePhyId, bool)
+inline HcclResult MockHrtGetDevicePhyIdByUserDevId(uint32_t deviceLogicId, uint32_t& devicePhyId, bool)
 {
     devicePhyId = deviceLogicId;
     return HcclResult::HCCL_SUCCESS;

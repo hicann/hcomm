@@ -788,7 +788,7 @@ void TaskExceptionHost::PrintUbDfxInfo(
             "errorMessage ubCqeStatus[%u], localEid[%s], remoteEid[%s]. ", static_cast<u32>(errorMessage.ubCqeStatus),
             errorMessage.locEid.Describe().c_str(), errorMessage.rmtEid.Describe().c_str());
         auto addr = Hccl::IpAddress(errorMessage.locEid);
-        u32 devPhyId = Hccl::HrtGetDevicePhyIdByIndex(exceptionInfo->deviceid);
+        u32 devPhyId = Hccl::HrtGetDevicePhyIdByUserDevId(exceptionInfo->deviceid);
         auto rdmaHandle = Hccl::RdmaHandleManager::GetInstance().GetByIp(devPhyId, addr);
         HrtRaDumpJettyContext(reinterpret_cast<void*>(errorMessage.jettyHandle), errorMessage.jettyId);
         PrintUbRegisters(static_cast<s32>(exceptionInfo->deviceid), rdmaHandle);

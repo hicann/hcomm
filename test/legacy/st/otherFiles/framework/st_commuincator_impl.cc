@@ -11,6 +11,7 @@
 #include "gtest/gtest.h"
 #include <mockcpp/mokc.h>
 #include <mockcpp/mockcpp.hpp>
+#include "test_mock_setup.h"
 #define private public
 #define protected public
 #include "communicator_impl.h"
@@ -219,6 +220,45 @@ static void GenRankTableFile1Ser8Dev()
 }
 
 void CommImplSendStub1() { THROW<InternalException>("HcclException &e"); }
+
+#define SETUP_COMM_RESOURCE_MOCKS()                                                                     \
+    do {                                                                                                \
+        MOCKER_CPP(&AicpuInsPreprocessor::Preprocess).stubs().with().will(ignoreReturnValue());         \
+        Buffer* buf = nullptr;                                                                          \
+        LocalRmaBuffer* rmaBuf = nullptr;                                                               \
+        MOCKER_CPP(&DataBufManager::Get)                                                                \
+            .stubs()                                                                                    \
+            .with(mockcpp::any(), mockcpp::any(), mockcpp::any())                                       \
+            .will(returnValue(buf));                                                                    \
+        MOCKER_CPP(                                                                                     \
+            &LocalRmaBufManager::Reg,                                                                   \
+            LocalRmaBuffer* (LocalRmaBufManager::*)(const string&, BufferType, std::shared_ptr<Buffer>, \
+                                                    const PortData&, LinkProtocol))                     \
+            .stubs()                                                                                    \
+            .with(mockcpp::any(), mockcpp::any(), mockcpp::any())                                       \
+            .will(returnValue(rmaBuf));                                                                 \
+    } while (0)
+
+#define SETUP_SNAPSHOT_COMM_PARAMS(collSvc)                                                 \
+    do {                                                                                    \
+        comm.collService = &(collSvc);                                                      \
+        SnapShotComm snapShotComm;                                                          \
+        u32 step = 1;                                                                       \
+        CommParams commParams("test_comm_id", 0, 4, 0, DevType::DEV_TYPE_950, false, true); \
+        HcclCommConfig config;                                                              \
+        strcpy(config.reserved, "test_reserved");                                           \
+        config.hcclBufferSize = 1024;                                                       \
+        config.hcclDeterministic = 1;                                                       \
+        strcpy(config.hcclCommName, "test_comm_name");                                      \
+        strcpy(config.hcclUdi, "test_udi");                                                 \
+        RankTableInfo ranktableInfo;                                                        \
+        ranktableInfo.version = "2.0";                                                      \
+        ranktableInfo.rankCount = 0;                                                        \
+        TopoInfo topoInfo;                                                                  \
+        topoInfo.version = "2.0";                                                           \
+        topoInfo.peerCount = 0;                                                             \
+        topoInfo.edgeCount = 0;                                                             \
+    } while (0)
 
 TEST(CommunicatorImplTest, load_opbased_coll_op_test)
 {
@@ -486,7 +526,7 @@ TEST(CommunicatorImplTest, should_return_success_when_normal_calling_new_init_wi
 TEST(CommunicatorImplTest, init_common_data)
 {
     MOCKER(HrtGetDevice).stubs().will(returnValue(0));
-    MOCKER(HrtGetDevicePhyIdByIndex).stubs().with(mockcpp::any()).will(returnValue(1));
+    MOCKER(HrtGetDevicePhyIdByUserDevId).stubs().with(mockcpp::any()).will(returnValue(1));
     CommunicatorImpl comm;
     CommParams params;
     HcclCommunicator hcclCommunicator(params);
@@ -510,33 +550,11 @@ TEST(CommunicatorImplTest, LoadOpbasedCollOp_success_CovertToCurrentCollOperator
     u32 fakeNotifyId = 1;
     u64 fakeOffset = 200;
     char fakeName[65] = "testRtsNotify";
-    MOCKER(HrtGetDevice).stubs().will(returnValue(0));
-    MOCKER(HrtNotifyCreate).stubs().will(returnValue((void*)(fakeNotifyHandleAddr)));
-    MOCKER(HrtNotifyCreateWithFlag).stubs().will(returnValue((void*)(fakeNotifyHandleAddr)));
-    MOCKER(HrtGetNotifyID).stubs().will(returnValue(fakeNotifyId));
-    MOCKER(HrtGetDevicePhyIdByIndex).stubs().will(returnValue(static_cast<DevId>(fakeDevPhyId)));
-    MOCKER(HrtIpcSetNotifyName).stubs().with(mockcpp::any(), outBoundP(fakeName, sizeof(fakeName)), mockcpp::any());
-    MOCKER(HrtNotifyGetOffset).stubs().will(returnValue(fakeOffset));
-    MOCKER(HrtGetDeviceType).stubs().will(returnValue(DevType(DevType::DEV_TYPE_950)));
+    SETUP_COMM_NOTIFY_MOCKS();
     MOCKER(HrtStreamDestroy).stubs();
 
     // 资源初始化
-    MOCKER_CPP(&CcuInsPreprocessor::Preprocess).stubs().with().will(ignoreReturnValue());
-    MOCKER_CPP(&AicpuInsPreprocessor::Preprocess).stubs().with().will(ignoreReturnValue());
-
-    Buffer* buf = nullptr;
-    LocalRmaBuffer* rmaBuf = nullptr;
-    MOCKER_CPP(&DataBufManager::Get)
-        .stubs()
-        .with(mockcpp::any(), mockcpp::any(), mockcpp::any())
-        .will(returnValue(buf));
-    MOCKER_CPP(
-        &LocalRmaBufManager::Reg, LocalRmaBuffer
-                                      * (LocalRmaBufManager::*)(const string&, BufferType, std::shared_ptr<Buffer>,
-                                                                const PortData&, LinkProtocol))
-        .stubs()
-        .with(mockcpp::any(), mockcpp::any(), mockcpp::any())
-        .will(returnValue(rmaBuf));
+    SETUP_COMM_RESOURCE_MOCKS();
     RtsNotify notify(false);
     RtsNotify notify1(false);
     MOCKER_CPP(&HostDeviceSyncNotifyManager::GetHostWaitNotify).stubs().with().will(returnValue(&notify));
@@ -733,33 +751,11 @@ TEST(CommunicatorImplTest, LoadOpbasedCollOp_success_CovertToCurrentCollOperator
     u32 fakeNotifyId = 1;
     u64 fakeOffset = 200;
     char fakeName[65] = "testRtsNotify";
-    MOCKER(HrtGetDevice).stubs().will(returnValue(0));
-    MOCKER(HrtNotifyCreate).stubs().will(returnValue((void*)(fakeNotifyHandleAddr)));
-    MOCKER(HrtNotifyCreateWithFlag).stubs().will(returnValue((void*)(fakeNotifyHandleAddr)));
-    MOCKER(HrtGetNotifyID).stubs().will(returnValue(fakeNotifyId));
-    MOCKER(HrtGetDevicePhyIdByIndex).stubs().will(returnValue(static_cast<DevId>(fakeDevPhyId)));
-    MOCKER(HrtIpcSetNotifyName).stubs().with(mockcpp::any(), outBoundP(fakeName, sizeof(fakeName)), mockcpp::any());
-    MOCKER(HrtNotifyGetOffset).stubs().will(returnValue(fakeOffset));
-    MOCKER(HrtGetDeviceType).stubs().will(returnValue(DevType(DevType::DEV_TYPE_950)));
+    SETUP_COMM_NOTIFY_MOCKS();
     MOCKER(HrtStreamDestroy).stubs();
 
     // 资源初始化
-    MOCKER_CPP(&CcuInsPreprocessor::Preprocess).stubs().with().will(ignoreReturnValue());
-    MOCKER_CPP(&AicpuInsPreprocessor::Preprocess).stubs().with().will(ignoreReturnValue());
-
-    Buffer* buf = nullptr;
-    LocalRmaBuffer* rmaBuf = nullptr;
-    MOCKER_CPP(&DataBufManager::Get)
-        .stubs()
-        .with(mockcpp::any(), mockcpp::any(), mockcpp::any())
-        .will(returnValue(buf));
-    MOCKER_CPP(
-        &LocalRmaBufManager::Reg, LocalRmaBuffer
-                                      * (LocalRmaBufManager::*)(const string&, BufferType, std::shared_ptr<Buffer>,
-                                                                const PortData&, LinkProtocol))
-        .stubs()
-        .with(mockcpp::any(), mockcpp::any(), mockcpp::any())
-        .will(returnValue(rmaBuf));
+    SETUP_COMM_RESOURCE_MOCKS();
     RtsNotify notify(false);
     RtsNotify notify1(false);
     MOCKER_CPP(&HostDeviceSyncNotifyManager::GetHostWaitNotify).stubs().with().will(returnValue(&notify));
@@ -1058,7 +1054,7 @@ TEST(CommunicatorImplTest, RecoverComm_NormalCase)
     MOCKER(HrtGetDevice).stubs().will(returnValue(0));
     MOCKER(HrtOpenTsdProcess).stubs().with(mockcpp::any(), mockcpp::any()).will(returnValue(HcclResult::HCCL_SUCCESS));
     MOCKER(HrtRaTlvInit).stubs().with(mockcpp::any()).will(returnValue(HcclResult::HCCL_SUCCESS));
-    MOCKER(HrtGetDevicePhyIdByIndex).stubs().with(mockcpp::any()).will(returnValue(static_cast<DevId>(1)));
+    MOCKER(HrtGetDevicePhyIdByUserDevId).stubs().with(mockcpp::any()).will(returnValue(static_cast<DevId>(1)));
     MOCKER(RaInit).stubs().with(mockcpp::any()).will(returnValue(0));
     MOCKER(RaTlvInit).stubs().with(mockcpp::any()).will(returnValue(0));
     MOCKER_CPP(&CommunicatorImpl::RecoverRankGraphData).stubs().will(returnValue(HcclResult::HCCL_SUCCESS));
@@ -1077,30 +1073,11 @@ TEST(CommunicatorImplTest, RecoverComm_NormalCase)
         .stubs()
         .with(mockcpp::any(), mockcpp::any(), mockcpp::any())
         .will(returnValue(HcclResult::HCCL_SUCCESS));
-    MOCKER(HrtGetDevicePhyIdByIndex).stubs().will(returnValue(static_cast<DevId>(1)));
+    MOCKER(HrtGetDevicePhyIdByUserDevId).stubs().will(returnValue(static_cast<DevId>(1)));
     CommunicatorImpl comm;
     comm.RegisterAcceStateCallBack(CommunicatorCallback());
     CollServiceAiCpuImpl collService{&comm};
-    comm.collService = &collService;
-    SnapShotComm snapShotComm;
-    u32 step = 1;
-
-    CommParams commParams("test_comm_id", 0, 4, 0, DevType::DEV_TYPE_950, false, true);
-    HcclCommConfig config;
-    strcpy(config.reserved, "test_reserved");
-    config.hcclBufferSize = 1024;
-    config.hcclDeterministic = 1;
-    strcpy(config.hcclCommName, "test_comm_name");
-    strcpy(config.hcclUdi, "test_udi");
-
-    RankTableInfo ranktableInfo;
-    ranktableInfo.version = "2.0";
-    ranktableInfo.rankCount = 0;
-
-    TopoInfo topoInfo;
-    topoInfo.version = "2.0";
-    topoInfo.peerCount = 0;
-    topoInfo.edgeCount = 0;
+    SETUP_SNAPSHOT_COMM_PARAMS(collService);
 
     snapShotComm.rankTableInfo = ranktableInfo;
     snapShotComm.topoInfo = topoInfo;
@@ -1148,7 +1125,7 @@ TEST(CommunicatorImplTest, RecoverComm_SubCommNormalCase)
     MOCKER(HrtGetDevice).stubs().will(returnValue(0));
     MOCKER(HrtOpenTsdProcess).stubs().with(mockcpp::any(), mockcpp::any()).will(returnValue(HcclResult::HCCL_SUCCESS));
     MOCKER(HrtRaTlvInit).stubs().with(mockcpp::any()).will(returnValue(HcclResult::HCCL_SUCCESS));
-    MOCKER(HrtGetDevicePhyIdByIndex).stubs().with(mockcpp::any()).will(returnValue(static_cast<DevId>(1)));
+    MOCKER(HrtGetDevicePhyIdByUserDevId).stubs().with(mockcpp::any()).will(returnValue(static_cast<DevId>(1)));
     MOCKER(RaInit).stubs().with(mockcpp::any()).will(returnValue(0));
     MOCKER(RaTlvInit).stubs().with(mockcpp::any()).will(returnValue(0));
     MOCKER_CPP(&CommunicatorImpl::RecoverRankGraphData).stubs().will(returnValue(HcclResult::HCCL_SUCCESS));
@@ -1165,30 +1142,11 @@ TEST(CommunicatorImplTest, RecoverComm_SubCommNormalCase)
         .stubs()
         .with(mockcpp::any(), mockcpp::any(), mockcpp::any())
         .will(returnValue(HcclResult::HCCL_SUCCESS));
-    MOCKER(HrtGetDevicePhyIdByIndex).stubs().will(returnValue(static_cast<DevId>(1)));
+    MOCKER(HrtGetDevicePhyIdByUserDevId).stubs().will(returnValue(static_cast<DevId>(1)));
     CommunicatorImpl comm;
     comm.RegisterAcceStateCallBack(CommunicatorCallback());
     CollServiceAiCpuImpl collService{&comm};
-    comm.collService = &collService;
-    SnapShotComm snapShotComm;
-    u32 step = 1;
-
-    CommParams commParams("test_comm_id", 0, 4, 0, DevType::DEV_TYPE_950, false, true);
-    HcclCommConfig config;
-    strcpy(config.reserved, "test_reserved");
-    config.hcclBufferSize = 1024;
-    config.hcclDeterministic = 1;
-    strcpy(config.hcclCommName, "test_comm_name");
-    strcpy(config.hcclUdi, "test_udi");
-
-    RankTableInfo ranktableInfo;
-    ranktableInfo.version = "2.0";
-    ranktableInfo.rankCount = 0;
-
-    TopoInfo topoInfo;
-    topoInfo.version = "2.0";
-    topoInfo.peerCount = 0;
-    topoInfo.edgeCount = 0;
+    SETUP_SNAPSHOT_COMM_PARAMS(collService);
 
     snapShotComm.rankTableInfo = ranktableInfo;
     snapShotComm.topoInfo = topoInfo;
@@ -2363,7 +2321,7 @@ TEST(CommunicatorImplTest, St_CommunicatorImpl_When_EnableSuperFastLoad_Expect_L
     u64 fakeStmMode = 3;
     MOCKER(HrtGetStreamId).stubs().will(returnValue(fakeId));
     MOCKER(HrtGetDevice).stubs().will(returnValue(fakeDevLogId));
-    MOCKER(HrtGetDevicePhyIdByIndex).stubs().will(returnValue(static_cast<DevId>(fakeDevPhyId)));
+    MOCKER(HrtGetDevicePhyIdByUserDevId).stubs().will(returnValue(static_cast<DevId>(fakeDevPhyId)));
     MOCKER(HrtStreamGetSqId).stubs().will(returnValue(fakeSqId));
     MOCKER(HrtStreamDestroy).stubs();
     MOCKER_CPP(&CommunicatorImpl::ExecAlgSelect).stubs().will(ignoreReturnValue());
@@ -2376,844 +2334,7 @@ TEST(CommunicatorImplTest, St_CommunicatorImpl_When_EnableSuperFastLoad_Expect_L
             const CollAlgOperator& op, const CollAlgParams& params, const string& algName, InsQuePtr queue))
         .stubs()
         .will(invoke(Orchestrate));
-    MOCKER_CPP(&CcuInsPreprocessor::Preprocess).stubs().with().will(ignoreReturnValue());
-    MOCKER_CPP(&HcclCommunicator::RegistTaskAbortHandler).stubs().with(mockcpp::any()).will(ignoreReturnValue());
-    MOCKER_CPP(&HcclCommunicator::UnRegistTaskAbortHandler).stubs().with(mockcpp::any()).will(ignoreReturnValue());
-
-    CommParams commInnerParams;
-    Hccl::HcclCommunicator commInner(commInnerParams);
-
-    CommunicatorImpl& comm = *commInner.pimpl.get();
-    comm.devLogicId = 0;
-    comm.rankSize = 4;
-    comm.InitMirrorTaskManager();
-    comm.InitProfilingReporter();
-    comm.InitStreamManager();
-    comm.InitNotifyManager();
-    comm.CollAlgComponentInit();
-    comm.InitSocketManager();
-    comm.notifyTimeoutCfg.notifyTimeout = 2333;
-    comm.currentCollOperator = std::make_unique<CollOperator>();
-    comm.currentCollOperator->opType = OpType::ALLREDUCE;
-    CollServiceAiCpuImpl collService{&comm};
-    comm.collService = &collService;
-    comm.status = CommStatus::COMM_READY;
-    CollOpParams opParams{};
-    u32 sendBuffer = 10;
-    opParams.sendBuf = static_cast<void*>(&sendBuffer);
-    u32 recvBuffer = 20;
-    opParams.recvBuf = static_cast<void*>(&recvBuffer);
-    opParams.count = 536870912;
-    opParams.dataType = Hccl::DataType::INT16;
-    opParams.opType = OpType::ALLREDUCE;
-    opParams.reduceOp = ReduceOp::MIN;
-    uint64_t tokenValue = 111;
-    CcuTaskParam ccuTaskParam{};
-    ccuTaskParam.dieId = 1;
-    ccuTaskParam.missionId = 1;
-    ccuTaskParam.instStartId = 14;
-    ccuTaskParam.instCnt = 126;
-    ccuTaskParam.key = 527697854;
-    ccuTaskParam.argSize;
-    ccuTaskParam.argSize = 13;
-    ccuTaskParam.args[0] = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(const_cast<void*>(opParams.sendBuf)));
-    ccuTaskParam.args[1] = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(const_cast<void*>(opParams.recvBuf)));
-    ccuTaskParam.args[2] = tokenValue;
-    ccuTaskParam.args[3] = 4096;
-    ccuTaskParam.args[4] = 0;
-    ccuTaskParam.args[5] = 0;
-    ccuTaskParam.args[6] = 2199023255552;
-    ccuTaskParam.args[7] = 4096;
-    ccuTaskParam.args[8] = 0;
-    ccuTaskParam.args[9] = 0;
-    ccuTaskParam.args[10] = 0;
-    ccuTaskParam.args[11] = 0;
-    ccuTaskParam.args[12] = 0;
-
-    comm.ccuParamsMappingKey
-        = {static_cast<std::uint32_t>(opParams.reduceOp), static_cast<std::uint32_t>(opParams.dataType),
-           static_cast<std::uint32_t>(opParams.count + 1)};
-    std::vector<std::vector<CcuTaskParam>> ccuParams1{};
-    std::vector<std::vector<CcuProfilingInfo>> ccuProfilingInfo1{};
-    ccuParams1.push_back({ccuTaskParam, ccuTaskParam});
-    ccuParams1.push_back({ccuTaskParam});
-    ccuProfilingInfo1.resize(2);
-    comm.saveCCUParams(std::move(ccuParams1), std::move(ccuProfilingInfo1), 0, true);
-
-    comm.ccuParamsMappingKey
-        = {static_cast<std::uint32_t>(opParams.reduceOp), static_cast<std::uint32_t>(opParams.dataType),
-           static_cast<std::uint32_t>(opParams.count + 1)};
-    std::vector<std::vector<CcuTaskParam>> ccuParams2{};
-    ccuParams2.push_back({ccuTaskParam});
-    ccuParams2.push_back({ccuTaskParam, ccuTaskParam});
-    ccuParams2.push_back({ccuTaskParam, ccuTaskParam, ccuTaskParam});
-    std::vector<std::vector<CcuProfilingInfo>> ccuProfilingInfo2{};
-    ccuProfilingInfo2.resize(3);
-    comm.saveCCUParams(std::move(ccuParams2), std::move(ccuProfilingInfo2), 0, true);
-    comm.saveCCUParams(std::move(ccuParams2), std::move(ccuProfilingInfo2), 0, true);
-
-    comm.ccuParamsMappingKey
-        = {static_cast<std::uint32_t>(opParams.reduceOp), static_cast<std::uint32_t>(opParams.dataType),
-           static_cast<std::uint32_t>(opParams.count)};
-
-    std::vector<std::vector<CcuTaskParam>> ccuParams{};
-    ccuParams.push_back({ccuTaskParam});
-    ccuParams.push_back({ccuTaskParam, ccuTaskParam});
-    ccuParams.push_back({ccuTaskParam, ccuTaskParam, ccuTaskParam});
-    std::vector<std::vector<CcuProfilingInfo>> ccuProfilingInfo3{};
-    ccuProfilingInfo3.resize(3);
-    ccuProfilingInfo3[0].resize(1);
-    ccuProfilingInfo3[1].resize(2);
-    ccuProfilingInfo3[2].resize(3);
-    comm.saveCCUParams(std::move(ccuParams), std::move(ccuProfilingInfo3), 0, true);
-
-    Stream stream(fakePtr);
-    stream.SetStmMode(fakeStmMode);
-    auto streamUnique = std::make_unique<Stream>(stream.GetPtr());
-    comm.streamManager = std::make_unique<StreamManager>(&comm);
-    comm.streamManager->opbase->RegisterMaster(std::move(streamUnique));
-    for (int i = 0; i < 10; ++i) {
-        comm.streamManager->opbase->GetOrCreateSlave();
-    }
-    std::shared_ptr<Buffer> buffer = DevBuffer::Create(0x100, 10);
-    comm.dataBufferManager = std::make_unique<DataBufManager>();
-    comm.dataBufferManager->Register("testTag", BufferType::SCRATCH, buffer);
-
-    comm.superFasterLoad = true;
-    comm.taskExceptionEnv = true;
-    comm.enableProfilingEnv = true;
-    comm.cclBuffer = DevBuffer::Create(0x100, 0x100);
-    comm.cclBufferSize = 0x100;
-    comm.collServices.emplace(AcceleratorState::CCU_MS, std::make_unique<CollServiceDeviceMode>(&comm));
-    comm.collServices.emplace(AcceleratorState::CCU_SCHED, std::make_unique<CollServiceDeviceMode>(&comm));
-    comm.opExecuteConfig.accState = AcceleratorState::CCU_SCHED;
-    comm.collService = comm.collServices[AcceleratorState::CCU_SCHED].get();
-
-    for (int i = 0; i < 3; ++i) {
-        u32 sendBuffer = i;
-        opParams.sendBuf = static_cast<void*>(&sendBuffer);
-        u32 recvBuffer = i;
-        opParams.recvBuf = static_cast<void*>(&recvBuffer);
-        CachedCCUParams& sendCcuParams = comm.colCcuParamMapping[opParams.opType][{
-            static_cast<std::uint32_t>(opParams.reduceOp), static_cast<std::uint32_t>(opParams.dataType),
-            static_cast<std::uint32_t>(opParams.count)}];
-        EXPECT_EQ(
-            HcclAllReduceV2(
-                opParams.sendBuf, opParams.recvBuf, opParams.count, HcclDataType::HCCL_DATA_TYPE_INT16,
-                HcclReduceOp::HCCL_REDUCE_MIN, static_cast<void*>(&commInner), fakePtr),
-            HcclResult::HCCL_SUCCESS);
-        EXPECT_EQ(sendCcuParams.ccuParams[0].dieId, 1);
-        EXPECT_EQ(sendCcuParams.ccuParams[0].missionId, 1);
-        EXPECT_EQ(sendCcuParams.ccuParams[0].timeout, comm.notifyTimeoutCfg.notifyTimeout);
-        EXPECT_EQ(sendCcuParams.ccuParams[0].instStartId, 14);
-        EXPECT_EQ(sendCcuParams.ccuParams[0].instCnt, 126);
-        EXPECT_EQ(sendCcuParams.ccuParams[0].key, 527697854);
-        EXPECT_EQ(sendCcuParams.ccuParams[0].argSize, 13);
-        EXPECT_EQ(
-            sendCcuParams.ccuParams[0].args[0],
-            static_cast<uint64_t>(reinterpret_cast<uintptr_t>(const_cast<void*>(opParams.sendBuf))));
-        EXPECT_EQ(
-            sendCcuParams.ccuParams[0].args[1],
-            static_cast<uint64_t>(reinterpret_cast<uintptr_t>(const_cast<void*>(opParams.recvBuf))));
-        EXPECT_EQ(sendCcuParams.ccuParams[0].args[2], tokenValue);
-        EXPECT_EQ(sendCcuParams.ccuParams[0].args[3], 4096);
-        EXPECT_EQ(sendCcuParams.ccuParams[0].args[4], 0);
-        EXPECT_EQ(sendCcuParams.ccuParams[0].args[5], 0);
-        EXPECT_EQ(sendCcuParams.ccuParams[0].args[6], 2199023255552);
-        EXPECT_EQ(sendCcuParams.ccuParams[0].args[7], 4096);
-        EXPECT_EQ(sendCcuParams.ccuParams[0].args[8], 0);
-        EXPECT_EQ(sendCcuParams.ccuParams[0].args[9], 0);
-        EXPECT_EQ(sendCcuParams.ccuParams[0].args[10], 0);
-        EXPECT_EQ(sendCcuParams.ccuParams[0].args[11], 0);
-        EXPECT_EQ(sendCcuParams.ccuParams[0].args[12], 0);
-    }
-
-    comm.superFasterLoad = false;
-    comm.taskExceptionEnv = true;
-    comm.enableProfilingEnv = true;
-}
-
-TEST(CommunicatorImplTest, St_LoadOffloadCollOp_When_dataTpye_fail_Expect_HCCL_E_PARA)
-{
-    // 前置条件
-    CommunicatorImpl comm;
-    comm.devLogicId = 0;
-    comm.rankSize = 2;
-    comm.InitMirrorTaskManager();
-    comm.InitProfilingReporter();
-    CollServiceAiCpuImpl collService{&comm};
-    comm.collService = &collService;
-    comm.opExecuteConfig.accState = AcceleratorState::AICPU_TS;
-    MOCKER_CPP(&CommunicatorImpl::ExecAlgSelect).stubs().will(ignoreReturnValue());
-    comm.status = CommStatus::COMM_READY;
-    MOCKER(HrtMemAsyncCopy).stubs();
-    CollOpParams opParams;
-    u32 buffer = 10;
-    opParams.sendBuf = static_cast<void*>(&buffer);
-    opParams.recvBuf = static_cast<void*>(&buffer);
-    opParams.count = 1;
-    opParams.dataType = DataType::INT64;
-    opParams.opType = OpType::ALLREDUCE;
-    std::string opTag = "";
-
-    // 执行步骤
-    auto ret = comm.LoadOffloadCollOp(opTag, opParams, nullptr);
-
-    // 后置验证
-    EXPECT_EQ(ret, HcclResult::HCCL_E_PARA);
-}
-
-TEST(CommunicatorImplTest, St_AppendLocalDieId_When_OneP_return)
-{
-    CommunicatorImpl comm;
-    comm.rankSize = 1;
-
-    EXPECT_NO_THROW(comm.AppendLocalDieIdForLinks());
-}
-
-TEST(CommunicatorImplTest, St_CheckAcceleratorConsistency)
-{
-    CommunicatorImpl comm;
-    EXPECT_NO_THROW(comm.CheckAcceleratorConsistency(AcceleratorState::AIV, AcceleratorState::AIV));
-}
-
-TEST(CommunicatorImplTest, St_GetNetLayers_When_InputValue_Expect_Return_HCCL_SUCCESS)
-{
-    CommunicatorImpl comm;
-    comm.devLogicId = 0;
-    HcclCommConfig config;
-    CommParams params;
-
-    comm.rankGraph = make_unique<RankGraph>(0);
-    u32 netLayer = 0;
-    string netInstId = "test";
-    s32 rankId = 0;
-    s32 localId = 0;
-    DeviceId deviceId = 0;
-    auto netInstance = std::make_shared<InnerNetInstance>(netLayer, netInstId);
-    shared_ptr<NetInstance::Peer> peer0 = make_shared<NetInstance::Peer>(rankId, localId, localId, deviceId);
-    peer0->AddNetInstance(netInstance);
-    netInstance->AddRankId(peer0->GetRankId());
-    comm.rankGraph->AddPeer(peer0);
-    comm.rankGraph->AddNetInstance(netInstance);
-
-    comm.rankGraph->netInsts_[netLayer].emplace(netInstId, netInstance);
-
-    uint32_t* netLayers = nullptr;
-    uint32_t netLayerNum;
-    auto ret = comm.GetNetLayers(&netLayers, &netLayerNum);
-    EXPECT_EQ(netLayers[0], 0);
-    EXPECT_EQ(netLayerNum, 1);
-    EXPECT_EQ(ret, HCCL_SUCCESS);
-}
-
-TEST(CommunicatorImplTest, St_GetInstSizeByNetLayer_When_InputValue_Expect_Return_HCCL_SUCCESS)
-{
-    CommunicatorImpl comm;
-    comm.devLogicId = 0;
-    HcclCommConfig config;
-    CommParams params;
-
-    comm.rankGraph = make_unique<RankGraph>(0);
-    u32 netLayer = 0;
-    string netInstId = "test";
-    s32 rankId = 0;
-    s32 localId = 0;
-    DeviceId deviceId = 0;
-    auto netInstance = std::make_shared<InnerNetInstance>(netLayer, netInstId);
-    shared_ptr<NetInstance::Peer> peer0 = make_shared<NetInstance::Peer>(rankId, localId, localId, deviceId);
-    peer0->AddNetInstance(netInstance);
-    netInstance->AddRankId(peer0->GetRankId());
-    comm.rankGraph->AddPeer(peer0);
-    comm.rankGraph->AddNetInstance(netInstance);
-
-    comm.rankGraph->netInsts_[netLayer].emplace(netInstId, netInstance);
-
-    uint32_t rankNum = 0;
-    auto ret = comm.GetInstSizeByNetLayer(netLayer, &rankNum);
-    EXPECT_EQ(rankNum, 1);
-    EXPECT_EQ(ret, HCCL_SUCCESS);
-}
-
-TEST(CommunicatorImplTest, St_GetInstRanksByNetLayer_When_InputValue_Expect_Return_HCCL_SUCCESS)
-{
-    CommunicatorImpl comm;
-    comm.devLogicId = 0;
-    HcclCommConfig config;
-    CommParams params;
-
-    comm.rankGraph = make_unique<RankGraph>(0);
-    u32 netLayer = 0;
-    string netInstId = "test";
-    s32 rankId = 0;
-    s32 localId = 0;
-    DeviceId deviceId = 0;
-    auto netInstance = std::make_shared<InnerNetInstance>(netLayer, netInstId);
-    shared_ptr<NetInstance::Peer> peer0 = make_shared<NetInstance::Peer>(rankId, localId, localId, deviceId);
-    peer0->AddNetInstance(netInstance);
-    netInstance->AddRankId(peer0->GetRankId());
-    comm.rankGraph->AddPeer(peer0);
-    comm.rankGraph->AddNetInstance(netInstance);
-
-    comm.rankGraph->netInsts_[netLayer].emplace(netInstId, netInstance);
-
-    uint32_t* ranks = nullptr;
-    uint32_t rankNum;
-    auto ret = comm.GetInstRanksByNetLayer(netLayer, &ranks, &rankNum);
-    EXPECT_EQ(ranks[0], 0);
-    EXPECT_EQ(rankNum, 1);
-    EXPECT_EQ(ret, HCCL_SUCCESS);
-}
-
-TEST(CommunicatorImplTest, St_GetInstRanksByNetLayer_When_InvalidLayer_Expect_Return_HCCL_E_PTR)
-{
-    CommunicatorImpl comm;
-    comm.devLogicId = 0;
-    HcclCommConfig config;
-    CommParams params;
-
-    comm.rankGraph = make_unique<RankGraph>(0);
-    u32 netLayer = 0;
-    string netInstId = "test";
-    s32 rankId = 0;
-    s32 localId = 0;
-    DeviceId deviceId = 0;
-    auto netInstance = std::make_shared<InnerNetInstance>(netLayer, netInstId);
-    shared_ptr<NetInstance::Peer> peer0 = make_shared<NetInstance::Peer>(rankId, localId, localId, deviceId);
-    peer0->AddNetInstance(netInstance);
-    netInstance->AddRankId(peer0->GetRankId());
-    comm.rankGraph->AddPeer(peer0);
-    comm.rankGraph->AddNetInstance(netInstance);
-
-    comm.rankGraph->netInsts_[netLayer].emplace(netInstId, netInstance);
-
-    netLayer = 3;
-    uint32_t* ranks = nullptr;
-    uint32_t rankNum;
-    auto ret = comm.GetInstRanksByNetLayer(netLayer, &ranks, &rankNum);
-    EXPECT_EQ(ret, HCCL_E_PTR);
-}
-
-TEST(CommunicatorImplTest, St_GetInstTopoTypeByNetLayer_When_InputValue_Expect_Return_HCCL_SUCCESS)
-{
-    CommunicatorImpl comm;
-    comm.devLogicId = 0;
-    HcclCommConfig config;
-    CommParams params;
-
-    comm.rankGraph = make_unique<RankGraph>(0);
-    u32 netLayer = 0;
-    string netInstId = "test";
-    s32 rankId = 0;
-    s32 localId = 0;
-    DeviceId deviceId = 0;
-    auto netInstance = std::make_shared<InnerNetInstance>(netLayer, netInstId);
-    shared_ptr<NetInstance::Peer> peer0 = make_shared<NetInstance::Peer>(rankId, localId, localId, deviceId);
-    peer0->AddNetInstance(netInstance);
-    netInstance->AddRankId(peer0->GetRankId());
-    comm.rankGraph->AddPeer(peer0);
-    comm.rankGraph->AddNetInstance(netInstance);
-
-    comm.rankGraph->netInsts_[netLayer].emplace(netInstId, netInstance);
-
-    uint32_t netType;
-    auto ret = comm.GetInstTopoTypeByNetLayer(netLayer, &netType);
-    EXPECT_EQ(ret, HCCL_SUCCESS);
-    EXPECT_EQ(netType, COMM_TOPO_CUSTOM);
-}
-
-TEST(CommunicatorImplTest, St_GetInstTopoTypeByNetLayer_When_InvalidLayer_Expect_Return_HCCL_E_PTR)
-{
-    CommunicatorImpl comm;
-    comm.devLogicId = 0;
-    HcclCommConfig config;
-    CommParams params;
-
-    comm.rankGraph = make_unique<RankGraph>(0);
-    u32 netLayer = 0;
-    string netInstId = "test";
-    s32 rankId = 0;
-    s32 localId = 0;
-    DeviceId deviceId = 0;
-    auto netInstance = std::make_shared<InnerNetInstance>(netLayer, netInstId);
-    shared_ptr<NetInstance::Peer> peer0 = make_shared<NetInstance::Peer>(rankId, localId, localId, deviceId);
-    peer0->AddNetInstance(netInstance);
-    netInstance->AddRankId(peer0->GetRankId());
-    comm.rankGraph->AddPeer(peer0);
-    comm.rankGraph->AddNetInstance(netInstance);
-    comm.rankGraph->netInsts_[netLayer].emplace(netInstId, netInstance);
-
-    netLayer = 3;
-    uint32_t netType;
-    auto ret = comm.GetInstTopoTypeByNetLayer(netLayer, &netType);
-    EXPECT_EQ(ret, HCCL_E_PTR);
-}
-
-TEST(CommunicatorImplTest, St_GetInstSizeListByNetLayer_When_InvalidLayer_Expect_ReturnHCCL_E_PARA)
-{
-    CommunicatorImpl comm;
-    comm.devLogicId = 0;
-    HcclCommConfig config;
-    CommParams params;
-
-    comm.rankGraph = make_unique<RankGraph>(0);
-    u32 netLayer = 0;
-    string netInstId = "test";
-    s32 rankId = 0;
-    s32 localId = 0;
-    DeviceId deviceId = 0;
-    auto netInstance = std::make_shared<InnerNetInstance>(netLayer, netInstId);
-    shared_ptr<NetInstance::Peer> peer0 = make_shared<NetInstance::Peer>(rankId, localId, localId, deviceId);
-    peer0->AddNetInstance(netInstance);
-    netInstance->AddRankId(peer0->GetRankId());
-    comm.rankGraph->AddPeer(peer0);
-    comm.rankGraph->AddNetInstance(netInstance);
-    comm.rankGraph->netInsts_[netLayer].emplace(netInstId, netInstance);
-
-    netLayer = 3;
-    uint32_t* instSizeList = nullptr;
-    uint32_t listSize;
-    auto ret = comm.GetInstSizeListByNetLayer(netLayer, &instSizeList, &listSize);
-    EXPECT_EQ(ret, HCCL_E_PARA);
-}
-
-TEST(CommunicatorImplTest, St_GetInstSizeListByNetLayer_When_InputValue_Expect_ReturnHCCL_SUCCESS)
-{
-    CommunicatorImpl comm;
-    comm.devLogicId = 0;
-    HcclCommConfig config;
-    CommParams params;
-
-    comm.rankGraph = make_unique<RankGraph>(0);
-    u32 netLayer = 0;
-    string netInstId = "test";
-    s32 rankId = 0;
-    s32 localId = 0;
-    DeviceId deviceId = 0;
-    auto netInstance = std::make_shared<InnerNetInstance>(netLayer, netInstId);
-    shared_ptr<NetInstance::Peer> peer0 = make_shared<NetInstance::Peer>(rankId, localId, localId, deviceId);
-    peer0->AddNetInstance(netInstance);
-    netInstance->AddRankId(peer0->GetRankId());
-    comm.rankGraph->AddPeer(peer0);
-    comm.rankGraph->AddNetInstance(netInstance);
-
-    comm.rankGraph->netInsts_[netLayer].emplace(netInstId, netInstance);
-
-    uint32_t* instSizeList = nullptr;
-    uint32_t listSize;
-    auto ret = comm.GetInstSizeListByNetLayer(netLayer, &instSizeList, &listSize);
-    EXPECT_EQ(instSizeList[0], 1);
-    EXPECT_EQ(listSize, 1);
-    EXPECT_EQ(ret, HCCL_SUCCESS);
-}
-
-TEST(CommunicatorImplTest, St_GetLinks_When_netLayer064Plus1_InputValue_Expect_Return_HCCL_SUCCESS)
-{
-    CommunicatorImpl comm;
-    comm.devLogicId = 0;
-    HcclCommConfig config;
-    CommParams params;
-
-    PhyTopo::GetInstance()->Clear();
-    RankGraphBuilder rankGraphBuilder;
-    string topoFilePath = "llt/ace/comop/hccl/orion/ut/framework/communicator/topo64plus1.json";
-    comm.rankGraph = rankGraphBuilder.Build(RANK_TABLE_4P_REPLACE_RANK1, topoFilePath, 0);
-    EXPECT_NE(comm.rankGraph, nullptr);
-
-    CommLink* linkList1 = nullptr;
-    uint32_t listSize1 = 0;
-    auto ret1 = comm.GetLinks(0, 2, 1, &linkList1, &listSize1); // 斜向 rank1为replace
-    EXPECT_EQ(listSize1, 0);                                    // 无连接
-    EXPECT_EQ(ret1, HCCL_SUCCESS);
-
-    CommLink* linkList = nullptr;
-    uint32_t listSize = 0;
-    auto ret2 = comm.GetLinks(0, 1, 3, &linkList, &listSize); // db到直连d
-    EXPECT_EQ(listSize, 1);                                   // 只有一条peer2peer
-    EXPECT_EQ(ret2, HCCL_SUCCESS);
-
-    CommLink* linkListD2D1 = nullptr;
-    uint32_t listSizeD2D1 = 0;
-    auto ret3 = comm.GetLinks(0, 2, 3, &linkListD2D1, &listSizeD2D1); // db到直连d X/Y轴
-    EXPECT_EQ(listSizeD2D1, 5);
-    EXPECT_EQ(ret3, HCCL_SUCCESS);
-
-    CommLink* linkListD2D2 = nullptr;
-    uint32_t listSizeD2D2 = 0;
-    auto ret4 = comm.GetLinks(0, 0, 3, &linkListD2D2, &listSizeD2D2); // db到直连d 斜向
-    EXPECT_EQ(listSizeD2D2, 4);
-    EXPECT_EQ(ret4, HCCL_SUCCESS);
-}
-
-TEST(CommunicatorImplTest, St_GetTopoInstsByLayer_When_InputValue_Expect_Return_HCCL_SUCCESS)
-{
-    CommunicatorImpl comm;
-    comm.devLogicId = 0;
-    HcclCommConfig config;
-    CommParams params;
-
-    comm.rankGraph = make_unique<RankGraph>(0);
-    u32 netLayer = 0;
-    string netInstId = "test";
-    s32 rankId = 0;
-    s32 localId = 0;
-    DeviceId deviceId = 0;
-
-    u32 topoInstId = 0;
-    auto topoInstance = std::make_shared<NetInstance::TopoInstance>(topoInstId);
-    std::unordered_map<u32, std::shared_ptr<NetInstance::TopoInstance>> topoInsts_;
-    topoInsts_[topoInstId] = topoInstance;
-
-    auto netInstance = std::make_shared<InnerNetInstance>(netLayer, netInstId);
-    netInstance->topoInsts_ = std::move(topoInsts_);
-
-    shared_ptr<NetInstance::Peer> peer0 = make_shared<NetInstance::Peer>(rankId, localId, localId, deviceId);
-    peer0->AddNetInstance(netInstance);
-    netInstance->AddRankId(peer0->GetRankId());
-
-    comm.rankGraph->AddPeer(peer0);
-    comm.rankGraph->AddNetInstance(netInstance);
-    comm.rankGraph->netInsts_[netLayer].emplace(netInstId, netInstance);
-
-    uint32_t* topoInsts = nullptr;
-    uint32_t topoInsNum = 0;
-    auto ret = comm.GetTopoInstsByLayer(netLayer, &topoInsts, &topoInsNum);
-
-    EXPECT_EQ(topoInsts[0], 0);
-    EXPECT_EQ(topoInsNum, 1);
-    EXPECT_EQ(ret, HCCL_SUCCESS);
-}
-
-TEST(CommunicatorImplTest, St_GetTopoInstsByLayer_When_InVaildLayer_Expect_Return_HCCL_E_PTR)
-{
-    CommunicatorImpl comm;
-    comm.devLogicId = 0;
-    HcclCommConfig config;
-    CommParams params;
-
-    comm.rankGraph = make_unique<RankGraph>(0);
-    u32 netLayer = 0;
-    string netInstId = "test";
-    s32 rankId = 0;
-    s32 localId = 0;
-    DeviceId deviceId = 0;
-
-    u32 topoInstId = 0;
-    auto topoInstance = std::make_shared<NetInstance::TopoInstance>(topoInstId);
-    std::unordered_map<u32, std::shared_ptr<NetInstance::TopoInstance>> topoInsts_;
-    topoInsts_[topoInstId] = topoInstance;
-
-    auto netInstance = std::make_shared<InnerNetInstance>(netLayer, netInstId);
-    netInstance->topoInsts_ = std::move(topoInsts_);
-
-    shared_ptr<NetInstance::Peer> peer0 = make_shared<NetInstance::Peer>(rankId, localId, localId, deviceId);
-    peer0->AddNetInstance(netInstance);
-    netInstance->AddRankId(peer0->GetRankId());
-
-    comm.rankGraph->AddPeer(peer0);
-    comm.rankGraph->AddNetInstance(netInstance);
-    comm.rankGraph->netInsts_[netLayer].emplace(netInstId, netInstance);
-
-    netLayer = 3;
-    uint32_t* topoInsts = nullptr;
-    uint32_t topoInsNum = 0;
-    auto ret = comm.GetTopoInstsByLayer(netLayer, &topoInsts, &topoInsNum);
-
-    EXPECT_EQ(ret, HCCL_E_PTR);
-}
-
-TEST(CommunicatorImplTest, St_GetTopoInstsByLayer_When_ErrorNetType_Expect_Return_HCCL_E_PARA)
-{
-    CommunicatorImpl comm;
-    comm.devLogicId = 0;
-    HcclCommConfig config;
-    CommParams params;
-
-    comm.rankGraph = make_unique<RankGraph>(0);
-    u32 netLayer = 1;
-    string netInstId = "layer1";
-    s32 rankId = 0;
-    s32 localId = 0;
-    DeviceId deviceId = 0;
-
-    u32 topoInstId = 0;
-    auto topoInstance = std::make_shared<NetInstance::TopoInstance>(topoInstId);
-    topoInstance->topoType = Hccl::TopoType::CLOS;
-    std::unordered_map<u32, std::shared_ptr<NetInstance::TopoInstance>> topoInsts_;
-    topoInsts_[topoInstId] = topoInstance;
-    auto netInstance = std::make_shared<ClosNetInstance>(netLayer, netInstId);
-    netInstance->topoInsts_ = std::move(topoInsts_);
-
-    shared_ptr<NetInstance::Peer> peer0 = make_shared<NetInstance::Peer>(rankId, localId, localId, deviceId);
-    peer0->AddNetInstance(netInstance);
-    netInstance->AddRankId(peer0->GetRankId());
-    comm.rankGraph->AddPeer(peer0);
-    comm.rankGraph->AddNetInstance(netInstance);
-    comm.rankGraph->netInsts_[netLayer].emplace(netInstId, netInstance);
-
-    uint32_t* topoInsts = nullptr;
-    uint32_t topoInsNum = 0;
-    auto ret = comm.GetTopoInstsByLayer(netLayer, &topoInsts, &topoInsNum);
-    EXPECT_EQ(ret, HCCL_E_PARA);
-}
-
-TEST(CommunicatorImplTest, St_GetTopoType_When_ErrorNetType_Expect_Return_HCCL_E_PARA)
-{
-    CommunicatorImpl comm;
-    comm.devLogicId = 0;
-    HcclCommConfig config;
-    CommParams params;
-
-    comm.rankGraph = make_unique<RankGraph>(0);
-    u32 netLayer = 1;
-    string netInstId = "layer1";
-    s32 rankId = 0;
-    s32 localId = 0;
-    DeviceId deviceId = 0;
-
-    u32 topoInstId = 0;
-    auto topoInstance = std::make_shared<NetInstance::TopoInstance>(topoInstId);
-    topoInstance->topoType = Hccl::TopoType::CLOS;
-    std::unordered_map<u32, std::shared_ptr<NetInstance::TopoInstance>> topoInsts_;
-    topoInsts_[topoInstId] = topoInstance;
-    auto netInstance = std::make_shared<ClosNetInstance>(netLayer, netInstId);
-    netInstance->topoInsts_ = std::move(topoInsts_);
-
-    shared_ptr<NetInstance::Peer> peer0 = make_shared<NetInstance::Peer>(rankId, localId, localId, deviceId);
-    peer0->AddNetInstance(netInstance);
-    netInstance->AddRankId(peer0->GetRankId());
-    comm.rankGraph->AddPeer(peer0);
-    comm.rankGraph->AddNetInstance(netInstance);
-    comm.rankGraph->netInsts_[netLayer].emplace(netInstId, netInstance);
-
-    CommTopo topoType;
-    auto ret = comm.GetTopoType(netLayer, topoInstId, &topoType);
-    EXPECT_EQ(ret, HCCL_E_PARA);
-}
-
-TEST(CommunicatorImplTest, St_GetTopoType_When_InvalidLayer_Expect_Return_HCCL_E_PTR)
-{
-    CommunicatorImpl comm;
-    comm.devLogicId = 0;
-    HcclCommConfig config;
-    CommParams params;
-
-    comm.rankGraph = make_unique<RankGraph>(0);
-    u32 netLayer = 0;
-    string netInstId = "test";
-    s32 rankId = 0;
-    s32 localId = 0;
-    DeviceId deviceId = 0;
-
-    u32 topoInstId = 0;
-    auto topoInstance = std::make_shared<NetInstance::TopoInstance>(topoInstId);
-    std::unordered_map<u32, std::shared_ptr<NetInstance::TopoInstance>> topoInsts_;
-    topoInsts_[topoInstId] = topoInstance;
-    auto netInstance = std::make_shared<InnerNetInstance>(netLayer, netInstId);
-    netInstance->topoInsts_ = std::move(topoInsts_);
-
-    shared_ptr<NetInstance::Peer> peer0 = make_shared<NetInstance::Peer>(rankId, localId, localId, deviceId);
-    peer0->AddNetInstance(netInstance);
-    netInstance->AddRankId(peer0->GetRankId());
-    comm.rankGraph->AddPeer(peer0);
-    comm.rankGraph->AddNetInstance(netInstance);
-    comm.rankGraph->netInsts_[netLayer].emplace(netInstId, netInstance);
-
-    netLayer = 3;
-    CommTopo topoType;
-    auto ret = comm.GetTopoType(netLayer, topoInstId, &topoType);
-    EXPECT_EQ(ret, HCCL_E_PTR);
-}
-
-TEST(CommunicatorImplTest, St_GetTopoType_When_InputValue_Expect_Return_HCCL_SUCCESS)
-{
-    CommunicatorImpl comm;
-    comm.devLogicId = 0;
-    HcclCommConfig config;
-    CommParams params;
-
-    comm.rankGraph = make_unique<RankGraph>(0);
-    u32 netLayer = 0;
-    string netInstId = "test";
-    s32 rankId = 0;
-    s32 localId = 0;
-    DeviceId deviceId = 0;
-
-    u32 topoInstId = 0;
-    auto topoInstance = std::make_shared<NetInstance::TopoInstance>(topoInstId);
-    std::unordered_map<u32, std::shared_ptr<NetInstance::TopoInstance>> topoInsts_;
-    topoInstance->topoType = Hccl::TopoType::CLOS;
-    topoInsts_[topoInstId] = topoInstance;
-
-    auto netInstance = std::make_shared<InnerNetInstance>(netLayer, netInstId);
-    netInstance->topoInsts_ = std::move(topoInsts_);
-
-    shared_ptr<NetInstance::Peer> peer0 = make_shared<NetInstance::Peer>(rankId, localId, localId, deviceId);
-    peer0->AddNetInstance(netInstance);
-    netInstance->AddRankId(peer0->GetRankId());
-
-    comm.rankGraph->AddPeer(peer0);
-    comm.rankGraph->AddNetInstance(netInstance);
-    comm.rankGraph->netInsts_[netLayer].emplace(netInstId, netInstance);
-
-    CommTopo topoType;
-    auto ret = comm.GetTopoType(netLayer, topoInstId, &topoType);
-    EXPECT_EQ(ret, HCCL_SUCCESS);
-}
-
-TEST(CommunicatorImplTest, St_GetRanksByTopoInst_When_InputValue_Expect_Return_HCCL_SUCCESS)
-{
-    CommunicatorImpl comm;
-    comm.devLogicId = 0;
-    HcclCommConfig config;
-    CommParams params;
-
-    comm.rankGraph = make_unique<RankGraph>(0);
-    u32 netLayer = 0;
-    string netInstId = "test";
-    s32 rankId = 0;
-    s32 localId = 0;
-    DeviceId deviceId = 0;
-
-    u32 topoInstId = 0;
-    auto topoInstance = std::make_shared<NetInstance::TopoInstance>(topoInstId);
-    std::unordered_map<u32, std::shared_ptr<NetInstance::TopoInstance>> topoInsts_;
-    std::set<RankId> rankSet = {0};
-    topoInstance->ranks = std::move(rankSet);
-    topoInsts_[topoInstId] = topoInstance;
-    auto netInstance = std::make_shared<InnerNetInstance>(netLayer, netInstId);
-    netInstance->topoInsts_ = std::move(topoInsts_);
-
-    shared_ptr<NetInstance::Peer> peer0 = make_shared<NetInstance::Peer>(rankId, localId, localId, deviceId);
-    peer0->AddNetInstance(netInstance);
-    netInstance->AddRankId(peer0->GetRankId());
-    comm.rankGraph->AddPeer(peer0);
-    comm.rankGraph->AddNetInstance(netInstance);
-    comm.rankGraph->netInsts_[netLayer].emplace(netInstId, netInstance);
-
-    uint32_t* ranks = nullptr;
-    uint32_t rankNum;
-    auto ret = comm.GetRanksByTopoInst(netLayer, topoInstId, &ranks, &rankNum);
-    EXPECT_EQ(ranks[0], 0);
-    EXPECT_EQ(rankNum, 1);
-    EXPECT_EQ(ret, HCCL_SUCCESS);
-}
-
-TEST(CommunicatorImplTest, St_GetRanksByTopoInst_When_InvalidLayer_Expect_Return_HCCL_E_PTR)
-{
-    CommunicatorImpl comm;
-    comm.devLogicId = 0;
-    HcclCommConfig config;
-    CommParams params;
-
-    comm.rankGraph = make_unique<RankGraph>(0);
-    u32 netLayer = 0;
-    string netInstId = "test";
-    s32 rankId = 0;
-    s32 localId = 0;
-    DeviceId deviceId = 0;
-
-    u32 topoInstId = 0;
-    auto topoInstance = std::make_shared<NetInstance::TopoInstance>(topoInstId);
-    std::unordered_map<u32, std::shared_ptr<NetInstance::TopoInstance>> topoInsts_;
-    std::set<RankId> rankSet = {0};
-    topoInstance->ranks = std::move(rankSet);
-    topoInsts_[topoInstId] = topoInstance;
-    auto netInstance = std::make_shared<InnerNetInstance>(netLayer, netInstId);
-    netInstance->topoInsts_ = std::move(topoInsts_);
-
-    shared_ptr<NetInstance::Peer> peer0 = make_shared<NetInstance::Peer>(rankId, localId, localId, deviceId);
-    peer0->AddNetInstance(netInstance);
-    netInstance->AddRankId(peer0->GetRankId());
-    comm.rankGraph->AddPeer(peer0);
-    comm.rankGraph->AddNetInstance(netInstance);
-    comm.rankGraph->netInsts_[netLayer].emplace(netInstId, netInstance);
-
-    netLayer = 3;
-    uint32_t* ranks = nullptr;
-    uint32_t rankNum;
-    auto ret = comm.GetRanksByTopoInst(netLayer, topoInstId, &ranks, &rankNum);
-    EXPECT_EQ(ret, HCCL_E_PTR);
-}
-
-TEST(CommunicatorImplTest, St_GetRanksByTopoInst_When_ErrorNetType_Expect_Return_HCCL_E_PARA)
-{
-    CommunicatorImpl comm;
-    comm.devLogicId = 0;
-    HcclCommConfig config;
-    CommParams params;
-
-    comm.rankGraph = make_unique<RankGraph>(0);
-    u32 netLayer = 1;
-    string netInstId = "layer1";
-    s32 rankId = 0;
-    s32 localId = 0;
-    DeviceId deviceId = 0;
-
-    u32 topoInstId = 0;
-    auto topoInstance = std::make_shared<NetInstance::TopoInstance>(topoInstId);
-    topoInstance->topoType = Hccl::TopoType::CLOS;
-    std::unordered_map<u32, std::shared_ptr<NetInstance::TopoInstance>> topoInsts_;
-    topoInsts_[topoInstId] = topoInstance;
-    auto netInstance = std::make_shared<ClosNetInstance>(netLayer, netInstId);
-    netInstance->topoInsts_ = std::move(topoInsts_);
-
-    shared_ptr<NetInstance::Peer> peer0 = make_shared<NetInstance::Peer>(rankId, localId, localId, deviceId);
-    peer0->AddNetInstance(netInstance);
-    netInstance->AddRankId(peer0->GetRankId());
-    comm.rankGraph->AddPeer(peer0);
-    comm.rankGraph->AddNetInstance(netInstance);
-    comm.rankGraph->netInsts_[netLayer].emplace(netInstId, netInstance);
-
-    uint32_t* ranks = nullptr;
-    uint32_t rankNum;
-    auto ret = comm.GetRanksByTopoInst(netLayer, topoInstId, &ranks, &rankNum);
-    EXPECT_EQ(ret, HCCL_E_PARA);
-}
-
-TEST(CommunicatorImplTest, st_GetAlgExecParam_When_Normal_Expect_ReturnHCCL_SUCCESS)
-{
-    CommunicatorImpl fakeComm;
-    TaskAbortHandler::GetInstance();
-    u32 fakeDevPhyId = 1;
-    u64 fakeNotifyHandleAddr = 100;
-    u32 fakeNotifyId = 1;
-    u64 fakeOffset = 200;
-    char fakeName[65] = "testRtsNotify";
-    MOCKER(HrtGetDevice).stubs().will(returnValue(0));
-    MOCKER(HrtStreamGetMode).stubs().will(returnValue((u64)1));
-    MOCKER(HrtNotifyCreate).stubs().will(returnValue((void*)(fakeNotifyHandleAddr)));
-    MOCKER(HrtNotifyCreateWithFlag).stubs().will(returnValue((void*)(fakeNotifyHandleAddr)));
-    MOCKER(HrtGetNotifyID).stubs().will(returnValue(fakeNotifyId));
-    MOCKER(HrtGetDevicePhyIdByIndex).stubs().will(returnValue(static_cast<DevId>(fakeDevPhyId)));
-    MOCKER(HrtIpcSetNotifyName).stubs().with(mockcpp::any(), outBoundP(fakeName, sizeof(fakeName)), mockcpp::any());
-    MOCKER(HrtNotifyGetOffset).stubs().will(returnValue(fakeOffset));
-    MOCKER(HrtGetDeviceType).stubs().will(returnValue(DevType(DevType::DEV_TYPE_950)));
-    MOCKER(HrtMemAsyncCopy).stubs();
-    MOCKER(HrtMemcpy).stubs().with(mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any());
-    void* addr = reinterpret_cast<void*>(0x12345678);
-    MOCKER(HrtMalloc).stubs().with(mockcpp::any(), mockcpp::any()).will(returnValue(addr));
-    MOCKER(HrtFree).stubs();
-
-    // 资源初始化
-    MOCKER_CPP(&CcuInsPreprocessor::Preprocess).stubs().with().will(ignoreReturnValue());
-    MOCKER_CPP(&AicpuInsPreprocessor::Preprocess).stubs().with().will(ignoreReturnValue());
-    MOCKER_CPP(&TaskAbortHandler::Register).stubs().with(mockcpp::any()).will(ignoreReturnValue());
-    MOCKER_CPP(&TaskAbortHandler::UnRegister).stubs().with(mockcpp::any()).will(ignoreReturnValue());
-
-    Buffer* buf = nullptr;
-    LocalRmaBuffer* rmaBuf = nullptr;
-    MOCKER_CPP(&DataBufManager::Get)
-        .stubs()
-        .with(mockcpp::any(), mockcpp::any(), mockcpp::any())
-        .will(returnValue(buf));
-    MOCKER_CPP(
-        &LocalRmaBufManager::Reg, LocalRmaBuffer
-                                      * (LocalRmaBufManager::*)(const string&, BufferType, std::shared_ptr<Buffer>,
-                                                                const PortData&, LinkProtocol))
-        .stubs()
-        .with(mockcpp::any(), mockcpp::any(), mockcpp::any())
-        .will(returnValue(rmaBuf));
+    SETUP_COMM_RESOURCE_MOCKS();
     RtsNotify notify(false);
     RtsNotify notify1(false);
     MOCKER_CPP(&HostDeviceSyncNotifyManager::GetHostWaitNotify).stubs().with().will(returnValue(&notify));

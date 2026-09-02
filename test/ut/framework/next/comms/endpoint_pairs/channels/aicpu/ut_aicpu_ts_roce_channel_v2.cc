@@ -47,7 +47,7 @@ protected:
         Hccl::DevType dev = Hccl::DevType::DEV_TYPE_950;
         MOCKER(Hccl::HrtGetDevice).stubs().will(returnValue(0));
         MOCKER(Hccl::HrtGetDeviceType).stubs().will(returnValue(dev));
-        MOCKER(Hccl::HrtGetDevicePhyIdByIndex)
+        MOCKER(Hccl::HrtGetDevicePhyIdByUserDevId)
             .stubs()
             .with(mockcpp::any())
             .will(returnValue(static_cast<Hccl::DevId>(0)));

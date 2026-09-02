@@ -90,6 +90,6 @@ std::string Stream::Describe() const
         devPhyId);
 }
 
-void Stream::InitDevPhyId() { devPhyId = HrtGetDevicePhyIdByIndex(HrtGetDevice()); }
+void Stream::InitDevPhyId() { devPhyId = HrtGetDevicePhyIdByUserDevId(HrtGetDevice()); }
 
 } // namespace Hccl

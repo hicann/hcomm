@@ -26,7 +26,7 @@ protected:
 
     virtual void SetUp()
     {
-        MOCKER(HrtGetDevicePhyIdByIndex).defaults().will(returnValue(static_cast<DevId>(0)));
+        MOCKER(HrtGetDevicePhyIdByUserDevId).defaults().will(returnValue(static_cast<DevId>(0)));
         MOCKER(RaGetInterfaceVersion).defaults().will(returnValue(static_cast<s32>(-1)));
         TpManager::GetInstance(0).Init();
         std::cout << "A Test case in TpManagerTest SetUP" << std::endl;

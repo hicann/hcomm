@@ -123,7 +123,7 @@ TEST_F(UbMemoryTransportMgrTest, should_return_success_when_calling_TransportsCo
 
     u64 res = 1;
     MOCKER(&CheckCollOperator).stubs().with().will(ignoreReturnValue());
-    MOCKER(&HrtGetDevicePhyIdByIndex).stubs().with().will(returnValue(static_cast<DevId>(1)));
+    MOCKER(&HrtGetDevicePhyIdByUserDevId).stubs().with().will(returnValue(static_cast<DevId>(1)));
     ReqHandleResult result = ReqHandleResult::COMPLETED;
     MOCKER(&HrtRaGetAsyncReqResult).stubs().with().will(returnValue(result));
     transportManager.ubMemLink2TransportMap[linkData]->rmtHandshakeMsg = comm.GetCurrentCollOperator()->GetUniqueId();

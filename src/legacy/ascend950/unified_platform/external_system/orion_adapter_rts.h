@@ -221,7 +221,8 @@ enum class HcclRtMemcpyKind {
     HCCL_RT_MEMCPY_ADDR_DEVICE_TO_DEVICE, /**< Level-2 address copy, device to device */
     HCCL_RT_MEMCPY_KIND_RESERVED,
 };
-DevId HrtGetDevicePhyIdByIndex(s32 deviceLogicId);
+DevId HrtGetDevicePhyIdByUserDevId(s32 userDevId);
+HcclResult HrtGetUserDevIdByPhyDevId(s32 devicePhyId, s32& userDevId);
 DevType HrtGetDeviceType();
 s32 HrtDeviceGetBareTgid();
 void HrtGetSocVer(std::string& socName);

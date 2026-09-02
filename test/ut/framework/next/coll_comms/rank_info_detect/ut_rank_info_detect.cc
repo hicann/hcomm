@@ -73,7 +73,7 @@ protected:
             .with(mockcpp::any(), mockcpp::any())
             .will(returnValue(hostSocketHandle));
         MOCKER(HrtGetDevice).stubs().with().will(returnValue(0));
-        MOCKER(HrtGetDevicePhyIdByIndex).stubs().with(mockcpp::any()).will(returnValue(static_cast<DevId>(0)));
+        MOCKER(HrtGetDevicePhyIdByUserDevId).stubs().with(mockcpp::any()).will(returnValue(static_cast<DevId>(0)));
         MOCKER(HrtRaInit).stubs().with(mockcpp::any()).will(ignoreReturnValue());
         MOCKER(HrtRaDeInit).stubs().with(mockcpp::any()).will(ignoreReturnValue());
         MOCKER(HrtGetDeviceType).stubs().will(returnValue((Hccl::DevType)Hccl::DevType::DEV_TYPE_950));

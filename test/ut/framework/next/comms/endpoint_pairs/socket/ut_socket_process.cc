@@ -82,7 +82,7 @@ HcclResult StubSocketMgrHrtGetDevice(s32* deviceLogicId)
     return HCCL_SUCCESS;
 }
 
-HcclResult StubSocketMgrHrtGetDevicePhyIdByIndex(u32 deviceLogicId, u32& devicePhyId)
+HcclResult StubSocketMgrHrtGetDevicePhyIdByUserDevId(u32 deviceLogicId, u32& devicePhyId)
 {
     (void)deviceLogicId;
     devicePhyId = 7;
@@ -335,7 +335,7 @@ TEST_F(SocketProcessTest, Ut_SocketMgr_Init_When_DevNet_Expect_DeviceInit)
     MOCKER(hrtGetDevicePhyIdByIndex)
         .stubs()
         .with(mockcpp::any(), mockcpp::any())
-        .will(invoke(StubSocketMgrHrtGetDevicePhyIdByIndex));
+        .will(invoke(StubSocketMgrHrtGetDevicePhyIdByUserDevId));
 
     HcclResult ret = socketMgr.Init();
 

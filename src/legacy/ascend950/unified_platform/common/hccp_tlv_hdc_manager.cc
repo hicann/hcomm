@@ -38,7 +38,7 @@ void HccpTlvHdcManager::Init(s32 deviceLogicId)
     }
 
     HRaTlvInitConfig cfg;
-    cfg.phyId = HrtGetDevicePhyIdByIndex(deviceLogicId);
+    cfg.phyId = HrtGetDevicePhyIdByUserDevId(deviceLogicId);
     cfg.mode = HrtNetworkMode::HDC;
     cfg.version = 1;
     tlvHandleMap[deviceLogicId] = HrtRaTlvInit(cfg);

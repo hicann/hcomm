@@ -106,6 +106,21 @@ MockMakeCcuConnection(hcomm::TpProtocol tpProtocol)
     return {std::move(connection), std::move(ccuJettys)};
 }
 
+#define SETUP_CCU_JETTY_MOCKS()                                                                 \
+    do {                                                                                        \
+        MOCKER(HcclGetThreadDeviceId).stubs().will(returnValue(0));                             \
+        MOCKER(HrtGetDevicePhyIdByUserDevId).stubs().will(returnValue(static_cast<s32>(0)));    \
+        void* rdmaHandle = reinterpret_cast<void*>(0x300);                                      \
+        MOCKER_CPP(&Hccl::RdmaHandleManager::GetByIp).stubs().will(returnValue(rdmaHandle));    \
+        MOCKER_CPP(&Hccl::RdmaHandleManager::IsHandleValid).stubs().will(returnValue(true));    \
+        MOCKER_CPP(&Hccl::RdmaHandleManager::GetJfcHandle)                                      \
+            .stubs()                                                                            \
+            .will(returnValue(static_cast<Hccl::JfcHandle>(0x400ULL)));                         \
+        MOCKER_CPP(&Hccl::RdmaHandleManager::GetTokenIdInfo)                                    \
+            .stubs()                                                                            \
+            .will(returnValue(std::make_pair(static_cast<Hccl::TokenIdHandle>(0x500ULL), 0U))); \
+    } while (0)
+
 TEST_F(CcuConnTest, Ut_GetStatus_When_CreateAndImportJettySuccess_Expect_Return_Connected)
 {
     auto resPair = MockMakeCcuConnection(hcomm::TpProtocol::RTP);
@@ -239,17 +254,7 @@ TEST_F(CcuConnTest, Ut_CcuJetty_SetMappedJettyPriority_When_NotCreated_SetsQos)
     jettyInfo.sqBufSize = 1024;
     jettyInfo.sqDepth = 4;
 
-    MOCKER(HcclGetThreadDeviceId).stubs().will(returnValue(0));
-    MOCKER(HrtGetDevicePhyIdByIndex).stubs().will(returnValue(static_cast<s32>(0)));
-    void* rdmaHandle = reinterpret_cast<void*>(0x300);
-    MOCKER_CPP(&Hccl::RdmaHandleManager::GetByIp).stubs().will(returnValue(rdmaHandle));
-    MOCKER_CPP(&Hccl::RdmaHandleManager::IsHandleValid).stubs().will(returnValue(true));
-    MOCKER_CPP(&Hccl::RdmaHandleManager::GetJfcHandle)
-        .stubs()
-        .will(returnValue(static_cast<Hccl::JfcHandle>(0x400ULL)));
-    MOCKER_CPP(&Hccl::RdmaHandleManager::GetTokenIdInfo)
-        .stubs()
-        .will(returnValue(std::make_pair(static_cast<Hccl::TokenIdHandle>(0x500ULL), 0U)));
+    SETUP_CCU_JETTY_MOCKS();
 
     hcomm::CcuJetty jetty(locAddrIp, jettyInfo);
     ASSERT_EQ(jetty.Init(), HcclResult::HCCL_SUCCESS);
@@ -268,17 +273,7 @@ TEST_F(CcuConnTest, Ut_CcuJetty_SetMappedJettyPriority_When_Conflict_Expect_Inte
     jettyInfo.sqBufSize = 512;
     jettyInfo.sqDepth = 4;
 
-    MOCKER(HcclGetThreadDeviceId).stubs().will(returnValue(0));
-    MOCKER(HrtGetDevicePhyIdByIndex).stubs().will(returnValue(static_cast<s32>(0)));
-    void* rdmaHandle = reinterpret_cast<void*>(0x300);
-    MOCKER_CPP(&Hccl::RdmaHandleManager::GetByIp).stubs().will(returnValue(rdmaHandle));
-    MOCKER_CPP(&Hccl::RdmaHandleManager::IsHandleValid).stubs().will(returnValue(true));
-    MOCKER_CPP(&Hccl::RdmaHandleManager::GetJfcHandle)
-        .stubs()
-        .will(returnValue(static_cast<Hccl::JfcHandle>(0x400ULL)));
-    MOCKER_CPP(&Hccl::RdmaHandleManager::GetTokenIdInfo)
-        .stubs()
-        .will(returnValue(std::make_pair(static_cast<Hccl::TokenIdHandle>(0x500ULL), 0U)));
+    SETUP_CCU_JETTY_MOCKS();
 
     hcomm::CcuJetty jetty(locAddrIp, jettyInfo);
     ASSERT_EQ(jetty.Init(), HcclResult::HCCL_SUCCESS);

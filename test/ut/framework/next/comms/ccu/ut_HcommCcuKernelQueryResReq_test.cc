@@ -73,7 +73,7 @@ HcclResult MockHrtGetDeviceRefresh(int32_t* deviceLogicId)
     return HcclResult::HCCL_E_PTR;
 }
 
-HcclResult MockHrtGetDevicePhyIdByIndex(uint32_t deviceLogicId, uint32_t& devicePhyId, bool)
+HcclResult MockHrtGetDevicePhyIdByUserDevId(uint32_t deviceLogicId, uint32_t& devicePhyId, bool)
 {
     devicePhyId = deviceLogicId;
     return HcclResult::HCCL_SUCCESS;
@@ -335,7 +335,7 @@ public:
         MOCKER(hrtGetDevicePhyIdByIndex)
             .stubs()
             .with(mockcpp::any(), mockcpp::any(), mockcpp::any())
-            .will(invoke(MockHrtGetDevicePhyIdByIndex));
+            .will(invoke(MockHrtGetDevicePhyIdByUserDevId));
         constexpr hcomm::CcuVersion fakeCcuVersion = hcomm::CcuVersion::CCU_V1;
         MockCcuNetworkDeviceDefault(fakeDeviceLogicId);
         EXPECT_EQ(MockCcuResourcesDefault(fakeDeviceLogicId, fakeCcuVersion), HcclResult::HCCL_SUCCESS);

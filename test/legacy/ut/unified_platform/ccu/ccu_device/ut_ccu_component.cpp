@@ -67,7 +67,7 @@ constexpr uint32_t CCU_V1_MAX_CHANNEL_NUM = 128;
 // 为 ccu 两个die添加寄存器资源信息
 void MockCcuResources(const int32_t devLogicId, const CcuVersion ccuVersion)
 {
-    MOCKER(HrtGetDevicePhyIdByIndex)
+    MOCKER(HrtGetDevicePhyIdByUserDevId)
         .stubs()
         .with(mockcpp::any())
         .will(returnValue(static_cast<s32>(MAX_MODULE_DEVICE_NUM)));

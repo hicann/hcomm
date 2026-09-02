@@ -235,7 +235,7 @@ HcclResult DevUbConnection::CalcTotalTimeout(uint32_t& outTotalTimeoutMs)
     TpHandle tpHandle = tpInfo.tpHandle;
     uint32_t attrBitmap = (1U << kTpAttrRetryTimesInitBit) | (1U << kTpAttrAtBit);
     struct TpAttr tpAttr = {};
-    u32 devicePhyId = HrtGetDevicePhyIdByIndex(devLogicId);
+    u32 devicePhyId = HrtGetDevicePhyIdByUserDevId(devLogicId);
     CHK_RET(HrtRaGetTpAttrAsync(devicePhyId, rdmaHandle, tpHandle, attrBitmap, tpAttr, reqHandle));
     TpAttrInfo tpAttrInfo = TpAttrInfo(tpAttr);
     CHK_RET(TpManager::GetTpTotalTimeout(tpAttrInfo, outTotalTimeoutMs));
@@ -1269,7 +1269,7 @@ HcclResult DevUbConnection::Describe(std::string& dfxMsg)
         struct TpAttr tpAttr {};
         uint32_t attrBitmap = 1 << 13; // 13对应dataUdpSrcport
         TRY_CATCH_PRINT_ERROR(
-            u32 devicePhyId = HrtGetDevicePhyIdByIndex(devLogicId);
+            u32 devicePhyId = HrtGetDevicePhyIdByUserDevId(devLogicId);
             HcclResult ret
             = HrtRaGetTpAttrAsync(devicePhyId, rdmaHandle, tpInfo.tpHandle, attrBitmap, tpAttr, reqHandle);
             if (ret == HCCL_E_NOT_SUPPORT) {

@@ -11,6 +11,7 @@
 #include "gtest/gtest.h"
 #include <mockcpp/mokc.h>
 #include <mockcpp/mockcpp.hpp>
+#include "test_mock_setup.h"
 #define private public
 #include "hccp_peer_manager.h"
 #include "orion_adapter_rts.h"
@@ -36,15 +37,7 @@ protected:
 TEST_F(HccpPeerManagerTest, hccp_peer_manager_getInstance)
 {
     // Given
-    DevId fakedevPhyId = 3;
-    DevId fakedevPhyId1 = 4;
-    MOCKER(HrtGetDevicePhyIdByIndex)
-        .stubs()
-        .with(mockcpp::any())
-        .will(returnValue(fakedevPhyId))
-        .then(returnValue(fakedevPhyId1));
-    MOCKER(HrtRaInit).stubs().with();
-    MOCKER(HrtRaDeInit).stubs().with();
+    SETUP_HCCP_PEER_MGR_MOCKS(3, 4);
     // when
     s32 deviceLogicId = 0;
     HccpPeerManager::GetInstance().Init(deviceLogicId);
@@ -64,9 +57,9 @@ TEST_F(HccpPeerManagerTest, hccp_peer_manager_init)
     s32 deviceLogicId1 = 1;
     s32 deviceLogicId2 = 2;
     DevId fakedevPhyId = 3;
-    MOCKER(HrtGetDevicePhyIdByIndex).stubs().with(mockcpp::any()).will(returnValue(fakedevPhyId));
+    MOCKER(HrtGetDevicePhyIdByUserDevId).stubs().with(mockcpp::any()).will(returnValue(fakedevPhyId));
     MOCKER(HrtRaDeInit).stubs().with();
-    MOCKER(HrtGetDevicePhyIdByIndex).stubs().will(returnValue(static_cast<DevId>(1)));
+    MOCKER(HrtGetDevicePhyIdByUserDevId).stubs().will(returnValue(static_cast<DevId>(1)));
 
     // when
     HccpPeerManager::GetInstance().Init(deviceLogicId);

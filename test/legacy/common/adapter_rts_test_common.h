@@ -8,15 +8,22 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
-#ifndef ORION_ADAPTER_RTS_H_
-#define ORION_ADAPTER_RTS_H_
+#ifndef ADAPTER_RTS_TEST_COMMON_H
+#define ADAPTER_RTS_TEST_COMMON_H
 
-#include <cstdint>
+#include "gtest/gtest.h"
+#include <mockcpp/mokc.h>
+#include <mockcpp/mockcpp.hpp>
 
-namespace Hccl {
-using DevId = uint32_t;
+class AdapterRtsTest : public testing::Test {
+protected:
+    static void SetUpTestCase() { std::cout << "AdapterRts tests set up." << std::endl; }
 
-DevId HrtGetDevicePhyIdByUserDevId(int32_t deviceLogicId);
-} // namespace Hccl
+    static void TearDownTestCase() { std::cout << "AdapterRts tests tear down." << std::endl; }
 
-#endif
+    virtual void SetUp() { std::cout << "A Test case in AdapterRts SetUP" << std::endl; }
+
+    virtual void TearDown() { GlobalMockObject::verify(); }
+};
+
+#endif // ADAPTER_RTS_TEST_COMMON_H

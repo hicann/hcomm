@@ -11,6 +11,7 @@
 #include "gtest/gtest.h"
 #include <mockcpp/mokc.h>
 #include <mockcpp/mockcpp.hpp>
+#include "test_mock_setup.h"
 #define private public
 #define protected public
 #include "op_type.h"
@@ -46,17 +47,21 @@ protected:
     }
 };
 
+#define SETUP_COMM_INIT_PUB_MOCKS()                                                                                 \
+    do {                                                                                                            \
+        MOCKER_CPP(static_cast<HcclResult (CommunicatorImpl::*)(                                                    \
+                       const CommParams&, const std::string&, const HcclCommConfig&)>(&CommunicatorImpl::Init))     \
+            .stubs()                                                                                                \
+            .with(mockcpp::any(), mockcpp::any(), mockcpp::any())                                                   \
+            .will(returnValue(HCCL_SUCCESS));                                                                       \
+        MOCKER(HrtGetDevice).stubs().with().will(returnValue(0));                                                   \
+        MOCKER(HrtGetDeviceCount).stubs().with().will(returnValue(8));                                              \
+        MOCKER(HrtGetDevicePhyIdByUserDevId).stubs().with(mockcpp::any()).will(returnValue(static_cast<DevId>(0))); \
+    } while (0)
+
 TEST_F(HcclCommunicatorTest, should_success_when_calling_init_with_valid_params)
 {
-    MOCKER_CPP(
-        static_cast<HcclResult (CommunicatorImpl::*)(const CommParams&, const std::string&, const HcclCommConfig&)>(
-            &CommunicatorImpl::Init))
-        .stubs()
-        .with(mockcpp::any(), mockcpp::any(), mockcpp::any())
-        .will(returnValue(HCCL_SUCCESS));
-    MOCKER(HrtGetDevice).stubs().with().will(returnValue(0));
-    MOCKER(HrtGetDeviceCount).stubs().with().will(returnValue(8));
-    MOCKER(HrtGetDevicePhyIdByIndex).stubs().with(mockcpp::any()).will(returnValue(static_cast<DevId>(0)));
+    SETUP_COMM_INIT_PUB_MOCKS();
     MOCKER(HrtSetDevice).stubs().with(mockcpp::any());
     MOCKER_CPP(&HccpHdcManager::Init).stubs().with(mockcpp::any());
     DevType devType = DevType::DEV_TYPE_910A;
@@ -80,7 +85,7 @@ TEST_F(HcclCommunicatorTest, should_failed_when_calling_init_with_invalid_params
         .will(returnValue(HCCL_E_PARA));
     MOCKER(HrtGetDevice).stubs().with().will(returnValue(0));
     MOCKER(HrtGetDeviceCount).stubs().with().will(returnValue(8));
-    MOCKER(HrtGetDevicePhyIdByIndex).stubs().with(mockcpp::any()).will(returnValue(static_cast<DevId>(0)));
+    MOCKER(HrtGetDevicePhyIdByUserDevId).stubs().with(mockcpp::any()).will(returnValue(static_cast<DevId>(0)));
     MOCKER(HrtSetDevice).stubs().with(mockcpp::any());
     MOCKER_CPP(&HccpHdcManager::Init).stubs().with(mockcpp::any());
     DevType devType = DevType::DEV_TYPE_910A;
@@ -450,15 +455,7 @@ TEST_F(HcclCommunicatorTest, get_static_binary_info_should_success)
 
 TEST_F(HcclCommunicatorTest, should_success_when_IsUsingCcu)
 {
-    MOCKER_CPP(
-        static_cast<HcclResult (CommunicatorImpl::*)(const CommParams&, const std::string&, const HcclCommConfig&)>(
-            &CommunicatorImpl::Init))
-        .stubs()
-        .with(mockcpp::any(), mockcpp::any(), mockcpp::any())
-        .will(returnValue(HCCL_SUCCESS));
-    MOCKER(HrtGetDevice).stubs().with().will(returnValue(0));
-    MOCKER(HrtGetDeviceCount).stubs().with().will(returnValue(8));
-    MOCKER(HrtGetDevicePhyIdByIndex).stubs().with(mockcpp::any()).will(returnValue(static_cast<DevId>(0)));
+    SETUP_COMM_INIT_PUB_MOCKS();
     MOCKER(HrtSetDevice).stubs().with(mockcpp::any());
     MOCKER_CPP(&HccpHdcManager::Init).stubs().with(mockcpp::any());
     DevType devType = DevType::DEV_TYPE_910A;

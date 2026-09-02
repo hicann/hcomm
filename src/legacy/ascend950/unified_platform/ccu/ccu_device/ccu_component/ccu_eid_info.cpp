@@ -34,7 +34,7 @@ CcuEidInfo::~CcuEidInfo() { initflag_ = false; }
 HcclResult CcuEidInfo::GetEidInfo(int32_t logicDeviceId, std::vector<HrtDevEidInfo>& eidInfo)
 {
     if (!initflag_) {
-        HRaInfo info(HrtNetworkMode::HDC, HrtGetDevicePhyIdByIndex(logicDeviceId));
+        HRaInfo info(HrtNetworkMode::HDC, HrtGetDevicePhyIdByUserDevId(logicDeviceId));
         vector<HrtDevEidInfo> eidInfoList = HrtRaGetDevEidInfoList(info);
 
         if (eidInfoList.empty()) {

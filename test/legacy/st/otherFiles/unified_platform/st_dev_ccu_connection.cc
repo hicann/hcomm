@@ -35,7 +35,7 @@ protected:
     virtual void SetUp()
     {
         MOCKER(HrtGetDeviceType).stubs().will(returnValue(DevType::DEV_TYPE_950));
-        MOCKER(HrtGetDevicePhyIdByIndex).stubs().with(mockcpp::any()).will(returnValue(static_cast<DevId>(0)));
+        MOCKER(HrtGetDevicePhyIdByUserDevId).stubs().with(mockcpp::any()).will(returnValue(static_cast<DevId>(0)));
         MOCKER(HrtRaUbCreateJetty)
             .stubs()
             .with(mockcpp::any(), mockcpp::any())

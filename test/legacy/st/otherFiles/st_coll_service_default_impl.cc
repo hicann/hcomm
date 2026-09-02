@@ -297,7 +297,7 @@ static void DelTopoFile()
 TEST(CollServiceDefaultImplTest, test_base_register_offload_buf)
 {
     MOCKER(HrtGetDevice).stubs().will(returnValue(0));
-    MOCKER(HrtGetDevicePhyIdByIndex).stubs().will(returnValue(static_cast<DevId>(1)));
+    MOCKER(HrtGetDevicePhyIdByUserDevId).stubs().will(returnValue(static_cast<DevId>(1)));
     DevType devType = DevType::DEV_TYPE_950;
     MOCKER(HrtGetDeviceType).stubs().will(returnValue(devType));
     MOCKER(HrtIpcSetMemoryName).stubs();
@@ -506,7 +506,7 @@ TEST(CollServiceDefaultImplTest, test_communicator_impl_hostDeviceSyncNotifyMana
     MOCKER(HrtNotifyCreate).stubs().will(returnValue((void*)(1)));
     MOCKER(HrtNotifyCreateWithFlag).stubs().will(returnValue((void*)(1)));
     MOCKER(HrtGetNotifyID).stubs().will(returnValue(1));
-    MOCKER(HrtGetDevicePhyIdByIndex).stubs().will(returnValue(static_cast<DevId>(1)));
+    MOCKER(HrtGetDevicePhyIdByUserDevId).stubs().will(returnValue(static_cast<DevId>(1)));
 
     CommunicatorImpl comm;
     comm.hostDeviceSyncNotifyManager = std::make_unique<HostDeviceSyncNotifyManager>();

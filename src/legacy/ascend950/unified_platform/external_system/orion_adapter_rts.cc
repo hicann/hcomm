@@ -78,7 +78,7 @@ DevType HrtGetDeviceType()
     return iter->second;
 }
 
-DevId HrtGetDevicePhyIdByIndex(s32 deviceLogicId)
+DevId HrtGetDevicePhyIdByUserDevId(s32 userDevId)
 {
     DevType deviceType = HrtGetDeviceType();
     if (deviceType == DevType::DEV_TYPE_NOSOC) {
@@ -86,17 +86,40 @@ DevId HrtGetDevicePhyIdByIndex(s32 deviceLogicId)
     }
 
     s32 devicePhyId = 0;
-    aclError ret = aclrtGetPhyDevIdByLogicDevId(deviceLogicId, &devicePhyId);
+    aclError ret = aclrtGetPhyDevIdByUserDevId(userDevId, &devicePhyId);
     if (ret != ACL_SUCCESS) {
         string msg = StringFormat(
             "[Get][DevicePhyId]errNo[0x%016llx] rtGet device PhyId by "
-            "index failed. return[%d], "
-            "para: devIndex[%d], phyId[%d].",
-            HCCL_ERROR_CODE(HcclResult::HCCL_E_DRV), ret, deviceLogicId, devicePhyId);
+            "userDevId failed. return[%d], "
+            "para: userDevId[%d], phyId[%d].",
+            HCCL_ERROR_CODE(HcclResult::HCCL_E_DRV), ret, userDevId, devicePhyId);
         MACRO_THROW(RuntimeApiException, msg);
     }
-    HCCL_INFO("[HrtGetDevicePhyIdByIndex]deviceLogicId=%d, devicePhyId=%d.", deviceLogicId, devicePhyId);
+    HCCL_INFO("[HrtGetDevicePhyIdByUserDevId]userDevId=%d, devicePhyId=%d.", userDevId, devicePhyId);
     return static_cast<DevId>(devicePhyId);
+}
+
+HcclResult HrtGetUserDevIdByPhyDevId(s32 devicePhyId, s32& userDevId)
+{
+    DevType deviceType = HrtGetDeviceType();
+    if (deviceType == DevType::DEV_TYPE_NOSOC) {
+        userDevId = 0;
+        return HCCL_SUCCESS;
+    }
+
+    s32 tmpUserDevId = 0;
+    aclError ret = aclrtGetUserDevIdByPhyDevId(devicePhyId, &tmpUserDevId);
+    if (ret != ACL_SUCCESS) {
+        string msg = StringFormat(
+            "[Get][UserDevId]errNo[0x%016llx] rtGet userDevId by PhyDevId failed. "
+            "return[%d], para: phyId[%d], userDevId[%d].",
+            HCCL_ERROR_CODE(HcclResult::HCCL_E_RUNTIME), ret, devicePhyId, tmpUserDevId);
+        HCCL_ERROR("%s", msg.c_str());
+        return HCCL_E_RUNTIME;
+    }
+    userDevId = tmpUserDevId;
+    HCCL_INFO("[HrtGetUserDevIdByPhyDevId]devicePhyId=%d, userDevId=%d.", devicePhyId, userDevId);
+    return HCCL_SUCCESS;
 }
 
 s32 HrtDeviceGetBareTgid()
@@ -127,41 +150,41 @@ void HrtGetSocVer(std::string& socName)
 
 s32 HrtGetDevice()
 {
-    s32 deviceLogicId = 0;
-    aclError ret = aclrtGetDevice(&deviceLogicId);
+    s32 userDevId = 0;
+    aclError ret = aclrtGetDevice(&userDevId);
     if (ret != ACL_SUCCESS) {
         string msg = StringFormat(
             "[Get][Device]errNo[0x%016llx] rtGet device fail, "
-            "please make sure that device is set. return[%d], para:deviceLogicId[%d]",
-            HCCL_ERROR_CODE(HcclResult::HCCL_E_RUNTIME), ret, deviceLogicId);
+            "please make sure that device is set. return[%d], para:userDevId[%d]",
+            HCCL_ERROR_CODE(HcclResult::HCCL_E_RUNTIME), ret, userDevId);
         MACRO_THROW(RuntimeApiException, msg);
     }
-    HCCL_INFO("[HrtGetDevice]deviceLogicId=%d.", deviceLogicId);
-    return deviceLogicId;
+    HCCL_INFO("[HrtGetDevice]userDevId=%d.", userDevId);
+    return userDevId;
 }
 
-void HrtSetDevice(s32 deviceLogicId)
+void HrtSetDevice(s32 userDevId)
 {
-    aclError ret = aclrtSetDevice(deviceLogicId);
-    HCCL_INFO("Call rtSetDevice, return value[%d], para: device_id[%d].", ret, deviceLogicId);
+    aclError ret = aclrtSetDevice(userDevId);
+    HCCL_INFO("Call rtSetDevice, return value[%d], para: device_id[%d].", ret, userDevId);
     if (ret != ACL_SUCCESS) {
         string msg = StringFormat(
             "[Set][Device]errNo[0x%016llx] rtSet device fail. "
-            "return[%d], para:deviceLogicId[%d].",
-            HCCL_ERROR_CODE(HcclResult::HCCL_E_RUNTIME), ret, deviceLogicId);
+            "return[%d], para:userDevId[%d].",
+            HCCL_ERROR_CODE(HcclResult::HCCL_E_RUNTIME), ret, userDevId);
         MACRO_THROW(RuntimeApiException, msg);
     }
 }
 
-void HrtResetDevice(s32 deviceLogicId)
+void HrtResetDevice(s32 userDevId)
 {
-    aclError ret = aclrtResetDevice(deviceLogicId);
-    HCCL_INFO("Call aclrtResetDevice, return value[%d], para: device_id[%d].", ret, deviceLogicId);
+    aclError ret = aclrtResetDevice(userDevId);
+    HCCL_INFO("Call aclrtResetDevice, return value[%d], para: device_id[%d].", ret, userDevId);
     if (ret != ACL_SUCCESS) {
         string msg = StringFormat(
             "[Reset][Device]errNo[0x%016llx] rtReset device fail. "
-            "return[%d], para: deviceLogicId[%d].",
-            HCCL_ERROR_CODE(HcclResult::HCCL_E_RUNTIME), ret, deviceLogicId);
+            "return[%d], para: userDevId[%d].",
+            HCCL_ERROR_CODE(HcclResult::HCCL_E_RUNTIME), ret, userDevId);
         MACRO_THROW(RuntimeApiException, msg);
     }
 }

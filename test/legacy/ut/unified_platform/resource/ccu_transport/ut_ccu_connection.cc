@@ -57,7 +57,7 @@ protected:
 
 pair<unique_ptr<CcuConnection>, vector<unique_ptr<CcuJetty>>> MockMakeCcuConnection(TpProtocol tpProtocol)
 {
-    MOCKER(HrtGetDevicePhyIdByIndex)
+    MOCKER(HrtGetDevicePhyIdByUserDevId)
         .stubs()
         .with(mockcpp::any())
         .will(returnValue(static_cast<s32>(MAX_MODULE_DEVICE_NUM - 1)));

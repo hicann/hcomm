@@ -12,6 +12,7 @@
 #include "gtest/gtest.h"
 #include <mockcpp/mokc.h>
 #include <mockcpp/mockcpp.hpp>
+#include "test_mock_setup.h"
 #include "communicator_impl.h"
 #include "rdma_handle_manager.h"
 #include "ccu_transport_group.h"
@@ -131,6 +132,7 @@ static void MockerCcuFeature()
 }
 
 // 测试GetGrpStatus接口，预期返回值TransportGrpStatus::INIT
+
 TEST_F(CcuTransportGroupTest, Test_CcuTransportGroup_001)
 {
     // 创建linkData
@@ -177,12 +179,7 @@ TEST_F(CcuTransportGroupTest, Test_CcuTransportGroup_001)
     impl.GetSocketManager().connectedSocketMap[socketConfig] = std::make_shared<Socket>(
         hccpSocketHandle, GetAnIpAddress(), 0, GetAnIpAddress(), "stub", SocketRole::CLIENT, NicType::DEVICE_NIC_TYPE);
 
-    MOCKER_CPP(&Socket::GetStatus)
-        .stubs()
-        .will(returnValue((SocketStatus)SocketStatus::INIT))
-        .then(returnValue((SocketStatus)SocketStatus::CONNECTING))
-        .then(returnValue((SocketStatus)SocketStatus::OK))
-        .then(returnValue((SocketStatus)SocketStatus::TIMEOUT));
+    SETUP_SOCKET_STATUS_MOCKS();
 
     // 打桩CcuConnection构造函数中调用的函数
     JfcHandle jfcHandle = 1;
@@ -190,21 +187,7 @@ TEST_F(CcuTransportGroupTest, Test_CcuTransportGroup_001)
     u32 jettyNum = 1; // 当前迭代，jettyNum默认为1
     u32 sqSize = 128; // 当前迭代，默认使用MS，故sqSize固定为128。sqSize就是jetty深度
 
-    MOCKER(CcuDeviceManager::AllocXn).defaults().will(returnValue(HcclResult::HCCL_SUCCESS));
-    MOCKER(CcuDeviceManager::AllocCke).defaults().will(returnValue(HcclResult::HCCL_SUCCESS));
-    MOCKER(CcuDeviceManager::ConfigChannel).defaults().will(returnValue(HcclResult::HCCL_SUCCESS));
-
-    MOCKER(CcuDeviceManager::ReleaseXn).defaults().will(returnValue(HcclResult::HCCL_SUCCESS));
-    MOCKER(CcuDeviceManager::ReleaseCke).defaults().will(returnValue(HcclResult::HCCL_SUCCESS));
-    MOCKER(HrtGetDevice).defaults().will(returnValue(0));
-    MOCKER(HrtRaUbUnimportJetty).defaults().will(returnValue(0));
-    MOCKER(HrtGetDeviceType).defaults().will(returnValue(DevType::DEV_TYPE_950));
-    MOCKER(HrtGetDevicePhyIdByIndex).defaults().will(returnValue(static_cast<s32>(0)));
-    MOCKER(HrtRaUbCreateJetty).defaults().will(returnValue(HrtRaUbJettyCreatedOutParam()));
-    MOCKER(HraGetDieAndFuncId).defaults().will(returnValue(std::pair<uint32_t, uint32_t>(0, 0)));
-    MOCKER(HrtRaUbCreateJfc).defaults().will(returnValue(jfcHandle));
-    MOCKER(RaUbImportJetty).defaults().will(returnValue(HrtRaUbJettyImportedOutParam()));
-    MOCKER(HrtRaUbLocalMemReg).defaults().will(returnValue(HrtRaUbLocalMemRegOutParam()));
+    SETUP_CCU_TRANSPORT_MOCKS();
 
     // 创建utConnection
     CcuChannelInfo channelInfo;
@@ -281,12 +264,7 @@ TEST_F(CcuTransportGroupTest, Test_CcuTransportGroup_002)
     impl.GetSocketManager().connectedSocketMap[socketConfig] = std::make_shared<Socket>(
         hccpSocketHandle, GetAnIpAddress(), 0, GetAnIpAddress(), "stub", SocketRole::CLIENT, NicType::DEVICE_NIC_TYPE);
 
-    MOCKER_CPP(&Socket::GetStatus)
-        .stubs()
-        .will(returnValue((SocketStatus)SocketStatus::INIT))
-        .then(returnValue((SocketStatus)SocketStatus::CONNECTING))
-        .then(returnValue((SocketStatus)SocketStatus::OK))
-        .then(returnValue((SocketStatus)SocketStatus::TIMEOUT));
+    SETUP_SOCKET_STATUS_MOCKS();
 
     // 打桩CcuConnection构造函数中调用的函数
     JfcHandle jfcHandle = 1;
@@ -294,21 +272,7 @@ TEST_F(CcuTransportGroupTest, Test_CcuTransportGroup_002)
     u32 jettyNum = 1; // 当前迭代，jettyNum默认为1
     u32 sqSize = 128; // 当前迭代，默认使用MS，故sqSize固定为128。sqSize就是jetty深度
 
-    MOCKER(CcuDeviceManager::AllocXn).defaults().will(returnValue(HcclResult::HCCL_SUCCESS));
-    MOCKER(CcuDeviceManager::AllocCke).defaults().will(returnValue(HcclResult::HCCL_SUCCESS));
-    MOCKER(CcuDeviceManager::ConfigChannel).defaults().will(returnValue(HcclResult::HCCL_SUCCESS));
-
-    MOCKER(CcuDeviceManager::ReleaseXn).defaults().will(returnValue(HcclResult::HCCL_SUCCESS));
-    MOCKER(CcuDeviceManager::ReleaseCke).defaults().will(returnValue(HcclResult::HCCL_SUCCESS));
-    MOCKER(HrtGetDevice).defaults().will(returnValue(0));
-    MOCKER(HrtRaUbUnimportJetty).defaults().will(returnValue(0));
-    MOCKER(HrtGetDeviceType).defaults().will(returnValue(DevType::DEV_TYPE_950));
-    MOCKER(HrtGetDevicePhyIdByIndex).defaults().will(returnValue(static_cast<s32>(0)));
-    MOCKER(HrtRaUbCreateJetty).defaults().will(returnValue(HrtRaUbJettyCreatedOutParam()));
-    MOCKER(HraGetDieAndFuncId).defaults().will(returnValue(std::pair<uint32_t, uint32_t>(0, 0)));
-    MOCKER(HrtRaUbCreateJfc).defaults().will(returnValue(jfcHandle));
-    MOCKER(RaUbImportJetty).defaults().will(returnValue(HrtRaUbJettyImportedOutParam()));
-    MOCKER(HrtRaUbLocalMemReg).defaults().will(returnValue(HrtRaUbLocalMemRegOutParam()));
+    SETUP_CCU_TRANSPORT_MOCKS();
 
     // 创建utConnection
     CcuChannelInfo channelInfo;
@@ -386,12 +350,7 @@ TEST_F(CcuTransportGroupTest, Test_CcuTransportGroup_003)
     impl.GetSocketManager().connectedSocketMap[socketConfig] = std::make_shared<Socket>(
         hccpSocketHandle, GetAnIpAddress(), 0, GetAnIpAddress(), "stub", SocketRole::CLIENT, NicType::DEVICE_NIC_TYPE);
 
-    MOCKER_CPP(&Socket::GetStatus)
-        .stubs()
-        .will(returnValue((SocketStatus)SocketStatus::INIT))
-        .then(returnValue((SocketStatus)SocketStatus::CONNECTING))
-        .then(returnValue((SocketStatus)SocketStatus::OK))
-        .then(returnValue((SocketStatus)SocketStatus::TIMEOUT));
+    SETUP_SOCKET_STATUS_MOCKS();
 
     // 打桩CcuConnection构造函数中调用的函数
     JfcHandle jfcHandle = 1;
@@ -400,21 +359,7 @@ TEST_F(CcuTransportGroupTest, Test_CcuTransportGroup_003)
     u32 sqSize = 128; // 当前迭代，默认使用MS，故sqSize固定为128。sqSize就是jetty深度
     u32 cntCkeId = 0;
 
-    MOCKER(CcuDeviceManager::AllocXn).defaults().will(returnValue(HcclResult::HCCL_SUCCESS));
-    MOCKER(CcuDeviceManager::AllocCke).defaults().will(returnValue(HcclResult::HCCL_SUCCESS));
-    MOCKER(CcuDeviceManager::ConfigChannel).defaults().will(returnValue(HcclResult::HCCL_SUCCESS));
-
-    MOCKER(CcuDeviceManager::ReleaseXn).defaults().will(returnValue(HcclResult::HCCL_SUCCESS));
-    MOCKER(CcuDeviceManager::ReleaseCke).defaults().will(returnValue(HcclResult::HCCL_SUCCESS));
-    MOCKER(HrtGetDevice).defaults().will(returnValue(0));
-    MOCKER(HrtRaUbUnimportJetty).defaults().will(returnValue(0));
-    MOCKER(HrtGetDeviceType).defaults().will(returnValue(DevType::DEV_TYPE_950));
-    MOCKER(HrtGetDevicePhyIdByIndex).defaults().will(returnValue(static_cast<s32>(0)));
-    MOCKER(HrtRaUbCreateJetty).defaults().will(returnValue(HrtRaUbJettyCreatedOutParam()));
-    MOCKER(HraGetDieAndFuncId).defaults().will(returnValue(std::pair<uint32_t, uint32_t>(0, 0)));
-    MOCKER(HrtRaUbCreateJfc).defaults().will(returnValue(jfcHandle));
-    MOCKER(RaUbImportJetty).defaults().will(returnValue(HrtRaUbJettyImportedOutParam()));
-    MOCKER(HrtRaUbLocalMemReg).defaults().will(returnValue(HrtRaUbLocalMemRegOutParam()));
+    SETUP_CCU_TRANSPORT_MOCKS();
 
     // 创建utConnection
     CcuChannelInfo channelInfo;
@@ -504,12 +449,7 @@ TEST_F(CcuTransportGroupTest, Test_CcuTransportGroup_004)
     impl.GetSocketManager().connectedSocketMap[socketConfig] = std::make_shared<Socket>(
         hccpSocketHandle, GetAnIpAddress(), 0, GetAnIpAddress(), "stub", SocketRole::CLIENT, NicType::DEVICE_NIC_TYPE);
 
-    MOCKER_CPP(&Socket::GetStatus)
-        .stubs()
-        .will(returnValue((SocketStatus)SocketStatus::INIT))
-        .then(returnValue((SocketStatus)SocketStatus::CONNECTING))
-        .then(returnValue((SocketStatus)SocketStatus::OK))
-        .then(returnValue((SocketStatus)SocketStatus::TIMEOUT));
+    SETUP_SOCKET_STATUS_MOCKS();
 
     // 打桩CcuConnection构造函数中调用的函数
     JfcHandle jfcHandle = 1;
@@ -517,21 +457,7 @@ TEST_F(CcuTransportGroupTest, Test_CcuTransportGroup_004)
     u32 jettyNum = 1; // 当前迭代，jettyNum默认为1
     u32 sqSize = 128; // 当前迭代，默认使用MS，故sqSize固定为128。sqSize就是jetty深度
 
-    MOCKER(CcuDeviceManager::AllocXn).defaults().will(returnValue(HcclResult::HCCL_SUCCESS));
-    MOCKER(CcuDeviceManager::AllocCke).defaults().will(returnValue(HcclResult::HCCL_SUCCESS));
-    MOCKER(CcuDeviceManager::ConfigChannel).defaults().will(returnValue(HcclResult::HCCL_SUCCESS));
-
-    MOCKER(CcuDeviceManager::ReleaseXn).defaults().will(returnValue(HcclResult::HCCL_SUCCESS));
-    MOCKER(CcuDeviceManager::ReleaseCke).defaults().will(returnValue(HcclResult::HCCL_SUCCESS));
-    MOCKER(HrtGetDevice).defaults().will(returnValue(0));
-    MOCKER(HrtRaUbUnimportJetty).defaults().will(returnValue(0));
-    MOCKER(HrtGetDeviceType).defaults().will(returnValue(DevType::DEV_TYPE_950));
-    MOCKER(HrtGetDevicePhyIdByIndex).defaults().will(returnValue(static_cast<s32>(0)));
-    MOCKER(HrtRaUbCreateJetty).defaults().will(returnValue(HrtRaUbJettyCreatedOutParam()));
-    MOCKER(HraGetDieAndFuncId).defaults().will(returnValue(std::pair<uint32_t, uint32_t>(0, 0)));
-    MOCKER(HrtRaUbCreateJfc).defaults().will(returnValue(jfcHandle));
-    MOCKER(RaUbImportJetty).defaults().will(returnValue(HrtRaUbJettyImportedOutParam()));
-    MOCKER(HrtRaUbLocalMemReg).defaults().will(returnValue(HrtRaUbLocalMemRegOutParam()));
+    SETUP_CCU_TRANSPORT_MOCKS();
 
     // 创建utConnection
     CcuChannelInfo channelInfo;
@@ -604,12 +530,7 @@ TEST_F(CcuTransportGroupTest, Test_CcuTransportGroup_005)
     impl.GetSocketManager().connectedSocketMap[socketConfig] = std::make_shared<Socket>(
         hccpSocketHandle, GetAnIpAddress(), 0, GetAnIpAddress(), "stub", SocketRole::CLIENT, NicType::DEVICE_NIC_TYPE);
 
-    MOCKER_CPP(&Socket::GetStatus)
-        .stubs()
-        .will(returnValue((SocketStatus)SocketStatus::INIT))
-        .then(returnValue((SocketStatus)SocketStatus::CONNECTING))
-        .then(returnValue((SocketStatus)SocketStatus::OK))
-        .then(returnValue((SocketStatus)SocketStatus::TIMEOUT));
+    SETUP_SOCKET_STATUS_MOCKS();
 
     // 打桩CcuConnection构造函数中调用的函数
     JfcHandle jfcHandle = 1;
@@ -617,21 +538,7 @@ TEST_F(CcuTransportGroupTest, Test_CcuTransportGroup_005)
     u32 jettyNum = 1; // 当前迭代，jettyNum默认为1
     u32 sqSize = 128; // 当前迭代，默认使用MS，故sqSize固定为128。sqSize就是jetty深度
 
-    MOCKER(CcuDeviceManager::AllocXn).defaults().will(returnValue(HcclResult::HCCL_SUCCESS));
-    MOCKER(CcuDeviceManager::AllocCke).defaults().will(returnValue(HcclResult::HCCL_SUCCESS));
-    MOCKER(CcuDeviceManager::ConfigChannel).defaults().will(returnValue(HcclResult::HCCL_SUCCESS));
-
-    MOCKER(CcuDeviceManager::ReleaseXn).defaults().will(returnValue(HcclResult::HCCL_SUCCESS));
-    MOCKER(CcuDeviceManager::ReleaseCke).defaults().will(returnValue(HcclResult::HCCL_SUCCESS));
-    MOCKER(HrtGetDevice).defaults().will(returnValue(0));
-    MOCKER(HrtRaUbUnimportJetty).defaults().will(returnValue(0));
-    MOCKER(HrtGetDeviceType).defaults().will(returnValue(DevType::DEV_TYPE_950));
-    MOCKER(HrtGetDevicePhyIdByIndex).defaults().will(returnValue(static_cast<s32>(0)));
-    MOCKER(HrtRaUbCreateJetty).defaults().will(returnValue(HrtRaUbJettyCreatedOutParam()));
-    MOCKER(HraGetDieAndFuncId).defaults().will(returnValue(std::pair<uint32_t, uint32_t>(0, 0)));
-    MOCKER(HrtRaUbCreateJfc).defaults().will(returnValue(jfcHandle));
-    MOCKER(RaUbImportJetty).defaults().will(returnValue(HrtRaUbJettyImportedOutParam()));
-    MOCKER(HrtRaUbLocalMemReg).defaults().will(returnValue(HrtRaUbLocalMemRegOutParam()));
+    SETUP_CCU_TRANSPORT_MOCKS();
 
     // 创建utConnection
     CcuChannelInfo channelInfo;
@@ -702,12 +609,7 @@ TEST_F(CcuTransportGroupTest, Test_CcuTransportGroup_006)
     impl.GetSocketManager().connectedSocketMap[socketConfig] = std::make_shared<Socket>(
         hccpSocketHandle, GetAnIpAddress(), 0, GetAnIpAddress(), "stub", SocketRole::CLIENT, NicType::DEVICE_NIC_TYPE);
 
-    MOCKER_CPP(&Socket::GetStatus)
-        .stubs()
-        .will(returnValue((SocketStatus)SocketStatus::INIT))
-        .then(returnValue((SocketStatus)SocketStatus::CONNECTING))
-        .then(returnValue((SocketStatus)SocketStatus::OK))
-        .then(returnValue((SocketStatus)SocketStatus::TIMEOUT));
+    SETUP_SOCKET_STATUS_MOCKS();
 
     // 打桩CcuConnection构造函数中调用的函数
     JfcHandle jfcHandle = 1;
@@ -715,21 +617,7 @@ TEST_F(CcuTransportGroupTest, Test_CcuTransportGroup_006)
     u32 jettyNum = 1; // 当前迭代，jettyNum默认为1
     u32 sqSize = 128; // 当前迭代，默认使用MS，故sqSize固定为128。sqSize就是jetty深度
 
-    MOCKER(CcuDeviceManager::AllocXn).defaults().will(returnValue(HcclResult::HCCL_SUCCESS));
-    MOCKER(CcuDeviceManager::AllocCke).defaults().will(returnValue(HcclResult::HCCL_SUCCESS));
-    MOCKER(CcuDeviceManager::ConfigChannel).defaults().will(returnValue(HcclResult::HCCL_SUCCESS));
-
-    MOCKER(CcuDeviceManager::ReleaseXn).defaults().will(returnValue(HcclResult::HCCL_SUCCESS));
-    MOCKER(CcuDeviceManager::ReleaseCke).defaults().will(returnValue(HcclResult::HCCL_SUCCESS));
-    MOCKER(HrtGetDevice).defaults().will(returnValue(0));
-    MOCKER(HrtRaUbUnimportJetty).defaults().will(returnValue(0));
-    MOCKER(HrtGetDeviceType).defaults().will(returnValue(DevType::DEV_TYPE_950));
-    MOCKER(HrtGetDevicePhyIdByIndex).defaults().will(returnValue(static_cast<s32>(0)));
-    MOCKER(HrtRaUbCreateJetty).defaults().will(returnValue(HrtRaUbJettyCreatedOutParam()));
-    MOCKER(HraGetDieAndFuncId).defaults().will(returnValue(std::pair<uint32_t, uint32_t>(0, 0)));
-    MOCKER(HrtRaUbCreateJfc).defaults().will(returnValue(jfcHandle));
-    MOCKER(RaUbImportJetty).defaults().will(returnValue(HrtRaUbJettyImportedOutParam()));
-    MOCKER(HrtRaUbLocalMemReg).defaults().will(returnValue(HrtRaUbLocalMemRegOutParam()));
+    SETUP_CCU_TRANSPORT_MOCKS();
 
     // 创建utConnection
     CcuChannelInfo channelInfo;
@@ -801,12 +689,7 @@ TEST_F(CcuTransportGroupTest, Test_CcuTransportGroup_007)
     impl.GetSocketManager().connectedSocketMap[socketConfig] = std::make_shared<Socket>(
         hccpSocketHandle, GetAnIpAddress(), 0, GetAnIpAddress(), "stub", SocketRole::CLIENT, NicType::DEVICE_NIC_TYPE);
 
-    MOCKER_CPP(&Socket::GetStatus)
-        .stubs()
-        .will(returnValue((SocketStatus)SocketStatus::INIT))
-        .then(returnValue((SocketStatus)SocketStatus::CONNECTING))
-        .then(returnValue((SocketStatus)SocketStatus::OK))
-        .then(returnValue((SocketStatus)SocketStatus::TIMEOUT));
+    SETUP_SOCKET_STATUS_MOCKS();
 
     // 打桩CcuConnection构造函数中调用的函数
     JfcHandle jfcHandle = 1;
@@ -814,21 +697,7 @@ TEST_F(CcuTransportGroupTest, Test_CcuTransportGroup_007)
     u32 jettyNum = 1; // 当前迭代，jettyNum默认为1
     u32 sqSize = 128; // 当前迭代，默认使用MS，故sqSize固定为128。sqSize就是jetty深度
 
-    MOCKER(CcuDeviceManager::AllocXn).defaults().will(returnValue(HcclResult::HCCL_SUCCESS));
-    MOCKER(CcuDeviceManager::AllocCke).defaults().will(returnValue(HcclResult::HCCL_E_RESERVED));
-    MOCKER(CcuDeviceManager::ConfigChannel).defaults().will(returnValue(HcclResult::HCCL_SUCCESS));
-
-    MOCKER(CcuDeviceManager::ReleaseXn).defaults().will(returnValue(HcclResult::HCCL_SUCCESS));
-    MOCKER(CcuDeviceManager::ReleaseCke).defaults().will(returnValue(HcclResult::HCCL_SUCCESS));
-    MOCKER(HrtGetDevice).defaults().will(returnValue(0));
-    MOCKER(HrtRaUbUnimportJetty).defaults().will(returnValue(0));
-    MOCKER(HrtGetDeviceType).defaults().will(returnValue(DevType::DEV_TYPE_950));
-    MOCKER(HrtGetDevicePhyIdByIndex).defaults().will(returnValue(static_cast<s32>(0)));
-    MOCKER(HrtRaUbCreateJetty).defaults().will(returnValue(HrtRaUbJettyCreatedOutParam()));
-    MOCKER(HraGetDieAndFuncId).defaults().will(returnValue(std::pair<uint32_t, uint32_t>(0, 0)));
-    MOCKER(HrtRaUbCreateJfc).defaults().will(returnValue(jfcHandle));
-    MOCKER(RaUbImportJetty).defaults().will(returnValue(HrtRaUbJettyImportedOutParam()));
-    MOCKER(HrtRaUbLocalMemReg).defaults().will(returnValue(HrtRaUbLocalMemRegOutParam()));
+    SETUP_CCU_TRANSPORT_MOCKS_EX(HcclResult::HCCL_E_RESERVED);
 
     // 创建utConnection
     CcuChannelInfo channelInfo;
