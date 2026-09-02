@@ -52,6 +52,8 @@ HcclResult HcclChannelDestroy(HcclComm comm, const ChannelHandle* channels, uint
 
 5. 同一通信域内，本接口不得与[HcclChannelAcquire](HcclChannelAcquire.md)、[HcclChannelQuery](HcclChannelQuery.md)并发调用，调用方须保证相关调用串行执行。
 
+6. 同一个通信域内，本接口不支持并发调用，调用方须保证调用串行执行。
+
 ## 调用示例
 
 以通道的获取、使用与销毁为例。通道获取（含channelDesc构造与字段填充）步骤参见[HcclChannelAcquire](HcclChannelAcquire.md)调用示例：

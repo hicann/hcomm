@@ -519,7 +519,9 @@ bool CheckCommEngine(const CommEngine engine, const uint32_t opExpansionMode)
     if (engine == CommEngine::COMM_ENGINE_CCU) {
         return opExpansionMode == DEFAULT_MODE || opExpansionMode == CCU_MS_MODE || opExpansionMode == CCU_SCHE_MODE;
     }
-
+    if (engine == COMM_ENGINE_RESERVED) {
+        return false;
+    }
     return true;
 }
 
@@ -641,7 +643,7 @@ static HcclResult FinalizeV2ChannelAcquire(
 
 // 入参校验：HcclChannelAcquire / HcclChannelQuery / HcclChannelAcquireWithConfig 共用，消除重复参数检查
 static HcclResult CheckChannelResParams(
-    HcclComm comm, const HcclChannelDesc* channelDescs, const ChannelHandle* channels, uint32_t channelNum)
+    const HcclComm comm, const HcclChannelDesc* channelDescs, const ChannelHandle* channels, uint32_t channelNum)
 {
     CHK_PTR_NULL(comm);
     CHK_PTR_NULL(channelDescs);

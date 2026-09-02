@@ -52,6 +52,8 @@ HcclResult HcclChannelQuery(HcclComm comm, CommEngine engine, const HcclChannelD
 
 4. 同一通信域内，本接口不得与[HcclChannelAcquire](HcclChannelAcquire.md)、[HcclChannelDestroy](HcclChannelDestroy.md)并发调用，调用方须保证相关调用串行执行。
 
+5. 同一个通信域内，本接口不支持并发调用，调用方须保证调用串行执行。
+
 ## 调用示例
 
 以批量查询通信通道为例。channelDesc的构造与字段填充步骤与[HcclChannelAcquire](HcclChannelAcquire.md)调用示例一致：

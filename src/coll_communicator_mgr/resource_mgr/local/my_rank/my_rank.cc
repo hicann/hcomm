@@ -33,6 +33,8 @@
 #include "new_rank_info.h"
 
 #include <acl/acl.h>
+#include <unordered_map>
+#include <unordered_set>
 #include "shared_jetty_channel_pool.h"
 
 using namespace hcomm;
@@ -647,6 +649,23 @@ HcclResult MyRank::BatchExchangeAndCheckConsistency(
 constexpr uint32_t MEM_HANDLE_NUM_MAX = 256; // memHandleNum的默认限制最大为256
 constexpr uint32_t NOTIFY_NUM_MAX = 64;      // notifynum 的默认限制最大为64
 
+static bool HasDuplicateChannelDesc(const HcclChannelDesc* channelDesc, uint32_t channelNum)
+{
+    // 通过localEndpoint, remoteEndpoint 和 channelProtocol 判断是否有重复的 channelDesc
+    std::unordered_map<EndpointDescPair, std::unordered_set<int32_t>, EndpointDescPairHash, EndpointDescPairEqual>
+        descSet;
+    descSet.reserve(channelNum);
+    for (u32 index = 0; index < channelNum; ++index) {
+        EndpointDescPair endpointPair{channelDesc[index].localEndpoint, channelDesc[index].remoteEndpoint};
+        auto& protocolSet = descSet[std::move(endpointPair)];
+        const int32_t protocol = static_cast<int32_t>(channelDesc[index].channelProtocol);
+        if (!protocolSet.insert(protocol).second) {
+            return true;
+        }
+    }
+    return false;
+}
+
 HcclResult MyRank::CheckChannelParam(CommEngine engine, const HcclChannelDesc* channelDesc, uint32_t channelNum) const
 {
     for (u32 index = 0; index < channelNum; ++index) {
@@ -673,6 +692,13 @@ HcclResult MyRank::CheckChannelParam(CommEngine engine, const HcclChannelDesc* c
                 "[%s]Channeldesc[%u] invalid notifyNum [%u], max notify num[%u]", __func__, index,
                 channelDesc->notifyNum, NOTIFY_NUM_MAX),
             HCCL_E_PARA);
+    }
+
+    if (engine == COMM_ENGINE_CCU) {
+        if (HasDuplicateChannelDesc(channelDesc, channelNum)) {
+            HCCL_ERROR("[%s]Duplicate channelDesc found in CCU engine.", __func__);
+            return HCCL_E_NOT_SUPPORT;
+        }
     }
 
     return HCCL_SUCCESS;
@@ -1278,7 +1304,7 @@ HcclResult MyRank::CreateChannels(
 
     if (!newChannelsSnapshot.empty()) {
         HcclResult connRet = BatchConnectChannels(channelDescs, hostChannelHandleList, channelNum);
-        if (connRet != HCCL_SUCCESS && engine == COMM_ENGINE_CCU) {
+        if (connRet == HCCL_E_UNAVAIL && engine == COMM_ENGINE_CCU) {
             // CCU 场景额外回滚本次新建的 channel，避免资源残留
             HCCL_RUN_WARNING(
                 "[%s] BatchConnectChannels failed[%d], engine[%s], new channels num[%u]", __func__, connRet,

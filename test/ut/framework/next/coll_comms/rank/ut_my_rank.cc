@@ -1977,8 +1977,9 @@ TEST_F(MyRankTest, Ut_When_DestroyPartialFail_Expect_ContinueAndReturnFirstErr)
 TEST_F(MyRankTest, Ut_When_RollbackFullChain_ResourceUnavailable_Expect_StateRestored)
 {
     HcclMem cclBuffer;
-    EndpointDesc localEp, rmtEp;
+    EndpointDesc localEp, rmtEp, rmtEp2;
     SetupForQuery(cclBuffer, localEp, rmtEp);
+    CreateEndpointDesc(rmtEp2, COMM_PROTOCOL_UB_MEM, "0.0.0.0");
     MOCKER(HcommChannelDestroy).stubs().will(returnValue(static_cast<int>(HCCL_SUCCESS)));
     // 建链阶段 mock 成功, 连接阶段返回资源不足, 触发 CCU 回滚(真实 DestroyNewChannels 路径)
     MOCKER_CPP(&MyRank::BatchCreateSockets).stubs().will(returnValue(HCCL_SUCCESS));
@@ -1990,19 +1991,23 @@ TEST_F(MyRankTest, Ut_When_RollbackFullChain_ResourceUnavailable_Expect_StateRes
     HcclChannelDesc desc[2];
     for (int i = 0; i < 2; ++i) {
         desc[i].channelProtocol = COMM_PROTOCOL_UBC_CTP;
-        desc[i].remoteRank = 1;
+        desc[i].remoteRank = (i == 0) ? 1 : 2;
         desc[i].notifyNum = 8;
         desc[i].localEndpoint = localEp;
-        desc[i].remoteEndpoint = rmtEp;
+        desc[i].remoteEndpoint = (i == 0) ? rmtEp : rmtEp2;
     }
 
-    // 模拟 BatchCreateChannels 已创建两个新通道(进入 newChannels_ 与反查表)
-    auto epPair = GetEpPair(0, 1, localEp, rmtEp);
-    ASSERT_NE(epPair, nullptr);
+    // 模拟 BatchCreateChannels 已创建两个新通道(进入 newChannels_ 与反查表)。
+    // 两条 desc 使用不同 endpoint，避免触发 CCU 重复 desc 拦截。
+    auto epPair1 = GetEpPair(0, 1, localEp, rmtEp);
+    auto epPair2 = GetEpPair(0, 2, localEp, rmtEp2);
+    ASSERT_NE(epPair1, nullptr);
+    ASSERT_NE(epPair2, nullptr);
     ChannelHandle acquireHandles[2] = {0x200, 0x201};
-    RegisterChannels(epPair, COMM_ENGINE_CCU, {acquireHandles[0], acquireHandles[1]});
+    RegisterChannels(epPair1, COMM_ENGINE_CCU, {acquireHandles[0]});
+    RegisterChannels(epPair2, COMM_ENGINE_CCU, {acquireHandles[1]});
     myRank->newChannels_.emplace_back(std::make_pair(0, 0));
-    myRank->newChannels_.emplace_back(std::make_pair(1, 1));
+    myRank->newChannels_.emplace_back(std::make_pair(1, 0));
 
     std::vector<ChannelHandle> outHandles(2, 0);
     EXPECT_EQ(myRank->CreateChannels(COMM_ENGINE_CCU, "test", desc, 2, outHandles.data()), HCCL_E_UNAVAIL);
