@@ -36,7 +36,7 @@ HcclResult HcclChannelAcquire(HcclComm comm, CommEngine engine, const HcclChanne
 
 ## Constraints
 
-1. When CommEngine is set to CCU, external configuration of NotifyNum is not supported, and eight CCU Notify resources are allocated by default.
+1. When CommEngine is set to CCU, external configuration of NotifyNum is not supported, and four CCU Notify resources are allocated by default.
 
 2. When CommEngine is set to CCU, exchanging additional custom memory is not supported. Only the HcclBuffer of the communicator can be exchanged.
 
@@ -102,7 +102,7 @@ for (uint32_t idx = 0; idx < listSize; idx++) {
   channelDesc.remoteEndpoint.commAddr = link.dstEndpointDesc.commAddr;
   channelDesc.remoteEndpoint.loc   = link.dstEndpointDesc.loc;
   channelDesc.channelProtocol     = link.linkAttr.linkProtocol;
-  channelDesc.notifyNum = 8; // Specify the number of Notify resources as required.
+  channelDesc.notifyNum = 4; // Specify the number of Notify resources as required.
 
   channelDescVec[idx] = channelDesc;
 }

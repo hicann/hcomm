@@ -38,7 +38,7 @@ HcommResult：接口成功返回0，其他失败。
 - HcommChannelDesc中的remoteEndpoint必须正确填充远端端点信息。
 - 当HcommChannelDesc中exchangeAllMems为false时，必须配置memHandles和memHandleNum。
 - 当前CommEngine配置为CCU时，仅支持交换1份memHandle。
-- 当前CommEngine配置为CCU时，不支持外部配置NotifyNum，默认为8个CCU Notify。
+- 当前CommEngine配置为CCU时，不支持外部配置NotifyNum，默认为4个CCU Notify。
 - 当前各CommEngine支持的通信协议与芯片型号有关，具体如下：
 
   针对Ascend 950PR/Ascend 950DT，各通信引擎支持的通信协议如下：

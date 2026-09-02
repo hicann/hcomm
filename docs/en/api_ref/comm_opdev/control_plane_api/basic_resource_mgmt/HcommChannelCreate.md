@@ -40,7 +40,7 @@ HcommResult: The API returns 0 on success and other values on failure.
 - The remoteEndpoint in HcommChannelDesc must be correctly filled with the remote endpoint information.
 - When exchangeAllMems in HcommChannelDesc is false, memHandles and memHandleNum must be configured.
 - When the current CommEngine is configured as CCU, only one memHandle can be exchanged.
-- When the current CommEngine is configured as CCU, external configuration of NotifyNum is not supported, and the default is 8 CCU Notify.
+- When the current CommEngine is configured as CCU, external configuration of NotifyNum is not supported, and the default is 4 CCU Notify.
 - The communication protocols supported by each CommEngine are related to the chip model, as follows:
 
   For Ascend 950PR/Ascend 950DT, the communication protocols supported by each communication engine are as follows:
