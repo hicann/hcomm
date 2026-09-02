@@ -105,7 +105,7 @@ RoceRegedMemMgr::MemoryExport(const EndpointDesc& endpointDesc, void* memHandle,
 }
 
 HcclResult RoceRegedMemMgr::GetParamsFromMemDesc(
-    const void* memDesc, uint32_t descLen, EndpointDesc& endpointDesc, Hccl::ExchangeRdmaBufferDto& dto)
+    const void* memDesc, uint32_t descLen, EndpointDesc& endpointDesc, Hccl::ExchangeRdmaBufferDto& dto) const
 {
     const char* description = static_cast<const char*>(memDesc);
 

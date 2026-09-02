@@ -23,7 +23,7 @@ public:
         : AicpuTsUboeUbRtpChannelHelper(endpointHandle, channelDesc)
     {}
 
-    ~AicpuTsUbRtpChannel() = default;
+    ~AicpuTsUbRtpChannel() override = default;
 
     HcommChannelKind GetChannelKind() const override { return HcommChannelKind::AICPU_TS_UB_RTP; }
 

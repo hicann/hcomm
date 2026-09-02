@@ -11,6 +11,9 @@
 #ifndef ENDPOINT_PAIR_H
 #define ENDPOINT_PAIR_H
 
+#include <cstddef>
+#include <cstdint>
+#include <cstring>
 #include <memory>
 #include <mutex>
 #include <unordered_map>
@@ -117,7 +120,7 @@ public:
 
 private:
     HcclResult EnsureSocketMgrCompat(const uint32_t myRank, const std::string& socketTag);
-    Hccl::SocketConfig BuildSocketConfig(const Hccl::LinkData& linkData, const std::string& socketTag);
+    Hccl::SocketConfig BuildSocketConfig(const Hccl::LinkData& linkData, const std::string& socketTag) const;
     HcclResult HandleHostSocketOrBuildLinkData(
         const uint32_t myRank, const uint32_t rmtRank, const std::string& socketTag, u32 reuseIdx,
         const uint32_t listenPort, Hccl::Socket*& socket, uint32_t devicePhyId, uint32_t remoteDevicePhyId,

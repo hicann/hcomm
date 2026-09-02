@@ -37,7 +37,7 @@ constexpr char_t FINISH_MSG[FINISH_MSG_SIZE] = "Uboe Comm Pipe ready!";
 class AicpuTsUboeUbRtpChannelHelper : public Channel {
 public:
     AicpuTsUboeUbRtpChannelHelper(EndpointHandle endpointHandle, const HcommChannelDesc& channelDesc);
-    virtual ~AicpuTsUboeUbRtpChannelHelper();
+    virtual ~AicpuTsUboeUbRtpChannelHelper() override;
 
     HcclResult GetNotifyNum(uint32_t* notifyNum) const override;
     HcclResult GetRemoteMems(uint32_t* memNum, CommMem** remoteMem, char*** memInfos) override;

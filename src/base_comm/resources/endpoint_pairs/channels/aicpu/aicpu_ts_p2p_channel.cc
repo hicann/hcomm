@@ -35,14 +35,14 @@ AicpuTsP2pChannel::~AicpuTsP2pChannel()
 
 HcclResult AicpuTsP2pChannel::ParseInputParam()
 {
-    Endpoint* localEpPtr = reinterpret_cast<Endpoint*>(endpointHandle_);
+    Endpoint* localEpPtr = static_cast<Endpoint*>(endpointHandle_);
     CHK_PTR_NULL(localEpPtr);
     localEp_ = localEpPtr->GetEndpointDesc();
 
     HCCL_INFO("[AicpuTsP2pChannel][%s] localProtocol[%d]", __func__, localEp_.protocol);
 
     remoteEp_ = channelDesc_.remoteEndpoint;
-    socket_ = reinterpret_cast<Hccl::Socket*>(channelDesc_.socket);
+    socket_ = static_cast<Hccl::Socket*>(channelDesc_.socket);
     notifyNum_ = channelDesc_.notifyNum;
     commonRes_.bufferVec.clear();
 
@@ -190,7 +190,7 @@ ChannelStatus AicpuTsP2pChannel::GetStatus()
 
 HcommChannelKind AicpuTsP2pChannel::GetChannelKind() const { return HcommChannelKind::AICPU_TS_PCIE; }
 
-HcclResult AicpuTsP2pChannel::SetModuleDataName(Hccl::ModuleData& module, const std::string& name)
+HcclResult AicpuTsP2pChannel::SetModuleDataName(Hccl::ModuleData& module, const std::string& name) const
 {
     int ret = strcpy_s(module.name, sizeof(module.name), name.c_str());
     if (ret != 0) {

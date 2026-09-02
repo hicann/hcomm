@@ -111,7 +111,7 @@ UbRegedMemMgr::MemoryExport(const EndpointDesc& endpointDesc, void* memHandle, v
 }
 
 HcclResult UbRegedMemMgr::GetParamsFromMemDesc(
-    const void* memDesc, uint32_t descLen, EndpointDesc& endpointDesc, Hccl::ExchangeUbBufferDto& dto)
+    const void* memDesc, uint32_t descLen, EndpointDesc& endpointDesc, Hccl::ExchangeUbBufferDto& dto) const
 {
     const char* description = static_cast<const char*>(memDesc);
 

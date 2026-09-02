@@ -192,7 +192,7 @@ HcclResult UrmaEndpoint::GetAsyncEvents(uint32_t devPhyId, struct AsyncEvent eve
     if (ret != 0) {
         HCCL_ERROR(
             "[%s] devPhyId[%u] epHandle[%p] RaCtxGetAsyncEvents failed, ctxHandle[%p] ret[%d]", __func__, devPhyId,
-            this, (void*)ctxHandle_, ret);
+            this, static_cast<void*>(ctxHandle_), ret);
         return HCCL_E_INTERNAL;
     }
     return HCCL_SUCCESS;

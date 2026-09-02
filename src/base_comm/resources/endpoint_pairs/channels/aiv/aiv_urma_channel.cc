@@ -311,13 +311,13 @@ void AivUrmaChannel::ReleaseDeviceChannelEntity()
 HcclResult AivUrmaChannel::ParseInputParam()
 {
     // 1. 从 endpointHandle_，获得 localEp_ 和 rdmaHandle_
-    Endpoint* localEpPtr = reinterpret_cast<Endpoint*>(endpointHandle_);
+    Endpoint* localEpPtr = static_cast<Endpoint*>(endpointHandle_);
     CHK_PTR_NULL(localEpPtr);
     localEp_ = localEpPtr->GetEndpointDesc();
     rdmaHandle_ = localEpPtr->GetRdmaHandle();
     devicePhyId_ = localEp_.loc.device.devPhyId;
 
-    socket_ = reinterpret_cast<Hccl::Socket*>(channelDesc_.socket);
+    socket_ = static_cast<Hccl::Socket*>(channelDesc_.socket);
     remoteEp_ = channelDesc_.remoteEndpoint;
     notifyNum_ = channelDesc_.notifyNum;
     commonRes_.bufferVec.clear();
@@ -453,7 +453,7 @@ HcclResult
 AivUrmaChannel::AcquireSharedJettyInBuildConnection(const UbConnBuildContext& ctx, Hccl::DevUbConnection* connection)
 {
     // 共享 jetty 模式：复用同 Endpoint 下已创建的 jetty
-    Endpoint* endpoint = reinterpret_cast<Endpoint*>(endpointHandle_);
+    Endpoint* endpoint = static_cast<Endpoint*>(endpointHandle_);
     // UB_CTP → HCOMM_TA_CTP_UB_TIMEOUT，UB_TP → HCOMM_TA_RTP_UB_TIMEOUT
     u8 taTimeOut = 0;
     uint32_t taTimeOutValue = 0;

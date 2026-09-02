@@ -165,10 +165,10 @@ protected:
         std::shared_ptr<RmaBuffer> rmaBuffer;
         CHK_RET(RegisterOrAlias(
             mgr, findPair, rmaBuffer,
-            [&](auto& parent) {
+            [&localBufferPtr, &makeAlias](auto& parent) {
                 return makeAlias(localBufferPtr, parent);
             },
-            [&]() {
+            [&localBufferPtr, &makeNew]() {
                 return makeNew(localBufferPtr);
             }));
 
@@ -217,13 +217,14 @@ protected:
                   return entry.first.get() == buffer;
               });
         if (it != allBuffers.end()) {
-            if (outRecords != nullptr) {
-                outRecords->erase(std::remove(outRecords->begin(), outRecords->end(), it->first), outRecords->end());
-            }
+            auto bufferPtr = it->first;
             if (!mgr->IsInTree(ownKey)) {
                 allBuffers.erase(it);
             } else {
                 it->second = true;
+            }
+            if (outRecords != nullptr) {
+                outRecords->erase(std::remove(outRecords->begin(), outRecords->end(), bufferPtr), outRecords->end());
             }
         }
         return HCCL_SUCCESS;

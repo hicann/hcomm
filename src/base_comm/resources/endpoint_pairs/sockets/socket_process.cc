@@ -233,7 +233,7 @@ HcclResult SocketProcess::Init()
     return HCCL_SUCCESS;
 }
 
-Hccl::SocketRole SocketProcess::ConvertToHcclSocketRole(HcommSocketRole& hcommRole)
+Hccl::SocketRole SocketProcess::ConvertToHcclSocketRole(HcommSocketRole& hcommRole) const
 {
     switch (hcommRole) {
         case HCOMM_SOCKET_ROLE_CLIENT:

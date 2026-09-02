@@ -70,7 +70,8 @@ HcclResult AivChannelHelper::HandleStatus(
 }
 
 HcclResult AivChannelHelper::PreAllocChannels(
-    ChannelHandle* targetChannels, ChannelHandle* userChannels, HcommChannelDesc* channelDescs, uint32_t channelNum)
+    ChannelHandle* targetChannels, ChannelHandle* userChannels, const HcommChannelDesc* channelDescs,
+    uint32_t channelNum)
 {
     CHK_PTR_NULL(targetChannels);
     CHK_PTR_NULL(userChannels);

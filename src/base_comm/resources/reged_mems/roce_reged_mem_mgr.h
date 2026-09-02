@@ -46,7 +46,7 @@ public:
     HcclResult GetAllMemHandles(void** memHandles, uint32_t* memHandleNum) override;
     HcclResult GetMemDesc(const EndpointDesc endpointDesc, Hccl::LocalRdmaRmaBuffer* localRdmaRmaBuffer);
     HcclResult GetParamsFromMemDesc(
-        const void* memDesc, uint32_t descLen, EndpointDesc& endpointDesc, Hccl::ExchangeRdmaBufferDto& dto);
+        const void* memDesc, uint32_t descLen, EndpointDesc& endpointDesc, Hccl::ExchangeRdmaBufferDto& dto) const;
 
     RdmaHandle GetRdmaHandle() const { return rdmaHandle_; }
 

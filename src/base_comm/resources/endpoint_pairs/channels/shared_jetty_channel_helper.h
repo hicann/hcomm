@@ -11,7 +11,6 @@
 #ifndef SHARED_JETTY_CHANNEL_HELPER_H
 #define SHARED_JETTY_CHANNEL_HELPER_H
 
-#include "hcomm_res_defs.h"
 #include "endpoint.h"
 #include "comm_queue_context/jetty_context.h"
 #include "dev_ub_connection.h"

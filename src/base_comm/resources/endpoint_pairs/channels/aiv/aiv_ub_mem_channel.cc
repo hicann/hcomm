@@ -19,7 +19,7 @@ AivUbMemChannel::AivUbMemChannel(EndpointHandle endpointHandle, const HcommChann
 
 HcclResult AivUbMemChannel::ParseInputParam()
 {
-    socket_ = reinterpret_cast<Hccl::Socket*>(channelDesc_.socket);
+    socket_ = static_cast<Hccl::Socket*>(channelDesc_.socket);
     return HCCL_SUCCESS;
 }
 

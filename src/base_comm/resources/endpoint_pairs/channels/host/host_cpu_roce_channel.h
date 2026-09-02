@@ -11,7 +11,13 @@
 #ifndef HOST_CPU_ROCE_CHANNEL_H
 #define HOST_CPU_ROCE_CHANNEL_H
 
+#include <array>
+#include <cstdint>
+#include <functional>
+#include <memory>
 #include <mutex>
+#include <string>
+#include <vector>
 
 #include "../channel.h"
 #include "enum_factory.h"
@@ -67,7 +73,7 @@ private:
     HcclResult
     CheckPollCqResult(const Hccl::QpInfo& qpInfo, uint32_t qpIdx, int actualNum, const struct ibv_wc* wc) const;
 
-    virtual HcclResult Clean() override;
+    HcclResult Clean() override;
     HcclResult Resume() override;
     HcclResult ExchangeCapability();
     HcclResult ExchangeDataHybird();

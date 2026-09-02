@@ -11,6 +11,10 @@
 #ifndef HCCLV2_RMA_HOST_NET_CONNECTION_H
 #define HCCLV2_RMA_HOST_NET_CONNECTION_H
 
+#include <cstdint>
+#include <memory>
+#include <string>
+
 #include "hccp_common.h"
 #include "enum_factory.h"
 #include "hccl_common.h"

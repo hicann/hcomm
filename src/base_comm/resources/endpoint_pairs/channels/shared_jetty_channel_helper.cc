@@ -37,7 +37,8 @@ static HcclResult WaitForJettyCreated(Hccl::DevUbConnection& conn, uint32_t time
             HCCL_ERROR("[%s] wait jetty create timeout[%ums].", __func__, timeoutMs);
             return HCCL_E_TIMEOUT;
         }
-        std::this_thread::sleep_for(std::chrono::milliseconds(2));
+        constexpr uint32_t kRetrySleepMs = 2;
+        std::this_thread::sleep_for(std::chrono::milliseconds(kRetrySleepMs));
     }
 }
 
@@ -66,7 +67,8 @@ ProvideSharedJettyCtx(const TempConnFactory& tempConnFactory, uint64_t sharedQue
     std::unique_ptr<Hccl::DevUbConnection> tempConn = tempConnFactory();
     CHK_SMART_PTR_NULL(tempConn);
     // 16s 覆盖 TP 建链(~8s) + jetty 异步创建(~8s) 的串行最坏时长, 与 jettyTimeOut hwValue=16(=8s) 配套
-    CHK_RET(WaitForJettyCreated(*tempConn, 16000));
+    constexpr uint32_t kJettyCreateTimeOutMs = 16000;
+    CHK_RET(WaitForJettyCreated(*tempConn, kJettyCreateTimeOutMs));
 
     // 通过适配层提取 jetty 字段（含 sqDepth），不直接调 legacy GetJettyInfo
     CHK_RET(ExtractJettyInfoFromConn(tempConn.get(), ctx));

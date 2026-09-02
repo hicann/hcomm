@@ -11,6 +11,9 @@
 #ifndef AIV_UB_MEM_CHANNEL_H
 #define AIV_UB_MEM_CHANNEL_H
 
+#include <cstdint>
+#include <memory>
+#include <vector>
 #include "../channel.h"
 
 // Orion
@@ -31,8 +34,8 @@ public:
     HcclResult UpdateMemInfo(HcommMemHandle* memHandles, uint32_t memHandleNum) override;
     const HcommChannelDesc& GetChannelDesc() const override { return channelDesc_; }
 
-    virtual HcclResult Clean() override;
-    virtual HcclResult Resume() override;
+    HcclResult Clean() override;
+    HcclResult Resume() override;
 
     // 数据面接口
     HcclResult NotifyWait(const uint32_t localNotifyIdx, const uint32_t timeout) override;

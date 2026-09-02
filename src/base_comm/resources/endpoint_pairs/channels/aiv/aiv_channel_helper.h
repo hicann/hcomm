@@ -25,7 +25,7 @@ public:
         const ChannelHandle* channelList, uint32_t listNum, const HcommChannelDesc* channelDescs,
         const std::vector<int32_t>& linkStatusList, int32_t* statusList);
     static HcclResult PreAllocChannels(
-        ChannelHandle* targetChannels, ChannelHandle* userChannels, HcommChannelDesc* channelDescs,
+        ChannelHandle* targetChannels, ChannelHandle* userChannels, const HcommChannelDesc* channelDescs,
         uint32_t channelNum);
 
 private:

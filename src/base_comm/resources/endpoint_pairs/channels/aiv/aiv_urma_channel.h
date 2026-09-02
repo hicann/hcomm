@@ -11,6 +11,9 @@
 #ifndef AIV_URMA_CHANNEL_H
 #define AIV_URMA_CHANNEL_H
 
+#include <cstdint>
+#include <memory>
+#include <vector>
 #include "../channel.h"
 
 // Orion
@@ -35,7 +38,7 @@ public:
 
     HcclResult Clean() override;
     HcclResult Resume() override;
-    virtual HcclResult GetNotifyNum(uint32_t* notifyNum) const override;
+    HcclResult GetNotifyNum(uint32_t* notifyNum) const override;
     HcclResult GetRemoteMems(uint32_t* memNum, CommMem** remoteMem, char*** memInfos) override;
     const HcommChannelDesc& GetChannelDesc() const override { return channelDesc_; }
     HcclResult BuildChannelEntityToDevice(void** devChannelPtr);

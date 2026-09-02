@@ -24,7 +24,7 @@ inline HcclResult MakeRmaBufferVecFromMemHandles(
 {
     bufferVec.clear();
     for (uint32_t i = 0; i < memHandleNum; ++i) {
-        auto localRmaBuffer = reinterpret_cast<Hccl::LocalRmaBuffer*>(memHandles[i]);
+        auto localRmaBuffer = static_cast<Hccl::LocalRmaBuffer*>(memHandles[i]);
         CHK_PTR_NULL(localRmaBuffer);
         auto buf = localRmaBuffer->GetBuf();
         CHK_PTR_NULL(buf);

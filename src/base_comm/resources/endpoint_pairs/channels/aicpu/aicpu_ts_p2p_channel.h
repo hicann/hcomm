@@ -43,8 +43,8 @@ public:
     const HcommChannelDesc& GetChannelDesc() const override { return channelDesc_; }
     HcclResult H2DResPack(std::vector<char>& buffer);
 
-    virtual HcclResult Clean() override;
-    virtual HcclResult Resume() override;
+    HcclResult Clean() override;
+    HcclResult Resume() override;
 
     // 数据面接口
     HcclResult NotifyRecord(const uint32_t remoteNotifyIdx) override;
@@ -58,7 +58,7 @@ public:
 
 private:
     AicpuTsChannelHelper aicpuTsHelper_;
-    HcclResult SetModuleDataName(Hccl::ModuleData& module, const std::string& name);
+    HcclResult SetModuleDataName(Hccl::ModuleData& module, const std::string& name) const;
     HcclResult ParseInputParam();
     HcclResult BuildAttr();
     HcclResult BuildConnection();

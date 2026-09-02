@@ -88,7 +88,7 @@ HcclResult SocketMgr::AddWhiteList(const Hccl::SocketConfig& socketConfig, const
     return HCCL_SUCCESS;
 }
 
-HcclResult SocketMgr::GetSocketHandle(const Hccl::SocketConfig& socketConfig, Hccl::SocketHandle& socketHandle)
+HcclResult SocketMgr::GetSocketHandle(const Hccl::SocketConfig& socketConfig, Hccl::SocketHandle& socketHandle) const
 {
     EXCEPTION_HANDLE_BEGIN
 
@@ -213,7 +213,7 @@ HcclResult SocketMgr::GetSocket(const Hccl::SocketConfig& socketConfig, Hccl::So
         }
     }
     if (it != socketMap_.end()) {
-        if (socketConfig.hostNic2DeviceNicMode_) {
+        if (socketConfig.hostNic2DeviceNicMode_ != 0) {
             HCCL_INFO(
                 "[SocketMgr][%s] destroy a socket[%p] in hostNic2DeviceNicMode", __func__, static_cast<void*>(socket));
             socket->Destroy();
@@ -246,9 +246,8 @@ HcclResult SocketMgr::GetHostSocket(const Hccl::SocketConfig& socketConfig, Hccl
     CHK_RET(Init());
     // 1. 先查找
     auto it = socketMap_.find(socketConfig);
-
     if (it != socketMap_.end()) {
-        if (socketConfig.hostNic2DeviceNicMode_) {
+        if (socketConfig.hostNic2DeviceNicMode_ != 0) {
             socket = it->second.get();
             HCCL_INFO(
                 "[SocketMgr][%s] destroy a socket[%p] in hostNic2DeviceNicMode", __func__, static_cast<void*>(socket));
@@ -295,7 +294,7 @@ HcclResult SocketMgr::UpdateSocketConfig(const Hccl::SocketConfig*& socketConfig
     return HCCL_SUCCESS;
 }
 
-HcclResult SocketMgr::DeleteWhiteList(Hccl::Socket* socket)
+HcclResult SocketMgr::DeleteWhiteList(const Hccl::Socket* socket)
 {
     std::unique_lock<std::mutex> lock(mutex_);
     CHK_PTR_NULL(socket);
@@ -308,7 +307,8 @@ HcclResult SocketMgr::DeleteWhiteList(Hccl::Socket* socket)
     }
     if (!socketExist) {
         HCCL_WARNING(
-            "[DeleteWhiteList] socket[%p] not found in socketMap_, nothing to delete.", static_cast<void*>(socket));
+            "[DeleteWhiteList] socket[%p] not found in socketMap_, nothing to delete.",
+            static_cast<const void*>(socket));
         return HCCL_SUCCESS;
     }
     auto iter = handle2WhiteListMap_.find(socket->GetFdHandle());

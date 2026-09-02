@@ -136,7 +136,8 @@ HcclResult HccsRegedMemMgr::UnregisterMemory(void* memHandle)
 }
 
 HcclResult HccsRegedMemMgr::SerializeToMemDesc(
-    const EndpointDesc& endpointDesc, hccl::LocalIpcRmaBuffer* localIpcRmaBuffer, void** memDesc, uint32_t* descLen)
+    const EndpointDesc& endpointDesc, hccl::LocalIpcRmaBuffer* localIpcRmaBuffer, void** memDesc,
+    uint32_t* descLen) const
 {
     HCCL_INFO("[%s] Begin", __FUNCTION__);
     CHK_PTR_NULL(memDesc);
@@ -148,8 +149,8 @@ HcclResult HccsRegedMemMgr::SerializeToMemDesc(
     ipcRmaBufferDesc.resize(ipcRmaBufferDesc.length() + sizeof(EndpointDesc));
     // put the EndpointDesc at the end of the Serialize-ed buf
     if (memcpy_s(
-            const_cast<char*>(ipcRmaBufferDesc.c_str()) + (ipcRmaBufferDesc.length() - sizeof(EndpointDesc)),
-            sizeof(EndpointDesc), &endpointDesc, sizeof(EndpointDesc))
+            &ipcRmaBufferDesc[0] + (ipcRmaBufferDesc.length() - sizeof(EndpointDesc)), sizeof(EndpointDesc),
+            &endpointDesc, sizeof(EndpointDesc))
         != EOK) {
         HCCL_ERROR("[RoceRegedMemMgr][SerializeToMemDesc] [%s] endpointDesc memcpy_s failed.", __func__);
         return HCCL_E_INTERNAL;
@@ -206,8 +207,7 @@ HcclResult HccsRegedMemMgr::DeSerializeFromMemDesc(
 
     std::string ipcRmaBufferDesc;
     ipcRmaBufferDesc.resize(ipcRmaBufferDescLen);
-    if (memcpy_s(const_cast<char*>(ipcRmaBufferDesc.c_str()), ipcRmaBufferDescLen, description, ipcRmaBufferDescLen)
-        != EOK) {
+    if (memcpy_s(&ipcRmaBufferDesc[0], ipcRmaBufferDescLen, description, ipcRmaBufferDescLen) != EOK) {
         HCCL_ERROR(
             "[HccsRegedMemMgr][DeSerializeFromMemDesc] [%s] ipcRmaBufferDesc copy error. aim size:[%llu]", __func__,
             ipcRmaBufferDescLen);
@@ -378,7 +378,7 @@ HcclResult HccsRegedMemMgr::MemoryGrant(const HcommMemGrantInfo* remoteGrantInfo
 }
 
 HcclResult
-HccsRegedMemMgr::MemoryEnableP2P(const EndpointDesc& localEndpointDesc, const EndpointDesc& remoteEndpointDesc)
+HccsRegedMemMgr::MemoryEnableP2P(const EndpointDesc& localEndpointDesc, const EndpointDesc& remoteEndpointDesc) const
 {
     HCCL_INFO("[%s] Begin", __FUNCTION__);
     if (localEndpointDesc.loc.device.serverIdx == remoteEndpointDesc.loc.device.serverIdx) {
@@ -393,7 +393,7 @@ HccsRegedMemMgr::MemoryEnableP2P(const EndpointDesc& localEndpointDesc, const En
 }
 
 HcclResult
-HccsRegedMemMgr::MemoryDisableP2P(const EndpointDesc& localEndpointDesc, const EndpointDesc& remoteEndpointDesc)
+HccsRegedMemMgr::MemoryDisableP2P(const EndpointDesc& localEndpointDesc, const EndpointDesc& remoteEndpointDesc) const
 {
     HCCL_INFO("[%s] Begin", __FUNCTION__);
     if (localEndpointDesc.loc.device.serverIdx == remoteEndpointDesc.loc.device.serverIdx) {
@@ -488,7 +488,7 @@ HcclResult HccsRegedMemMgr::GetRemoteIpcRmaBufferEx(std::vector<HcclMemEx>& remo
     return HCCL_SUCCESS;
 }
 
-HcclResult HccsRegedMemMgr::GetLocalIpcRmaBufferEx(std::vector<HcclMemEx>& localIpcRmaBufferVecEx)
+HcclResult HccsRegedMemMgr::GetLocalIpcRmaBufferEx(std::vector<HcclMemEx>& localIpcRmaBufferVecEx) const
 {
     NetDevContext* netDevCtx = static_cast<NetDevContext*>(netDevCtx_);
     const std::shared_ptr<LocalIpcRmaBufferMgr>& localIpcRmaBufferMgr = netDevCtx->GetlocalIpcRmaBufferMgr();

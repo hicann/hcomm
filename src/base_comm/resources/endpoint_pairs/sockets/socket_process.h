@@ -12,9 +12,11 @@
 #define SOCKET_PROCESS_H
 
 #include <map>
+#include <memory>
 #include <mutex>
 #include <string>
 #include <atomic>
+#include <unordered_map>
 #include "hccl_comm_socket_c_adpt.h"
 #include "socket_mgr.h"
 
@@ -42,7 +44,7 @@ public:
 private:
     HcclResult Init();
 
-    Hccl::SocketRole ConvertToHcclSocketRole(HcommSocketRole& hcommRole);
+    Hccl::SocketRole ConvertToHcclSocketRole(HcommSocketRole& hcommRole) const;
 
     // 创建socket句柄，建立通信通道
     HcclResult BuildSocket(SocketDesc* socketDesc, const std::string& socketTag);

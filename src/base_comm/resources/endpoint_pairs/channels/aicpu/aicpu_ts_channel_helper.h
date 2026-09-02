@@ -22,12 +22,12 @@
 static const uint32_t HCOMM_AICPU_CHANNEL_CTX_MAGIC_WORD = 0x0fcf0f4fU;
 static const uint32_t HCOMM_AICPU_CHANNEL_CTX_VERSION = 0U;
 
-typedef struct {
+using HcommAicpuChannelCtx = struct {
     CommAbiHeader abiHeader{HCOMM_AICPU_CHANNEL_CTX_VERSION, HCOMM_AICPU_CHANNEL_CTX_MAGIC_WORD, 0, 0};
     CommEngine engine{COMM_ENGINE_RESERVED};
     CommProtocol protocol{COMM_PROTOCOL_RESERVED};
     void* deviceChannel{nullptr};
-} HcommAicpuChannelCtx;
+};
 
 /**
  * @brief AICPU 专用辅助类，持有 ctx 内存等 AICPU 专属资源，提供 AICPU 批量建链状态机接口。

@@ -157,7 +157,7 @@ HcclResult CcuUrmaChannel::Init()
 {
     EXCEPTION_HANDLE_BEGIN
     CHK_PTR_NULL(channelDesc_.socket);
-    socket_ = reinterpret_cast<Hccl::Socket*>(channelDesc_.socket);
+    socket_ = static_cast<Hccl::Socket*>(channelDesc_.socket);
     // 当前socket在外部统一触发connect，建议之后改为异步建链流程内触发
 
     CHK_PTR_NULL(locEndpointHandle_);

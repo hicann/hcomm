@@ -49,20 +49,20 @@ public:
     HcclResult AcceptClient(
         uint32_t localPort, hccl::HcclIpAddress remoteIp, std::string& socketTag,
         std::shared_ptr<hccl::HcclSocket>& socket);
-    void CloseSocket(std::shared_ptr<hccl::HcclSocket>& socket);
+    void CloseSocket(std::shared_ptr<hccl::HcclSocket>& socket) const;
 
 private:
     static HcclResult Init(u32 devicePhyId, u32 deviceLogicId);
     void UnInit();
     HcclResult ServerDeInit(const HcclIpAddress& localIp, u32 port);
     HcclResult
-    GetListenSocket(const HcclIpAddress& localIp, uint32_t port, std::shared_ptr<hccl::HcclSocket>& listenSocket);
+    GetListenSocket(const HcclIpAddress& localIp, uint32_t port, std::shared_ptr<hccl::HcclSocket>& listenSocket) const;
     HcclResult AddListenSocketWhiteList(
-        const HcclIpAddress& localIp, uint32_t port, const std::vector<SocketWlistInfo>& wlistInfos);
+        const HcclIpAddress& localIp, uint32_t port, const std::vector<SocketWlistInfo>& wlistInfos) const;
     HcclResult AcceptDataSocket(
         const HcclIpAddress& localIp, uint32_t port, const std::string& tag,
-        std::shared_ptr<hccl::HcclSocket>& outConnected, uint32_t acceptTimeoutMs);
-    HcclResult WaitClientSocketLinkEstablished(const std::shared_ptr<hccl::HcclSocket>& socket, s32 timeoutSec);
+        std::shared_ptr<hccl::HcclSocket>& outConnected, uint32_t acceptTimeoutMs) const;
+    HcclResult WaitClientSocketLinkEstablished(const std::shared_ptr<hccl::HcclSocket>& socket, s32 timeoutSec) const;
 
 private:
     static std::map<PortInfo, std::pair<NicType, HcclNetDevCtx>> netDevCtxMap_;

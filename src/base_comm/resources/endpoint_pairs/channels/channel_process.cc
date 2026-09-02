@@ -361,7 +361,6 @@ static void PrintChannelStatusDistribution(
         lastLog = now;
     }
 }
-
 HcclResult ChannelProcess::GetChannelsInfo(
     const ChannelHandle* channelList, uint32_t listNum, std::vector<CommEngine>& engines,
     std::vector<HcommChannelDesc>& channelDescs, std::vector<ChannelStatus>& statusList)
@@ -503,7 +502,7 @@ ChannelProcess::CombineHostMemory(const std::vector<std::vector<char>>& hostPack
 }
 
 HcclResult ChannelProcess::FillChannelD2HMap(
-    ChannelHandle* deviceChannelHandles, ChannelHandle* hostChannelHandles, uint32_t listNum)
+    const ChannelHandle* deviceChannelHandles, ChannelHandle* hostChannelHandles, uint32_t listNum)
 {
     CHK_PTR_NULL(deviceChannelHandles);
     CHK_PTR_NULL(hostChannelHandles);
@@ -588,7 +587,7 @@ LaunchKernelDeviceParam(const T& channelParam, aclrtBinHandle binHandle, const s
                                                                       envTimeout + 25; // 多25s，避免超时
 
     CHK_RET(hccl::AicpuAclKernelLaunch(
-        localStream.ptr(), reinterpret_cast<void*>(&context), sizeof(context), binHandle, kernelName, true,
+        localStream.ptr(), static_cast<void*>(&context), sizeof(context), binHandle, kernelName, true,
         static_cast<u16>(timeOut)));
 
     CHK_RET(hcclStreamSynchronize(localStream.ptr(), timeOut));
@@ -676,8 +675,9 @@ static HcclResult CopyUpdateKernelChannelListToDevice(
 }
 
 HcclResult ChannelProcess::LaunchChannelKernelCommon(
-    ChannelHandle* channelHandles, ChannelHandle* hostChannelHandles, HcommChannelDesc* hcommDesc, uint32_t listNum,
-    const std::string& commTag, aclrtBinHandle binHandle, const std::string& kernelName, bool needProfiling)
+    ChannelHandle* channelHandles, ChannelHandle* hostChannelHandles, const HcommChannelDesc* hcommDesc,
+    uint32_t listNum, const std::string& commTag, aclrtBinHandle binHandle, const std::string& kernelName,
+    bool needProfiling)
 {
     CHK_PTR_NULL(channelHandles);
     CHK_PTR_NULL(hostChannelHandles);

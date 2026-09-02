@@ -43,7 +43,7 @@ AicpuTsUboeUbRtpChannelHelper::~AicpuTsUboeUbRtpChannelHelper()
 HcclResult AicpuTsUboeUbRtpChannelHelper::ParseInputParam()
 {
     // 1. 从 endpointHandle_，获得 localEp_ 和 rdmaHandle_
-    Endpoint* localEpPtr = reinterpret_cast<Endpoint*>(endpointHandle_);
+    Endpoint* localEpPtr = static_cast<Endpoint*>(endpointHandle_);
     CHK_PTR_NULL(localEpPtr);
     localEp_ = localEpPtr->GetEndpointDesc();
     rdmaHandle_ = localEpPtr->GetRdmaHandle();
@@ -52,7 +52,7 @@ HcclResult AicpuTsUboeUbRtpChannelHelper::ParseInputParam()
 
     // 2. 从 channelDesc_，获得 remoteEp_, socket_ 和 notifyNum
     remoteEp_ = channelDesc_.remoteEndpoint;
-    socket_ = reinterpret_cast<Hccl::Socket*>(channelDesc_.socket);
+    socket_ = static_cast<Hccl::Socket*>(channelDesc_.socket);
     notifyNum_ = channelDesc_.notifyNum;
     commonRes_.bufferVec.clear();
 

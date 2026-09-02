@@ -196,7 +196,7 @@ static void LaunchChannelKernelForKindExpectsV2(hcomm::HcommChannelKind kind)
     MOCKER_CPP(
         &hcomm::ChannelProcess::LaunchChannelKernelCommon,
         HcclResult(
-            ChannelHandle*, ChannelHandle*, HcommChannelDesc*, uint32_t, const std::string&, aclrtBinHandle,
+            ChannelHandle*, ChannelHandle*, const HcommChannelDesc*, uint32_t, const std::string&, aclrtBinHandle,
             const std::string&, bool))
         .stubs()
         .with(

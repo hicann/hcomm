@@ -11,6 +11,11 @@
 #ifndef DEV_RDMA_CONNECTION_V2_H
 #define DEV_RDMA_CONNECTION_V2_H
 
+#include <cstdint>
+#include <memory>
+#include <string>
+#include <vector>
+
 #include "hccp_common.h"
 #include "enum_factory.h"
 #include "hccl_common.h"

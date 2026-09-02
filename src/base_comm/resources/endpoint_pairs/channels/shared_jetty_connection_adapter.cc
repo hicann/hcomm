@@ -16,7 +16,7 @@
 namespace hcomm {
 
 // 适配层当前实现：转发到 Hccl::DevUbConnection 的新增共享 jetty 方法。
-// TODO(architecture): DevUbConnection 自 legacy/ 迁入 base_comm 后，本文件可直接操作 connection，
+// 后续演进：DevUbConnection 自 legacy/ 迁入 base_comm 后，本文件可直接操作 connection，
 //                     届时移除对 dev_ub_connection.h 的 #include，base_comm 完全不依赖 legacy 实现细节。
 // 注意：endpointTag 当前仅 builtin 路径传入，实际类型为 Endpoint*。
 //       若将来 plugin 路径复用此函数，需将 acquireRemoteCb/publishRemoteCb 的构建提升到调用方，

@@ -95,7 +95,7 @@ public:
     static HcclResult
     RegisterChannelD2HMap(ChannelHandle* deviceChannelHandles, ChannelHandle* hostChannelHandles, uint32_t listNum);
     static HcclResult
-    FillChannelD2HMap(ChannelHandle* deviceChannelHandles, ChannelHandle* hostChannelHandles, uint32_t listNum);
+    FillChannelD2HMap(const ChannelHandle* deviceChannelHandles, ChannelHandle* hostChannelHandles, uint32_t listNum);
     static HcclResult LaunchChannelKernel(
         ChannelHandle* channelHandles, ChannelHandle* hostChannelHandles, HcommChannelDesc* hcommDesc, uint32_t listNum,
         aclrtBinHandle binHandle);
@@ -112,8 +112,9 @@ private:
         const std::vector<std::vector<char>>& hostPackBuffers, const std::vector<u32>& channelSizeVec,
         uint32_t totalListNum, hccl::DeviceMem& channelSizeAddr, hccl::DeviceMem& devicePackBuf);
     static HcclResult LaunchChannelKernelCommon(
-        ChannelHandle* channelHandles, ChannelHandle* hostChannelHandles, HcommChannelDesc* hcommDesc, uint32_t listNum,
-        const std::string& commTag, aclrtBinHandle binHandle, const std::string& kernelName, bool needProfiling);
+        ChannelHandle* channelHandles, ChannelHandle* hostChannelHandles, const HcommChannelDesc* hcommDesc,
+        uint32_t listNum, const std::string& commTag, aclrtBinHandle binHandle, const std::string& kernelName,
+        bool needProfiling);
     static HcclResult ChannelKernelLaunchForBase(
         ChannelHandle* channelHandles, ChannelHandle* hostChannelHandles, HcommChannelDesc* hcommDesc, uint32_t listNum,
         aclrtBinHandle binHandle);

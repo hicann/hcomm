@@ -96,7 +96,7 @@ HcclResult EndpointPair::EnsureSocketMgrCompat(const uint32_t myRank, const std:
     return HCCL_SUCCESS;
 }
 
-Hccl::SocketConfig EndpointPair::BuildSocketConfig(const Hccl::LinkData& linkData, const std::string& socketTag)
+Hccl::SocketConfig EndpointPair::BuildSocketConfig(const Hccl::LinkData& linkData, const std::string& socketTag) const
 {
     std::string linkTag = socketTag;
     if (linkData.GetReuseIdx() != "0") {

@@ -44,8 +44,8 @@ public:
     HcclResult H2DResPack(std::vector<char>& buffer);
     HcommChannelKind GetChannelKind() const override;
 
-    virtual HcclResult Clean() override;
-    virtual HcclResult Resume() override;
+    HcclResult Clean() override;
+    HcclResult Resume() override;
     const HcommChannelDesc& GetChannelDesc() const override { return channelDesc_; }
     // 数据面接口
     HcclResult NotifyRecord(const uint32_t remoteNotifyIdx) override;

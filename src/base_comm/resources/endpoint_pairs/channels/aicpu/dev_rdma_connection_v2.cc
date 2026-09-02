@@ -25,7 +25,8 @@ static constexpr uint32_t UB_DB_VENDOR_FIELD_MASK = 0x7;
 DevRdmaConnectionV2::DevRdmaConnectionV2(Hccl::Socket* socket, RdmaHandle rdmaHandle, uint32_t cqAttrFlags)
     : socket_(socket),
       rdmaHandle_(rdmaHandle),
-      cqAttrFlags_(cqAttrFlags)
+      cqAttrFlags_(cqAttrFlags),
+      ndaQpInfo_{}
 {}
 
 HcclResult DevRdmaConnectionV2::Init()
@@ -231,7 +232,7 @@ HcclResult DevRdmaConnectionV2::DestroyQp()
     return ret;
 }
 
-HcclResult DevRdmaConnectionV2::GetExchangeDto(std::unique_ptr<Hccl::Serializable>& locQpAttrserial)
+HcclResult DevRdmaConnectionV2::GetExchangeDto(std::unique_ptr<Hccl::Serializable>& serial)
 {
     if (rdmaConnStatus_ != RdmaConnStatus::QP_CREATED && rdmaConnStatus_ != RdmaConnStatus::QP_MODIFIED) {
         HCCL_ERROR(
@@ -250,7 +251,7 @@ HcclResult DevRdmaConnectionV2::GetExchangeDto(std::unique_ptr<Hccl::Serializabl
         dto = std::make_unique<ExchangeRdmaConnDto>(localQpAttr.qpn, localQpAttr.psn, localQpAttr.gidIdx),
         return HCCL_E_PTR);
     CHK_SAFETY_FUNC_RET(memcpy_s(dto->gid_, HCCP_GID_RAW_LEN, localQpAttr.gid, HCCP_GID_RAW_LEN));
-    locQpAttrserial = std::unique_ptr<Hccl::Serializable>(std::move(dto));
+    serial = std::unique_ptr<Hccl::Serializable>(std::move(dto));
     return HCCL_SUCCESS;
 }
 

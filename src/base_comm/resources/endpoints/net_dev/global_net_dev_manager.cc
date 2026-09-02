@@ -313,7 +313,7 @@ HcclResult GlobalNetDevMgr::ServerDeInit(const HcclIpAddress& localIp, u32 port)
 }
 
 HcclResult GlobalNetDevMgr::GetListenSocket(
-    const HcclIpAddress& localIp, uint32_t port, std::shared_ptr<hccl::HcclSocket>& listenSocket)
+    const HcclIpAddress& localIp, uint32_t port, std::shared_ptr<hccl::HcclSocket>& listenSocket) const
 {
     PortInfo portInfo(localIp, port);
     std::lock_guard<std::mutex> lock(serverMapMutex_);
@@ -327,7 +327,7 @@ HcclResult GlobalNetDevMgr::GetListenSocket(
 }
 
 HcclResult GlobalNetDevMgr::AddListenSocketWhiteList(
-    const HcclIpAddress& localIp, uint32_t port, const std::vector<SocketWlistInfo>& wlistInfos)
+    const HcclIpAddress& localIp, uint32_t port, const std::vector<SocketWlistInfo>& wlistInfos) const
 {
     if (wlistInfos.empty()) {
         HCCL_ERROR("[GlobalNetDevMgr][%s] empty whitelist", __func__);
@@ -342,7 +342,7 @@ HcclResult GlobalNetDevMgr::AddListenSocketWhiteList(
 
 HcclResult GlobalNetDevMgr::AcceptDataSocket(
     const HcclIpAddress& localIp, uint32_t port, const std::string& tag,
-    std::shared_ptr<hccl::HcclSocket>& outConnected, uint32_t acceptTimeoutMs)
+    std::shared_ptr<hccl::HcclSocket>& outConnected, uint32_t acceptTimeoutMs) const
 {
     std::shared_ptr<hccl::HcclSocket> listenSocket;
     CHK_RET(GetListenSocket(localIp, port, listenSocket));
@@ -350,7 +350,7 @@ HcclResult GlobalNetDevMgr::AcceptDataSocket(
 }
 
 HcclResult
-GlobalNetDevMgr::WaitClientSocketLinkEstablished(const std::shared_ptr<hccl::HcclSocket>& socket, s32 timeoutSec)
+GlobalNetDevMgr::WaitClientSocketLinkEstablished(const std::shared_ptr<hccl::HcclSocket>& socket, s32 timeoutSec) const
 {
     CHK_SMART_PTR_NULL(socket);
     u32 pollCount = 0;
@@ -477,7 +477,7 @@ HcclResult GlobalNetDevMgr::AcceptClient(
     return HCCL_SUCCESS;
 }
 
-void GlobalNetDevMgr::CloseSocket(std::shared_ptr<hccl::HcclSocket>& socket)
+void GlobalNetDevMgr::CloseSocket(std::shared_ptr<hccl::HcclSocket>& socket) const
 {
     if (socket != nullptr) {
         socket->Close();

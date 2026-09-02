@@ -209,7 +209,7 @@ void EndpointMonitor::ProcessUbAsyncEvents()
 
 constexpr u32 SECOND_LAST_OFFSET = 2; // 倒数第二个字节偏移
 constexpr u32 LAST_OFFSET = 3;        // 倒数第一个字节偏移
-void EndpointMonitor::PrintUbAsyncEventsContext(void* epHandle, u32 seq, const struct AsyncEvent& event)
+void EndpointMonitor::PrintUbAsyncEventsContext(const void* epHandle, u32 seq, const struct AsyncEvent& event) const
 {
     u32 contextLen = event.len;
     if (contextLen > CONTEXT_MAX_LEN) {

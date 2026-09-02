@@ -198,7 +198,8 @@ AicpuTsRoceChannelV2::AicpuTsRoceChannelV2(
     EndpointHandle endpointHandle, HcommChannelDesc channelDesc, CommEngine engine)
     : endpointHandle_(endpointHandle),
       channelDesc_(channelDesc),
-      engine_(engine)
+      engine_(engine),
+      remoteEp_{}
 {}
 
 AicpuTsRoceChannelV2::~AicpuTsRoceChannelV2()
@@ -217,14 +218,14 @@ HcclResult AicpuTsRoceChannelV2::ParseInputParam()
     HCCL_INFO(
         "[AicpuTsRoceChannelV2][%s] Start. endpointHandle[0x%llx]", __func__,
         reinterpret_cast<uint64_t>(endpointHandle_));
-    Endpoint* localEpPtr = reinterpret_cast<Endpoint*>(endpointHandle_);
+    Endpoint* localEpPtr = static_cast<Endpoint*>(endpointHandle_);
     localEp_ = localEpPtr->GetEndpointDesc();
     rdmaHandle_ = localEpPtr->GetRdmaHandle();
     CHK_PTR_NULL(rdmaHandle_);
 
     // 2. 从 channelDesc_，获得 remoteEp_, socket_ 和 notifyNum_
     remoteEp_ = channelDesc_.remoteEndpoint;
-    socket_ = reinterpret_cast<Hccl::Socket*>(channelDesc_.socket);
+    socket_ = static_cast<Hccl::Socket*>(channelDesc_.socket);
     notifyNum_ = channelDesc_.notifyNum;
 
     return HCCL_SUCCESS;
@@ -512,7 +513,7 @@ HcclResult AicpuTsRoceChannelV2::ExchangeData()
     EXCEPTION_HANDLE_BEGIN
     // 同步发送数据包尺寸
     CHK_PRT_RET(
-        !socket_->Send(reinterpret_cast<void*>(&sendSize), sizeof(sendSize)),
+        !socket_->Send(static_cast<void*>(&sendSize), sizeof(sendSize)),
         HCCL_ERROR("[AicpuTsRoceChannelV2::%s] Send sendSize failed", __func__), HCCL_E_NETWORK);
     HCCL_INFO(
         "[AicpuTsRoceChannelV2::%s] Send size[%llu] of data success. [%llu] bytes sent.", __func__, sendSize,
@@ -520,7 +521,7 @@ HcclResult AicpuTsRoceChannelV2::ExchangeData()
 
     // 同步接收数据包尺寸
     CHK_PRT_RET(
-        !socket_->Recv(reinterpret_cast<void*>(&recvSize), sizeof(recvSize)),
+        !socket_->Recv(static_cast<void*>(&recvSize), sizeof(recvSize)),
         HCCL_ERROR("[AicpuTsRoceChannelV2::%s] Recv recvSize failed", __func__), HCCL_E_NETWORK);
     HCCL_INFO(
         "[AicpuTsRoceChannelV2::%s] Receive size[%llu] of data success. [%llu] bytes received.", __func__, recvSize,
@@ -528,7 +529,7 @@ HcclResult AicpuTsRoceChannelV2::ExchangeData()
 
     // 同步发送数据
     CHK_PRT_RET(
-        !socket_->Send(reinterpret_cast<void*>(sendData.data()), sendSize),
+        !socket_->Send(static_cast<void*>(sendData.data()), sendSize),
         HCCL_ERROR("[AicpuTsRoceChannelV2::%s] Send exchange data failed", __func__), HCCL_E_NETWORK);
     HCCL_INFO("[AicpuTsRoceChannelV2::%s] Send Exchange Data success. [%llu] bytes sent.", __func__, sendSize);
 
@@ -536,7 +537,7 @@ HcclResult AicpuTsRoceChannelV2::ExchangeData()
     HCCL_INFO("[AicpuTsRoceChannelV2::%s] Start to Receive Exchange Data", __func__);
     recvData.resize(recvSize);
     CHK_PRT_RET(
-        !socket_->Recv(reinterpret_cast<void*>(recvData.data()), recvSize),
+        !socket_->Recv(static_cast<void*>(recvData.data()), recvSize),
         HCCL_ERROR("[AicpuTsRoceChannelV2::%s] Recv exchange data failed", __func__), HCCL_E_NETWORK);
     HCCL_INFO("[AicpuTsRoceChannelV2::%s] Receive Exchange Data success. [%llu] bytes received.", __func__, recvSize);
     EXCEPTION_HANDLE_END
@@ -702,12 +703,12 @@ HcclResult AicpuTsRoceChannelV2::ModifyQp()
     return HCCL_SUCCESS;
 }
 
-HcclResult AicpuTsRoceChannelV2::BuildAndGetLocNotifyInfo([[maybe_unused]] RegedNotifyEntity** notify)
+HcclResult AicpuTsRoceChannelV2::BuildAndGetLocNotifyInfo([[maybe_unused]] RegedNotifyEntity** notify) const
 {
     return HCCL_SUCCESS;
 }
 
-HcclResult AicpuTsRoceChannelV2::BuildAndGetRmtNotifyInfo([[maybe_unused]] RegedNotifyEntity** notify)
+HcclResult AicpuTsRoceChannelV2::BuildAndGetRmtNotifyInfo([[maybe_unused]] RegedNotifyEntity** notify) const
 {
     // 目前仅用于aiv模式，无notify
     return HCCL_SUCCESS;

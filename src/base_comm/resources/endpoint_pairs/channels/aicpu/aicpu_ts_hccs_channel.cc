@@ -99,7 +99,7 @@ HcclResult AicpuTsHccsChannel::ParseInputParam()
     return HCCL_SUCCESS;
 }
 
-HcclResult AicpuTsHccsChannel::GetFirstIpByPhyId(u32 devicePhyId, u32 superDevId, HcclIpAddress& ip)
+HcclResult AicpuTsHccsChannel::GetFirstIpByPhyId(u32 devicePhyId, u32 superDevId, HcclIpAddress& ip) const
 {
     CHK_RET(GlobalNetDevMgr::GetDeviceVnicIP(devicePhyId, superDevId, ip));
     HCCL_INFO(
@@ -189,7 +189,7 @@ HcclResult AicpuTsHccsChannel::SetMachinePara(hccl::MachinePara& machinePara)
     return HCCL_SUCCESS;
 }
 
-void AicpuTsHccsChannel::SetTransportParam(hccl::TransportPara& para)
+void AicpuTsHccsChannel::SetTransportParam(hccl::TransportPara& para) const
 {
     std::chrono::milliseconds kdefaultTimeout = std::chrono::seconds(GetExternalInputHcclLinkTimeOut());
     para.timeout = kdefaultTimeout;
@@ -301,7 +301,7 @@ HcclResult AicpuTsHccsChannel::EnableMemAccess()
     return HCCL_SUCCESS;
 }
 
-void AicpuTsHccsChannel::DisableMemAccess()
+void AicpuTsHccsChannel::DisableMemAccess() const
 {
     if (localEpPtr_ != nullptr) {
         auto* mgr = static_cast<HccsRegedMemMgr*>(localEpPtr_->GetRegedMemMgr());

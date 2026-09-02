@@ -14,7 +14,6 @@
 #include <atomic>
 #include <mutex>
 #include <condition_variable>
-
 #include "../../../../../legacy/ascend950/unified_platform/resource/socket/socket.h"
 
 namespace hcomm {
@@ -30,14 +29,14 @@ public:
     HcclResult MakeSocketInUse(Hccl::Socket*& socket);
     HcclResult PutSocket(const Hccl::SocketConfig*& socketConfig, Hccl::Socket*& socket);
     HcclResult UpdateSocketConfig(const Hccl::SocketConfig*& socketConfig, Hccl::Socket*& socket);
-    HcclResult DeleteWhiteList(Hccl::Socket* socket);
+    HcclResult DeleteWhiteList(const Hccl::Socket* socket);
     HcclResult DestroySocket(Hccl::Socket* socket);
     static void DeInit(u32 devPhyId);
     static SocketMgr& GetInstance(s32 phyId);
 
 private:
     HcclResult Init();
-    HcclResult GetSocketHandle(const Hccl::SocketConfig& socketConfig, Hccl::SocketHandle& socketHandle);
+    HcclResult GetSocketHandle(const Hccl::SocketConfig& socketConfig, Hccl::SocketHandle& socketHandle) const;
     HcclResult AddWhiteList(const Hccl::SocketConfig& socketConfig, const Hccl::SocketHandle& socketHandle);
     HcclResult CreateSocket(const Hccl::SocketConfig& socketConfig, const Hccl::SocketHandle& socketHandle);
 

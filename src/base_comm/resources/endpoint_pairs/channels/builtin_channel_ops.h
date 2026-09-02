@@ -32,7 +32,7 @@ inline int32_t BuiltinChannelDestroy(void* ctx)
 
 inline int32_t BuiltinGetStatus(void* ctx, int32_t* status)
 {
-    auto* const channelPtr = reinterpret_cast<hcomm::Channel*>(ctx);
+    auto* const channelPtr = static_cast<hcomm::Channel*>(ctx);
     CHK_PTR_NULL(channelPtr);
     auto channelStatus = channelPtr->GetStatus();
     switch (channelStatus) {
@@ -67,7 +67,7 @@ inline int32_t BuiltinRwNbiOnThread(void* ctx, ThreadHandle thread, void* dst, c
     DevType devType;
     CHK_RET(hrtGetDeviceType(devType));
     if (devType == DevType::DEV_TYPE_950 || devType == DevType::DEV_TYPE_960) {
-        auto* const channelPtr = reinterpret_cast<hcomm::Channel*>(ctx);
+        auto* const channelPtr = static_cast<hcomm::Channel*>(ctx);
         CHK_PTR_NULL(channelPtr);
         ret = op(channelPtr, dst, src, len);
     } else {
@@ -109,7 +109,7 @@ inline int32_t BuiltinWriteWithNotifyNbiOnThread(
     DevType devType;
     CHK_RET(hrtGetDeviceType(devType));
     if (devType == DevType::DEV_TYPE_950 || devType == DevType::DEV_TYPE_960 || thread == 0) {
-        auto* const channelPtr = reinterpret_cast<hcomm::Channel*>(ctx);
+        auto* const channelPtr = static_cast<hcomm::Channel*>(ctx);
         CHK_PTR_NULL(channelPtr);
         ret = channelPtr->WriteWithNotify(dst, src, len, remoteNotifyIdx);
     } else {
@@ -137,7 +137,7 @@ inline int32_t BuiltinNotifyWaitOnThread(void* ctx, ThreadHandle thread, uint32_
     HCCL_INFO(
         "[%s] START. thread[0x%llx], channel[0x%llx], localNotifyIdx[%u], timeOut[%u].", __func__, thread, ctx,
         localNotifyIdx, timeOut);
-    auto* const channelPtr = reinterpret_cast<hcomm::Channel*>(ctx);
+    auto* const channelPtr = static_cast<hcomm::Channel*>(ctx);
     CHK_PTR_NULL(channelPtr);
     HcclResult ret = channelPtr->NotifyWait(localNotifyIdx, timeOut);
     CHK_PRT_RET(
@@ -166,7 +166,7 @@ inline int32_t BuiltinNotifyRecordOnThread(void* ctx, ThreadHandle thread, uint3
     (void)thread;
     HCCL_INFO(
         "[%s] START. thread[0x%llx], channel[0x%llx], remoteNotifyIdx[%u].", __func__, thread, ctx, remoteNotifyIdx);
-    auto* const channelPtr = reinterpret_cast<hcomm::Channel*>(ctx);
+    auto* const channelPtr = static_cast<hcomm::Channel*>(ctx);
     CHK_PTR_NULL(channelPtr);
     HcclResult ret = channelPtr->NotifyRecord(remoteNotifyIdx);
     CHK_PRT_RET(
@@ -209,7 +209,7 @@ inline int32_t BuiltinFenceOnThread(void* ctx, ThreadHandle thread)
     DevType devType;
     CHK_RET(hrtGetDeviceType(devType));
     if (devType == DevType::DEV_TYPE_950 || devType == DevType::DEV_TYPE_960 || thread == 0) {
-        auto* const channelPtr = reinterpret_cast<hcomm::Channel*>(ctx);
+        auto* const channelPtr = static_cast<hcomm::Channel*>(ctx);
         CHK_PTR_NULL(channelPtr);
         ret = channelPtr->ChannelFence();
     } else {

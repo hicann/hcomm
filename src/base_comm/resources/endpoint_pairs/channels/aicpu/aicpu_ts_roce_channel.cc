@@ -129,7 +129,7 @@ AicpuTsRoceChannel::~AicpuTsRoceChannel()
 
 HcclResult AicpuTsRoceChannel::ParseInputParam()
 {
-    auto* localEpPtr = reinterpret_cast<Endpoint*>(endpointHandle_);
+    auto* localEpPtr = static_cast<Endpoint*>(endpointHandle_);
     CHK_PTR_NULL(localEpPtr);
     localEp_ = localEpPtr->GetEndpointDesc();
     rdmaHandle_ = localEpPtr->GetRdmaHandle();
@@ -164,7 +164,7 @@ HcclResult AicpuTsRoceChannel::ParseInputParam()
 HcclResult AicpuTsRoceChannel::BuildDataSocket()
 {
     HCCL_INFO("[AicpuTsRoceChannel][%s] BuildDataSocket start", SocketRoleTag());
-    auto* roceEp = dynamic_cast<AicpuTsRoceEndpoint*>(reinterpret_cast<Endpoint*>(endpointHandle_));
+    auto* roceEp = dynamic_cast<AicpuTsRoceEndpoint*>(static_cast<Endpoint*>(endpointHandle_));
     CHK_PTR_NULL(roceEp);
 
     HcclNetDevCtx netDevCtx = static_cast<HcclNetDevCtx>(roceEp->GetNetDev());
@@ -519,7 +519,7 @@ HcclResult AicpuTsRoceChannel::Serialize(std::shared_ptr<hccl::DeviceMem>& out)
     std::vector<HcclQpInfoV2> aiQpInfos;
     u32 qpNum = 0;
 
-    auto* ep = reinterpret_cast<Endpoint*>(endpointHandle_);
+    auto* ep = static_cast<Endpoint*>(endpointHandle_);
     CHK_PTR_NULL(ep);
     auto* mgr = dynamic_cast<AicpuTsRoceRegedMemMgr*>(ep->GetRegedMemMgr());
     CHK_PTR_NULL(mgr);

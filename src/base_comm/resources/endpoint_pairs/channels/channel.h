@@ -17,15 +17,14 @@
 #include "hccl/hccl_res.h"
 #include "hccl/hccl_types.h"
 #include "hcomm_res_defs.h"
-#include "hcomm_channel.h"
 #include "hccl_mem_defs.h"
-#include "mem_device_pub.h"
 #include <string>
 #include <unordered_map>
 #include <vector>
 #include "enum_factory.h"
-
 #include "hcomm_nic_plugin.h"
+#include "hcomm_channel.h"
+#include "mem_device_pub.h"
 
 // Orion
 #include "transport_status.h"

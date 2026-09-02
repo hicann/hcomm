@@ -10,7 +10,11 @@
 
 #ifndef AIV_UB_MEM_TRANSPORT_H
 #define AIV_UB_MEM_TRANSPORT_H
+#include <cstdint>
+#include <memory>
 #include <mutex>
+#include <string>
+#include <vector>
 #include "hccl/hccl_res.h"
 #include "../../../../../../legacy/ascend950/unified_platform/resource/socket/socket.h"
 #include "../../../../../../legacy/ascend950/unified_platform/resource/buffer/local_ipc_rma_buffer_v2.h"
@@ -61,7 +65,7 @@ private:
     HcclResult SendMemInfo();
     HcclResult RecvMemInfo();
     HcclResult RecvDataProcess();
-    HcclResult BufferPack(Hccl::BinaryStream& binaryStream, std::vector<Hccl::LocalIpcRmaBuffer*>& bufferVec);
+    HcclResult BufferPack(Hccl::BinaryStream& binaryStream, std::vector<Hccl::LocalIpcRmaBuffer*>& bufferVec) const;
     void RmtBufferUnpackProc(Hccl::BinaryStream& binaryStream);
     HcclResult StateMachine();
     Hccl::TransportStatus UpdateStatus();

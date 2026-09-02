@@ -57,7 +57,7 @@ private:
     HcclResult DeInit(s32 deviceLogicId);
 
     void ProcessUbAsyncEvents();
-    void PrintUbAsyncEventsContext(void* epHandle, u32 seq, const struct AsyncEvent& event);
+    void PrintUbAsyncEventsContext(const void* epHandle, u32 seq, const struct AsyncEvent& event) const;
 
     static constexpr u32 MONITOR_INTERVAL = 1000;
     std::unique_ptr<std::thread> endpointMonitorThread_;

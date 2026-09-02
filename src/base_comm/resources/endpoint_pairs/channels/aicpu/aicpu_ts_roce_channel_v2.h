@@ -11,6 +11,11 @@
 #ifndef AICPU_TS_ROCE_CHANNEL_V2_H
 #define AICPU_TS_ROCE_CHANNEL_V2_H
 
+#include <memory>
+#include <mutex>
+#include <string>
+#include <vector>
+
 #include "../channel.h"
 #include "aicpu_ts_channel_helper.h"
 #include "enum_factory.h"
@@ -119,8 +124,8 @@ private:
     HcclResult RmtBufferVecUnpackProc(Hccl::BinaryStream& binaryStream);
     HcclResult ConnVecUnpackProc(Hccl::BinaryStream& binaryStream);
 
-    HcclResult BuildAndGetLocNotifyInfo(RegedNotifyEntity** notify);
-    HcclResult BuildAndGetRmtNotifyInfo(RegedNotifyEntity** notify);
+    HcclResult BuildAndGetLocNotifyInfo(RegedNotifyEntity** notify) const;
+    HcclResult BuildAndGetRmtNotifyInfo(RegedNotifyEntity** notify) const;
     HcclResult BuildAndGetRmtBufInfo(std::vector<RegedBufferEntity>& bufList, RegedBufferEntity** bufferEntityPtr);
     HcclResult BuildAndGetLocBufInfo(std::vector<RegedBufferEntity>& bufList, RegedBufferEntity** bufferEntityPtr);
     HcclResult BuildAndGetSqContext(std::vector<SqContext>& sqList, SqContext** sqContextPtr);
