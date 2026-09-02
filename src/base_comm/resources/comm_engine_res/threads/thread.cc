@@ -301,8 +301,9 @@ HcclResult StoreThreadHandles(
     return HCCL_SUCCESS;
 }
 
-static HcclResult
-FreeThreadHandlesLocked(const ThreadHandle* threads, uint32_t threadNum, vector<ThreadHandle>& deviceHandles)
+static HcclResult FreeThreadHandlesLocked(
+    const ThreadHandle* threads, uint32_t threadNum, vector<ThreadHandle>& deviceHandles,
+    vector<shared_ptr<Thread>>& hostThreadsToRelease)
 {
     int32_t deviceId = 0;
     CHK_RET(hrtGetDevice(&deviceId));
@@ -332,6 +333,9 @@ FreeThreadHandlesLocked(const ThreadHandle* threads, uint32_t threadNum, vector<
             deviceHandles.push_back(inHandle);
         }
 
+        // 暂缓析构 host 侧线程，待 device 侧线程销毁（停止守护线程轮询）后再释放其 SQ/CQ 资源
+        hostThreadsToRelease.emplace_back(itC->second);
+
         HCCL_INFO(
             "[%s] erase thread: deviceId[%d], inHandle[0x%llx], mappedHandle[0x%llx], ptr[%p]", __func__, deviceId,
             inHandle, mappedHandle, itC->second.get());
@@ -360,10 +364,12 @@ HcclResult FreeThreads(const ThreadHandle* threads, uint32_t threadNum, aclrtBin
     HCCL_INFO("[%s] begin to free %u threads", __func__, threadNum);
 
     vector<ThreadHandle> deviceHandles; // 存放device侧的handle
+    vector<shared_ptr<Thread>> hostThreadsToRelease; // 暂缓析构的 host 侧线程，避免 CQ 先于 device 侧线程销毁被释放
 
-    CHK_RET(FreeThreadHandlesLocked(threads, threadNum, deviceHandles));
+    CHK_RET(FreeThreadHandlesLocked(threads, threadNum, deviceHandles, hostThreadsToRelease));
 
-    // 如果有需要销毁的deviceThread，调用销毁kernel
+    // 先销毁 device 侧线程（将其从守护线程轮询列表 threads_ 移除），再释放 host 侧 SQ/CQ 资源，
+    // 避免守护线程在 CQ 已释放后仍对其发起查询导致「参数无效」报错
     if (!deviceHandles.empty()) {
         CHK_RET(AicpuLaunchMgr::ThreadKernelLaunchDestroy(deviceHandles.data(), deviceHandles.size(), binHandle));
     }

@@ -27,6 +27,58 @@ static HcclResult StubThreadKernelLaunchForComm(
     return HCCL_SUCCESS;
 }
 
+// Spy 线程：通过构造/析构计数观测 host 侧线程对象的生命周期，
+// 用于验证 FreeThreads 先销毁 device 侧线程、再释放 host 侧 SQ/CQ 资源的顺序
+class SpyThreadForFree : public hccl::Thread {
+public:
+    SpyThreadForFree() { ++aliveCount; }
+    ~SpyThreadForFree() override { --aliveCount; }
+    static int aliveCount;
+
+    HcclResult Init() override { return HCCL_SUCCESS; }
+    HcclResult DeInit() override { return HCCL_SUCCESS; }
+    std::string& GetUniqueId() override { return uniqueId_; }
+    uint32_t GetNotifyNum() const override { return 0; }
+    LocalNotify* GetNotify(uint32_t index) const override { return nullptr; }
+    HcclResult SupplementNotify(uint32_t notifyNum) override { return HCCL_SUCCESS; }
+    bool IsDeviceA5() const override { return false; }
+    Stream* GetStream() const override { return nullptr; }
+    void* GetStreamLitePtr() const override { return nullptr; }
+    void LaunchTask() const override {}
+    void TryLaunchTask() const override {}
+    HcclResult LocalNotifyRecord(uint32_t notifyId) const override { return HCCL_SUCCESS; }
+    HcclResult LocalNotifyWait(uint32_t notifyId) const override { return HCCL_SUCCESS; }
+    HcclResult LocalNotifyRecord(ThreadHandle dstThread, uint32_t dstNotifyIdx) const override { return HCCL_SUCCESS; }
+    HcclResult LocalNotifyWait(uint32_t notifyIdx, uint32_t timeOut) const override { return HCCL_SUCCESS; }
+    HcclResult LocalCopy(void* dst, const void* src, uint64_t sizeByte) const override { return HCCL_SUCCESS; }
+    HcclResult LocalReduce(
+        void* dst, const void* src, uint64_t sizeByte, HcommDataType dataType, HcommReduceOp reduceOp) const override
+    {
+        return HCCL_SUCCESS;
+    }
+    bool GetMaster() const override { return false; }
+    void SetIsMaster(bool isMaster) override {}
+
+private:
+    std::string uniqueId_{"spy_thread"};
+};
+int SpyThreadForFree::aliveCount = 0;
+
+static bool g_destroyCalled = false;
+static int g_aliveAtDestroy = -1;
+static ThreadHandle g_destroyDeviceHandle = 0;
+static uint32_t g_destroyListNum = 0;
+
+static HcclResult StubThreadKernelLaunchDestroy(ThreadHandle* threadHandles, uint32_t listNum, aclrtBinHandle binHandle)
+{
+    (void)binHandle;
+    g_destroyCalled = true;
+    g_aliveAtDestroy = SpyThreadForFree::aliveCount;
+    g_destroyListNum = listNum;
+    g_destroyDeviceHandle = (threadHandles != nullptr && listNum > 0) ? threadHandles[0] : 0;
+    return HCCL_SUCCESS;
+}
+
 class TestHcclThread : public BaseInit {
 public:
     void SetUp() override
@@ -241,6 +293,40 @@ TEST_F(TestHcclThread, Ut_HcommThreadFree_When_ThreadNullptr_expect_Return_HCCL_
     ThreadHandle* thread = nullptr;
     HcommResult ret = HcommThreadFree(thread, 0);
     EXPECT_EQ(ret, HCCL_E_PTR);
+}
+
+TEST_F(TestHcclThread, Ut_FreeThreads_When_DeviceThread_Expect_HostReleasedAfterDeviceDestroy)
+{
+    bool isDeviceSide{false};
+    MOCKER(GetRunSideIsDevice).stubs().with(outBound(isDeviceSide)).will(returnValue(HCCL_SUCCESS));
+    MOCKER(hrtGetDeviceType).stubs().with(outBound(DevType::DEV_TYPE_950)).will(returnValue(HCCL_SUCCESS));
+
+    g_destroyCalled = false;
+    g_aliveAtDestroy = -1;
+    g_destroyDeviceHandle = 0;
+    g_destroyListNum = 0;
+    SpyThreadForFree::aliveCount = 0;
+
+    auto spyThread = std::make_shared<SpyThreadForFree>();
+    EXPECT_EQ(SpyThreadForFree::aliveCount, 1);
+    ThreadHandle hostHandle = reinterpret_cast<ThreadHandle>(spyThread.get());
+    ThreadHandle deviceHandle = hostHandle + 0x1000;
+
+    ASSERT_EQ(SaveThreads(std::vector<std::shared_ptr<Thread>>{spyThread}), HCCL_SUCCESS);
+    ASSERT_EQ(FillThreadD2HMap(&deviceHandle, &hostHandle, 1), HCCL_SUCCESS);
+    spyThread.reset(); // 释放测试栈引用，仅剩全局映射表持有 host 线程
+    EXPECT_EQ(SpyThreadForFree::aliveCount, 1);
+
+    MOCKER_CPP(&AicpuLaunchMgr::ThreadKernelLaunchDestroy).stubs().will(invoke(StubThreadKernelLaunchDestroy));
+
+    HcclResult ret = FreeThreads(&deviceHandle, 1, nullptr);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+
+    EXPECT_TRUE(g_destroyCalled);
+    EXPECT_EQ(g_destroyListNum, 1U);
+    EXPECT_EQ(g_destroyDeviceHandle, deviceHandle);
+    EXPECT_EQ(g_aliveAtDestroy, 1);             // device 侧销毁时 host 线程仍存活
+    EXPECT_EQ(SpyThreadForFree::aliveCount, 0); // FreeThreads 返回后 host 线程已释放
 }
 
 TEST_F(TestHcclThread, UT_TestHcommThreadAllocWithStream_When_Allocate_WithStream_expect_return_HcclSuccess)
