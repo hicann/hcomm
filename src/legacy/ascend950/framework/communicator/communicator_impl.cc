@@ -1264,6 +1264,7 @@ void CommunicatorImpl::InitCommonData(const CommParams& commParams)
     myRank = commParams.myRank;
     rankSize = commParams.rankSize;
     rankInParentComm = commParams.rankInParentComm;
+    commDepth = commParams.commDepth;
     devType = commParams.devType;
     isWorldGroup = commParams.isWorldGroup;
     devLogicId = HrtGetDevice();
@@ -4331,6 +4332,8 @@ ErrorMessageReport CommunicatorImpl::GetAicpuTaskException()
 }
 
 u32 CommunicatorImpl::GetRankInParentComm() const { return static_cast<u32>(rankInParentComm); }
+
+u8 CommunicatorImpl::GetCommDepth() const { return commDepth; }
 void CommunicatorImpl::RegisterAicpuKernel() { aicpuKernelHolder_.Load(); }
 
 aclrtFuncHandle CommunicatorImpl::GetAicpuKernelFuncHandle(const char* kernelName) const

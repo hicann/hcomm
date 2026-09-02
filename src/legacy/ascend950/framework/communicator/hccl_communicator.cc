@@ -519,6 +519,8 @@ Trace& HcclCommunicator::GetTrace() const { return pimpl->GetTrace(); }
 
 u32 HcclCommunicator::GetRankInParentComm() { return pimpl->GetRankInParentComm(); }
 
+u8 HcclCommunicator::GetCommDepth() const { return pimpl->GetCommDepth(); }
+
 HcclResult HcclCommunicator::Mc2AiCpuStreamAllocAndGetV2(rtStream_t* aiCpuStream)
 {
     return pimpl->Mc2AiCpuStreamAllocAndGetV2(aiCpuStream);

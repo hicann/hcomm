@@ -357,6 +357,7 @@ public:
     std::vector<LinkData> GetFullMeshLinks() const;
     ErrorMessageReport GetAicpuTaskException();
     u32 GetRankInParentComm() const;
+    u8 GetCommDepth() const;
     aclrtFuncHandle GetAicpuKernelFuncHandle(const char* kernelName) const;
     bool IsCommWithPCIEProtocol() const; // 判断通信域内是否有rank之间存在PCIE链路
     HcclResult Mc2AiCpuStreamAllocAndGetV2(rtStream_t* aiCpuStream);
@@ -374,6 +375,7 @@ private:
     RankId myRank;
     u32 rankSize;
     RankId rankInParentComm;
+    u8 commDepth{0};
     DevType devType;
     DevId devPhyId;
     DevId devLogicId;

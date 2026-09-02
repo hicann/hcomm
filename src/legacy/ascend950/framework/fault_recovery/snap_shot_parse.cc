@@ -395,6 +395,7 @@ HcclResult SnapShotParser::DeserializeParamsInfo(BinaryStream& binaryStream, Hcc
     commParams.devType = static_cast<DevType::Value>(dev);
     binaryStream >> commParams.devUsed;
     commParams.isWorldGroup = true;
+    commParams.commDepth = 0;
     HCCL_INFO(
         "Snapshot recovering: commId[%s], myRank[%d], rankSize[%u],rankInParentComm[%d], devType[%u], devUsed[%u]",
         commParams.commId.c_str(), commParams.myRank, commParams.rankSize, commParams.rankInParentComm,
@@ -489,6 +490,7 @@ SnapShotParser::DeserializeSubCommParamsInfo(BinaryStream& binaryStream, Hccl::C
     binaryStream >> subCommParam.commId >> subCommParam.myRank >> subCommParam.rankSize >> subCommParam.rankInParentComm
         >> dev >> subCommParam.devUsed;
     subCommParam.devType = static_cast<DevType::Value>(dev);
+    subCommParam.commDepth = 1;
     HCCL_INFO(
         "Snapshot recovering: commId[%s], myRank[%d], rankSize[%u],rankInParentComm[%d], devType[%u], devUsed[%u]",
         subCommParam.commId.c_str(), subCommParam.myRank, subCommParam.rankSize, subCommParam.rankInParentComm,

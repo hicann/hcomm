@@ -443,6 +443,67 @@ void PrepareCommConfig(
     std::strncpy(config.hcclUdi, worldgroup.c_str(), worldgroup.size() + 1);
 }
 
+static void MockSubCommConfigV2Dependencies(HcclGroupParamsV2& groupParamsV2Tem)
+{
+    MOCKER(HrtGetDevice).stubs().with(mockcpp::any()).will(returnValue(0));
+
+    groupParamsV2Tem.groupRank = 0;
+    MOCKER(GetHcomRankListV2)
+        .stubs()
+        .with(mockcpp::any(), mockcpp::any(), outBound(groupParamsV2Tem))
+        .will(returnValue(HCCL_SUCCESS));
+
+    MOCKER_CPP(static_cast<HcclResult (CommunicatorImpl::*)(
+                   const CommParams& subCommParams, const std::vector<u32>& rankIds, CommunicatorImpl* subCommImpl,
+                   HcclCommConfig& subConfig)>(&CommunicatorImpl::CreateSubComm))
+        .stubs()
+        .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any())
+        .will(returnValue(HCCL_SUCCESS));
+}
+
+static void PrepareSubCommConfigV2WorldManagerState(bool setIdleStatus = false)
+{
+    Hccl::CommParams commParams;
+    std::shared_ptr<Hccl::HcclCommunicator> communicator = std::make_shared<Hccl::HcclCommunicator>(commParams);
+    HcclGroupParamsV2 groupParams;
+    groupParams.pComm = communicator;
+    std::map<std::string, HcclGroupParamsV2> groupMap = {{"hccl_world_group", groupParams}};
+    HcclCommInfoV2& commInfo = CommManager::GetInstance(0).GetCommInfoV2();
+    commInfo.hcclGroupMap = groupMap;
+    commInfo.commParams = commParams;
+    commInfo.isUsed = true;
+    commInfo.pComm = communicator;
+    if (setIdleStatus) {
+        commInfo.status = DeviceStatus::DEVICE_IDLE;
+    }
+}
+
+struct SubCommConfigV2TestContext {
+    std::shared_ptr<Hccl::HcclCommunicator> communicator;
+    HcclComm comm;
+    HcclComm subComm;
+    uint32_t rankNum;
+    uint32_t rankIds;
+    uint64_t subCommId;
+    uint32_t subCommRankId;
+    HcclCommConfig config;
+};
+
+static SubCommConfigV2TestContext
+ConstructSubCommConfigV2TestContext(uint64_t subCommId, const std::string& worldgroup, uint32_t hcclBufferSize = 200)
+{
+    SubCommConfigV2TestContext context;
+    context.communicator = std::make_shared<Hccl::HcclCommunicator>(Hccl::CommParams{});
+    context.comm = static_cast<HcclComm>(context.communicator.get());
+    context.subComm = nullptr;
+    context.rankNum = 1;
+    context.rankIds = 0;
+    context.subCommId = subCommId;
+    context.subCommRankId = 1;
+    PrepareCommConfig(context.config, hcclBufferSize, worldgroup, 1, 0);
+    return context;
+}
+
 TEST_F(OpbaseTestV2, HcclCommInitClusterInfoConfigV2)
 {
     nlohmann::json rank_table = rank_table_950_1server_8rank;
@@ -1453,147 +1514,124 @@ TEST_F(OpbaseTestV2, HcclGetTopoDescV2)
 
 TEST_F(OpbaseTestV2, HcclCreateSubCommConfigV2)
 {
-    Hccl::CommParams commParams_1;
-    std::shared_ptr<Hccl::HcclCommunicator> hcclcomm = std::make_shared<Hccl::HcclCommunicator>(commParams_1);
-    HcclComm comm = static_cast<HcclComm>(hcclcomm.get());
-    HcclComm subComm;
-    uint32_t rankNum = 1;
-    uint32_t rankIds = 0;
-    uint64_t subCommId = 42;
-    uint32_t subCommRankId = 1;
-    HcclCommConfig config;
-    string worldgroup = "hccl_world_group";
-    PrepareCommConfig(config, 200, worldgroup, 1, 0);
-
-    // 打桩 hrtGetDevice
-    HcclGroupParamsV2 hcclGroupParamsV2;
-    Hccl::CommParams commParams;
-    std::shared_ptr<Hccl::HcclCommunicator> hcclComm_1 = std::make_shared<Hccl::HcclCommunicator>(commParams);
-    hcclGroupParamsV2.pComm = hcclComm_1;
-    std::map<std::string, HcclGroupParamsV2> hcclGroupMap = {{"hccl_world_group", hcclGroupParamsV2}};
-    CommManager::GetInstance(0).GetCommInfoV2().hcclGroupMap = hcclGroupMap;
-
-    CommManager::GetInstance(0).GetCommInfoV2().commParams = commParams;
-    CommManager::GetInstance(0).GetCommInfoV2().isUsed = true;
-    CommManager::GetInstance(0).GetCommInfoV2().pComm = hcclComm_1;
-    MOCKER(HrtGetDevice).stubs().with(mockcpp::any()).will(returnValue(0));
-
+    auto context = ConstructSubCommConfigV2TestContext(42, "hccl_world_group");
     HcclGroupParamsV2 groupParamsV2Tem;
-    groupParamsV2Tem.groupRank = 0;
-    MOCKER(GetHcomRankListV2)
-        .stubs()
-        .with(mockcpp::any(), mockcpp::any(), outBound(groupParamsV2Tem))
-        .will(returnValue(HCCL_SUCCESS));
 
-    MOCKER_CPP(static_cast<HcclResult (CommunicatorImpl::*)(
-                   const CommParams& subCommParams, const std::vector<u32>& rankIds, CommunicatorImpl* subCommImpl,
-                   HcclCommConfig& subConfig)>(&CommunicatorImpl::CreateSubComm))
-        .stubs()
-        .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any())
-        .will(returnValue(HCCL_SUCCESS));
-    hcclcomm.get()->pimpl.get()->id = "hccl_world_group";
-    hcclcomm.get()->pimpl.get()->isWorldGroup = true;
-    HcclResult ret = HcclCreateSubCommConfigV2(&comm, rankNum, &rankIds, subCommId, subCommRankId, &config, &subComm);
+    PrepareSubCommConfigV2WorldManagerState();
+    MockSubCommConfigV2Dependencies(groupParamsV2Tem);
+    context.communicator.get()->pimpl.get()->id = "hccl_world_group";
+    context.communicator.get()->pimpl.get()->isWorldGroup = true;
+    HcclResult ret = HcclCreateSubCommConfigV2(
+        &context.comm, context.rankNum, &context.rankIds, context.subCommId, context.subCommRankId, &context.config,
+        &context.subComm);
     EXPECT_EQ(ret, HCCL_SUCCESS);
 }
 
 TEST_F(OpbaseTestV2, HcclCreateSubCommConfigV2_IDEL)
 {
-    Hccl::CommParams commParams_1;
-    std::shared_ptr<Hccl::HcclCommunicator> hcclcomm = std::make_shared<Hccl::HcclCommunicator>(commParams_1);
-    HcclComm comm = static_cast<HcclComm>(hcclcomm.get());
-    HcclComm subComm;
-    uint32_t rankNum = 1;
-    uint32_t rankIds = 0;
-    uint64_t subCommId = 42;
-    uint32_t subCommRankId = 1;
-    HcclCommConfig config;
-    string worldgroup = "hccl_world_group_1";
-    PrepareCommConfig(config, 200, worldgroup, 1, 0);
-
-    // 打桩 hrtGetDevice
-    HcclGroupParamsV2 hcclGroupParamsV2;
-    Hccl::CommParams commParams;
-    std::shared_ptr<Hccl::HcclCommunicator> hcclComm_1 = std::make_shared<Hccl::HcclCommunicator>(commParams);
-    hcclGroupParamsV2.pComm = hcclComm_1;
-    std::map<std::string, HcclGroupParamsV2> hcclGroupMap = {{"hccl_world_group", hcclGroupParamsV2}};
-    CommManager::GetInstance(0).GetCommInfoV2().hcclGroupMap = hcclGroupMap;
-
-    CommManager::GetInstance(0).GetCommInfoV2().commParams = commParams;
-    CommManager::GetInstance(0).GetCommInfoV2().isUsed = true;
-    CommManager::GetInstance(0).GetCommInfoV2().pComm = hcclComm_1;
-    CommManager::GetInstance(0).GetCommInfoV2().status = DeviceStatus::DEVICE_IDLE;
-    MOCKER(HrtGetDevice).stubs().with(mockcpp::any()).will(returnValue(0));
-
+    auto context = ConstructSubCommConfigV2TestContext(42, "hccl_world_group_1");
     HcclGroupParamsV2 groupParamsV2Tem;
-    groupParamsV2Tem.groupRank = 0;
-    MOCKER(GetHcomRankListV2)
-        .stubs()
-        .with(mockcpp::any(), mockcpp::any(), outBound(groupParamsV2Tem))
-        .will(returnValue(HCCL_SUCCESS));
 
-    MOCKER_CPP(static_cast<HcclResult (CommunicatorImpl::*)(
-                   const CommParams& subCommParams, const std::vector<u32>& rankIds, CommunicatorImpl* subCommImpl,
-                   HcclCommConfig& subConfig)>(&CommunicatorImpl::CreateSubComm))
-        .stubs()
-        .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any())
-        .will(returnValue(HCCL_SUCCESS));
-    hcclcomm.get()->pimpl.get()->id = "hccl_world_group";
-    hcclcomm.get()->pimpl.get()->isWorldGroup = true;
+    PrepareSubCommConfigV2WorldManagerState(true);
+    MockSubCommConfigV2Dependencies(groupParamsV2Tem);
+    context.communicator.get()->pimpl.get()->id = "hccl_world_group";
+    context.communicator.get()->pimpl.get()->isWorldGroup = true;
     MOCKER_CPP(&CommunicatorImpl::SetCommExecuteConfig).stubs().will(ignoreReturnValue());
     MOCKER_CPP(&CommunicatorImpl::RegisterAcceStateCallBack).stubs().will(ignoreReturnValue());
     DevType devType = DevType::DEV_TYPE_950;
     MOCKER(HrtGetDeviceType).stubs().with(mockcpp::any()).will(returnValue(devType));
-    HcclResult ret = HcclCreateSubCommConfigV2(&comm, rankNum, &rankIds, subCommId, subCommRankId, &config, &subComm);
+    HcclResult ret = HcclCreateSubCommConfigV2(
+        &context.comm, context.rankNum, &context.rankIds, context.subCommId, context.subCommRankId, &context.config,
+        &context.subComm);
     EXPECT_EQ(ret, HCCL_SUCCESS);
 }
 
 TEST_F(OpbaseTestV2, HcclCreateSubCommConfigV2_Invalided_Config)
 {
-    Hccl::CommParams commParams_1;
-    std::shared_ptr<Hccl::HcclCommunicator> hcclcomm = std::make_shared<Hccl::HcclCommunicator>(commParams_1);
-    HcclComm comm = static_cast<HcclComm>(hcclcomm.get());
-    HcclComm subComm;
+    auto context = ConstructSubCommConfigV2TestContext(43, "hccl_world_group_1", HCCL_COMM_BUFFSIZE_CONFIG_NOT_SET);
+    HcclGroupParamsV2 groupParamsV2Tem;
+
+    PrepareSubCommConfigV2WorldManagerState(true);
+    MockSubCommConfigV2Dependencies(groupParamsV2Tem);
+    context.communicator.get()->pimpl.get()->id = "hccl_world_group";
+    context.communicator.get()->pimpl.get()->isWorldGroup = true;
+    MOCKER_CPP(&CommunicatorImpl::SetCommExecuteConfig).stubs().will(ignoreReturnValue());
+    HcclResult ret = HcclCreateSubCommConfigV2(
+        &context.comm, context.rankNum, &context.rankIds, context.subCommId, context.subCommRankId, &context.config,
+        &context.subComm);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+}
+
+TEST_F(OpbaseTestV2, HcclCreateSubCommConfigV2_WhenParentIsChild_ExpectSuccess)
+{
+    Hccl::CommParams commParams;
+    std::shared_ptr<Hccl::HcclCommunicator> parentComm = std::make_shared<Hccl::HcclCommunicator>(commParams);
+    parentComm->pimpl.get()->id = "child_comm";
+    parentComm->pimpl.get()->isWorldGroup = false;
+    parentComm->pimpl.get()->commDepth = 1;
+    parentComm->pimpl.get()->myRank = 0;
+    HcclComm comm = static_cast<HcclComm>(parentComm.get());
+
+    HcclComm subComm = nullptr;
     uint32_t rankNum = 1;
     uint32_t rankIds = 0;
-    uint64_t subCommId = 43;
-    uint32_t subCommRankId = 1;
+    uint64_t subCommId = 42;
+    uint32_t subCommRankId = 0;
     HcclCommConfig config;
-    string worldgroup = "hccl_world_group_1";
-    PrepareCommConfig(config, HCCL_COMM_BUFFSIZE_CONFIG_NOT_SET, worldgroup, 1, 0);
+    PrepareCommConfig(config, 200, "grandchild_comm", 1, 0);
 
-    // 打桩 hrtGetDevice
     HcclGroupParamsV2 hcclGroupParamsV2;
-    Hccl::CommParams commParams;
-    std::shared_ptr<Hccl::HcclCommunicator> hcclComm_1 = std::make_shared<Hccl::HcclCommunicator>(commParams);
-    hcclGroupParamsV2.pComm = hcclComm_1;
-    std::map<std::string, HcclGroupParamsV2> hcclGroupMap = {{"hccl_world_group", hcclGroupParamsV2}};
-    CommManager::GetInstance(0).GetCommInfoV2().hcclGroupMap = hcclGroupMap;
-
+    std::shared_ptr<Hccl::HcclCommunicator> dummyComm = std::make_shared<Hccl::HcclCommunicator>(commParams);
+    hcclGroupParamsV2.pComm = dummyComm;
+    CommManager::GetInstance(0).GetCommInfoV2().hcclGroupMap.clear();
+    CommManager::GetInstance(0).GetCommInfoV2().pComm = dummyComm;
     CommManager::GetInstance(0).GetCommInfoV2().commParams = commParams;
     CommManager::GetInstance(0).GetCommInfoV2().isUsed = true;
-    CommManager::GetInstance(0).GetCommInfoV2().pComm = hcclComm_1;
-    CommManager::GetInstance(0).GetCommInfoV2().status = DeviceStatus::DEVICE_IDLE;
-    MOCKER(HrtGetDevice).stubs().with(mockcpp::any()).will(returnValue(0));
 
     HcclGroupParamsV2 groupParamsV2Tem;
-    groupParamsV2Tem.groupRank = 0;
-    MOCKER(GetHcomRankListV2)
-        .stubs()
-        .with(mockcpp::any(), mockcpp::any(), outBound(groupParamsV2Tem))
-        .will(returnValue(HCCL_SUCCESS));
+    MockSubCommConfigV2Dependencies(groupParamsV2Tem);
 
-    MOCKER_CPP(static_cast<HcclResult (CommunicatorImpl::*)(
-                   const CommParams& subCommParams, const std::vector<u32>& rankIds, CommunicatorImpl* subCommImpl,
-                   HcclCommConfig& subConfig)>(&CommunicatorImpl::CreateSubComm))
-        .stubs()
-        .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any())
-        .will(returnValue(HCCL_SUCCESS));
-    hcclcomm.get()->pimpl.get()->id = "hccl_world_group";
-    hcclcomm.get()->pimpl.get()->isWorldGroup = true;
-    MOCKER_CPP(&CommunicatorImpl::SetCommExecuteConfig).stubs().will(ignoreReturnValue());
     HcclResult ret = HcclCreateSubCommConfigV2(&comm, rankNum, &rankIds, subCommId, subCommRankId, &config, &subComm);
     EXPECT_EQ(ret, HCCL_SUCCESS);
+    ASSERT_NE(subComm, nullptr);
+    HcclCommunicator* grandChildComm = static_cast<HcclCommunicator*>(subComm);
+    EXPECT_EQ(grandChildComm->commParams.commDepth, 2);
+
+    CommManager::GetInstance(0).GetCommInfoV2().hcclGroupMap.clear();
+    CommManager::GetInstance(0).GetCommInfoV2().pComm = nullptr;
+}
+
+TEST_F(OpbaseTestV2, HcclCreateSubCommConfigV2_WhenParentIsGrandChild_ExpectNotSupport)
+{
+    Hccl::CommParams commParams;
+    std::shared_ptr<Hccl::HcclCommunicator> parentComm = std::make_shared<Hccl::HcclCommunicator>(commParams);
+    parentComm->pimpl.get()->id = "grandchild_comm";
+    parentComm->pimpl.get()->isWorldGroup = false;
+    parentComm->pimpl.get()->commDepth = 2;
+    HcclComm comm = static_cast<HcclComm>(parentComm.get());
+
+    HcclComm subComm = nullptr;
+    uint32_t rankNum = 1;
+    uint32_t rankIds = 0;
+    uint64_t subCommId = 42;
+    uint32_t subCommRankId = 0;
+    HcclCommConfig config;
+    PrepareCommConfig(config, 200, "deeper_comm", 1, 0);
+
+    HcclGroupParamsV2 hcclGroupParamsV2;
+    std::shared_ptr<Hccl::HcclCommunicator> dummyComm = std::make_shared<Hccl::HcclCommunicator>(commParams);
+    hcclGroupParamsV2.pComm = dummyComm;
+    CommManager::GetInstance(0).GetCommInfoV2().hcclGroupMap.clear();
+    CommManager::GetInstance(0).GetCommInfoV2().pComm = dummyComm;
+    CommManager::GetInstance(0).GetCommInfoV2().commParams = commParams;
+    CommManager::GetInstance(0).GetCommInfoV2().isUsed = true;
+
+    HcclResult ret = HcclCreateSubCommConfigV2(&comm, rankNum, &rankIds, subCommId, subCommRankId, &config, &subComm);
+    EXPECT_EQ(ret, HCCL_E_NOT_SUPPORT);
+    EXPECT_EQ(subComm, nullptr);
+
+    CommManager::GetInstance(0).GetCommInfoV2().hcclGroupMap.clear();
+    CommManager::GetInstance(0).GetCommInfoV2().pComm = nullptr;
 }
 
 TEST_F(OpbaseTestV2, HcclCommInitClusterInfoMemConfigV2_err)

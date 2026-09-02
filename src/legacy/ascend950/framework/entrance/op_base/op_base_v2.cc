@@ -965,10 +965,13 @@ HcclResult HcclCreateSubCommConfigV2(
     Hccl::HcclCommunicator* communicator = static_cast<Hccl::HcclCommunicator*>(*comm);
 
     string commId = communicator->GetId();
-    if (!communicator->IsWorldGroup()) {
-        HCCL_ERROR("[HcclCreateSubCommConfig] commId [%s] is not HCCL WORLD GROUP", commId.c_str());
-        return HCCL_E_INTERNAL;
-    }
+    u8 parentDepth = communicator->GetCommDepth();
+    CHK_PRT_RET(
+        parentDepth >= MAX_SUB_COMM_DEPTH,
+        HCCL_ERROR(
+            "[HcclCreateSubCommConfigV2] commId [%s] depth [%u] exceeds max depth [%u]", commId.c_str(),
+            static_cast<uint32_t>(parentDepth), static_cast<uint32_t>(MAX_SUB_COMM_DEPTH)),
+        HCCL_E_NOT_SUPPORT);
 
     CHK_PRT_RET(
         opbasedCommInfoV2.pComm == nullptr,
@@ -978,6 +981,12 @@ HcclResult HcclCreateSubCommConfigV2(
     std::unique_lock<std::mutex> groupParaLock(opbasedCommInfoV2.groupParamsLock);
 
     string subCommIdStr(commId + "_sub_" + to_string(subCommId));
+    CHK_PRT_RET(
+        subCommIdStr.size() >= COMM_NAME_MAX_LENGTH,
+        HCCL_ERROR(
+            "[HcclCreateSubCommConfigV2] sub comm name[%s] length[%zu] exceeds max[%u]", subCommIdStr.c_str(),
+            subCommIdStr.size(), COMM_NAME_MAX_LENGTH - 1),
+        HCCL_E_PARA);
     LoadConfigCommName(subCommIdStr, *config);
     if (subCommIdStr == commId) {
         HCCL_ERROR(
@@ -1007,9 +1016,12 @@ HcclResult HcclCreateSubCommConfigV2(
     }
 
     /* 创建子通信域 */
+    uint32_t parentRank = 0;
+    CHK_RET(communicator->GetRankId(parentRank));
     Hccl::CommParams commParams{
-        subCommIdStr, static_cast<Hccl::RankId>(subCommRankId), rankNum, opbasedCommInfoV2.commParams.myRank,
+        subCommIdStr, static_cast<Hccl::RankId>(subCommRankId), rankNum, static_cast<Hccl::RankId>(parentRank),
         opbasedCommInfoV2.commParams.devType};
+    commParams.commDepth = parentDepth + 1;
     CheckHcclDeterministic(hcclConf->hcclDeterministic);
     // 默认全都开启确定性计算
     hcclConf->hcclDeterministic = 1;

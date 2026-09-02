@@ -321,6 +321,7 @@ HcclResult HcomCreateGroupImplV2(const std::string& group, u32 rankNum, const st
     Hccl::CommParams subCommParams{
         group, static_cast<Hccl::RankId>(groupParamsV2Tem.groupRank), rankNum,
         static_cast<Hccl::RankId>(groupParamsV2Tem.worldRank), hcomCommInfoV2.commParams.devType};
+    subCommParams.commDepth = 1;
     auto ret = hcomCommInfoV2.pComm->CreateSubComm(subCommParams, groupParamsV2Tem.groupRanks, groupParamsV2Tem.pComm);
     CHK_PRT_RET(
         ret != HCCL_SUCCESS, HCCL_ERROR("[Create][Group]errNo[0x%016llx] create group failed.", HCOM_ERROR_CODE(ret)),

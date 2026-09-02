@@ -23,6 +23,8 @@
 
 namespace Hccl {
 
+constexpr u8 MAX_SUB_COMM_DEPTH = 2;
+
 class CommParams {
 public:
     std::string commId{""};
@@ -35,6 +37,7 @@ public:
     DevType devType{DevType::DEV_TYPE_950};
     bool devUsed{false};
     bool isWorldGroup{false};
+    u8 commDepth{0}; // 0:world, 1:child, 2:grandchild
 
     CommParams(
         std::string commId, RankId myRank, u32 rankSize, RankId rankInParentComm, const DevType& devType,
