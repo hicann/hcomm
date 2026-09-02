@@ -125,12 +125,12 @@ void RtsqBase::ConfigSqStatusByType(drvSqCqPropType_t givenType, u32 value) cons
     }
 }
 
-void RtsqBase::ConfigSqTail(u32 value)
+void RtsqBase::ConfigSqTail(u32 value) const
 {
     HCCL_INFO("RtsqBase::%s, value=%u", __func__, value);
     ConfigSqStatusByType(drvSqCqPropType_t::DRV_SQCQ_PROP_SQ_TAIL, value);
 }
-void RtsqBase::ConfigDisableToEnable(u32 value)
+void RtsqBase::ConfigDisableToEnable(u32 value) const
 {
     HCCL_INFO("RtsqBase::%s, value=%u", __func__, value);
     ConfigSqStatusByType(drvSqCqPropType_t::DRV_SQCQ_PROP_SQ_DISABLE_TO_ENABLE, value);

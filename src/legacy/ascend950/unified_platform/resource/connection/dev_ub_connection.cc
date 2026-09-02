@@ -856,7 +856,7 @@ void DevUbConnection::ReleaseResource()
 void DevUbConnection::CreateAivUrmaJfc()
 {
     jfcHandle = HrtRaUbCreateJfcUserCtl(rdmaHandle, cqInfo_);
-    HCCL_INFO("[DevUbConnection][CreateAivUrmaJfc] create jfcHandle[%p] for rdmaHandle[%p].", jfcHandle, rdmaHandle);
+    HCCL_INFO("[DevUbConnection][CreateAivUrmaJfc] create jfcHandle[%llu] for rdmaHandle[%p].", jfcHandle, rdmaHandle);
 }
 
 DevUbConnection::~DevUbConnection() { DECTOR_TRY_CATCH("DevUbConnection", ReleaseResource()); }

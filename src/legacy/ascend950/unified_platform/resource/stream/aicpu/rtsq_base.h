@@ -10,8 +10,6 @@
 
 #ifndef HCCLV2_RTSQ_BASE_H
 #define HCCLV2_RTSQ_BASE_H
-#include <vector>
-#include <functional>
 #include "types.h"
 #include "buffer.h"
 #include "notify_lite.h"
@@ -20,6 +18,7 @@
 #include "reduce_in.h"
 #include "not_support_exception.h"
 #include "ub_jetty_lite.h"
+#include <functional>
 
 #include "ascend_hal.h"
 namespace aicpu {
@@ -240,8 +239,8 @@ protected:
 
     std::string GetHwSqDescribe() const;
 
-    void ConfigSqTail(u32 value);
-    void ConfigDisableToEnable(u32 value);
+    void ConfigSqTail(u32 value) const;
+    void ConfigDisableToEnable(u32 value) const;
 
     inline void SetTaskIdBySqeId()
     {

@@ -619,7 +619,7 @@ void RoceTransportLiteImpl::ReportNotifyWaitTask(u64 notifyId, const StreamLite&
     slot->taskPara.Notify.sqeAddr = stream.GetRtsq()->GetSqeAddr();
 }
 
-bool RoceTransportLiteImpl::IsReportTask()
+bool RoceTransportLiteImpl::IsReportTask() const
 {
     // TaskException或Profiling开启时，允许上报
     return taskExceptionEnable_ || DfxProfilingHandlerLite::GetInstance().GetProfL1State();

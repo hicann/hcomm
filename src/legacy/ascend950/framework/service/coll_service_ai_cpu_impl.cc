@@ -233,8 +233,8 @@ HcclResult CollServiceAiCpuImpl::AicpuMc2CommResourcePrepare(
 
     shared_ptr<DevBuffer> newDevMem = make_shared<DevBuffer>(sizeof(HcclKernelParamLite));
     HrtMemcpy(
-        reinterpret_cast<void*>(newDevMem->GetAddr()), sizeof(HcclKernelParamLite),
-        reinterpret_cast<void*>(&param.kernel), sizeof(HcclKernelParamLite), RT_MEMCPY_HOST_TO_DEVICE);
+        reinterpret_cast<void*>(newDevMem->GetAddr()), sizeof(HcclKernelParamLite), static_cast<void*>(&param.kernel),
+        sizeof(HcclKernelParamLite), RT_MEMCPY_HOST_TO_DEVICE);
     aicpuMc2CommResourceMap_.insert(make_pair(opAlgTag, newDevMem));
     *addr = reinterpret_cast<void*>(newDevMem->GetAddr());
     HCCL_INFO(

@@ -9,7 +9,6 @@
  */
 
 #include "ccu_transport_group.h"
-#include "exception_util.h"
 #include "ccu_device_manager.h"
 
 namespace Hccl {

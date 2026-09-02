@@ -576,7 +576,7 @@ void UbTransportLiteImpl::NotifyRecordProfilingProcess(
 }
 
 void UbTransportLiteImpl::FillSlotUbDmaInfo(
-    DfxTaskInfo* slot, const StreamLite& stream, u32 taskId, u64 srcAddr, u64 dstAddr, u64 size, u32 notifyId)
+    DfxTaskInfo* slot, const StreamLite& stream, u32 taskId, u64 srcAddr, u64 dstAddr, u64 size, u32 notifyId) const
 {
     slot->sqId = stream.GetSqId();
     slot->taskId = taskId;
@@ -596,7 +596,7 @@ void UbTransportLiteImpl::FillSlotUbDmaInfo(
 
 void UbTransportLiteImpl::FillSlotReduceInfo(
     DfxTaskInfo* slot, const StreamLite& stream, u32 taskId, u64 srcAddr, u64 dstAddr, u64 size, u32 notifyId,
-    u8 reduceOp)
+    u8 reduceOp) const
 {
     slot->sqId = stream.GetSqId();
     slot->taskId = taskId;
@@ -1517,7 +1517,7 @@ void UbTransportLiteImpl::SetFenceConfig(SqeConfigLite& cfg)
     fence_ = false;
 }
 
-bool UbTransportLiteImpl::IsReportTask()
+bool UbTransportLiteImpl::IsReportTask() const
 {
     return taskExceptionEnable_ || DfxProfilingHandlerLite::GetInstance().GetProfL1State();
 }

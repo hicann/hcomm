@@ -214,7 +214,7 @@ void P2PTransport::RecvPid()
     HCCL_INFO("P2PTransport: recv pid %u", rmtPid);
 }
 
-void P2PTransport::Grant()
+void P2PTransport::Grant() const
 {
     // 暂时不做Grant处理
     return;

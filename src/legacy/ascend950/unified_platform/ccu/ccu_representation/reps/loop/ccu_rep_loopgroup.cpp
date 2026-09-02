@@ -29,7 +29,8 @@ namespace CcuRep {
         this->instrId = instrId;
         translated = true;
 
-        if (instrId > USHRT_MAX - 3) {
+        constexpr uint16_t INSTR_ID_RESERVE_SIZE = 3;
+        if (instrId > USHRT_MAX - INSTR_ID_RESERVE_SIZE) {
             HCCL_ERROR(
                 "[CcuRepLoopGroup][Translate] instrId[%u] + 3 exceeds the maximum value of unsigned short int.",
                 instrId);

@@ -9,6 +9,7 @@
  */
 
 #include "ccu_rep.h"
+#include "ccu_res_specs_legacy.h"
 #include "string_util.h"
 
 namespace Hccl {

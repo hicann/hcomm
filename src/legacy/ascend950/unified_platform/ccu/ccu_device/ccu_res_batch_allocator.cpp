@@ -642,8 +642,9 @@ void CcuResBatchAllocator::ReleaseBlockResource(std::unique_ptr<CcuResRepository
                std::make_tuple(ResType::GSA, resStrategies[i].gsaNum, std::ref(resRepoPtr->blockGsa[i]))};
 
         for (uint32_t j = 0; j < BLOCK_RES_TYPE_NUM; j++) {
+            constexpr size_t RES_INFO_IDX = 2;
             auto req = blockReqParas[j];
-            std::vector<ResInfo>& resInfos = std::get<2>(req);
+            std::vector<ResInfo>& resInfos = std::get<RES_INFO_IDX>(req);
             auto resType = std::get<0>(req);
             std::vector<BlockInfo>& blocks = resBlocks[i][resType];
             if (resInfos.size() == 0 || blocks.size() == 0) {

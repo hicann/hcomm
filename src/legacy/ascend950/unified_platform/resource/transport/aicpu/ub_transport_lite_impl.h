@@ -203,8 +203,8 @@ private:
 
     void ProfilingProcess(void* src, void* dst, u64 size, const StreamLite& stream, DmaOp dmaOp, u32 taskId);
 
-    inline void
-    BuildDbSqeProfInfoForProfilingProcess(void* src, void* dst, u64 size, DmaOp dmaOp, DbSqeProfInfo& dbSqeProfInfo)
+    inline void BuildDbSqeProfInfoForProfilingProcess(
+        void* src, void* dst, u64 size, DmaOp dmaOp, DbSqeProfInfo& dbSqeProfInfo) const
     {
         FillDbSqeProfInfoDmaPub(dst, size, dmaOp, dbSqeProfInfo);
 
@@ -217,7 +217,7 @@ private:
         void* src, void* dst, u64 size, const ReduceIn& reduceIn, const StreamLite& stream, u32 taskId);
 
     inline void BuildDbSqeProfInfoForReduceProfilingProcess(
-        void* src, void* dst, u64 size, const ReduceIn& reduceIn, DbSqeProfInfo& dbSqeProfInfo)
+        void* src, void* dst, u64 size, const ReduceIn& reduceIn, DbSqeProfInfo& dbSqeProfInfo) const
     {
         // 构造DbSqeProfInfo
         dbSqeProfInfo.isValid = true;
@@ -243,7 +243,7 @@ private:
 
     void SetFenceConfig(SqeConfigLite& cfg);
 
-    bool IsReportTask();
+    bool IsReportTask() const;
 
     void ExecProfiling(
         const RmaBufferLite& loc, const Buffer& rmt, const u64 totalSize,
@@ -378,8 +378,8 @@ private:
     void
     WriteWithNotifyProfilingProcess(void* src, void* dst, u64 size, const StreamLite& stream, u32 taskId, u64 notifyId);
 
-    inline void
-    BuildDbSqeProfInfoForWriteWithNotify(void* src, void* dst, u64 size, u64 notifyId, DbSqeProfInfo& dbSqeProfInfo)
+    inline void BuildDbSqeProfInfoForWriteWithNotify(
+        void* src, void* dst, u64 size, u64 notifyId, DbSqeProfInfo& dbSqeProfInfo) const
     {
         FillDbSqeProfInfoDmaPub(dst, size, DmaOp::HCCL_DMA_WRITE, dbSqeProfInfo);
 
@@ -393,7 +393,7 @@ private:
         void* src, void* dst, u64 size, const ReduceIn& reduceIn, const StreamLite& stream, u32 taskId, u64 notifyId);
 
     inline void BuildDbSqeProfInfoForWriteReduceWithNotify(
-        void* src, void* dst, u64 size, const ReduceIn& reduceIn, u64 notifyId, DbSqeProfInfo& dbSqeProfInfo)
+        void* src, void* dst, u64 size, const ReduceIn& reduceIn, u64 notifyId, DbSqeProfInfo& dbSqeProfInfo) const
     {
         // 构造DbSqeProfInfo
         dbSqeProfInfo.isValid = true;
@@ -404,7 +404,7 @@ private:
 
     void NotifyRecordProfilingProcess(void* dst, u64 size, const StreamLite& stream, u32 taskId, u64 notifyId);
 
-    inline void BuildDbSqeProfInfoForNotifyRecord(void* dst, u64 size, u64 notifyId, DbSqeProfInfo& dbSqeProfInfo)
+    inline void BuildDbSqeProfInfoForNotifyRecord(void* dst, u64 size, u64 notifyId, DbSqeProfInfo& dbSqeProfInfo) const
     {
         FillDbSqeProfInfoDmaPub(dst, size, DmaOp::HCCL_DMA_WRITE, dbSqeProfInfo);
 
@@ -544,10 +544,11 @@ private:
     }
 
     void FillSlotUbDmaInfo(
-        DfxTaskInfo* slot, const StreamLite& stream, u32 taskId, u64 srcAddr, u64 dstAddr, u64 size, u32 notifyId);
+        DfxTaskInfo* slot, const StreamLite& stream, u32 taskId, u64 srcAddr, u64 dstAddr, u64 size,
+        u32 notifyId) const;
     void FillSlotReduceInfo(
         DfxTaskInfo* slot, const StreamLite& stream, u32 taskId, u64 srcAddr, u64 dstAddr, u64 size, u32 notifyId,
-        u8 reduceOp);
+        u8 reduceOp) const;
     void ReportWriteWithNotifyTask(
         const RmaBufSliceLite& locSlice, const RmtRmaBufSliceLite& rmtSlice, const RmtRmaBufSliceLite& rmtNotifySlice,
         const StreamLite& stream, u32 taskId);

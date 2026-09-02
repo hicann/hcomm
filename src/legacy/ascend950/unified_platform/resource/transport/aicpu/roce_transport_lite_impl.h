@@ -97,7 +97,7 @@ private:
         const void* src, const void* dst, u64 size, const ReduceIn& reduceIn, const StreamLite& stream, u32 taskId,
         TaskParamType taskType, u64 notifyId, u32 notifyValue, const char* funcName);
     void ReportNotifyWaitTask(u64 notifyId, const StreamLite& stream, u32 taskId);
-    bool IsReportTask();
+    bool IsReportTask() const;
 };
 
 } // namespace Hccl

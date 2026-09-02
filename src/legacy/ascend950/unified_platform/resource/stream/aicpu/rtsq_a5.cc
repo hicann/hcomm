@@ -124,7 +124,7 @@ void RtsqA5::CheckLaunchTaskStatus(
     }
 }
 
-void RtsqA5::CopySqeBufToSq(u8* sqeBuf)
+void RtsqA5::CopySqeBufToSq(u8* sqeBuf) const
 {
     u8* sqCurrAddr = reinterpret_cast<u8*>(sqBaseAddr_) + sqTail_ * RTSQ_SQE_SIZE;
     if (sqTail_ >= sqHead_) {

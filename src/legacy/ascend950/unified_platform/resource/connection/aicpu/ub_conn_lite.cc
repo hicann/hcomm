@@ -158,8 +158,7 @@ void UbConnLite::ProcessSlices(
 
         RmtRmaBufSliceLite lastRmtSlice(
             rmt.GetAddr() + sliceNum * sliceSize, lastSliceSize, 0, rmt.GetTokenId(), rmt.GetTokenValue(), UINT32_MAX);
-        SlicePosition slicePos;
-        slicePos = (sliceNum == 0) ? SlicePosition::ONLY : SlicePosition::LAST;
+        SlicePosition slicePos = (sliceNum == 0) ? SlicePosition::ONLY : SlicePosition::LAST;
         processOneSlice(lastLocSlice, lastRmtSlice, slicePos);
         sliceNum++;
     }
@@ -210,8 +209,7 @@ void UbConnLite::ProcessSlicesWithNotify(
 
         RmtRmaBufSliceLite lastRmtSlice(
             rmt.GetAddr() + sliceNum * sliceSize, lastSliceSize, 0, rmt.GetTokenId(), rmt.GetTokenValue(), UINT32_MAX);
-        SlicePosition slicePos;
-        slicePos = (sliceNum == 0) ? SlicePosition::ONLY : SlicePosition::LAST;
+        SlicePosition slicePos = (sliceNum == 0) ? SlicePosition::ONLY : SlicePosition::LAST;
         processOneSliceWithNotify(lastLocSlice, lastRmtSlice, slicePos);
     }
 

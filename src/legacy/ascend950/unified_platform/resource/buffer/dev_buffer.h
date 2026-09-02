@@ -15,6 +15,7 @@
 #include <string>
 #include <memory>
 #include "buffer.h"
+
 namespace Hccl {
 
 struct PolicyTag {};

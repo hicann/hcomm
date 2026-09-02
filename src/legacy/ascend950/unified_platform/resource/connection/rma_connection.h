@@ -15,8 +15,8 @@
 #include "buffer_type.h"
 #include "remote_rma_buffer.h"
 #include "stream.h"
-#include "socket.h"
 #include "serializable.h"
+#include "socket.h"
 
 namespace Hccl {
 

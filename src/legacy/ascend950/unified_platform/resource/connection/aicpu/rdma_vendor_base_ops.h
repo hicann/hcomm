@@ -307,7 +307,7 @@ protected:
     }
 
     // 将PI更新到硬件可见地址
-    HcclResult UpdateSqPI()
+    HcclResult UpdateSqPI() const
     {
         // 更新Sq PI指针
         uint32_t sqHeadNum = Htonl32(sqHead_);

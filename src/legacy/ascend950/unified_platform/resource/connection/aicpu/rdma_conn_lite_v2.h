@@ -13,7 +13,6 @@
 
 #include "rma_conn_lite.h"
 #include "binary_stream.h"
-#include "exception_util.h"
 #include "not_support_exception.h"
 #include "log.h"
 

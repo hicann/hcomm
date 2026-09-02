@@ -9,6 +9,7 @@
  */
 
 #include "dlprof_func_v2.h"
+#include <dlfcn.h>
 #include "log.h"
 #include "exception_util.h"
 
@@ -19,7 +20,7 @@ DlProfFunc& DlProfFunc::GetInstance()
     return hcclDlProfFunction;
 }
 
-bool DlProfFunc::isStubMode() { return false; }
+bool DlProfFunc::isStubMode() const { return false; }
 
 DlProfFunc::DlProfFunc()
 {
@@ -44,7 +45,7 @@ static uint64_t HcclMsprofSysCycleTimeStub()
     return 0;
 }
 
-void DlProfFunc::DlProfFunctionStubInit() { dlMsprofSysCycleTime = (uint64_t(*)(void))HcclMsprofSysCycleTimeStub; }
+void DlProfFunc::DlProfFunctionStubInit() { dlMsprofSysCycleTime = &HcclMsprofSysCycleTimeStub; }
 
 HcclResult DlProfFunc::DlProfFunctionInterInit()
 {

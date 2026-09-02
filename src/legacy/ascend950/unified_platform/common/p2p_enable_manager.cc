@@ -91,7 +91,7 @@ HcclResult P2PEnableManager::WaitP2PEnabled(uint32_t localDeviceLogicID, uint32_
     return HCCL_SUCCESS;
 }
 
-HcclResult P2PEnableManager::WaitP2PConnected(uint32_t localDeviceLogicID, uint32_t remoteDevicePhysicID)
+HcclResult P2PEnableManager::WaitP2PConnected(uint32_t localDeviceLogicID, uint32_t remoteDevicePhysicID) const
 {
     // 读取P2P状态超时时间
     const std::chrono::seconds timeout(EnvConfig::GetInstance().GetSocketConfig().GetLinkTimeOut());

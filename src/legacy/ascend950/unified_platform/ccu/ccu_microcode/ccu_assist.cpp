@@ -92,9 +92,10 @@ namespace CcuRep {
 
     uint64_t GetExpansionParam(uint64_t expansionNum)
     {
+        constexpr uint64_t expansionNum1 = 1;
         constexpr uint64_t expansionNum2 = 2;
         constexpr uint64_t expansionNumShiftBit = 53;
-        return (expansionNum == expansionNum2 ? uint64_t(1) : uint64_t(2))
+        return (expansionNum == expansionNum2 ? expansionNum1 : expansionNum2)
                << expansionNumShiftBit; // Bit[53-54], 00: 1, 01: 2, 10: 4
     }
 

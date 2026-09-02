@@ -13,13 +13,12 @@
 
 #include <functional>
 #include <mutex>
-#include <dlfcn.h>
 #include <hccl/hccl_types.h>
 #include "orion_adapter_rts.h"
 namespace Hccl {
 class DlProfFunc {
 public:
-    bool isStubMode();
+    bool isStubMode() const;
     virtual ~DlProfFunc();
     static DlProfFunc& GetInstance();
     HcclResult DlProfFunctionInit();

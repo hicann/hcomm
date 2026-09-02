@@ -14,7 +14,6 @@
 #include "base_mem_transport.h"
 #include "virtual_topo.h"
 #include "ipc_remote_notify.h"
-#include "../../../resource/buffer/local_ipc_rma_buffer_v2.h"
 #include "remote_rma_buffer.h"
 
 namespace Hccl {
@@ -79,7 +78,7 @@ private:
     bool IsRmtPidValid() const;
     void SendPid();
     void RecvPid();
-    void Grant();
+    void Grant() const;
     void PrepareSendData();
     void RecvDataSize();
     void SendExchangeData();

@@ -138,7 +138,7 @@ private:
 
     void RefreshInfo();
 
-    void CopySqeBufToSq(u8* sqeBuf);
+    void CopySqeBufToSq(u8* sqeBuf) const;
 
     void MakeSureAvailableSpace();
 

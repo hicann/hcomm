@@ -57,7 +57,7 @@ private:
 
     HcclResult EnableP2P(uint32_t localDeviceLogicID, uint32_t remoteDevicePhysicID);
     HcclResult WaitP2PEnabled(uint32_t localDeviceLogicID, uint32_t remoteDevicePhysicID);
-    HcclResult WaitP2PConnected(uint32_t localDeviceLogicID, uint32_t remoteDevicePhysicID);
+    HcclResult WaitP2PConnected(uint32_t localDeviceLogicID, uint32_t remoteDevicePhysicID) const;
     HcclResult DisableP2P(uint32_t localDeviceLogicID, uint32_t remoteDevicePhysicID);
 
     std::array<std::map<uint32_t, P2PConnectionInfo>, MAX_MODULE_DEVICE_NUM> connectionsInfo_;
