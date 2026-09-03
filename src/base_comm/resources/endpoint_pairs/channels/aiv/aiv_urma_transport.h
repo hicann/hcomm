@@ -40,7 +40,14 @@ private:
     void GetSqContext();
     void GetCqContext();
     void GetProtectionInfo();
+    void ResolveLocalBufferTokens();
     void EnsureQueueIndexDeviceMem();
+
+    struct BufferTokenInfo {
+        uint32_t tokenId{0};
+        uint32_t tokenValue{0};
+        bool useProcessToken{false};
+    };
 
     // 建链过程
     using RemoteBufferVec = std::vector<std::unique_ptr<RemoteUbRmaBuffer>>;
@@ -89,6 +96,8 @@ private:
 
     std::vector<RegedBufferEntity> localBufferInfo_{};
     std::vector<RegedBufferEntity> remoteBufferInfo_{};
+    std::vector<BufferTokenInfo> localBufferTokens_{};
+    bool localBufferTokensResolved_{false};
     std::vector<SqContext> sqContextVec_{};
     std::vector<CqContext> cqContextVec_{};
     hccl::DeviceMem sqPiMem_{};

@@ -24,7 +24,6 @@
 #include "endpoint.h"
 #include "exchange_ub_buffer_dto.h"
 #include "runtime_api_exception.h"
-#include "hcomm_adapter_rts.h"
 
 using namespace hcomm;
 using namespace Hccl;
@@ -32,6 +31,8 @@ using namespace Hccl;
 namespace {
 
 uint32_t g_listenPort = 0;
+constexpr u32 STUB_TOKEN_VALUE = 0x12345678U;
+constexpr u32 STUB_TOKEN_ID = 0x87654321U;
 
 HcommResult StubEndpointStartListen(EndpointHandle, uint32_t port, HcommEndpointListenConfig*)
 {
@@ -68,7 +69,8 @@ public:
 
     std::unique_ptr<Serializable> GetExchangeDto() override
     {
-        return std::make_unique<ExchangeUbBufferDto>(GetAddr(), GetSize(), 0, 0, 0, UINT32_MAX);
+        return std::make_unique<ExchangeUbBufferDto>(
+            GetAddr(), GetSize(), STUB_TOKEN_VALUE, STUB_TOKEN_ID, 0, UINT32_MAX);
     }
 };
 
@@ -750,14 +752,8 @@ TEST_F(AivUrmaTransportTest, Ut_BufferVecPack_WhenCalled_FillsBinaryStream)
     EXPECT_NO_THROW(transport->BufferVecPack(binaryStream));
 }
 
-// 覆盖 commit 改动：QueryProcessToken 进程级 token 查询路径（bufferVec 非空 + 调用 hcomm::RtsUbDevQueryInfo）
-TEST_F(AivUrmaTransportTest, Ut_BufferVecPack_WhenBufferVecHasLocalBuffer_QueriesProcessToken)
+TEST_F(AivUrmaTransportTest, Ut_BufferVecPack_WhenBufferVecHasLocalBuffer_PreservesRegisteredToken)
 {
-    MOCKER_CPP(&hcomm::RtsUbDevQueryInfo)
-        .expects(once())
-        .with(mockcpp::any(), mockcpp::any())
-        .will(returnValue(static_cast<HcclResult>(HCCL_SUCCESS)));
-
     auto conn = MakeConn();
     Socket socket(nullptr, IpAddress(), 0, IpAddress(), "ut", SocketRole::CLIENT, Hccl::NicType::DEVICE_NIC_TYPE);
     auto transport = MakeTransport(*conn, socket);
@@ -767,7 +763,16 @@ TEST_F(AivUrmaTransportTest, Ut_BufferVecPack_WhenBufferVecHasLocalBuffer_Querie
     BinaryStream binaryStream;
 
     EXPECT_NO_THROW(transport->BufferVecPack(binaryStream));
-    EXPECT_GT(binaryStream.GetSize(), 0U);
+    uint32_t bufferNum = 0;
+    uint32_t pos = 0;
+    ExchangeUbBufferDto dto;
+    binaryStream >> bufferNum >> pos;
+    dto.Deserialize(binaryStream);
+
+    EXPECT_EQ(bufferNum, 1U);
+    EXPECT_EQ(pos, 0U);
+    EXPECT_EQ(dto.tokenId, STUB_TOKEN_ID);
+    EXPECT_EQ(dto.tokenValue, STUB_TOKEN_VALUE);
 }
 
 TEST_F(AivUrmaTransportTest, Ut_IsResReadyAndConnsReady_WhenConnReady_ReturnsTrue)

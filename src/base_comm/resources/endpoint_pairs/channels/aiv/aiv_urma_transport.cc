@@ -211,6 +211,62 @@ void AivUrmaTransport::PrepareHostChannelEntity(ChannelEntity* channelEntitiesHo
     channelEntitiesHost->cqNum = connNum_;
 }
 
+void AivUrmaTransport::ResolveLocalBufferTokens()
+{
+    if (localBufferTokensResolved_) {
+        return;
+    }
+
+    localBufferTokens_.resize(commonLocRes_.bufferVec.size());
+    hcomm::rtMemUbTokenInfo processTokenInfo{};
+    bool processTokenResolved = false;
+    int32_t currentDeviceId = 0;
+    aclError getDeviceRet = aclrtGetDevice(&currentDeviceId);
+    if (getDeviceRet != ACL_SUCCESS) {
+        MACRO_THROW(
+            InternalException,
+            StringFormat("[AivUrmaTransport::%s] get current device failed, ret[%d]", __func__, getDeviceRet));
+    }
+    for (size_t i = 0; i < commonLocRes_.bufferVec.size(); ++i) {
+        if (commonLocRes_.bufferVec[i] == nullptr) {
+            continue;
+        }
+        auto* localBuffer = dynamic_cast<LocalUbRmaBuffer*>(commonLocRes_.bufferVec[i]);
+        CHECK_NULLPTR(
+            localBuffer, StringFormat("[AivUrmaTransport::%s] failed, localBuffer pointer is nullptr", __func__));
+
+        localBufferTokens_[i].tokenId = localBuffer->GetTokenId();
+        localBufferTokens_[i].tokenValue = localBuffer->GetTokenValue();
+
+        aclrtPtrAttributes attributes{};
+        aclError ret = aclrtPointerGetAttributes(reinterpret_cast<const void*>(localBuffer->GetAddr()), &attributes);
+        if (ret != ACL_SUCCESS) {
+            HCCL_WARNING(
+                "[AivUrmaTransport::%s] get buffer attributes failed, use registered token, addr[0x%llx], ret[%d]",
+                __func__, static_cast<unsigned long long>(localBuffer->GetAddr()), ret);
+            continue;
+        }
+        if (attributes.location.type != ACL_MEM_LOCATION_TYPE_DEVICE
+            || attributes.location.id != static_cast<uint32_t>(currentDeviceId)) {
+            HCCL_INFO(
+                "[AivUrmaTransport::%s] buffer is not on channel device, use registered token, addr[0x%llx], "
+                "bufferDeviceId[%u], channelDeviceId[%u]",
+                __func__, static_cast<unsigned long long>(localBuffer->GetAddr()), attributes.location.id,
+                static_cast<uint32_t>(currentDeviceId));
+            continue;
+        }
+
+        if (!processTokenResolved) {
+            processTokenInfo = QueryProcessToken(*localBuffer);
+            processTokenResolved = true;
+        }
+        localBufferTokens_[i].tokenId = processTokenInfo.tokenId;
+        localBufferTokens_[i].tokenValue = processTokenInfo.tokenValue;
+        localBufferTokens_[i].useProcessToken = true;
+    }
+    localBufferTokensResolved_ = true;
+}
+
 void AivUrmaTransport::GetProtectionInfo()
 {
     if (transportStatus_ != TransportStatus::READY) {
@@ -219,6 +275,7 @@ void AivUrmaTransport::GetProtectionInfo()
             StringFormat("[AivUrmaTransport::%s]transport status is not ready, please check", __func__));
     }
 
+    ResolveLocalBufferTokens();
     size_t localBufSize = commonLocRes_.bufferVec.size();
     localBufferInfo_.clear();
     localBufferInfo_.resize(localBufSize);
@@ -233,12 +290,8 @@ void AivUrmaTransport::GetProtectionInfo()
             localBufferInfo_[i].bufferInfo.rma.addr = it->GetAddr();
             localBufferInfo_[i].bufferInfo.rma.size = it->GetSize();
             localBufferInfo_[i].bufferInfo.rma.protectionInfo.type = PROTECTION_TYPE_UB;
-            const hcomm::rtMemUbTokenInfo processTokenInfo = QueryProcessToken(*localBuffer);
-            localBufferInfo_[i].bufferInfo.rma.protectionInfo.memInfo.ub.tokenId = processTokenInfo.tokenId;
-            localBufferInfo_[i].bufferInfo.rma.protectionInfo.memInfo.ub.tokenValue = processTokenInfo.tokenValue;
-            HCCL_INFO(
-                "use process token for AIV local buffer, addr[0x%llx], size[%llu]",
-                static_cast<unsigned long long>(it->GetAddr()), static_cast<unsigned long long>(it->GetSize()));
+            localBufferInfo_[i].bufferInfo.rma.protectionInfo.memInfo.ub.tokenId = localBufferTokens_[i].tokenId;
+            localBufferInfo_[i].bufferInfo.rma.protectionInfo.memInfo.ub.tokenValue = localBufferTokens_[i].tokenValue;
         }
     }
 
@@ -304,6 +357,7 @@ void AivUrmaTransport::HandshakeMsgUnpack(BinaryStream& binaryStream)
 
 void AivUrmaTransport::BufferVecPack(BinaryStream& binaryStream)
 {
+    ResolveLocalBufferTokens();
     binaryStream << static_cast<u32>(commonLocRes_.bufferVec.size());
     HCCL_INFO("start pack %s bufferVec", transportType_.Describe().c_str());
     uint32_t pos = 0;
@@ -315,9 +369,10 @@ void AivUrmaTransport::BufferVecPack(BinaryStream& binaryStream)
             CHECK_NULLPTR(
                 ubBufferDto,
                 StringFormat("[AivUrmaTransport::%s] exchange buffer dto is not ExchangeUbBufferDto", __func__));
-            const hcomm::rtMemUbTokenInfo processTokenInfo = QueryProcessToken(*it);
-            ubBufferDto->tokenId = processTokenInfo.tokenId;
-            ubBufferDto->tokenValue = processTokenInfo.tokenValue;
+            if (localBufferTokens_[pos].useProcessToken) {
+                ubBufferDto->tokenId = localBufferTokens_[pos].tokenId;
+                ubBufferDto->tokenValue = localBufferTokens_[pos].tokenValue;
+            }
             dto->Serialize(binaryStream);
             HCCL_INFO("pack buffer pos=%u dto %s", pos, dto->Describe().c_str());
         } else { // 空的buffer，dto所有字段为0(size=0)

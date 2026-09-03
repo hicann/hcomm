@@ -196,6 +196,9 @@ ChannelStatus AicpuTsUbRtpChannel::GetStatus()
 
 HcclResult AicpuTsUbRtpChannel::Clean()
 {
+    HCCL_INFO(
+        "[AicpuTsUbRtpChannel][%s] start, channelStatus[%u], ubRtpStatus[%u]", __func__,
+        static_cast<u32>(channelStatus), static_cast<u32>(ubRtpStatus));
     commonRes_.connVec.clear();
     connections_.clear();
 
@@ -223,13 +226,18 @@ HcclResult AicpuTsUbRtpChannel::Clean()
     channelStatus = ChannelStatus::INIT;
     ubRtpStatus = UbRtpStatus::INIT;
 
+    HCCL_INFO("[AicpuTsUbRtpChannel][%s] done.", __func__);
     return HCCL_SUCCESS;
 }
 
 HcclResult AicpuTsUbRtpChannel::Resume()
 {
+    HCCL_INFO(
+        "[AicpuTsUbRtpChannel][%s] start, channelStatus[%u], ubRtpStatus[%u]", __func__,
+        static_cast<u32>(channelStatus), static_cast<u32>(ubRtpStatus));
     channelStatus = ChannelStatus::INIT;
     ubRtpStatus = UbRtpStatus::INIT;
+    HCCL_INFO("[AicpuTsUbRtpChannel][%s] done.", __func__);
     return HCCL_SUCCESS;
 }
 
