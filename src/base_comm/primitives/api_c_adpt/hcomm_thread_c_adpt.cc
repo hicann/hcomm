@@ -176,6 +176,8 @@ HcommResult HcommThreadAllocWithStream(CommEngine engine, rtStream_t stream, uin
         std::lock_guard<std::mutex> lock(hcomm::g_ThreadMapMtx);
         hcomm::g_ThreadMap.emplace(*thread, handle);
     }
+    std::vector<std::shared_ptr<hccl::Thread>> threads{handle};
+    CHK_RET(hccl::SaveThreads(threads));
 
     HCCL_INFO(
         "[ThreadMgr] ThreadAcquireWithStream done: engine[%s] stream[%p], "
@@ -249,8 +251,8 @@ HcommResult HcommThreadGetNotifyNum(ThreadHandle thread, uint32_t* notifyNum)
 {
     CHK_PTR_NULL(notifyNum);
     (void)HcommResMgrInit();
-    hccl::Thread* threadPtr = reinterpret_cast<hccl::Thread*>(thread);
-    CHK_PTR_NULL(threadPtr);
+    std::shared_ptr<hccl::Thread> threadPtr;
+    CHK_RET(hccl::LookupThreadByHandle(thread, threadPtr));
     *notifyNum = threadPtr->GetNotifyNum();
     HCCL_INFO("[%s] thread[0x%llx] notifyNum[%u]", __func__, thread, *notifyNum);
     return HCCL_SUCCESS;
@@ -342,8 +344,8 @@ HcommResult HcommThreadResGetInfo(ThreadHandle thread, ThreadResType resType, ui
         "[%s] begin, thread[0x%llx], resType[%d], infoLen[%u]", __func__, thread, static_cast<int32_t>(resType),
         infoLen);
 
-    /* ThreadHandle 是 Thread* 的 reinterpret_cast，可直接转换 */
-    auto* threadPtr = reinterpret_cast<hccl::Thread*>(thread);
+    std::shared_ptr<hccl::Thread> threadPtr;
+    CHK_RET(hccl::LookupThreadByHandle(thread, threadPtr));
 
     if (resType != ThreadResType::THREAD_RES_TYPE_STREAM) {
         HCCL_ERROR("[%s] resType[%d] is not supported", __func__, static_cast<int32_t>(resType));
