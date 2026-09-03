@@ -1,5 +1,7 @@
 # HCOMM
 
+English | [简体中文](./README.md)
+
 ## 🔥 Latest News
 
 - [2025/11/30] The HCOMM project is now open source.

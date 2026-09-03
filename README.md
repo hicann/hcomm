@@ -1,5 +1,7 @@
 # HCOMM
 
+简体中文 | [English](./README_en.md)
+
 ## 🔥 Latest News
 
 - [2025/11/30] HCOMM项目开源。
