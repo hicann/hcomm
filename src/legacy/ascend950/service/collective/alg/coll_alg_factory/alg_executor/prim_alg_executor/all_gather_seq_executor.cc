@@ -266,6 +266,7 @@ HcclResult AllGatherSeqExecutor<AlgTopoMatch, AlgTemp0, AlgTemp1>::GenPrimQues4O
         HCCL_ERROR("[CollAlgFactory] Rank [%d], Invalid dataSizePerVolume [%u].", myRank_, dataSizePerVolume),
         HcclResult::HCCL_E_INTERNAL);
 
+    CHK_PRT_RET(rankSize_ == 0, HCCL_ERROR("[CollAlgFactory] RankSize is zero!"), HcclResult::HCCL_E_INTERNAL);
     u32 scratchInputSize = static_cast<int>(
         (rankSize_ % dataSizePerVolume == 0) ?
             floor(maxTmpMemSize_ / rankSize_) :

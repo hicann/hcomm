@@ -126,7 +126,7 @@ private:
 
     void UnimportSharedRemoteJettys(Inner& inner);
     void DestroyJettyResources(Inner& inner);
-    Ctx InnerToCtx(const Inner& inner);
+    HcclResult InnerToCtx(const Inner& inner, Ctx& outCtx);
 
     mutable std::mutex mtx_;
     std::condition_variable cv_;

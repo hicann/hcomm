@@ -66,8 +66,8 @@ HcclResult JettyContext::Acquire(const std::function<HcclResult(Ctx&)>& provideC
             return HCCL_E_TIMEOUT;
         }
         if (inner_.valid) {
+            CHK_RET(InnerToCtx(inner_, outCtx));
             inner_.refCount++;
-            outCtx = InnerToCtx(inner_);
             HCCL_INFO(
                 "[JettyContext][Acquire] reuse shared jetty, handle[%llu], refCount[%u]",
                 static_cast<unsigned long long>(outCtx.handle), inner_.refCount);
@@ -125,7 +125,15 @@ HcclResult JettyContext::Acquire(const std::function<HcclResult(Ctx&)>& provideC
         inner_.valid = true;
         inner_.creating = false;
         inner_.refCount = 1;
-        outCtx = InnerToCtx(inner_);
+        HcclResult innerToCtxRet = InnerToCtx(inner_, outCtx);
+        if (innerToCtxRet != HCCL_SUCCESS) {
+            DestroyJettyResources(inner_);
+            inner_ = Inner{};
+            inner_.creating = false;
+            cv_.notify_all();
+            HCCL_ERROR("[JettyContext][Acquire] InnerToCtx failed, ret[%d].", innerToCtxRet);
+            return innerToCtxRet;
+        }
         cv_.notify_all();
     }
     HCCL_INFO(
@@ -281,7 +289,7 @@ void JettyContext::DestroyJettyResources(Inner& inner)
     inner.rdmaHandle = nullptr;
 }
 
-JettyContext::Ctx JettyContext::InnerToCtx(const Inner& inner)
+HcclResult JettyContext::InnerToCtx(const Inner& inner, Ctx& outCtx)
 {
     Ctx ctx{};
     ctx.handle = inner.handle;
@@ -301,9 +309,10 @@ JettyContext::Ctx JettyContext::InnerToCtx(const Inner& inner)
     ctx.cqInfo = inner.cqInfo;
     ctx.localPsn = inner.localPsn;
     if (inner.keySize > 0 && inner.keySize <= Hccl::HRT_UB_QP_KEY_MAX_LEN) {
-        (void)memcpy_s(ctx.localQpKey, Hccl::HRT_UB_QP_KEY_MAX_LEN, inner.localQpKey, inner.keySize);
+        CHK_SAFETY_FUNC_RET(memcpy_s(ctx.localQpKey, Hccl::HRT_UB_QP_KEY_MAX_LEN, inner.localQpKey, inner.keySize));
     }
-    return ctx;
+    outCtx = ctx;
+    return HCCL_SUCCESS;
 }
 
 } // namespace hcomm

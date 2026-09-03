@@ -183,6 +183,12 @@ HcclResult InsAllReduceParallelExecutorV2<
 
     rankSizeLevel0_ = virtRanks_.at(0).size();
     rankSizeLevel1_ = virtRanks_.at(1).size();
+    CHK_PRT_RET(
+        rankSizeLevel0_ == 0 || rankSizeLevel1_ == 0,
+        HCCL_ERROR(
+            "[CalcLocalRankSize] rankSizeLevel0_[%llu] or rankSizeLevel1_[%llu] is 0, rankSize will be 0.",
+            rankSizeLevel0_, rankSizeLevel1_),
+        HcclResult::HCCL_E_INTERNAL);
     rankSize_ = rankSizeLevel0_ * rankSizeLevel1_;
 
     // 计算当前 rank 在各层级中的索引
