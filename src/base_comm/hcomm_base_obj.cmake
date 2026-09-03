@@ -106,7 +106,7 @@ target_include_directories(hcomm_base_obj PRIVATE
     ${HCOMM_DIR}/src/legacy/ascend910/framework/common/src/config
     ${HCOMM_DIR}/src/legacy/ascend910/framework/common/src/mgr
     ${HCOMM_DIR}/src/legacy/ascend910/framework/common/src/exception
-    ${HCOMM_DIR}/src/legacy/ascend910/framework/common/src/aicpu
+    ${HCOMM_DIR}/src/legacy/ascend910/framework/common/src/host
     ${HCOMM_DIR}/src/legacy/ascend910/framework/common/src/topo
     ${HCOMM_DIR}/src/legacy/ascend910/framework/communicator/impl
     ${HCOMM_DIR}/src/legacy/ascend910/framework/communicator/impl/resource_manager
@@ -142,7 +142,6 @@ target_include_directories(hcomm_base_obj PRIVATE
     ${HCOMM_DIR}/src/legacy/ascend950/framework/topo
     ${HCOMM_DIR}/src/legacy/ascend950/framework/topo/new_topo_builder/common
     ${HCOMM_DIR}/src/legacy/ascend950/framework/topo/new_topo_builder/rank_graph
-    ${HCOMM_DIR}/src/legacy/ascend950/framework/topo/new_topo_builder/rank_table_info
     ${HCOMM_DIR}/src/legacy/ascend950/interface
     ${HCOMM_DIR}/src/legacy/ascend950/service/collective
     ${HCOMM_DIR}/src/legacy/ascend950/service/collective/primitive
@@ -198,6 +197,7 @@ target_include_directories(hcomm_base_obj PRIVATE
     ${HCOMM_DIR}/src/coll_communicator_mgr/dfx/profiling/aicpu
     ${HCOMM_DIR}/src/coll_communicator_mgr/dfx/profiling/host
     ${HCOMM_DIR}/src/coll_communicator_mgr/rank_graph
+    ${HCOMM_DIR}/src/coll_communicator_mgr/rank_graph/rank_table_info
     ${HCOMM_DIR}/src/coll_communicator_mgr/resource_mgr/local/my_rank
     ${HCOMM_DIR}/src/coll_communicator_mgr/resource_mgr/local/my_rank/comm_engine
     ${HCOMM_DIR}/src/coll_communicator_mgr/resource_mgr/local/my_rank/comm_engine/notify
