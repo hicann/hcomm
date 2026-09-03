@@ -143,42 +143,90 @@ protected:
     ConnectProtoType proto_;
 };
 
-class P2PPortType : public BasePortType {
+class P2PPortType {
 public:
-    P2PPortType(ConnectProtoType proto) : BasePortType(PortDeploymentType::P2P)
+    P2PPortType(ConnectProtoType proto) : portType_(PortDeploymentType::P2P, proto)
     {
         if (proto != ConnectProtoType::HCCS && proto != ConnectProtoType::PCIE) {
             THROW<InvalidParamsException>(StringFormat("P2PPortType::P2PPortType proto invalid"));
         }
-        proto_ = proto;
     };
+
+    PortDeploymentType GetType() const { return portType_.GetType(); }
+
+    ConnectProtoType GetProto() const { return portType_.GetProto(); }
+
+    bool operator==(const BasePortType& rhs) const { return portType_ == rhs; }
+
+    bool operator!=(const BasePortType& rhs) const { return portType_ != rhs; }
+
+    bool operator<(const BasePortType& rhs) const { return portType_ < rhs; }
+
+    string Describe() const { return portType_.Describe(); }
+
+    operator BasePortType() const { return portType_; }
+
+private:
+    BasePortType portType_;
 };
 
-class DevNetPortType : public BasePortType {
+class DevNetPortType {
 public:
-    DevNetPortType(ConnectProtoType proto) : BasePortType(PortDeploymentType::DEV_NET)
+    DevNetPortType(ConnectProtoType proto) : portType_(PortDeploymentType::DEV_NET, proto)
     {
         if (proto != ConnectProtoType::TCP && proto != ConnectProtoType::RDMA && proto != ConnectProtoType::UB) {
             THROW<InvalidParamsException>(StringFormat("DevNetPortType::DevNetPortType proto invalid"));
         }
-        proto_ = proto;
     };
+
+    PortDeploymentType GetType() const { return portType_.GetType(); }
+
+    ConnectProtoType GetProto() const { return portType_.GetProto(); }
+
+    bool operator==(const BasePortType& rhs) const { return portType_ == rhs; }
+
+    bool operator!=(const BasePortType& rhs) const { return portType_ != rhs; }
+
+    bool operator<(const BasePortType& rhs) const { return portType_ < rhs; }
+
+    string Describe() const { return portType_.Describe(); }
+
+    operator BasePortType() const { return portType_; }
+
+private:
+    BasePortType portType_;
 };
 
-class HostNetPortType : public BasePortType {
+class HostNetPortType {
 public:
-    HostNetPortType(ConnectProtoType proto) : BasePortType(PortDeploymentType::HOST_NET)
+    HostNetPortType(ConnectProtoType proto) : portType_(PortDeploymentType::HOST_NET, proto)
     {
         if (proto != ConnectProtoType::TCP && proto != ConnectProtoType::RDMA && proto != ConnectProtoType::UB) {
             THROW<InvalidParamsException>(StringFormat("HostNetPortType::HostNetPortType proto invalid"));
         }
-        proto_ = proto;
     };
+
+    PortDeploymentType GetType() const { return portType_.GetType(); }
+
+    ConnectProtoType GetProto() const { return portType_.GetProto(); }
+
+    bool operator==(const BasePortType& rhs) const { return portType_ == rhs; }
+
+    bool operator!=(const BasePortType& rhs) const { return portType_ != rhs; }
+
+    bool operator<(const BasePortType& rhs) const { return portType_ < rhs; }
+
+    string Describe() const { return portType_.Describe(); }
+
+    operator BasePortType() const { return portType_; }
+
+private:
+    BasePortType portType_;
 };
 
 class PortData {
 public:
-    PortData(RankId rankId, BasePortType type, u32 id, const IpAddress& addr)
+    PortData(RankId rankId, const BasePortType& type, u32 id, const IpAddress& addr)
         : rankId(rankId),
           type(type.GetType()),
           protoType(ConnProto2LinkProto(type.GetProto())),

@@ -523,7 +523,7 @@ bool SocketManager::CheckServerPortListening(const PortData& portData, const uin
     return true;
 }
 
-bool SocketManager::RegisterHostListenSocket(const PortData& portData, std::shared_ptr<Socket> listenSocket)
+bool SocketManager::RegisterHostListenSocket(const PortData& portData, std::shared_ptr<Socket> listenSocket) const
 {
     std::lock_guard<std::mutex> lock(socketLock);
     auto& serverSocketMap = SocketManager::GetServerSocketMap();

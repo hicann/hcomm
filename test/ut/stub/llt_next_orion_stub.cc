@@ -1194,7 +1194,7 @@ Socket* SocketManager::GetConnectedSocket(const SocketConfig& socketConfig) cons
 
 bool SocketManager::CheckServerPortListening(const PortData& portData, const uint32_t port) const { return true; }
 
-bool SocketManager::RegisterHostListenSocket(const PortData& portData, std::shared_ptr<Socket> listenSocket)
+bool SocketManager::RegisterHostListenSocket(const PortData& portData, std::shared_ptr<Socket> listenSocket) const
 {
     return true;
 }
