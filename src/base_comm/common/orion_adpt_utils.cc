@@ -44,11 +44,11 @@ HcclResult CommAddrToIpAddress(const CommAddr& commAddr, Hccl::IpAddress& ipAddr
     if (commAddr.type != COMM_ADDR_TYPE_IP_V4 && commAddr.type != COMM_ADDR_TYPE_IP_V6
         && commAddr.type != COMM_ADDR_TYPE_EID) {
         if (commAddr.type == COMM_ADDR_TYPE_ID || commAddr.type == COMM_ADDR_TYPE_RESERVED) {
-            HCCL_ERROR(
+            HCCL_WARNING(
                 "[%s] failed, comm address type[%d][%s] is not supported.", __func__, commAddr.type,
                 CommAddrTypeToStr(commAddr.type));
         } else {
-            HCCL_ERROR(
+            HCCL_WARNING(
                 "[%s] failed, comm address type[%d][%s] is invalid.", __func__, commAddr.type,
                 CommAddrTypeToStr(commAddr.type));
         }

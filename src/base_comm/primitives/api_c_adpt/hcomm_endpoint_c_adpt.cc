@@ -251,7 +251,11 @@ HcclResult GetListenPortByEndpoint(Endpoint* endpoint, uint32_t* port)
         return HCCL_E_NOT_SUPPORT;
     }
     Hccl::IpAddress ipAddr{};
-    CHK_RET(CommAddrToIpAddress(endpoint->GetEndpointDesc().commAddr, ipAddr));
+    HcclResult ret = CommAddrToIpAddress(endpoint->GetEndpointDesc().commAddr, ipAddr);
+    if (ret == HCCL_E_NOT_SUPPORT) {
+        return ret;
+    }
+    CHK_RET(ret);
     return serverSocketContext->ServerSocketGetListenPort(ipAddr, port);
 }
 } // namespace
