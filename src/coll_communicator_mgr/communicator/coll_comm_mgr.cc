@@ -17,6 +17,35 @@ namespace hccl {
 
 CollCommMgr& CollCommMgr::GetInstance()
 {
+    // 确保 base_comm 层单例先于 CollCommMgr 构造，从而后于 CollCommMgr 析构，
+    // 避免 ~CollCommMgr() 访问已销毁的 base_comm 单例。
+    // magic static 保证仅执行一次，避免热路径重复调用和并发访问。
+    // 使用 init-capture 捕获外层函数名：__func__在lambda体内输出在不同 gcc 版本下行为不同，捕获可消除差异。
+    static const bool baseCommReady = [func = __func__]() {
+        s32 devLogicId = 0;
+        HcclResult ret = hrtGetDevice(&devLogicId);
+        uint32_t devPhyId = 0U;
+        if (ret == HCCL_SUCCESS) {
+            ret = hrtGetDevicePhyIdByIndex(static_cast<uint32_t>(devLogicId), devPhyId);
+        }
+        if (ret != HCCL_SUCCESS) {
+            // devPhyId 保持为 0 作为回退值：此处首要目的是触发 base_comm 单例构造以保证析构顺序，
+            // phyId 正确性是次要的。后续 LegacyGetOpHcomInfo 中会用正确的 devId 重新调用
+            // InitBaseCommRes 覆盖初始化。
+            HCCL_WARNING(
+                "[CollCommMgr][%s] get deviceId failed, ret[%d], use default devPhyId[0].", func,
+                static_cast<s32>(ret));
+        }
+        HcommResult hRet = HcommResMgrInit(devPhyId);
+        if (hRet != HCCL_SUCCESS) {
+            HCCL_WARNING(
+                "[CollCommMgr][%s] HcommResMgrInit failed, ret[%d], "
+                "base_comm singleton construct-order not guaranteed.",
+                func, static_cast<s32>(hRet));
+        }
+        return true;
+    }();
+    (void)baseCommReady;
     static CollCommMgr instance;
     return instance;
 }

@@ -23,6 +23,14 @@ static HcommResult stub_CollCommMgrTest_HcommResMgrInit(uint32_t devPhyId)
     return static_cast<HcommResult>(HCOMM_SUCCESS);
 }
 
+// 析构顺序问题：跟踪 GetInstance() 是否调用了 HcommResMgrInit
+static bool g_ut_hcommResMgrInitCalledInGetInstance = false;
+static HcommResult stub_DestructionOrder_HcommResMgrInit(uint32_t devPhyId)
+{
+    g_ut_hcommResMgrInitCalledInGetInstance = true;
+    return static_cast<HcommResult>(HCOMM_SUCCESS);
+}
+
 class CollCommMgrTest : public BaseInit {
 public:
     void SetUp() override
@@ -176,4 +184,33 @@ TEST_F(CollCommMgrTest, Ut_UnRegisteCollComm_When_NotRegistered_Expect_NoCrashNo
     // 未注册直接注销：map erase no-op，taskAbortHandler UnRegister 仅告警，clusterMonitor initialized_==false no-op
     CollCommMgr::GetInstance().UnRegisteCollComm(&stub);
     EXPECT_EQ(CollCommMgr::GetInstance().GetAllCollComms().count(commId), 0U);
+}
+
+// ===== 析构顺序问题（static destruction order fiasco）=====
+// CollCommMgr 是 Meyers 单例，~CollCommMgr() 间接依赖 base_comm 层单例。
+// 若 base_comm 单例后于 CollCommMgr 构造，则先于其析构，导致 coredump。
+// 修复：GetInstance() 中 magic static lambda 先获取 deviceId 再调 HcommResMgrInit，
+// 确保 base_comm 单例先于 CollCommMgr 构造。本测试验证 magic static 不重复调用。
+TEST_F(CollCommMgrTest, Ut_GetInstance_When_CalledAfterInit_Expect_HcommResMgrInitNotReInvoked)
+{
+    (void)CollCommMgr::GetInstance(); // 先触发 magic static 初始化
+
+    g_ut_hcommResMgrInitCalledInGetInstance = false;
+    MOCKER(HcommResMgrInit).stubs().will(invoke(stub_DestructionOrder_HcommResMgrInit));
+    (void)CollCommMgr::GetInstance();
+    EXPECT_FALSE(g_ut_hcommResMgrInitCalledInGetInstance)
+        << "HcommResMgrInit should NOT be called again after magic static initialization";
+}
+
+// 验证 HcommResMgrInit 返回失败时 GetInstance() 仍返回有效实例，不因初始化失败而崩溃。
+// magic static lambda 中即使 HcommResMgrInit 失败，也仅打印告警并返回 true，
+// static CollCommMgr instance 照常构造。由于 magic static 在进程内仅执行一次，
+// SetUp 中已触发初始化，此处 mock HcommResMgrInit 失败后调用 GetInstance()，
+// 验证单例不崩溃且返回稳定引用。
+TEST_F(CollCommMgrTest, Ut_GetInstance_When_HcommResMgrInitFails_Expect_ReturnsValidInstance)
+{
+    MOCKER(HcommResMgrInit).stubs().will(returnValue(static_cast<HcommResult>(HCOMM_E_INTERNAL)));
+    CollCommMgr& inst = CollCommMgr::GetInstance();
+    EXPECT_EQ(&inst, &CollCommMgr::GetInstance())
+        << "GetInstance should return valid singleton even if HcommResMgrInit fails";
 }
