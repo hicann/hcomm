@@ -54,6 +54,7 @@ public:
         uint64_t beginTime, const std::string& commTag, const std::string& kernelName, uint32_t threadId,
         bool cachedReq);
     HcclResult GetOpModeFlags(bool& isOpBase, bool& isCached);
+    u64 GetGroupNameHash() const { return groupNameHash_; }
 
     void SetDpuStreamId(u32 dpuStreamId);
     void SetAicpuTaskIdAndStreamId(u32 taskId, u32 streamId)
@@ -70,6 +71,7 @@ private:
     static std::shared_mutex baseLock_;
     static std::mutex taskIdMutex_;
     std::string commTag_{};
+    u64 groupNameHash_{0};
     u32 deviceId_{0};
     u32 myRankId_{0};
     u32 dpuStreamId_{0};

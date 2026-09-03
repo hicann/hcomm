@@ -40,7 +40,6 @@ protected:
         handler_.enableHcclL1_ = false;
         handler_.initializedFlag_ = false;
         handler_.cachedAlgTypeHashId_ = 0;
-        handler_.currDfxOpInfo_ = nullptr;
         handler_.taskTypeHashCache_.clear();
         handler_.opTypeHashCache_.clear();
         handler_.algTypeHashCache_.clear();
@@ -83,19 +82,6 @@ TEST_F(DfxProfilingHandlerLiteTest, Ut_Init_When_AlreadyInit_Expect_ReturnSucces
     handler_.initializedFlag_ = true;
     HcclResult ret = handler_.Init();
     EXPECT_EQ(ret, HCCL_SUCCESS);
-}
-
-TEST_F(DfxProfilingHandlerLiteTest, Ut_GetCurrDfxOpInfo_When_NotSet_Expect_Nullptr)
-{
-    handler_.currDfxOpInfo_ = nullptr;
-    EXPECT_EQ(handler_.GetCurrDfxOpInfo(), nullptr);
-}
-
-TEST_F(DfxProfilingHandlerLiteTest, Ut_GetCurrDfxOpInfo_When_Set_Expect_ReturnPtr)
-{
-    DfxDfxOpInfo opInfo{};
-    handler_.SetCurrDfxOpInfo(&opInfo);
-    EXPECT_EQ(handler_.GetCurrDfxOpInfo(), &opInfo);
 }
 
 TEST_F(DfxProfilingHandlerLiteTest, Ut_ReportHcclOpInfo_When_L0Off_Expect_EarlyReturn)

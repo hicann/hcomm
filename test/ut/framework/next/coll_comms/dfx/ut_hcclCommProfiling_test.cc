@@ -20,7 +20,7 @@
 
 #include "mirror_task_manager.h"
 #include "mirror_task_manager_lite.h"
-#include "profiling_reporter.h"
+#include "dfx_profiling_reporter.h"
 #include "profiling_reporter_lite.h"
 
 using namespace hccl;

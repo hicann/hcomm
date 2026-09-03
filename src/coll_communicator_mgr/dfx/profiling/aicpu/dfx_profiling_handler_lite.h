@@ -69,8 +69,6 @@ public:
 
     void ReportStreamTaskDetails(TaskInfoCircularQueue& taskQueue, const DfxCommContext& ctx) const;
     void ReportStreamTaskDetailsLog(TaskInfoCircularQueue& taskQueue) const;
-    HcclResult SetCurrDfxOpInfo(const DfxDfxOpInfo* dfxOpInfo);
-    const DfxDfxOpInfo* GetCurrDfxOpInfo() const;
 
 private:
     explicit DfxProfilingHandlerLite();
@@ -103,12 +101,10 @@ private:
     bool enableHcclL0_{false};
     bool enableHcclL1_{false};
     bool initializedFlag_{false};
-    uint32_t cachedTid_{0};
     std::unordered_map<uint32_t, uint64_t> taskTypeHashCache_;
     std::unordered_map<u8, uint64_t> opTypeHashCache_;
     std::unordered_map<u8, uint64_t> algTypeHashCache_;
     uint64_t cachedAlgTypeHashId_{0};
-    const DfxDfxOpInfo* currDfxOpInfo_{nullptr};
     using ReportAdditionalInfoHandle = int32_t (*)(uint32_t, const void*, uint32_t);
     ReportAdditionalInfoHandle reportAdditionalInfo_{nullptr};
     using ReportBatchAdditionalInfoHandle = int32_t (*)(uint32_t, const void*, uint32_t);

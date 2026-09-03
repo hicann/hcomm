@@ -80,7 +80,7 @@ void MirrorTaskManager::AddTaskInfo(std::unique_ptr<TaskInfo>&& taskInfo)
 
 HcclResult MirrorTaskManager::AddTaskInfo(
     u32 streamId, u32 taskId, u32 remoteRankId, const TaskParam& taskParam, std::shared_ptr<DfxOpInfo> dfxOpInfo,
-    bool isMaster)
+    bool isMaster, u32 tid)
 {
     bool needCallback = false;
     std::unique_lock<std::mutex> lock(profMutex);
@@ -124,6 +124,7 @@ HcclResult MirrorTaskManager::AddTaskInfo(
         slot->channelHandle_ = INVALID_U64;
         slot->getRemoteRankByHandle_ = nullptr;
     }
+    slot->taskParam_.tid = tid;
     entryPtr->taskNum++;
     return HCCL_SUCCESS;
 }

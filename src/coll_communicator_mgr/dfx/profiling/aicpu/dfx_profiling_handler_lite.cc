@@ -93,14 +93,6 @@ DfxProfilingHandlerLite::~DfxProfilingHandlerLite() {}
 
 DfxProfilingHandlerLite& DfxProfilingHandlerLite::GetInstance() { return instance_; }
 
-HcclResult DfxProfilingHandlerLite::SetCurrDfxOpInfo(const DfxDfxOpInfo* dfxOpInfo)
-{
-    currDfxOpInfo_ = dfxOpInfo;
-    return HCCL_SUCCESS;
-}
-
-const DfxDfxOpInfo* DfxProfilingHandlerLite::GetCurrDfxOpInfo() const { return currDfxOpInfo_; }
-
 void DfxProfilingHandlerLite::BindProfilingHandles()
 {
     if (MsprofReportBatchAdditionalInfo == nullptr) {
@@ -155,7 +147,6 @@ HcclResult DfxProfilingHandlerLite::Init()
     if (initializedFlag_) {
         return HCCL_SUCCESS;
     }
-    cachedTid_ = SalGetTidLite();
     BindProfilingHandles();
     if (reportAdditionalInfo_ == nullptr) {
         HCCL_ERROR(
@@ -194,7 +185,7 @@ void DfxProfilingHandlerLite::ReportHcclOpInfo(const DfxDfxOpInfo& opInfo, const
     MsprofAdditionalInfo reporterData{};
     reporterData.level = MSPROF_REPORT_AICPU_LEVEL;
     reporterData.type = MSPROF_REPORT_AICPU_HCCL_OP_INFO;
-    reporterData.threadId = cachedTid_;
+    reporterData.threadId = static_cast<u32>(SalGetTidLite());
     reporterData.dataLen = sizeof(MsprofAicpuHCCLOPInfo);
     reporterData.timeStamp = ProfGetCurCpuTimestampLite();
     auto* hcclOpInfo = reinterpret_cast<MsprofAicpuHCCLOPInfo*>(reporterData.data);
@@ -237,7 +228,7 @@ void DfxProfilingHandlerLite::ReportMainStreamTask(const DfxFlagTaskInfo& flagTa
     MsprofAdditionalInfo reporterData{};
     reporterData.level = MSPROF_REPORT_AICPU_LEVEL;
     reporterData.type = MSPROF_REPORT_AICPU_HCCL_FLAG_TASK;
-    reporterData.threadId = cachedTid_;
+    reporterData.threadId = SalGetTidLite();
     reporterData.dataLen = sizeof(MsprofAicpuHcclMainStreamTask);
     reporterData.timeStamp = ProfGetCurCpuTimestampLite();
     auto* flagtask = reinterpret_cast<MsprofAicpuHcclMainStreamTask*>(reporterData.data);
@@ -266,7 +257,7 @@ bool DfxProfilingHandlerLite::FillBatchReporterData(
 {
     addInfo.level = MSPROF_REPORT_AICPU_LEVEL;
     addInfo.type = MSPROF_REPORT_AICPU_MC2_BATCH_HCCL_INFO;
-    addInfo.threadId = cachedTid_;
+    addInfo.threadId = SalGetTidLite();
     addInfo.timeStamp = 0;
     addInfo.dataLen = sizeof(MsprofAicpuHcclTaskInfo) * batchId;
     s32 sret = memcpy_s(addInfo.data, sizeof(addInfo.data), taskInfos, addInfo.dataLen);

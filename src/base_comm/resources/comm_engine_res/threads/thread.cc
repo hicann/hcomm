@@ -17,6 +17,7 @@
 #include "comm_engine_utils.h"
 #include "aicpu_launch_manager.h"
 #include "dfx_profiling_handler_lite.h"
+#include "dfx_dlprof_function.h"
 #include "aicpu_indop_env.h"
 #include "adapter_rts_common.h"
 
@@ -492,7 +493,7 @@ HcclResult Thread::ReportHostNotifyWaitTask(
     u32 taskId = 0;
     u32 streamId = 0;
     hrtGetTaskIdAndStreamID(taskId, streamId);
-    taskParam.endTime = Hccl::DlProfFunction::GetInstance().dlMsprofSysCycleTime();
+    taskParam.endTime = Hccl::DfxDlProfFunction::GetInstance().dlMsprofSysCycleTime();
     HCCL_INFO("[ReportHostNotifyWaitTask] time is %llu", taskParam.endTime);
     CHK_PTR_NULL(callback_);
     CHK_RET(callback_(streamId, taskId, taskParam, DFX_INVALID_U64));
@@ -535,7 +536,7 @@ HcclResult Thread::ReportHostNotifyRecordTask(
     u32 taskId = 0;
     u32 streamId = 0;
     hrtGetTaskIdAndStreamID(taskId, streamId);
-    taskParam.endTime = Hccl::DlProfFunction::GetInstance().dlMsprofSysCycleTime();
+    taskParam.endTime = Hccl::DfxDlProfFunction::GetInstance().dlMsprofSysCycleTime();
     HCCL_INFO("[ReportHostNotifyRecordTask] time is %llu", taskParam.endTime);
     CHK_PTR_NULL(callback_);
     CHK_RET(callback_(streamId, taskId, taskParam, DFX_INVALID_U64));
@@ -565,7 +566,7 @@ HcclResult Thread::ReportHostLocalCopyTask(
     u32 taskId = 0;
     u32 streamId = 0;
     hrtGetTaskIdAndStreamID(taskId, streamId);
-    taskParam.endTime = Hccl::DlProfFunction::GetInstance().dlMsprofSysCycleTime();
+    taskParam.endTime = Hccl::DfxDlProfFunction::GetInstance().dlMsprofSysCycleTime();
     CHK_PTR_NULL(callback_);
     CHK_RET(callback_(streamId, taskId, taskParam, DFX_INVALID_U64));
     HCCL_INFO(
@@ -644,7 +645,7 @@ HcclResult Thread::ReportHostLocalReduceTask(
     u32 taskId = 0;
     u32 streamId = 0;
     hrtGetTaskIdAndStreamID(taskId, streamId);
-    taskParam.endTime = Hccl::DlProfFunction::GetInstance().dlMsprofSysCycleTime();
+    taskParam.endTime = Hccl::DfxDlProfFunction::GetInstance().dlMsprofSysCycleTime();
 
     CHK_PTR_NULL(callback_);
     CHK_RET(callback_(streamId, taskId, taskParam, DFX_INVALID_U64));

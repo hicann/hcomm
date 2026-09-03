@@ -37,8 +37,6 @@
 // todo: 引入头文件需要检查
 #include "ccu_assist_v1.h"
 #include "hccl_comm_pub.h"
-#include "hcclCommDfx.h"
-#include "task_info.h"
 #include "task_param.h"
 
 #include "ccu_ins_generator_base.h"

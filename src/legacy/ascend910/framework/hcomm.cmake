@@ -123,6 +123,7 @@ target_include_directories(hcomm PRIVATE
     ${HCOMM_DIR}/src/legacy/ascend910/platform/resource/transport/heterog
     ${HCOMM_DIR}/src/legacy/ascend910/platform/resource/notify
     ${HCOMM_DIR}/src/legacy/ascend910/platform/resource/dispatcher_ctx
+    ${HCOMM_DIR}/src/legacy/ascend910/platform/task
     ${HCOMM_DIR}/src/legacy/ascend910/platform/resource/socket
 
     # base_comm/resources 头文件 (原 platform/hccp)
@@ -292,6 +293,7 @@ target_include_directories(hcomm PRIVATE
     # coll_communicator_mgr dfx 头文件 (stream_lite.h -> res_pub.h)
     ${HCOMM_DIR}/src/coll_communicator_mgr/dfx/profiling/aicpu
     ${HCOMM_DIR}/src/coll_communicator_mgr/dfx/profiling/aicpu/common
+    ${HCOMM_DIR}/src/coll_communicator_mgr/dfx/profiling/host
 
     # 三方件头文件
     ${URMA_INCLUDE_DIR}

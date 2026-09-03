@@ -9,8 +9,8 @@
  */
 
 #include "prof_cycle_time.h"
-#include "dlprof_function.h"
+#include "dfx_dlprof_function.h"
 
 namespace hcomm {
-uint64_t GetProfCycleTime() { return hccl::DlProfFunction::GetInstance().dlMsprofSysCycleTime(); }
+uint64_t GetProfCycleTime() { return Hccl::DfxDlProfFunction::GetInstance().dlMsprofSysCycleTime(); }
 } // namespace hcomm

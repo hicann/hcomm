@@ -16,6 +16,7 @@
 #include "comm_engine_utils.h"
 #include "hcomm_res.h"
 #include "thread.h"
+#include "dfx_dlprof_function.h"
 
 namespace hccl {
 
@@ -535,7 +536,7 @@ HcclResult ThreadMgr::ExportHostThreadsToAicpu(
     }
     std::unique_ptr<ThreadHandle[]> aicpuHandle;
     EXCEPTION_CATCH(aicpuHandle = std::make_unique<ThreadHandle[]>(hostThreads.size()), return HCCL_E_PTR);
-    uint64_t beginTime = Hccl::DlProfFunction::GetInstance().dlMsprofSysCycleTime();
+    uint64_t beginTime = Hccl::DfxDlProfFunction::GetInstance().dlMsprofSysCycleTime();
     HcclResult ret = AicpuLaunchMgr::ThreadKernelLaunchForComm(hostThreads, commId_, aicpuHandle, binHandle_);
     CHK_PRT_RET(
         ret != HCCL_SUCCESS,

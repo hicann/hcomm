@@ -125,14 +125,11 @@ constexpr u32 DFX_TASK_INFO_QUEUE_CAPACITY = 2048 + 128; // 2048 基础容量 + 
 constexpr u32 DFX_OP_INFO_QUEUE_CAPACITY = 1024;
 
 struct DfxDfxOpInfo {
-    // 8B 对齐字段（7 × 8B = 56B）
-    void* commHandle{
-        nullptr}; // 通信域句柄，来源于 dfxOpInfo_->comm_，用于从 CollCommAicpu 获取上下文
-                  //   groupName/localRank/rankSize 不存入 DfxDfxOpInfo：属于通信域级别（同一通信域内所有算子相同），
-                  //   由 HcclCommDfxLite 存储并传递给 DfxProfilingHandlerLite 缓存使用
-                  //   cclTag 不单独存储：与 opType 一一对应（均来自 CMD_OP_TYPE_INFO_MAP），
-                  //   上报 Msprof 时通过 opTypeHashCache_[opType] 查表转为 GetProfHashId 哈希值
-    u64 count{0}; // 发送数据个数，来源于 dfxOpInfo_->op_.dataCount
+    // 8B 对齐字段（7 × 8B = 56B，offset 0-55）
+    void* commHandle{nullptr}; // 通信域句柄，来源于 dfxOpInfo_->comm_，用于从 CollCommAicpu 获取上下文
+                               //   cclTag 不单独存储：与 opType 一一对应（均来自 CMD_OP_TYPE_INFO_MAP），
+                               //   上报 Msprof 时通过 opTypeHashCache_[opType] 查表转为 GetProfHashId 哈希值
+    u64 count{0};   // 发送数据个数，来源于 dfxOpInfo_->op_.dataCount
     u64 srcAddr{0}; // 算子级输入地址，来源于 dfxOpInfo_->op_.newInputMem
     u64 dstAddr{0}; // 算子级输出地址，来源于 dfxOpInfo_->op_.newOutputMem
     u64 srcSize{0}; // 算子级输入大小，来源于 dfxOpInfo_->op_.inputMemSize
@@ -141,12 +138,12 @@ struct DfxDfxOpInfo {
         nullptr}; // HcclCommDfxLite 指针（void* 避免 base_comm 对 coll_communicator_mgr 的编译期依赖）
                   //   上报时 static_cast<HcclCommDfxLite*>(hcclCommDfxLite)->GetChannelRemoteRankId(channelHandle)
 
-    // 4B 对齐字段（3 × 4B = 12B，offset 56）
+    // 4B 对齐字段（3 × 4B = 12B，offset 56-67）
     u32 opIndex{0}; // 算子序号，标识当前是 algTag 数组的第几个，来源于 dfxOpInfo_->opIndex_
     u32 cpuWaitAicpuNotifyId{0}; // Host 等 Device 的 notify ID，来源于 dfxOpInfo_->cpuWaitAicpuNotifyId_
     u32 aicpuWaitCpuNotifyId{0}; // Device 等 Host 的 notify ID，来源于 DfxOpInfo
 
-    // 1B 对齐字段（3 × 1B = 3B，offset 68）
+    // 1B 对齐字段（3 × 1B = 3B，offset 68-70）
     u8 opType{0}; // 算子类型枚举值，来源于 dfxOpInfo_->op_.opType（OpType 底层 uint8_t）
     u8 algType{0}; // 通信算法枚举值，来源于 AlgType 底层 uint8_t（如 RING/MESH 等；当前 Lite 路径固定为 NHR）
                    //   上报 Msprof 时通过 algTypeHashCache_[algType] 查表转为 GetProfHashId 哈希值
@@ -154,9 +151,9 @@ struct DfxDfxOpInfo {
         0}; // 数据类型枚举值，来源于 dfxOpInfo_->op_.dataType（HcclDataType 底层 uint8_t）
             //   由 SetCurrDfxOpInfo 从 oldDataType 转换后获取；从 task 级提升为算子级，每个算子只有一个 dataType
 
-    // 变长尾部字段（offset 71，无需对齐填充）
+    // 固定长度尾部字段（288B，offset 71-358）
     char algTag[288]{0}; // 算子标签字符串，来源于 dfxOpInfo_->algTag_，288 = TAG_MAX_LENGTH(256) + 32 余量
-    // 71+288=359，尾部填充 1B 对齐到 360B
+    // 总计 360B：8B字段56B + 4B字段12B + 1B字段3B + algTag 288B + 尾部padding 1B（对齐到8B）
 };
 
 struct DfxTaskParaNotify { // Notify 任务参数（NOTIFY_RECORD/NOTIFY_WAIT）

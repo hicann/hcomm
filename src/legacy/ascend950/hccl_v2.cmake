@@ -214,6 +214,7 @@ target_include_directories(hccl_v2 PRIVATE
     ${HCOMM_DIR}/src/coll_communicator_mgr/dfx
     ${HCOMM_DIR}/src/coll_communicator_mgr/dfx/profiling/aicpu
     ${HCOMM_DIR}/src/coll_communicator_mgr/dfx/profiling/aicpu/common
+    ${HCOMM_DIR}/src/coll_communicator_mgr/dfx/profiling/host
     # 内部头文件
     ${HCOMM_DIR}/include
     ${HCOMM_DIR}/include/hccl/

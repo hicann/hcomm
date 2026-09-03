@@ -9,22 +9,22 @@
  */
 
 #include "hcclCommProfiling.h"
-#include "profiling_reporter.h"
-#include "profiling_handler.h"
-#include "../../../../legacy/ascend950/framework/dfx/profiling/dlprof_function_v2.h"
+#include "dfx_profiling_reporter.h"
+#include "dfx_profiling_handler.h"
+#include "dfx_dlprof_function.h"
 namespace hccl {
 
 HcclResult HcclCommProfiling::ReportKernel(
     uint64_t beginTime, const std::string& commTag, const std::string& kernelName, uint32_t threadId,
     bool cachedReq) const
 {
-    u64 endTime = Hccl::DlProfFunction::GetInstance().dlMsprofSysCycleTime();
-    uint64_t cmdItemId = Hccl::DlProfFunction::GetInstance().dlMsprofStr2Id(kernelName.c_str(), kernelName.length());
+    u64 endTime = Hccl::DfxDlProfFunction::GetInstance().dlMsprofSysCycleTime();
+    uint64_t cmdItemId = Hccl::DfxDlProfFunction::GetInstance().dlMsprofStr2Id(kernelName.c_str(), kernelName.length());
     EXCEPTION_CATCH(
-        Hccl::ProfilingHandler::GetInstance().ReportNodeApi(beginTime, endTime, cmdItemId, threadId, cachedReq),
+        Hccl::DfxProfilingHandler::GetInstance().ReportNodeApi(beginTime, endTime, cmdItemId, threadId, cachedReq),
         return HCCL_E_PTR);
     EXCEPTION_CATCH(
-        Hccl::ProfilingHandler::GetInstance().ReportNodeBasicInfo(endTime, cmdItemId, threadId, cachedReq),
+        Hccl::DfxProfilingHandler::GetInstance().ReportNodeBasicInfo(endTime, cmdItemId, threadId, cachedReq),
         return HCCL_E_PTR);
     HCCL_INFO(
         "[HcclCommProfiling][ReportKernel] beginTime [%llu] endTime[%llu] kernelName[%s] commTag[%s] threadId[%u]",
@@ -43,9 +43,9 @@ HcclResult HcclCommProfiling::Init()
     if (initializedFlag_) {
         return HCCL_SUCCESS;
     }
-    CHK_RET(Hccl::ProfilingHandler::GetInstance().Init());
+    CHK_RET(Hccl::DfxProfilingHandler::GetInstance().Init());
     profilingReporter_
-        = std::make_unique<Hccl::ProfilingReporter>(mirrorTaskManager_, &Hccl::ProfilingHandler::GetInstance());
+        = std::make_unique<Hccl::DfxProfilingReporter>(mirrorTaskManager_, &Hccl::DfxProfilingHandler::GetInstance());
     CHK_RET(profilingReporter_->Init());
     initializedFlag_ = true;
     return HCCL_SUCCESS;

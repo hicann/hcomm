@@ -9,6 +9,7 @@
  */
 
 #include "hcclCommDfx.h"
+#include "dfx_dlprof_function.h"
 #include "ccu_rep_context_v1.h"
 #include "task_info.h"
 
@@ -45,6 +46,9 @@ HcclResult HcclCommDfx::Init(u32 deviceId, const std::string& comTag, u32 myRank
     EXCEPTION_CATCH(
         profiling_ = std::make_unique<HcclCommProfiling>(deviceId_, mirrorTaskManager_.get()), return HCCL_E_PTR);
     CHK_RET(profiling_->Init());
+    // profiling_->Init() 内部触发 DfxDlProfFunctionInit(dlopen libprofapi.so)，必须在 dlsym 完成后计算
+    // groupNameHash_，否则首 comm 走 stub 返回 0
+    groupNameHash_ = Hccl::DfxDlProfFunction::GetInstance().dlMsprofStr2Id(commTag_.c_str(), commTag_.length());
 
     // 3. 注册回调
     setAddTaskCallback_ = [this](u32 streamId, u32 taskId, const Hccl::TaskParam& taskParam, u64 handle) {
@@ -59,12 +63,9 @@ HcclResult HcclCommDfx::Init(u32 deviceId, const std::string& comTag, u32 myRank
 
 HcclResult HcclCommDfx::GetOpModeFlags(bool& isOpBase, bool& isCached)
 {
-    auto currDfxOpInfo = mirrorTaskManager_->GetCurrDfxOpInfo();
-    CHK_SMART_PTR_NULL(currDfxOpInfo);
-    isOpBase = currDfxOpInfo->op_.opMode == Hccl::OpMode::OPBASE || currDfxOpInfo->op_.opMode == Hccl::OpMode::ACLGRAPH;
-    isCached
-        = currDfxOpInfo->op_.opMode == Hccl::OpMode::OFFLOAD || currDfxOpInfo->op_.opMode == Hccl::OpMode::ACLGRAPH;
-    HCCL_INFO("[%s] GetOpModeFlags: isOpBase %d, isCached %d", __func__, isOpBase, isCached);
+    auto opMode = mirrorTaskManager_->GetOpMode();
+    isOpBase = opMode == Hccl::OpMode::OPBASE || opMode == Hccl::OpMode::ACLGRAPH;
+    isCached = opMode == Hccl::OpMode::OFFLOAD || opMode == Hccl::OpMode::ACLGRAPH;
     return HCCL_SUCCESS;
 }
 
@@ -128,7 +129,8 @@ HcclResult HcclCommDfx::AddTaskInfoCallback(u32 streamId, u32 taskId, const Hccl
         }
     }
     HcclResult ret = mirrorTaskManager_->AddTaskInfo(
-        streamId, taskId, remoteRankId, taskParam, mirrorTaskManager_->GetCurrDfxOpInfo(), taskParam.isMaster);
+        streamId, taskId, remoteRankId, taskParam, mirrorTaskManager_->GetCurrDfxOpInfo(), taskParam.isMaster,
+        Hccl::DfxProfilingHandler::GetCachedTid());
     CHK_RET(ret);
     return HCCL_SUCCESS;
 }
@@ -148,6 +150,11 @@ HcclResult HcclCommDfx::AddDpuTaskInfoCallback(const Hccl::TaskParam& taskParam,
 
 HcclResult HcclCommDfx::SetCurrDfxOpInfo(std::shared_ptr<Hccl::DfxOpInfo> dfxOpInfo)
 {
+    if (dfxOpInfo != nullptr) {
+        // commTag_ 与 op_.opTag 恒等（单算子入口 HcclDfxRegOpInfoByCommId 设 op_.opTag=collComm->GetCommId()，
+        // HcclCommDfx::Init 的 comTag 入参来源同为 collComm->GetCommId()），故 groupNameHash_ 可代表 op_.opTag 哈希
+        dfxOpInfo->groupNameHash_ = groupNameHash_;
+    }
     profiling_->SetCurrDfxOpInfo(dfxOpInfo);
     return HCCL_SUCCESS;
 }

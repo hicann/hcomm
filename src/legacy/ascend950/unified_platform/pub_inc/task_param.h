@@ -144,6 +144,7 @@ struct TaskParam {
     u64 aicpuTaskId{0};
     uint16_t npuDevId{0};
     bool isMaster{false};
+    u32 tid{0};
     union {
         ParaDMA DMA;       // taskType = SDMA/RDMA使用, 包括rtRDMASend写notify
         ParaReduce Reduce; // taskType = inline/CCE Reduce使用

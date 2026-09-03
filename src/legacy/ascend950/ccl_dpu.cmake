@@ -75,6 +75,7 @@ target_include_directories(ccl_dpu PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/framework
     ${CMAKE_CURRENT_SOURCE_DIR}/framework/dfx
     ${CMAKE_CURRENT_SOURCE_DIR}/framework/dfx/profiling
+    ${HCOMM_DIR}/src/coll_communicator_mgr/dfx/profiling/host
 )
 
 # 指定 ccl_dpu 构建完成后安装到指定的目标位置

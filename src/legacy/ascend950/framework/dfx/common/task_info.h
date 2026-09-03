@@ -30,6 +30,7 @@ public:
     bool isIndop_{false};
     std::string algTag_;
     std::string groupName_;
+    u64 groupNameHash_{0}; // 通信域 groupName 哈希值，由 HcclCommDfx::SetCurrDfxOpInfo 填入
     u32 rankSize_{0};
     u32 cpuWaitAicpuNotifyId_{0};
     std::string commId_{};

@@ -29,6 +29,7 @@
 #include "ccu_var_event_res_mgr.h"
 
 #include "thread.h"
+#include "dfx_dlprof_function.h"
 
 #include "env_config/env_config_v2.h" // 暂时引用orion的环境变量处理模块
 
@@ -323,9 +324,9 @@ HcommCcuKernelLaunch(ThreadHandle threadHandle, CcuKernelHandle kernelHandle, co
         HCCL_INFO("[%s] passed, ccu params are empty.", __func__);
         return CcuResult::CCU_SUCCESS;
     }
-    bool isProfilingEnabledL1 = Hccl::ProfilingHandler::GetInstance().GetHcclL1State();
-    bool isProfilingEnabledL0 = Hccl::ProfilingHandler::GetInstance().GetHcclL0State();
-    bool isCached = Hccl::ProfilingHandler::GetInstance().GetCachedFlag();
+    bool isProfilingEnabledL1 = Hccl::DfxProfilingHandler::GetInstance().GetHcclL1State();
+    bool isProfilingEnabledL0 = Hccl::DfxProfilingHandler::GetInstance().GetHcclL0State();
+    bool isCached = Hccl::DfxProfilingHandler::GetInstance().GetCachedFlag();
     bool isSaveProfilingData = isProfilingEnabledL1 || isProfilingEnabledL0 || isCached;
 
     std::vector<hcomm::CcuProfilingInfo> allCcuProfilingInfo;
@@ -334,9 +335,9 @@ HcommCcuKernelLaunch(ThreadHandle threadHandle, CcuKernelHandle kernelHandle, co
     LogCcuTaskInfo(taskParams, kernelHandle);
     auto ccuDetailInfo = ConstructCcuDetailInfo(allCcuProfilingInfo, isSaveProfilingData);
     for (u32 idx = 0; idx < taskParams.size(); idx++) {
-        u64 beginTime = Hccl::DlProfFunction::GetInstance().dlMsprofSysCycleTime();
+        u64 beginTime = Hccl::DfxDlProfFunction::GetInstance().dlMsprofSysCycleTime();
         CCU_CHK_RET(LaunchCcuTasks(taskParams[idx], streamPtr));
-        u64 endTime = Hccl::DlProfFunction::GetInstance().dlMsprofSysCycleTime();
+        u64 endTime = Hccl::DfxDlProfFunction::GetInstance().dlMsprofSysCycleTime();
         Hccl::TaskParam taskParam = ConstructCcuTaskParam(
             taskParams[idx], kernelHandle, ccuDetailInfo, beginTime, endTime, rtsThread->GetMaster());
         CCU_CHK_RET(ReportCcuTaskDfx(threadHandle, taskParam));

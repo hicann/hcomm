@@ -13,6 +13,7 @@
 #include "dfx_profiling_handler_lite.h"
 #include "res_pub.h"
 #include "dfx_circular_queue.h"
+#include "prof_sal_lite.h"
 
 namespace hccl {
 // HcclCommDfxLite构造函数实现
@@ -65,7 +66,6 @@ HcclResult HcclCommDfxLite::SetCurrDfxOpInfo(const Hccl::DfxDfxOpInfo* newDfxOpI
         }
         slot->dataType = static_cast<u8>(Hccl::HcclDataTypeToDataType(static_cast<HcclDataType>(slot->dataType)));
         slot->hcclCommDfxLite = this;
-        Hccl::DfxProfilingHandlerLite::GetInstance().SetCurrDfxOpInfo(slot);
     }
     return HCCL_SUCCESS;
 }
@@ -93,7 +93,7 @@ void HcclCommDfxLite::AddChannelRemoteRankId(u64 handle, u32 remoteRankId)
     channelRemoteRankIdLite_[handle] = remoteRankId;
 }
 
-u32 HcclCommDfxLite::GetChannelRemoteRankId(u64 handle)
+u32 HcclCommDfxLite::GetChannelRemoteRankId(u64 handle) const
 {
     if (handle == DFX_INVALID_U64) {
         return INVALID_UINT;

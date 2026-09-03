@@ -13,7 +13,7 @@
 
 #include <memory>
 #include "mirror_task_manager.h"
-#include "profiling_reporter.h"
+#include "dfx_profiling_reporter.h"
 #include "types.h"
 
 namespace hccl {
@@ -55,7 +55,7 @@ public:
 
 private:
     Hccl::MirrorTaskManager* mirrorTaskManager_;
-    std::unique_ptr<Hccl::ProfilingReporter> profilingReporter_{nullptr};
+    std::unique_ptr<Hccl::DfxProfilingReporter> profilingReporter_{nullptr};
     bool initializedFlag_{false};
 };
 } // namespace hccl

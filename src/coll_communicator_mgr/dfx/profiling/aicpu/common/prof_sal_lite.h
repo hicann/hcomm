@@ -16,7 +16,11 @@
 
 namespace Hccl {
 
-inline int32_t SalGetTidLite() { return static_cast<int32_t>(syscall(SYS_gettid)); }
+inline int32_t SalGetTidLite()
+{
+    thread_local int32_t cachedTid = static_cast<int32_t>(syscall(SYS_gettid));
+    return cachedTid;
+}
 
 inline uint64_t ProfGetCurCpuTimestampLite()
 {

@@ -23,6 +23,7 @@
 #include "coll_comm_mgr.h"
 #include "orion_adapter_rts.h"
 #include "hccl_common.h"
+#include "dfx_dlprof_function.h"
 #include "adapter_rts.h"
 #include "hcclCommOp.h"
 using namespace hccl;
@@ -152,7 +153,7 @@ HcclResult HcclThreadAcquireWithConfig(
     CHK_PRT_RET(threads == nullptr, HCCL_ERROR("[%s] threads is null", __func__), HCCL_E_PTR);
     CHK_RET(ValidateThreadAcquireParams(engine, type, config, threadNum));
 
-    u64 beginTime = Hccl::DlProfFunction::GetInstance().dlMsprofSysCycleTime();
+    u64 beginTime = Hccl::DfxDlProfFunction::GetInstance().dlMsprofSysCycleTime();
     auto* hcclComm = static_cast<hccl::hcclComm*>(comm);
     std::string commId = hcclComm->GetIdentifier();
     HCCL_RUN_INFO(
@@ -212,7 +213,7 @@ static CommEngine ConvertEngineToTsType(CommEngine engine)
 HcclResult HcclThreadAcquire(
     HcclComm comm, CommEngine engine, uint32_t threadNum, uint32_t notifyNumPerThread, ThreadHandle* threads)
 {
-    u64 beginTime = Hccl::DlProfFunction::GetInstance().dlMsprofSysCycleTime();
+    u64 beginTime = Hccl::DfxDlProfFunction::GetInstance().dlMsprofSysCycleTime();
     CHK_PRT_RET(comm == nullptr, HCCL_ERROR("[%s] comm is null", __func__), HCCL_E_PTR);
     CHK_PRT_RET(threads == nullptr, HCCL_ERROR("[%s] threads is null", __func__), HCCL_E_PTR);
     CHK_PRT_RET(

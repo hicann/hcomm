@@ -88,12 +88,13 @@
 #include "../../../legacy/ascend950/framework/dfx/common/mirror_task_manager.h"
 #include "../../../legacy/ascend950/framework/dfx/common/global_mirror_tasks.h"
 #include "../../../legacy/ascend950/framework/dfx/common/circular_queue.h"
-#include "../../../legacy/ascend950/framework/dfx/profiling/profiling_handler.h"
-#include "../../../legacy/ascend950/framework/dfx/profiling/profiling_reporter.h"
+#include "dfx_profiling_handler.h"
+#include "dfx_profiling_reporter.h"
 #include "../../../legacy/ascend950/framework/dfx/aicpu/profiling/profiling_handler_lite.h"
 #include "../../../legacy/ascend950/framework/dfx/aicpu/profiling/profiling_reporter_lite.h"
 #include "dfx_profiling_reporter_lite.h"
 #include "../../../legacy/ascend950/unified_platform/common/dlhal_function_v2.h"
+#include "dfx_dlprof_function.h"
 #include "../../../legacy/ascend950/framework/dfx/profiling/dlprof_function_v2.h"
 #include "../../../legacy/ascend950/framework/communicator/aicpu/daemon/aicpu_daemon_service.h"
 #include "../../../legacy/ascend950/framework/dfx/task_exception/task_exception_handler.h"
@@ -1321,7 +1322,7 @@ void MirrorTaskManager::AddTaskInfo(std::unique_ptr<TaskInfo>&& taskInfo) {}
 
 HcclResult MirrorTaskManager::AddTaskInfo(
     u32 streamId, u32 taskId, u32 remoteRankId, const TaskParam& taskParam, std::shared_ptr<DfxOpInfo> dfxOpInfo,
-    bool isMaster)
+    bool isMaster, u32 tid)
 {
     return HCCL_SUCCESS;
 }
@@ -1370,9 +1371,6 @@ std::shared_ptr<DfxOpInfo> MirrorTaskManagerLite::GetCurrDfxOpInfo() const { ret
 TaskInfoQueue* MirrorTaskManagerLite::GetQueue(u32 streamId) const {}
 
 MirrorTaskManagerLite::~MirrorTaskManagerLite() {}
-ProfilingHandler::ProfilingHandler() {}
-
-ProfilingHandler::~ProfilingHandler() {}
 
 std::string TaskInfo::GetParaInfo() const { return ""; }
 
@@ -1382,118 +1380,6 @@ std::string TaskInfo::GetIndopDataInfo() const { return ""; }
 
 std::string TaskInfo::GetIndopBaseInfo() const { return ""; }
 
-ProfilingHandler& ProfilingHandler::GetInstance()
-{
-    static ProfilingHandler instance;
-    return instance;
-}
-
-HcclResult ProfilingHandler::Init() { return HCCL_SUCCESS; }
-
-// 回调注册
-int32_t ProfilingHandler::CommandHandleWrapper(uint32_t rtType, void* data, uint32_t len) { return 0; }
-
-// 接口预留，暂时不实现
-// 函数入参，因为静态检查先删除注释：kernelType kerType, uint64_t beginTime, uint64_t endTime, bool cachedReq
-void ProfilingHandler::ReportKernel() const {}
-
-void ProfilingHandler::ReportHostApi(OpType opType, uint64_t beginTime, uint64_t endTime, bool cachedReq, bool isAiCpu)
-{}
-
-void ProfilingHandler::ReportHcclOp(const DfxOpInfo& opInfo, bool cachedReq) {}
-
-void ProfilingHandler::ReportHcclTaskApi(
-    TaskParamType taskType, uint64_t beginTime, uint64_t endTime, bool isMasterStream, bool cachedReq, bool ignoreLevel)
-{}
-
-void ProfilingHandler::ReportHcclTaskDetails(const TaskInfo& taskInfo, bool cachedReq) {}
-
-void ProfilingHandler::CallAdditionInfo(MsprofAdditionalInfo& reporterData) const {}
-
-void ProfilingHandler::GetHCCLReportData(const TaskInfo& taskInfo, HCCLReportData& hcclReportData) const {}
-
-void ProfilingHandler::DumpHCCLReportData(const TaskInfo& taskInfo, const MsprofAdditionalInfo& reporterData) const {}
-
-void ProfilingHandler::ReportCcuInfo(const TaskInfo& taskInfo) const {}
-
-void ProfilingHandler::GetCcuTaskInfo(const TaskInfo& taskInfo, const CcuProfilingInfo& info) const {}
-
-void ProfilingHandler::GetCcuGroupInfo(const TaskInfo& taskInfo, const CcuProfilingInfo& info) const {}
-
-void ProfilingHandler::DumpCcuGroupInfo(const MsprofCcuGroupInfo& ccuGroupInfo) const {}
-
-void ProfilingHandler::GetCcuWaitSignalInfo(const TaskInfo& taskInfo, const CcuProfilingInfo& info) const {}
-
-void ProfilingHandler::ReportAclApi(
-    uint32_t cmdType, uint64_t beginTime, uint64_t endTime, uint64_t cmdItemId, uint32_t threadId, bool cachedReq)
-{}
-
-void ProfilingHandler::ReportNodeApi(
-    uint64_t beginTime, uint64_t endTime, uint64_t cmdItemId, uint32_t threadId, bool cachedReq)
-{
-    (void)cachedReq;
-}
-
-void ProfilingHandler::ReportNodeBasicInfo(uint64_t timeStamp, uint64_t cmdItemId, uint32_t threadId, bool cachedReq)
-{
-    (void)cachedReq;
-}
-
-void ProfilingHandler::ReportHcclOpInfo(uint64_t timeStamp, const DfxOpInfo& opInfo, uint32_t threadId, bool cachedReq)
-{
-    (void)cachedReq;
-}
-
-void ProfilingHandler::ReportAdditionInfo(MsprofAdditionalInfo& reporterData) const {}
-
-int32_t ProfilingHandler::CommandHandle(uint32_t rtType, void* data, uint32_t len) const { return 0; }
-
-void ProfilingHandler::StartSubscribe(uint64_t profconfig) {}
-
-void ProfilingHandler::StartHostApiSubscribe() {}
-
-void ProfilingHandler::CallProfRegHostApi() const {}
-
-void ProfilingHandler::ReportStoragedCompactInfo() {}
-
-void ProfilingHandler::ReportMc2AdditionInfo() {}
-
-void ProfilingHandler::StartTaskApiSubscribe() {}
-
-void ProfilingHandler::CallProfRegTaskTypeApi() const {}
-
-void ProfilingHandler::ReportStoragedTaskApi() {}
-
-void ProfilingHandler::StartHostHcclOpSubscribe() {}
-
-void ProfilingHandler::CallProfRegHcclOpApi() const {}
-
-void ProfilingHandler::StartAdditionInfoSubscribe() {}
-
-void ProfilingHandler::ReportStoragedAdditionInfo() {}
-
-void ProfilingHandler::StartCcuSubscribe() {}
-
-void ProfilingHandler::ProfilingHandler::StopSubscribe() {}
-
-bool ProfilingHandler::GetHostApiState() const { return false; }
-bool ProfilingHandler::GetHcclNodeState() const { return false; }
-bool ProfilingHandler::GetHcclL0State() const { return false; }
-
-bool ProfilingHandler::GetHcclL1State() const { return false; }
-
-uint64_t ProfilingHandler::GetProfHashId(const char* name, uint32_t len) const { return 0; }
-
-void ProfilingHandler::ReportHcclMC2CommInfo(
-    const Stream& kfcStream, const Stream& stream, const std::vector<Stream*>& aicpuStreams, const std::string& id,
-    RankId myRank, u32 rankSize, RankId rankInParentComm)
-{}
-
-void ProfilingHandler::ReportHcclMC2CommInfo(
-    const u32 kfcStreamId, const std::vector<u32>& aicpuStreamsId, const std::string& id, RankId myRank, u32 rankSize,
-    RankId rankInParentComm)
-{}
-void ProfilingHandler::ReportMc2AdditionInfo(uint64_t timeStamp, const void* data, int len) {}
 ProfilingHandlerLite ProfilingHandlerLite::instance_;
 
 ProfilingHandlerLite::ProfilingHandlerLite() {}
@@ -1538,37 +1424,35 @@ uint64_t ProfilingHandlerLite::GetProfHashId(const char* name, uint32_t len) con
 
 void ProfilingHandlerLite::SetCachedGroupName(const std::string& groupName, u32 rankSize) {}
 
-ProfilingReporter::ProfilingReporter(MirrorTaskManager* mirrorTaskMgr, ProfilingHandler* profilingHandler)
+DfxProfilingReporter::DfxProfilingReporter(MirrorTaskManager* mirrorTaskMgr, DfxProfilingHandler* profilingHandler)
     : mirrorTaskMgr_(mirrorTaskMgr),
       profilingHandler_(profilingHandler)
 {}
 
-ProfilingReporter::~ProfilingReporter() {}
+DfxProfilingReporter::~DfxProfilingReporter() {}
 
-HcclResult ProfilingReporter::Init() { return HCCL_SUCCESS; }
+HcclResult DfxProfilingReporter::Init() { return HCCL_SUCCESS; }
 
-void ProfilingReporter::SetCurrDfxOpInfo(std::shared_ptr<DfxOpInfo> dfxOpInfo) const {}
+void DfxProfilingReporter::SetCurrDfxOpInfo(std::shared_ptr<DfxOpInfo> dfxOpInfo) const {}
 
-void ProfilingReporter::ReportOp(uint64_t beginTime, bool cachedReq, bool opbased) const {}
+void DfxProfilingReporter::ReportOp(uint64_t beginTime, bool cachedReq, bool opbased) const {}
 
-void ProfilingReporter::ReportCallBackAllTasks(bool cachedReq) {}
+void DfxProfilingReporter::ReportCallBackAllTasks(bool cachedReq) {}
 
-void ProfilingReporter::ReportAllTasks(bool cachedReq) {}
+void DfxProfilingReporter::ReportAllTasks(bool cachedReq) {}
 
 /* 中途打开profiling开关 */
-void ProfilingReporter::UpdateProfStat() {}
+void DfxProfilingReporter::UpdateProfStat() {}
 
-void ProfilingReporter::CallReportMc2CommInfo(
+void DfxProfilingReporter::CallReportMc2CommInfo(
     const Stream& kfcStream, const Stream& stream, const std::vector<Stream*>& aicpuStreams, const std::string& id,
     RankId myRank, u32 rankSize, RankId rankInParentComm) const
 {}
 
-void ProfilingReporter::CallReportMc2CommInfo(
+void DfxProfilingReporter::CallReportMc2CommInfo(
     const u32 kfcStreamId, const std::vector<u32>& aicpuStreamsId, const std::string& id, RankId myRank, u32 rankSize,
     RankId rankInParentComm) const
 {}
-
-std::array<ProfilingReporter::lastPosesMap, 65> ProfilingReporter::allLastPoses_{};
 
 ProfilingReporterLite::ProfilingReporterLite(
     MirrorTaskManagerLite* mirrorTaskMgrLite, ProfilingHandlerLite* profilingHandlerLite, bool isIndop)
@@ -1602,16 +1486,8 @@ DlProfFunction::DlProfFunction() : handle_(nullptr) { DlProfFunctionStubInit(); 
 
 DlProfFunction::~DlProfFunction() {}
 
-static uint64_t MsprofSysCycleTimeStub()
-{
-    HCCL_WARNING("Entry MsprofSysCycleTimeStub");
-    return 0;
-}
+void DlProfFunction::DlProfFunctionStubInit() {}
 
-void DlProfFunction::DlProfFunctionStubInit()
-{
-    dlMsprofSysCycleTime = static_cast<uint64_t (*)(void)>(MsprofSysCycleTimeStub);
-}
 DlProfFunction& DlProfFunction::GetInstance()
 {
     static DlProfFunction instance;
@@ -1621,6 +1497,48 @@ DlProfFunction& DlProfFunction::GetInstance()
 HcclResult DlProfFunction::DlProfFunctionInit() { return HCCL_SUCCESS; }
 
 HcclResult DlProfFunction::DlProfFunctionInterInit() { return HCCL_SUCCESS; }
+
+DfxDlProfFunction::DfxDlProfFunction() : handle_(nullptr) { DfxDlProfFunctionStubInit(); }
+
+DfxDlProfFunction::~DfxDlProfFunction() {}
+
+void DfxDlProfFunction::DfxDlProfFunctionStubInit()
+{
+    dlMsprofRegisterCallback = [](uint32_t, ProfCommandHandle) {
+        return (int32_t)0;
+    };
+    dlMsprofRegTypeInfo = [](uint16_t, uint32_t, const char*) {
+        return (int32_t)0;
+    };
+    dlMsprofReportApi = [](uint32_t, const MsprofApi*) {
+        return (int32_t)0;
+    };
+    dlMsprofReportCompactInfo = [](uint32_t, const VOID_PTR, uint32_t) {
+        return (int32_t)0;
+    };
+    dlMsprofReportAdditionalInfo = [](uint32_t, const VOID_PTR, uint32_t) {
+        return (int32_t)0;
+    };
+    dlMsprofReportBatchAdditionalInfo = [](uint32_t, const VOID_PTR, uint32_t) {
+        return (int32_t)0;
+    };
+    dlMsprofStr2Id = [](const char*, uint32_t) {
+        return (uint64_t)0;
+    };
+    dlMsprofSysCycleTime = []() {
+        return (uint64_t)0;
+    };
+}
+
+DfxDlProfFunction& DfxDlProfFunction::GetInstance()
+{
+    static DfxDlProfFunction instance;
+    return instance;
+}
+
+HcclResult DfxDlProfFunction::DfxDlProfFunctionInit() { return HCCL_SUCCESS; }
+
+HcclResult DfxDlProfFunction::DfxDlProfFunctionInterInit() { return HCCL_SUCCESS; }
 
 AicpuDaemonService& AicpuDaemonService::GetInstance()
 {

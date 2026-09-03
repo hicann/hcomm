@@ -34,7 +34,7 @@ public:
     HcclResult SetCurrDfxOpInfo(const Hccl::DfxDfxOpInfo* newDfxOpInfo);
     const void* GetLatestDfxOpInfo() const;
     void AddChannelRemoteRankId(u64 handle, u32 remoteRankId);
-    u32 GetChannelRemoteRankId(u64 handle);
+    u32 GetChannelRemoteRankId(u64 handle) const;
     Hccl::DfxCommContext GetDfxCommContext() const;
 
 private:

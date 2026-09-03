@@ -202,7 +202,7 @@ TEST_F(TestHcclThreadAcquireWithConfig, Ut_When_V2_CpuEngine_Expect_HCCL_SUCCESS
     auto hcclCommPtr = CreateV2Comm();
     ThreadConfig threadConfig;
     InitValidConfig(&threadConfig, 1);
-    ThreadHandle thread;
+    ThreadHandle thread = 0;
     void* comm = static_cast<HcclComm>(hcclCommPtr.get());
     HcclResult ret = HcclThreadAcquireWithConfig(comm, COMM_ENGINE_CPU, 1, THREAD_TYPE_TS, &threadConfig, &thread);
     EXPECT_EQ(ret, HCCL_SUCCESS);

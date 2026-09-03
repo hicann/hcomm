@@ -24,6 +24,7 @@
 #include "hcclCommOp.h"
 #include "channel_process.h"
 #include "aicpu_ts_roce_channel_v2.h"
+#include "dfx_dlprof_function.h"
 #include "aiv_urma_channel.h"
 #include "hccl_group.h"
 #include "../resource_mgr/local/my_rank/comm_engine/kernel_launch/hccl_kernel_launch_aicpu.h"
@@ -660,7 +661,7 @@ HcclResult HcclChannelAcquire(
     HcclComm comm, CommEngine engine, const HcclChannelDesc* channelDescs, uint32_t channelNum, ChannelHandle* channels)
 {
     HcclUs startut = TIME_NOW();
-    u64 beginTime = Hccl::DlProfFunction::GetInstance().dlMsprofSysCycleTime();
+    u64 beginTime = Hccl::DfxDlProfFunction::GetInstance().dlMsprofSysCycleTime();
     EXCEPTION_HANDLE_BEGIN
 
     CHK_RET(CheckChannelResParams(comm, channelDescs, channels, channelNum));
@@ -1341,7 +1342,7 @@ HcclResult HcclChannelAcquireWithConfig(
         return HcclChannelAcquire(comm, engine, channelDescs, channelNum, channels);
     }
 
-    u64 beginTime = Hccl::DlProfFunction::GetInstance().dlMsprofSysCycleTime();
+    u64 beginTime = Hccl::DfxDlProfFunction::GetInstance().dlMsprofSysCycleTime();
     CHK_RET(PrepareV2ChannelAcquire(hcclComm, comm, engine));
 
     // 复用 HcclChannelAcquire 的前置校验（ProcessHcclResPackReq），保证共享/非共享路径校验一致

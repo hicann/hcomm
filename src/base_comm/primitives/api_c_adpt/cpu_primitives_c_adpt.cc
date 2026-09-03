@@ -12,6 +12,7 @@
 #include "new/hccl_primitive_local.h"
 #include "new/hccl_primitive_remote.h"
 #include "thread.h"
+#include "dfx_dlprof_function.h"
 #include "launch_context.h"
 #include "host/host_cpu_roce_channel.h"
 #include "hccl_comm_pub.h"
@@ -891,7 +892,7 @@ HcclResult HcclDfxRegOpInfoByCommId(char* commId, void* hcclDfxOpInfo)
         = dfxOpInfoOnce->op_.opMode == Hccl::OpMode::OPBASE || dfxOpInfoOnce->op_.opMode == Hccl::OpMode::ACLGRAPH;
     bool isCached
         = dfxOpInfoOnce->op_.opMode == Hccl::OpMode::OFFLOAD || dfxOpInfoOnce->op_.opMode == Hccl::OpMode::ACLGRAPH;
-    Hccl::ProfilingHandler::GetInstance().SetOpModeFlags(isOpBase, isCached);
+    Hccl::DfxProfilingHandler::GetInstance().SetOpModeFlags(isOpBase, isCached);
     HCCL_INFO(
         "[%s] Register DfxOpInfo success, opMode[%d], isOpBase[%d], isCached[%d], DfxOpInfo: %s", __func__,
         dfxOpInfoOnce->op_.opMode, isOpBase, isCached, dfxOpInfoOnce->Describe().c_str());
@@ -970,7 +971,7 @@ HcclResult HcclReportAicpuKernel(HcclComm comm, uint64_t beginTime, char* kernel
     Hccl::TaskParam taskParam{};
     taskParam.beginTime = beginTime;
     taskParam.taskType = Hccl::TaskParamType::TASK_AICPU_KERNEL;
-    taskParam.endTime = Hccl::DlProfFunction::GetInstance().dlMsprofSysCycleTime();
+    taskParam.endTime = Hccl::DfxDlProfFunction::GetInstance().dlMsprofSysCycleTime();
     uint32_t taskId = INVALID_UINT;
     uint32_t streamId = INVALID_UINT;
     CHK_RET(hrtGetTaskIdAndStreamID(taskId, streamId));
@@ -999,7 +1000,7 @@ extern HcclResult HcclReportAivKernel(HcclComm comm, uint64_t beginTime)
     Hccl::TaskParam taskParam{};
     taskParam.beginTime = beginTime;
     taskParam.taskType = Hccl::TaskParamType::TASK_AIV;
-    taskParam.endTime = Hccl::DlProfFunction::GetInstance().dlMsprofSysCycleTime();
+    taskParam.endTime = Hccl::DfxDlProfFunction::GetInstance().dlMsprofSysCycleTime();
     taskParam.isMaster = true;
     uint32_t taskId = INVALID_UINT;
     uint32_t streamId = INVALID_UINT;

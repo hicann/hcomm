@@ -15,8 +15,8 @@
 
 namespace hcomm {
 /**
- * @brief 获取 prof 系统时间戳，封装 legacy DlProfFunction 的调用，
- *        避免上层模块直接依赖 legacy/ascend950 头文件。
+ * @brief 获取 prof 系统时间戳，封装 DfxDlProfFunction 的调用，
+ *        避免上层模块直接依赖 coll_communicator_mgr 头文件。
  * @return 当前系统时间戳
  */
 uint64_t GetProfCycleTime();

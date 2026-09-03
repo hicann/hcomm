@@ -27,7 +27,6 @@
 #include "stream_lite.h"
 #include "task_info.h"
 #include "adapter_prof.h"
-#include "../../../../../legacy/ascend950/framework/dfx/profiling/dlprof_function_v2.h"
 
 namespace hccl {
 

@@ -11,6 +11,7 @@
 #include "cpu_ts_thread.h"
 #include "hccl_common.h"
 #include "adapter_rts.h"
+#include "dfx_dlprof_function.h"
 
 namespace hccl {
 const std::unordered_map<HcclDataType, aclDataType> hccl2rtDataTypeMap = {
@@ -202,7 +203,7 @@ HcclResult
 CpuTsThread::LocalNotifyRecord([[maybe_unused]] ThreadHandle dstThread, [[maybe_unused]] uint32_t dstNotifyIdx) const
 {
 #ifndef CCL_KERNEL_AICPU
-    u64 beginTime = Hccl::DlProfFunction::GetInstance().dlMsprofSysCycleTime();
+    u64 beginTime = Hccl::DfxDlProfFunction::GetInstance().dlMsprofSysCycleTime();
     HCCL_INFO("[%s]dstThread[0x%llu], dstNotifyIdx[%u].", __func__, dstThread, dstNotifyIdx);
     CHK_PRT_RET(
         !IsDeviceA5(), HCCL_ERROR("[CpuTsThread][%s]only support A5", __func__),
@@ -230,7 +231,7 @@ CpuTsThread::LocalNotifyRecord([[maybe_unused]] ThreadHandle dstThread, [[maybe_
 HcclResult CpuTsThread::LocalNotifyWait([[maybe_unused]] uint32_t notifyIdx, [[maybe_unused]] uint32_t timeOut) const
 {
 #ifndef CCL_KERNEL_AICPU
-    u64 beginTime = Hccl::DlProfFunction::GetInstance().dlMsprofSysCycleTime();
+    u64 beginTime = Hccl::DfxDlProfFunction::GetInstance().dlMsprofSysCycleTime();
     HCCL_INFO("[%s]notifyIdx[%u], timeOut[%u s].", __func__, notifyIdx, timeOut);
     CHK_PRT_RET(
         !IsDeviceA5(), HCCL_ERROR("[CpuTsThread][%s]only support A5", __func__),
@@ -256,7 +257,7 @@ HcclResult CpuTsThread::LocalCopy(
     [[maybe_unused]] void* dst, [[maybe_unused]] const void* src, [[maybe_unused]] uint64_t sizeByte) const
 {
 #ifndef CCL_KERNEL_AICPU
-    u64 beginTime = Hccl::DlProfFunction::GetInstance().dlMsprofSysCycleTime();
+    u64 beginTime = Hccl::DfxDlProfFunction::GetInstance().dlMsprofSysCycleTime();
     HCCL_INFO("[%s]dst[%p], src[%p], sizeByte[%llu].", __func__, dst, src, sizeByte);
     CHK_PRT_RET(
         !IsDeviceA5(), HCCL_ERROR("[CpuTsThread][%s]only support A5", __func__),
@@ -282,7 +283,7 @@ HcclResult CpuTsThread::LocalReduce(
     [[maybe_unused]] HcommDataType dataType, [[maybe_unused]] HcommReduceOp reduceOp) const
 {
 #ifndef CCL_KERNEL_AICPU
-    u64 beginTime = Hccl::DlProfFunction::GetInstance().dlMsprofSysCycleTime();
+    u64 beginTime = Hccl::DfxDlProfFunction::GetInstance().dlMsprofSysCycleTime();
     HCCL_INFO(
         "[%s]dst[%p], src[%p], sizeByte[%llu], dataType[%d], reduceOp[%d].", __func__, dst, src, sizeByte, dataType,
         reduceOp);

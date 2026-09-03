@@ -51,6 +51,8 @@ file(GLOB_RECURSE BASE_COMM "${HCCL_CODE_ROOT}/src/base_comm/*.cc")
 file(GLOB_RECURSE COLL_COMMUNICATOR_MGR "${HCCL_CODE_ROOT}/src/coll_communicator_mgr/*.cc")
 list(REMOVE_ITEM COLL_COMMUNICATOR_MGR
     "${HCCL_CODE_ROOT}/src/coll_communicator_mgr/rank_graph/rank_graph_builder/detour_service.cc"
+    "${HCCL_CODE_ROOT}/src/coll_communicator_mgr/dfx/profiling/host/dfx_dlprof_function.cc"
+    "${HCCL_CODE_ROOT}/src/coll_communicator_mgr/dfx/profiling/host/dfx_profiling_reporter.cc"
 )
 
 set(EXCLUDE_FREAMEWORK_DEVICE_REGEX

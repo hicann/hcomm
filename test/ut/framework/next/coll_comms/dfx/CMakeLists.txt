@@ -25,6 +25,7 @@ set(src_to_test_list
     ut_dfx_profiling_handler_lite.cc
     ut_dfx_profiling_reporter_lite.cc
     ut_dfx_profiling_command_handle_lite.cc
+    ut_dfx_profiling_handler_host.cc
 )
 
 add_executable(hccl_utest_test_dfx_resource ${src_to_test_list})

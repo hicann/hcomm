@@ -201,13 +201,7 @@ TEST_F(HcclCommDfxTest, Ut_Add_Get_ChannelRemoteRankId)
 // 测试 GetOpModeFlags - OFFLOAD 模式返回 false
 TEST_F(HcclCommDfxTest, Ut_GetOpModeFlags_When_OpModeIsOffload_Expect_ReturnFalse)
 {
-    auto opInfo = std::make_shared<Hccl::DfxOpInfo>();
-    opInfo->op_.opMode = Hccl::OpMode::OFFLOAD;
-    MOCKER_CPP(
-        &Hccl::MirrorTaskManager::GetCurrDfxOpInfo,
-        std::shared_ptr<Hccl::DfxOpInfo>(Hccl::MirrorTaskManager::*)() const)
-        .stubs()
-        .will(returnValue(opInfo));
+    dfx_->mirrorTaskManager_->opMode_ = Hccl::OpMode::OFFLOAD;
 
     bool isOpBase = true;
     bool isCached = false;
@@ -219,13 +213,7 @@ TEST_F(HcclCommDfxTest, Ut_GetOpModeFlags_When_OpModeIsOffload_Expect_ReturnFals
 
 TEST_F(HcclCommDfxTest, Ut_GetOpModeFlags_When_OpModeIsAclgraph_Expect_BothTrue)
 {
-    auto opInfo = std::make_shared<Hccl::DfxOpInfo>();
-    opInfo->op_.opMode = Hccl::OpMode::ACLGRAPH;
-    MOCKER_CPP(
-        &Hccl::MirrorTaskManager::GetCurrDfxOpInfo,
-        std::shared_ptr<Hccl::DfxOpInfo>(Hccl::MirrorTaskManager::*)() const)
-        .stubs()
-        .will(returnValue(opInfo));
+    dfx_->mirrorTaskManager_->opMode_ = Hccl::OpMode::ACLGRAPH;
 
     bool isOpBase = false;
     bool isCached = false;
@@ -308,9 +296,11 @@ TEST_F(HcclCommDfxTest, Ut_AddTaskInfoCallback_When_CcuTaskAndHandleExist_Expect
     MOCKER_CPP(
         &Hccl::MirrorTaskManager::AddTaskInfo,
         HcclResult(Hccl::MirrorTaskManager::*)(
-            u32, u32, u32, const Hccl::TaskParam&, std::shared_ptr<Hccl::DfxOpInfo>, bool))
+            u32, u32, u32, const Hccl::TaskParam&, std::shared_ptr<Hccl::DfxOpInfo>, bool, u32))
         .stubs()
-        .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any())
+        .with(
+            mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any(),
+            mockcpp::any())
         .will(returnValue(HCCL_SUCCESS));
 
     HcclResult ret = dfx_->AddTaskInfoCallback(1, 1, taskParam, channelHandle);
