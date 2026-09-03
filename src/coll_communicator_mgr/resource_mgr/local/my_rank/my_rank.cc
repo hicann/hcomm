@@ -1318,7 +1318,7 @@ HcclResult MyRank::CreateChannels(
                     __func__, destroyRet, connRet, newChannels_.size());
             }
         }
-        CHK_RET(connRet);
+        CHK_RET_UNAVAIL(connRet);
         auto end = std::chrono::steady_clock::now();
         auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
         HCCL_RUN_INFO(
