@@ -32,6 +32,11 @@ HcclResult AicpuReduceScatter::RunAlgorithm(
     AivAicpuOpParam* /* nextTask */)
 {
     CHK_PTR_NULL(ctx_);
+    // 通信域 rankNum 为 0 时，后续取模/除法会除零，作为非法入参直接返回
+    if (rankNum_ == 0) {
+        HCCL_ERROR("Reduce scatter rankNum_ is 0, division by zero.");
+        return HCCL_E_PARA;
+    }
     // dataCount 为tile的输入的数据量（scatter前）
     if (dataCount % rankNum_ != 0) { // 每个tile数据量必须能均分至每张卡
         HCCL_ERROR("Reduce scatter dataCount %lu max be multiple of rankNum_.", dataCount);

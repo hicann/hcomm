@@ -372,6 +372,11 @@ u32 RunAicpuApiRpcSrvLaunchV2(void* args[], CommKfcParamDesc* desc)
     const u32 blockNum = HcclAicpuUtils::GetBlockNum();
     const u32 blockIdx = HcclAicpuUtils::GetBlockIdx();
     const u32 totalQueueNum = tilingData->commBlockNum * tilingData->queueNum;
+    // blockNum 为 0 时，后续 totalQueueNum/blockNum 与 %blockNum 会除零，作为非法入参直接返回
+    if (blockNum == 0) {
+        HCCL_ERROR("Invalid blockNum 0, division by zero.");
+        return HCCL_E_PARA;
+    }
     const u32 turnOffset = blockIdx * (totalQueueNum / blockNum) + std::min(blockIdx, totalQueueNum % blockNum);
     CHK_RET(KfcProf(launchEntryTime, task, turnOffset));
     HCCL_INFO("End %s, aicpuOpIdx %lu", __func__, aicpuOpIdx);
