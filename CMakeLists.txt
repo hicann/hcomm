@@ -33,6 +33,8 @@ message(STATUS "BUILD_OPEN_PROJECT=${BUILD_OPEN_PROJECT}")
 message(STATUS "ENABLE_BUILD_DEVICE=${ENABLE_BUILD_DEVICE}")
 message(STATUS "ENABLE_BUILD_AARCH=${ENABLE_BUILD_AARCH}")
 message(STATUS "ENABLE_EXPERIMENTAL=${ENABLE_EXPERIMENTAL}")
+message(STATUS "LAUNCH_COMPILE_TOOL=${LAUNCH_COMPILE_TOOL}")
+message(STATUS "LAUNCH_LINK_TOOL=${LAUNCH_LINK_TOOL}")
 
 set(HCOMM_DIR         "${CMAKE_CURRENT_SOURCE_DIR}")
 set(HCC_TOOLCHAIN_DIR "${ASCEND_CANN_PACKAGE_PATH}/toolkit/toolchain/hcc")
@@ -146,7 +148,9 @@ elseif(BUILD_OPEN_PROJECT)
 
     # Device 侧编译构建
     if(ENABLE_DEVICE)
-        add_cann_device_project(hcomm)
+        add_cann_device_project(hcomm
+            EXT_ARGS -DLAUNCH_COMPILE_TOOL=${LAUNCH_COMPILE_TOOL}
+        )
     endif()
 
     set(HCCL_HEAD

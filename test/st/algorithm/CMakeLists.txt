@@ -23,8 +23,6 @@ set(HCOMM_CODE_ALGORITHM ${HCOMM_CODE_ROOT}/src/legacy/ascend910/algorithm)
 set(HCOMM_CODE_FRAMEWORK ${HCOMM_CODE_ROOT}/src/legacy/ascend910/framework)
 set(HCOMM_CODE_LEGACY    ${HCOMM_CODE_ROOT}/src/legacy/ascend950)
 
-set(PROTOC_PROGRAM     ${HOST_PROTOC_PATH}/protoc)
-
 # Include List
 set(ASCEND_CANN_INCLUDE_LIST
     ${ASCEND_CANN_PACKAGE_PATH}/pkg_inc

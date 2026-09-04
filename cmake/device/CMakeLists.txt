@@ -22,6 +22,7 @@ add_cann_target_options()
 message(STATUS "BUILD_OPEN_PROJECT=${BUILD_OPEN_PROJECT}")
 message(STATUS "ASCEND_INSTALL_PATH=${ASCEND_INSTALL_PATH}")
 message(STATUS "CANN_3RD_LIB_PATH=${CANN_3RD_LIB_PATH}")
+message(STATUS "LAUNCH_COMPILE_TOOL=${LAUNCH_COMPILE_TOOL}")
 
 # cmake 配置
 include(${HCOMM_DIR}/cmake/config.cmake)
@@ -56,13 +57,18 @@ add_cann_subdirectories_relative(${HCOMM_DIR}
 )
 
 # 打包并签名：cann-hcomm-compat.tar.gz
+if(LAUNCH_COMPILE_TOOL STREQUAL "hitestwrapper")
+    set(TAR_SIZE_LIMIT 7558) # hitest出包场景，放宽文件大小限制（即当前发布包 3779 KB 的 200%）
+else()
+    set(TAR_SIZE_LIMIT 3968) # 文件大小限制为 3968 KB（即当前发布包 3779 KB 的 105%）
+endif()
 cann_pack_targets_and_files(
     OUTPUT_TARGET "pack_cann_hcomm_compat"
     OUTPUT "cann-hcomm-compat.tar.gz"
     TARGETS rs_device ra_adp net_co hccp_service.bin tls_adp ascend_kms
     MANIFEST "hccp_compat_bin_hash.cfg"
-    SIZE_LIMIT 3968 # 文件大小限制为 3968 KB（即当前发布包 3779 KB 的 105%），超出则会报错
-    GEN_INI         # 生成版本号文件
+    SIZE_LIMIT ${TAR_SIZE_LIMIT} # 文件大小限制，超出则会报错
+    GEN_INI                      # 生成版本号文件
 )
 add_cann_sign_file(
     OUTPUT_TARGET sign_cann_hcomm_compat

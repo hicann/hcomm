@@ -15,7 +15,7 @@ add_custom_target(alg_analyzer_proto_legacy
 )
 add_custom_command(TARGET alg_analyzer_proto_legacy
     COMMAND mkdir -p ${CMAKE_BINARY_DIR}/proto/alg_analyzer_proto/proto
-    COMMAND cd ${ALG_ANALYZER_UI_PROTO_DIR} && ${PROTOC_PROGRAM} --cpp_out=${CMAKE_BINARY_DIR}/proto/alg_analyzer_proto/proto analysis_result.proto
+    COMMAND cd ${ALG_ANALYZER_UI_PROTO_DIR} && $<TARGET_FILE:host_protoc> --cpp_out=${CMAKE_BINARY_DIR}/proto/alg_analyzer_proto/proto analysis_result.proto
 )
 
 add_dependencies(hccl_alg_analyzer_legacy alg_analyzer_proto_legacy)
