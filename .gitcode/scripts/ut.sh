@@ -50,9 +50,9 @@ source /home/jenkins/Ascend/cann/bin/setenv.bash
 
 LOG_HEAD "Start run c++ testcase"
 if [ "${GIT_TARGET_BRANCH}" == "competition/campus-2026" ]; then
-    timeout 30m bash build.sh --ut --cov
+    timeout 30m bash build.sh --ut --cov -j32
 else
-    bash build.sh --ut --cov
+    bash build.sh --ut --cov -j32
 fi
 DP_ASSERT_EQUAL "$?" "0" "Run UT TESTCASE"
 

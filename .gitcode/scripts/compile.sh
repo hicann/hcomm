@@ -66,5 +66,5 @@ else
     echo "api-check=continue" >> "${ATOMGIT_OUTPUT}"
 fi
 
-LOG_DO bash build.sh --pkg --cann_3rd_lib_path="/home/jenkins/opensource" --full -p /home/jenkins/Ascend/cann
+LOG_DO bash build.sh --pkg --cann_3rd_lib_path="/home/jenkins/opensource" --full -p /home/jenkins/Ascend/cann -j16
 DP_ASSERT_EQUAL "$?" "0" "Build"

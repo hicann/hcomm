@@ -56,5 +56,5 @@ export ASCEND_HOME_PATH=/home/jenkins/Ascend/cann
 source /home/jenkins/Ascend/cann/bin/setenv.bash
 
 LOG_HEAD "Start run c++ testcase"
-bash build.sh --st
+bash build.sh --st -j32
 DP_ASSERT_EQUAL "$?" "0" "Run ST TESTCASE"
