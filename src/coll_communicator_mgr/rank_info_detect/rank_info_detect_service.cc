@@ -85,14 +85,7 @@ void RankInfoDetectService::GetConnections()
         auto topoExResTime = timeout - topoExUsedTime;
         u32 topoExRes_i = std::chrono::duration_cast<std::chrono::seconds>(topoExResTime).count();
         if (topoExRes_i == 0) {
-            RPT_INPUT_ERR(
-                true, "EI0016", std::vector<std::string>({"value", "variable", "expect"}),
-                std::vector<std::string>(
-                    {std::to_string(topoExRes_i), "waiting time for rank connections",
-                     "at least 1 second to establish rank connections"}));
-            HCCL_ERROR(
-                "[RankInfoDetectService::%s] timeout[%lld s] is exhausted, expected[%u], received[%u]", __func__,
-                timeout, expectedSocketNum + previousRankNum, previousRankNum);
+            HCCL_ERROR("[RankInfoDetectService::%s] timeout[%lld s] is exhausted", __func__, timeout);
             break;
         }
         std::shared_ptr<Socket> connSocket = std::make_shared<Socket>(

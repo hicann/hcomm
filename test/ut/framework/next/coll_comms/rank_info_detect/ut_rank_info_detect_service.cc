@@ -157,7 +157,7 @@ TEST_F(RankInfoDetectServiceTest, Ut_GetConnections_When_Timeout_Expect_fail)
     EXPECT_EQ(0, res1);
 }
 
-TEST_F(RankInfoDetectServiceTest, Ut_GetConnections_When_Timeout_Expect_EI0016Report)
+TEST_F(RankInfoDetectServiceTest, Ut_GetConnections_When_Timeout_Expect_NoEI0016Report)
 {
     SetupMockSocketAndTimeoutConfig();
 
@@ -168,7 +168,8 @@ TEST_F(RankInfoDetectServiceTest, Ut_GetConnections_When_Timeout_Expect_EI0016Re
     MOCKER(RptInputErr).stubs().will(invoke(StubServiceRptInputErr));
 
     EXPECT_THROW(rankInfoDetectService_->GetConnections(), InternalException);
-    EXPECT_EQ(g_serviceCapturedErrorCode, "EI0016");
+    // 耗时耗尽分支已收敛为不再单独上报 EI0016，避免与超时 EI0015 重复
+    EXPECT_NE(g_serviceCapturedErrorCode, "EI0016");
 }
 
 TEST_F(RankInfoDetectServiceTest, Ut_GetConnections_When_Normal_Expect_Success)

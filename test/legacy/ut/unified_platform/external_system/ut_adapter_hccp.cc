@@ -20,6 +20,7 @@
 #include "internal_exception.h"
 #include "hccp_async.h"
 #include "ub_memory_transport.h"
+#include "adapter_error_manager_pub.h"
 using namespace Hccl;
 
 namespace {
@@ -76,6 +77,14 @@ int StubRaNdaCqCreateCaptureCqe(void* rdmaHandle, struct NdaCqInitAttr* attr, st
         *cqHandle = &fakeCqHandle;
     }
     return 0;
+}
+
+static std::string gCapturedErrorCode;
+void StubRptInputErrCapture(std::string errorCode, std::vector<std::string> keys, std::vector<std::string> values)
+{
+    (void)keys;
+    (void)values;
+    gCapturedErrorCode = errorCode;
 }
 
 } // namespace
@@ -353,15 +362,17 @@ TEST_F(AdapterHccpTest, hrtRaSocketListenOneStart_again)
     EXPECT_THROW(HrtRaSocketListenOneStart(listenInfo, HrtNetworkMode::HDC), NetworkApiException);
 }
 
-TEST_F(AdapterHccpTest, Ut_HrtRaSocketTryListenOneStart_When_InValid_IP_Expect_Throw_Exception)
+TEST_F(AdapterHccpTest, Ut_HrtRaSocketTryListenOneStart_When_InValid_IP_Expect_RptEI0016)
 {
+    gCapturedErrorCode.clear();
     MOCKER(RaSocketListenStart).stubs().will(returnValue(SOCK_EADDRNOTAVAIL));
+    MOCKER(RptInputErr).stubs().will(invoke(StubRptInputErrCapture));
 
     SocketHandle socketHandle = nullptr;
-
     RaSocketListenParam listenInfo(socketHandle, 0, IpAddress());
 
     EXPECT_THROW(HrtRaSocketTryListenOneStart(listenInfo, HrtNetworkMode::HDC), NetworkApiException);
+    EXPECT_EQ(gCapturedErrorCode, "EI0016");
 }
 
 TEST_F(AdapterHccpTest, Ut_HrtRaSocketNonBlockSendHeart_When_Input_normal_Expect_Return_Success)
@@ -919,16 +930,22 @@ TEST_F(AdapterHccpTest, Ut_HrtRaSocketBlockRecv_When_RecvSizeZero_Expect_Throw_N
 
 TEST_F(AdapterHccpTest, Ut_HrtRaSocketBlockRecv_When_SockClosed_Expect_Throw_NetworkApiException)
 {
+    gCapturedErrorCode.clear();
     MockRaSocketRecv(SOCK_ESOCKCLOSED, 0);
     MockEnvLinkTimeoutGet(1);
+    MOCKER(RptInputErr).stubs().will(invoke(StubRptInputErrCapture));
     EXPECT_THROW(HrtRaSocketBlockRecv(fakeFdHandle, fakeData, 100), NetworkApiException);
+    EXPECT_EQ(gCapturedErrorCode, "EI0015");
 }
 
 TEST_F(AdapterHccpTest, Ut_HrtRaSocketBlockRecv_When_SockClose_Expect_Throw_NetworkApiException)
 {
+    gCapturedErrorCode.clear();
     MockRaSocketRecv(SOCK_CLOSE, 0);
     MockEnvLinkTimeoutGet(1);
+    MOCKER(RptInputErr).stubs().will(invoke(StubRptInputErrCapture));
     EXPECT_THROW(HrtRaSocketBlockRecv(fakeFdHandle, fakeData, 100), NetworkApiException);
+    EXPECT_EQ(gCapturedErrorCode, "EI0015");
 }
 
 TEST_F(AdapterHccpTest, Ut_HrtRaSocketBlockRecv_When_Timeout_Expect_Throw_NetworkApiException)

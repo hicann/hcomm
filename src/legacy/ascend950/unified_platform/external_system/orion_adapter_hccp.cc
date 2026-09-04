@@ -467,6 +467,9 @@ static bool RaSocketTryListenStart(
             __func__, port);
         return false;
     } else if (ret == SOCK_EADDRNOTAVAIL) {
+        RPT_INPUT_ERR(
+            true, "EI0016", std::vector<std::string>({"value", "variable", "expect"}),
+            std::vector<std::string>({std::to_string(ret), "socket listen start", "0"}));
         MACRO_THROW(
             NetworkApiException,
             StringFormat(
@@ -805,6 +808,10 @@ void HrtRaSocketBlockRecv(const FdHandle fdHandle, void* data, u32 size)
                     "[Recv][RaSocket]recv fail, fdHandle=%p, data=%p, bufLen=%u, recLen=%lld, ret=%d", fdHandle, data,
                     size, recvSize, rtRet));
         } else if (rtRet == SOCK_ESOCKCLOSED || rtRet == SOCK_CLOSE) { // 连接关闭，出错
+            RPT_INPUT_ERR(
+                true, "EI0015", std::vector<std::string>({"error_reason"}),
+                std::vector<std::string>(
+                    {StringFormat("socket closed during recv, fdHandle[%p], ret[%d]", fdHandle, rtRet)}));
             MACRO_THROW(
                 NetworkApiException,
                 StringFormat(

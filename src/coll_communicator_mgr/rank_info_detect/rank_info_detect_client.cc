@@ -569,9 +569,6 @@ void RankInfoDetectClient::ParseRankTable(vector<char>& rankInfoMsg)
     binStream >> failedAgentIdList;
     if (failedAgentIdList.size() > 0) {
         // 建链失败时，打印 root 节点发来的临终遗言
-        RPT_INPUT_ERR(
-            true, "EI0015", std::vector<std::string>({"error_reason"}),
-            std::vector<std::string>({"rank connection failed, failedRankIdList: " + failedAgentIdList}));
         HCCL_ERROR(
             "[RankInfoDetectClient::%s] TopoDetect ERROR occur, failedRankIdList[%s]", __func__,
             failedAgentIdList.c_str());

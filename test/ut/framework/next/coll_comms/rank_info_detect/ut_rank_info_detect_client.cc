@@ -767,7 +767,7 @@ TEST_F(RankInfoDetectClientTest, Ut_ProbeHostRoceAddr_When_OtherError_Expect_Ret
     EXPECT_EQ(ret, -EOPNOTSUPP);
 }
 
-TEST_F(RankInfoDetectClientTest, Ut_ParseRankTable_When_FailedAgentIdListNotEmpty_Expect_EI0015Report)
+TEST_F(RankInfoDetectClientTest, Ut_ParseRankTable_When_FailedAgentIdListNotEmpty_Expect_NoEI0015Report)
 {
     // 非空 failedAgentIdList 表示建链失败
     vector<char> rankInfoMsg = BuildMockRankInfoMsg("1,2");
@@ -776,7 +776,8 @@ TEST_F(RankInfoDetectClientTest, Ut_ParseRankTable_When_FailedAgentIdListNotEmpt
     MOCKER(RptInputErr).stubs().will(invoke(StubClientRptInputErr));
 
     EXPECT_NO_THROW(rankInfoDetectClient_->ParseRankTable(rankInfoMsg));
-    EXPECT_EQ(g_clientCapturedErrorCode, "EI0015");
+    // failedAgentIdList 分支已收敛为不再单独上报 EI0015，避免与 root 节点上报重复
+    EXPECT_NE(g_clientCapturedErrorCode, "EI0015");
 }
 
 TEST_F(RankInfoDetectClientTest, Ut_RecvRankTable_When_Normal_Expect_Success)
