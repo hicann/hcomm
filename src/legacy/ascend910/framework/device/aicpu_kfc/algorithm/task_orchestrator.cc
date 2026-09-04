@@ -86,7 +86,7 @@ HcclResult TaskOrchestrator::SelfCpySnd2Win(
 
     AicpuComRankInfo* rankInfo = &ctx->rankInfo[rankId];
     void* src = static_cast<void*>(static_cast<s8*>(sndAddr) + sndOffset);
-    void* dst = reinterpret_cast<void*>(static_cast<const uintptr_t>(rankInfo->window) + winOffset);
+    void* dst = reinterpret_cast<void*>(static_cast<uintptr_t>(rankInfo->window) + winOffset);
 
     CHK_RET(AicpuDispatcher::CopyData(rankId, src, dst, dataSize, dataType, opType, rankId));
 
@@ -103,7 +103,7 @@ HcclResult TaskOrchestrator::SelfCpyRcv2Win(
 
     AicpuComRankInfo* rankInfo = &ctx->rankInfo[rankId];
     void* src = static_cast<void*>(static_cast<s8*>(rcvAddr) + rcvOffset);
-    void* dst = reinterpret_cast<void*>(static_cast<const uintptr_t>(rankInfo->window) + winOffset);
+    void* dst = reinterpret_cast<void*>(static_cast<uintptr_t>(rankInfo->window) + winOffset);
 
     CHK_RET(AicpuDispatcher::CopyData(rankId, src, dst, dataSize, dataType, opType, rankId));
 
@@ -118,12 +118,12 @@ TaskOrchestrator::IpcCpyWin2Win(u64* dataSize, u64* winOffsets, HcclReduceOp opT
     auto ctx = AicpuGetComContext();
     AicpuComRankInfo* selfRankInfo = &ctx->rankInfo[ctx->rankId];
     u64 offset = (winOffsets == nullptr) ? 0 : winOffsets[ctx->rankId];
-    void* selfWindow = reinterpret_cast<void*>(static_cast<const uintptr_t>(selfRankInfo->window));
+    void* selfWindow = reinterpret_cast<void*>(static_cast<uintptr_t>(selfRankInfo->window));
     void* dst = static_cast<void*>(static_cast<s8*>(selfWindow) + sendOff + offset);
     for (u32 index = 0; index < ctx->rankNum; index++) {
         if (index != ctx->rankId) {
             AicpuComRankInfo* rankInfo = &ctx->rankInfo[index];
-            void* otherRankWindow = reinterpret_cast<void*>(static_cast<const uintptr_t>(rankInfo->window));
+            void* otherRankWindow = reinterpret_cast<void*>(static_cast<uintptr_t>(rankInfo->window));
             void* src = static_cast<void*>(static_cast<s8*>(otherRankWindow) + sendOff + offset);
             CHK_RET(AicpuDispatcher::CopyData(index, src, dst, dataSize[ctx->rankId], dataType, opType, index));
         }
@@ -140,12 +140,12 @@ HcclResult TaskOrchestrator::IpcCpyWin2Win(
     auto ctx = AicpuGetComContext();
     AicpuComRankInfo* selfRankInfo = &ctx->rankInfo[ctx->rankId];
     u64 offset = winOffsets.empty() ? 0 : winOffsets[ctx->rankId];
-    void* selfWindow = reinterpret_cast<void*>(static_cast<const uintptr_t>(selfRankInfo->window));
+    void* selfWindow = reinterpret_cast<void*>(static_cast<uintptr_t>(selfRankInfo->window));
     void* dst = static_cast<void*>(static_cast<s8*>(selfWindow) + sendOff + offset);
     for (u32 index = 0; index < ctx->rankNum; index++) {
         if (index != ctx->rankId) {
             AicpuComRankInfo* rankInfo = &ctx->rankInfo[index];
-            void* otherRankWindow = reinterpret_cast<void*>(static_cast<const uintptr_t>(rankInfo->window));
+            void* otherRankWindow = reinterpret_cast<void*>(static_cast<uintptr_t>(rankInfo->window));
             void* src = static_cast<void*>(static_cast<s8*>(otherRankWindow) + sendOff + offset);
             u64 dataSize = dataSizes.empty() ? 0 : dataSizes[ctx->rankId];
             CHK_RET(AicpuDispatcher::CopyData(index, src, dst, dataSize, dataType, opType, index));
@@ -169,8 +169,8 @@ HcclResult TaskOrchestrator::IpcCpyWin2WinEx(
 
     AicpuComRankInfo* mainRankInfo = &ctx->rankInfo[mainRankId];
     AicpuComRankInfo* rankInfo = &ctx->rankInfo[rankId];
-    void* src = reinterpret_cast<void*>(static_cast<const uintptr_t>(rankInfo->window) + winOffset);
-    void* dst = reinterpret_cast<void*>(static_cast<const uintptr_t>(mainRankInfo->window) + winOffset);
+    void* src = reinterpret_cast<void*>(static_cast<uintptr_t>(rankInfo->window) + winOffset);
+    void* dst = reinterpret_cast<void*>(static_cast<uintptr_t>(mainRankInfo->window) + winOffset);
 
     CHK_RET(AicpuDispatcher::CopyData(rankId % maxStreamNum, src, dst, dataSize, dataType, opType, mainRankId));
 
@@ -192,7 +192,7 @@ HcclResult TaskOrchestrator::SelfCpySnd2WinEx(
 
     AicpuComRankInfo* rankInfo = &ctx->rankInfo[mainRankId];
     void* src = static_cast<void*>(static_cast<s8*>(sndAddr) + sndOffset);
-    void* dst = reinterpret_cast<void*>(static_cast<const uintptr_t>(rankInfo->window) + winOffset);
+    void* dst = reinterpret_cast<void*>(static_cast<uintptr_t>(rankInfo->window) + winOffset);
 
     CHK_RET(AicpuDispatcher::CopyData(rankId % maxStreamNum, src, dst, dataSize, dataType, opType, mainRankId));
 
@@ -208,7 +208,7 @@ HcclResult TaskOrchestrator::SelfCpyWin2Rcv(
     u32 rankId = ctx->rankId;
     AicpuComRankInfo* rankInfo = &ctx->rankInfo[rankId];
 
-    void* src = reinterpret_cast<void*>(static_cast<const uintptr_t>(rankInfo->window) + winOffset);
+    void* src = reinterpret_cast<void*>(static_cast<uintptr_t>(rankInfo->window) + winOffset);
     void* dst = static_cast<void*>(static_cast<s8*>(rcvAddr) + rcvOffset);
 
     CHK_RET(AicpuDispatcher::CopyData(rankId, src, dst, dataSize, dataType, opType, rankId));
@@ -224,7 +224,7 @@ HcclResult TaskOrchestrator::SelfCpyWin2RcvEx1(
     auto ctx = AicpuGetComContext();
     u32 rankId = ctx->rankId;
     AicpuComRankInfo* rankInfo = &ctx->rankInfo[rankId];
-    void* window = reinterpret_cast<void*>(static_cast<const uintptr_t>(rankInfo->window));
+    void* window = reinterpret_cast<void*>(static_cast<uintptr_t>(rankInfo->window));
     void* src = static_cast<void*>(static_cast<s8*>(window) + winOffset + rcvOffset);
     void* dst = static_cast<void*>(static_cast<s8*>(rcvAddr) + rcvOffset);
 
@@ -247,7 +247,7 @@ HcclResult TaskOrchestrator::SelfCpySnd2WinEx1(
 
     AicpuComRankInfo* rankInfo = &ctx->rankInfo[ctx->rankId];
     void* src = static_cast<void*>(static_cast<s8*>(sndAddr) + sndOffset);
-    void* dst = reinterpret_cast<void*>(static_cast<const uintptr_t>(rankInfo->window) + winOffset);
+    void* dst = reinterpret_cast<void*>(static_cast<uintptr_t>(rankInfo->window) + winOffset);
 
     CHK_RET(AicpuDispatcher::CopyData(ctx->rankId % maxStreamNum, src, dst, dataSize, dataType, opType, ctx->rankId));
 
@@ -284,7 +284,7 @@ HcclResult TaskOrchestrator::SelfCpyWin2RcvEx(
     u32 rankId = ctx->rankId;
     AicpuComRankInfo* rankInfo = &ctx->rankInfo[mainRankId];
 
-    void* src = reinterpret_cast<void*>(static_cast<const uintptr_t>(rankInfo->window) + winOffset);
+    void* src = reinterpret_cast<void*>(static_cast<uintptr_t>(rankInfo->window) + winOffset);
     void* dst = static_cast<void*>(static_cast<s8*>(rcvAddr) + rcvOffset);
 
     CHK_RET(AicpuDispatcher::CopyData(rankId % maxStreamNum, src, dst, dataSize, dataType, opType, mainRankId));
@@ -320,7 +320,7 @@ HcclResult TaskOrchestrator::IpcCpySnd2Win(
             u64 srcOffset = (sndOffsets == nullptr) ? 0 : sndOffsets[index];
             void* src = static_cast<void*>(static_cast<s8*>(sndAddr) + srcOffset);
             u64 dstOffset = (winOffsets == nullptr) ? 0 : winOffsets[index];
-            void* dst = reinterpret_cast<void*>(static_cast<const uintptr_t>(rankInfo->window) + dstOffset);
+            void* dst = reinterpret_cast<void*>(static_cast<uintptr_t>(rankInfo->window) + dstOffset);
             CHK_RET(AicpuDispatcher::CopyData(index, src, dst, dataSize, dataType, opType, index));
         }
     }
@@ -337,7 +337,7 @@ HcclResult TaskOrchestrator::IpcCpySnd2Win(
         if (index != ctx->rankId) {
             AicpuComRankInfo* rankInfo = &ctx->rankInfo[index];
             void* src = static_cast<void*>(static_cast<s8*>(sndAddr) + srcOffset);
-            void* dst = reinterpret_cast<void*>(static_cast<const uintptr_t>(rankInfo->window) + dstOffset);
+            void* dst = reinterpret_cast<void*>(static_cast<uintptr_t>(rankInfo->window) + dstOffset);
             CHK_RET(AicpuDispatcher::CopyData(index, src, dst, dataSize, dataType, opType, index));
         }
     }
@@ -357,7 +357,7 @@ HcclResult TaskOrchestrator::IpcCpySnd2Win(
             u64 srcOffset = sndOffsets.empty() ? 0 : sndOffsets[index];
             void* src = static_cast<void*>(static_cast<s8*>(sndAddr) + srcOffset);
             u64 dstOffset = (winOffsets == nullptr) ? 0 : winOffsets[index];
-            void* dst = reinterpret_cast<void*>(static_cast<const uintptr_t>(rankInfo->window) + dstOffset);
+            void* dst = reinterpret_cast<void*>(static_cast<uintptr_t>(rankInfo->window) + dstOffset);
 
             CHK_RET(AicpuDispatcher::CopyData(
                 index, src, dst, dataSizes.empty() ? 0 : dataSizes[index], dataType, opType, index));
@@ -377,7 +377,7 @@ HcclResult TaskOrchestrator::IpcCpySnd2Win(
             AicpuComRankInfo* rankInfo = &ctx->rankInfo[index];
             u64 srcOffset = (sndOffsets == nullptr) ? 0 : sndOffsets[index];
             void* src = static_cast<void*>(static_cast<s8*>(sndAddr) + srcOffset);
-            void* dst = reinterpret_cast<void*>(static_cast<const uintptr_t>(rankInfo->window) + winOffsets);
+            void* dst = reinterpret_cast<void*>(static_cast<uintptr_t>(rankInfo->window) + winOffsets);
             CHK_RET(AicpuDispatcher::CopyData(index, src, dst, dataSize, dataType, opType, index));
         }
     }
@@ -396,7 +396,7 @@ HcclResult TaskOrchestrator::IpcCpySnd2Win(
             u64 srcOffset = (sndOffsets == nullptr) ? 0 : sndOffsets[index];
             void* src = static_cast<void*>(static_cast<s8*>(sndAddr) + srcOffset);
             u64 dstOffset = (winOffsets == nullptr) ? 0 : winOffsets[index];
-            void* dst = reinterpret_cast<void*>(static_cast<const uintptr_t>(rankInfo->window) + dstOffset);
+            void* dst = reinterpret_cast<void*>(static_cast<uintptr_t>(rankInfo->window) + dstOffset);
             CHK_RET(AicpuDispatcher::CopyData(index, src, dst, dataSize[index], dataType, opType, index));
         }
     }
@@ -414,7 +414,7 @@ HcclResult TaskOrchestrator::IpcCpySnd2WinP2P(
     u32 selfRank = ctx->rankId;
 
     void* src = static_cast<void*>(static_cast<s8*>(sndAddr) + sndOffsets);
-    void* dst = reinterpret_cast<void*>(static_cast<const uintptr_t>(ctx->rankInfo[dstRank].window) + winOffsets);
+    void* dst = reinterpret_cast<void*>(static_cast<uintptr_t>(ctx->rankInfo[dstRank].window) + winOffsets);
     // 下发到主流上
     CHK_RET(AicpuDispatcher::CopyData(selfRank, src, dst, dataSize, dataType, opType, dstRank));
     RECORD_FILL_SQE_TIME(startTime);
@@ -429,8 +429,8 @@ HcclResult TaskOrchestrator::IpcCpyWin2WinP2P(
     auto ctx = AicpuGetComContext();
     u32 selfRank = ctx->rankId;
 
-    void* src = reinterpret_cast<void*>(static_cast<const uintptr_t>(ctx->rankInfo[srcRank].window) + srcOffsets);
-    void* dst = reinterpret_cast<void*>(static_cast<const uintptr_t>(ctx->rankInfo[selfRank].window) + dstOffsets);
+    void* src = reinterpret_cast<void*>(static_cast<uintptr_t>(ctx->rankInfo[srcRank].window) + srcOffsets);
+    void* dst = reinterpret_cast<void*>(static_cast<uintptr_t>(ctx->rankInfo[selfRank].window) + dstOffsets);
     CHK_RET(AicpuDispatcher::CopyData(srcRank, src, dst, dataSize, dataType, opType, srcRank));
 
     RECORD_FILL_SQE_TIME(startTime);
@@ -446,7 +446,7 @@ HcclResult TaskOrchestrator::IpcCpyWin2Rcv(
         if (index != ctx->rankId) {
             AicpuComRankInfo* rankInfo = &ctx->rankInfo[index];
             u64 srcOffset = (winOffsets == nullptr) ? 0 : winOffsets[index];
-            void* src = reinterpret_cast<void*>(static_cast<const uintptr_t>(rankInfo->window) + srcOffset);
+            void* src = reinterpret_cast<void*>(static_cast<uintptr_t>(rankInfo->window) + srcOffset);
             u64 dstOffset = (rcvOffsets == nullptr) ? 0 : rcvOffsets[index];
             void* dst = static_cast<void*>(static_cast<s8*>(rcvAddr) + dstOffset);
 
@@ -466,7 +466,7 @@ HcclResult TaskOrchestrator::IpcCpyWin2RcvEx(
         if (index != ctx->rankId) {
             AicpuComRankInfo* rankInfo = &ctx->rankInfo[index];
             u64 dstOffset = (rcvOffsets == nullptr) ? 0 : rcvOffsets[index];
-            void* window = reinterpret_cast<void*>(static_cast<const uintptr_t>(rankInfo->window));
+            void* window = reinterpret_cast<void*>(static_cast<uintptr_t>(rankInfo->window));
             void* src = static_cast<void*>(static_cast<s8*>(window) + winOffset + dstOffset);
             void* dst = static_cast<void*>(static_cast<s8*>(rcvAddr) + dstOffset);
 
@@ -486,7 +486,7 @@ HcclResult TaskOrchestrator::IpcCpyWin2RcvEx(
         if (index != ctx->rankId) {
             AicpuComRankInfo* rankInfo = &ctx->rankInfo[index];
             u64 dstOffset = (rcvOffsets == nullptr) ? 0 : rcvOffsets[index];
-            void* window = reinterpret_cast<void*>(static_cast<const uintptr_t>(rankInfo->window));
+            void* window = reinterpret_cast<void*>(static_cast<uintptr_t>(rankInfo->window));
             void* src = static_cast<void*>(static_cast<s8*>(window) + winOffset + dstOffset);
             void* dst = static_cast<void*>(static_cast<s8*>(rcvAddr) + dstOffset);
 
@@ -507,7 +507,7 @@ HcclResult TaskOrchestrator::IpcCpyWin2RcvEx(
         if (index != ctx->rankId) {
             AicpuComRankInfo* rankInfo = &ctx->rankInfo[index];
             u64 dstOffset = rcvOffsets.empty() ? 0 : rcvOffsets[index];
-            void* window = reinterpret_cast<void*>(static_cast<const uintptr_t>(rankInfo->window));
+            void* window = reinterpret_cast<void*>(static_cast<uintptr_t>(rankInfo->window));
             void* src = static_cast<void*>(static_cast<s8*>(window) + recvOff + dstOffset);
             void* dst = static_cast<void*>(static_cast<s8*>(rcvAddr) + dstOffset);
             u64 dataSize = dataSizes.empty() ? 0 : dataSizes[index];
@@ -528,7 +528,7 @@ HcclResult TaskOrchestrator::IpcCpyWin2Rcv(
         if (index != ctx->rankId) {
             AicpuComRankInfo* rankInfo = &ctx->rankInfo[index];
             u64 srcOffset = (winOffsets == nullptr) ? 0 : winOffsets[index];
-            void* src = reinterpret_cast<void*>(static_cast<const uintptr_t>(rankInfo->window) + srcOffset);
+            void* src = reinterpret_cast<void*>(static_cast<uintptr_t>(rankInfo->window) + srcOffset);
             u64 dstOffset = rcvOffsets.empty() ? 0 : rcvOffsets[index];
             void* dst = static_cast<void*>(static_cast<s8*>(rcvAddr) + dstOffset);
 
@@ -548,7 +548,7 @@ HcclResult TaskOrchestrator::IpcCpyWin2Rcv(
     for (u32 index = 0; index < ctx->rankNum; index++) {
         if (index != ctx->rankId) {
             AicpuComRankInfo* rankInfo = &ctx->rankInfo[index];
-            void* src = reinterpret_cast<void*>(static_cast<const uintptr_t>(rankInfo->window) + winOffsets);
+            void* src = reinterpret_cast<void*>(static_cast<uintptr_t>(rankInfo->window) + winOffsets);
             u64 dstOffset = (rcvOffsets == nullptr) ? 0 : rcvOffsets[index];
             void* dst = static_cast<void*>(static_cast<s8*>(rcvAddr) + dstOffset);
 
@@ -568,7 +568,7 @@ HcclResult TaskOrchestrator::IpcCpyWin2Rcv(
         if (index != ctx->rankId) {
             AicpuComRankInfo* rankInfo = &ctx->rankInfo[index];
             u64 srcOffset = (winOffsets == nullptr) ? 0 : winOffsets[index];
-            void* src = reinterpret_cast<void*>(static_cast<const uintptr_t>(rankInfo->window) + srcOffset);
+            void* src = reinterpret_cast<void*>(static_cast<uintptr_t>(rankInfo->window) + srcOffset);
             u64 dstOffset = (rcvOffsets == nullptr) ? 0 : rcvOffsets[index];
             void* dst = static_cast<void*>(static_cast<s8*>(rcvAddr) + dstOffset);
 
@@ -585,7 +585,7 @@ HcclResult TaskOrchestrator::IpcCpyWin2RcvP2P(
     const u64 startTime = KFC_GET_START_TIME();
     auto ctx = AicpuGetComContext();
 
-    void* src = reinterpret_cast<void*>(static_cast<const uintptr_t>(ctx->rankInfo[srcRank].window) + srcOffset);
+    void* src = reinterpret_cast<void*>(static_cast<uintptr_t>(ctx->rankInfo[srcRank].window) + srcOffset);
     void* dst = static_cast<void*>(static_cast<s8*>(rcvAddr) + dstOffset);
     CHK_RET(AicpuDispatcher::CopyData(srcRank, src, dst, dataSize, dataType, opType, srcRank));
 
@@ -600,7 +600,7 @@ HcclResult TaskOrchestrator::IpcCpyWin2RcvP2PMainStream(
     auto ctx = AicpuGetComContext();
     u32 selfRank = ctx->rankId;
 
-    void* src = reinterpret_cast<void*>(static_cast<const uintptr_t>(ctx->rankInfo[srcRank].window) + srcOffset);
+    void* src = reinterpret_cast<void*>(static_cast<uintptr_t>(ctx->rankInfo[srcRank].window) + srcOffset);
     void* dst = static_cast<void*>(static_cast<s8*>(rcvAddr) + dstOffset);
     CHK_RET(AicpuDispatcher::CopyData(selfRank, src, dst, dataSize, dataType, opType, srcRank));
 
@@ -626,7 +626,7 @@ HcclResult TaskOrchestrator::IpcCpySnd2WinEx(
             u64 srcOffset = (sndOffsets == nullptr) ? 0 : sndOffsets[index];
             void* src = static_cast<void*>(static_cast<s8*>(sndAddr) + srcOffset);
             u64 dstOffset = (winOffsets == nullptr) ? 0 : winOffsets[index];
-            void* dst = reinterpret_cast<void*>(static_cast<const uintptr_t>(rankInfo->window) + dstOffset);
+            void* dst = reinterpret_cast<void*>(static_cast<uintptr_t>(rankInfo->window) + dstOffset);
 
             CHK_RET(AicpuDispatcher::CopyData(streamId, src, dst, dataSize, dataType, opType, index));
         }
@@ -651,7 +651,7 @@ HcclResult TaskOrchestrator::IpcCpyWin2RcvEx(
             streamId = (onMainSq == true) ? (ctx->rankId % maxStreamNum) : (index % maxStreamNum);
             AicpuComRankInfo* rankInfo = &ctx->rankInfo[index];
             u64 srcOffset = (winOffsets == nullptr) ? 0 : winOffsets[index];
-            void* src = reinterpret_cast<void*>(static_cast<const uintptr_t>(rankInfo->window) + srcOffset);
+            void* src = reinterpret_cast<void*>(static_cast<uintptr_t>(rankInfo->window) + srcOffset);
             u64 dstOffset = (rcvOffsets == nullptr) ? 0 : rcvOffsets[index];
             void* dst = static_cast<void*>(static_cast<s8*>(rcvAddr) + dstOffset);
 
@@ -680,7 +680,7 @@ HcclResult TaskOrchestrator::IpcCpySnd2WinSliceEx(
             u64 srcOffset = dataSlice[index].offset;
             void* src = static_cast<void*>(static_cast<s8*>(sndAddr) + srcOffset);
             u64 dstOffset = (winOffsets == nullptr) ? 0 : winOffsets[index];
-            void* dst = reinterpret_cast<void*>(static_cast<const uintptr_t>(rankInfo->window) + dstOffset);
+            void* dst = reinterpret_cast<void*>(static_cast<uintptr_t>(rankInfo->window) + dstOffset);
 
             CHK_RET(AicpuDispatcher::CopyData(streamId, src, dst, dataSlice[index].size, dataType, opType, index));
         }
@@ -705,7 +705,7 @@ HcclResult TaskOrchestrator::IpcCpyWin2RcvSliceEx(
             streamId = (onMainSq == true) ? (ctx->rankId % maxStreamNum) : (index % maxStreamNum);
             AicpuComRankInfo* rankInfo = &ctx->rankInfo[index];
             u64 srcOffset = (winOffsets == nullptr) ? 0 : winOffsets[index];
-            void* src = reinterpret_cast<void*>(static_cast<const uintptr_t>(rankInfo->window) + srcOffset);
+            void* src = reinterpret_cast<void*>(static_cast<uintptr_t>(rankInfo->window) + srcOffset);
             u64 dstOffset = dataSlice[index].offset;
             void* dst = static_cast<void*>(static_cast<s8*>(rcvAddr) + dstOffset);
 
@@ -723,7 +723,7 @@ HcclResult TaskOrchestrator::SelfLocalReduce(u64 dataSize, HcclReduceOp opType, 
     u32 rankId = ctx->rankId;
     AicpuComRankInfo* rankInfo = &ctx->rankInfo[rankId];
     void* src = nullptr;
-    void* dst = reinterpret_cast<void*>(static_cast<const uintptr_t>(rankInfo->window));
+    void* dst = reinterpret_cast<void*>(static_cast<uintptr_t>(rankInfo->window));
     u64 srcOffset = 0LU;
     u64 cpySize = 0LU;
 
@@ -736,7 +736,7 @@ HcclResult TaskOrchestrator::SelfLocalReduce(u64 dataSize, HcclReduceOp opType, 
         HCCL_DEBUG(
             "SelfLocalReduce: rankNum %u, power %u, rankPower %u, srcOffset %lu, cpySize %lu", rankNum, power,
             rankPower, srcOffset, cpySize);
-        src = reinterpret_cast<void*>(static_cast<const uintptr_t>(rankInfo->window) + srcOffset);
+        src = reinterpret_cast<void*>(static_cast<uintptr_t>(rankInfo->window) + srcOffset);
         CHK_RET(AicpuDispatcher::CopyData(rankId, src, dst, cpySize, dataType, opType, rankId));
     }
 
@@ -747,7 +747,7 @@ HcclResult TaskOrchestrator::SelfLocalReduce(u64 dataSize, HcclReduceOp opType, 
         HCCL_DEBUG(
             "SelfLocalReduce: sliceNum %u, rankNum %u, power %u, rankPower %u, srcOffset %lu", sliceNum, rankNum, power,
             rankPower, srcOffset);
-        src = reinterpret_cast<void*>(static_cast<const uintptr_t>(rankInfo->window) + srcOffset);
+        src = reinterpret_cast<void*>(static_cast<uintptr_t>(rankInfo->window) + srcOffset);
         CHK_RET(AicpuDispatcher::CopyData(rankId, src, dst, cpySize, dataType, opType, rankId));
     }
     RECORD_FILL_SQE_TIME(startTime);
@@ -1297,8 +1297,8 @@ HcclResult TaskOrchestrator::IsSupportRDMAReduce(HcclCMDType commType, HcclDataT
 HcclResult
 TaskOrchestrator::RunConcreteAlgorithm(AivAicpuOpParam* commParam, AivAicpuOpParam* commParamNext, AicpuComContext* ctx)
 {
-    void* src = reinterpret_cast<void*>(static_cast<const uintptr_t>(commParam->sendBuffer));
-    void* dst = reinterpret_cast<void*>(static_cast<const uintptr_t>(commParam->recvBuffer));
+    void* src = reinterpret_cast<void*>(static_cast<uintptr_t>(commParam->sendBuffer));
+    void* dst = reinterpret_cast<void*>(static_cast<uintptr_t>(commParam->recvBuffer));
     RECORD_PROF_TIME(hccExecStartTime);
 
     const bool waitFlag
