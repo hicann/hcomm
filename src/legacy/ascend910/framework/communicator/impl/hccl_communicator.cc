@@ -2885,4 +2885,7 @@ HcclResult HcclCommunicator::GetAivQPInfoV2(std::vector<LINK>& links, const std:
 
     return HCCL_SUCCESS;
 }
+
+template HcclResult HcclCommunicator::GenIbvAiRMAInfo<HcclAiRMAInfo>(
+    u32 rankid, const std::shared_ptr<Transport>& transport, const std::string& tag, HcclAiRMAInfo* aiRMAInfoPtr);
 } // namespace hccl

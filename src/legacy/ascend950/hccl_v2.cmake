@@ -244,6 +244,12 @@ target_include_directories(hccl_v2 PRIVATE
     ${HCOMM_DIR}/external_depends/tsch
 )
 
+# 符号隐藏: 仅导出白名单符号; UT/ST 打桩依赖动态符号, 不挂载
+if(NOT ENABLE_TEST)
+    target_link_options(hccl_v2 PRIVATE "-Wl,--version-script=${CMAKE_CURRENT_LIST_DIR}/hccl_v2.map")
+    set_property(TARGET hccl_v2 APPEND PROPERTY LINK_DEPENDS "${CMAKE_CURRENT_LIST_DIR}/hccl_v2.map")
+endif()
+
 # 将hccl编译出的动态库加入CANN的安装包
 install(TARGETS hccl_v2
     LIBRARY DESTINATION ${INSTALL_LIBRARY_DIR} ${INSTALL_OPTIONAL}

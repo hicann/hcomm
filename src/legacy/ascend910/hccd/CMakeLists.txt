@@ -389,3 +389,9 @@ else()
         COMPONENT hcomm
     )
 endif()
+
+# 符号隐藏: 仅导出白名单符号; UT/ST 打桩依赖动态符号, 不挂载
+if(NOT ENABLE_TEST)
+    target_link_options(hccd PRIVATE "-Wl,--version-script=${CMAKE_CURRENT_LIST_DIR}/hccd.map")
+    set_property(TARGET hccd APPEND PROPERTY LINK_DEPENDS "${CMAKE_CURRENT_LIST_DIR}/hccd.map")
+endif()

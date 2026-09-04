@@ -350,6 +350,12 @@ else()
     )
 endif()
 
+# 符号隐藏: 仅导出白名单符号; UT/ST 打桩依赖动态符号, 不挂载
+if(NOT ENABLE_TEST)
+    target_link_options(ccl_kernel PRIVATE "-Wl,--version-script=${CMAKE_CURRENT_LIST_DIR}/ccl_kernel.map")
+    set_property(TARGET ccl_kernel APPEND PROPERTY LINK_DEPENDS "${CMAKE_CURRENT_LIST_DIR}/ccl_kernel.map")
+endif()
+
 # 将 ccl_kernel.ini 转换为 json 格式
 add_custom_command(
     OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/ccl_kernel.json

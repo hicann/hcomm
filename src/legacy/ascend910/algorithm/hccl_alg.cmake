@@ -150,6 +150,12 @@ else()
     )
 endif()
 
+# 符号隐藏: 仅导出白名单符号; UT/ST 打桩依赖动态符号, 不挂载
+if(NOT ENABLE_TEST)
+    target_link_options(hccl_alg PRIVATE "-Wl,--version-script=${CMAKE_CURRENT_LIST_DIR}/hccl_alg.map")
+    set_property(TARGET hccl_alg APPEND PROPERTY LINK_DEPENDS "${CMAKE_CURRENT_LIST_DIR}/hccl_alg.map")
+endif()
+
 install(TARGETS hccl_alg
     LIBRARY DESTINATION ${INSTALL_LIBRARY_DIR} ${INSTALL_OPTIONAL}
     COMPONENT hcomm
