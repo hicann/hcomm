@@ -1256,6 +1256,7 @@ TEST_F(CollBatchSendRecvGroupExecutorTest, ProcessNewRankSendSlice_SingleSlice)
 {
     SetStreamNum(2, 2);
     SetupAlgResResp(6, 4 * 1024 * 1024);
+    MOCKER(hrtMemAsyncCopy).stubs().will(returnValue(HCCL_SUCCESS));
     executor_->bufferSliceSize_ = 16384;
     LINK fakeLink = MakeFakeLink();
     SetupOpTransportForRank(1, fakeLink); // remoteRank=1 < userRank=4 -> send
@@ -1264,7 +1265,6 @@ TEST_F(CollBatchSendRecvGroupExecutorTest, ProcessNewRankSendSlice_SingleSlice)
     executor_->sendDataSlicesBySendStream_.resize(2);
     executor_->sendDataSlicesBySendStream_[0].emplace_back(buf, 16, 1);
 
-    // hrtMemAsyncCopy is already stubbed in runtime_stub.cc
     // Initialize per-stream state vectors
     executor_->sendCurPhase_.assign(2, 0);
     executor_->sendLoadedSize_.assign(2, 0);
@@ -1282,6 +1282,7 @@ TEST_F(CollBatchSendRecvGroupExecutorTest, ProcessNewRankSendSlice_TwoSlicesSame
 {
     SetStreamNum(2, 2);
     SetupAlgResResp(6, 4 * 1024 * 1024);
+    MOCKER(hrtMemAsyncCopy).stubs().will(returnValue(HCCL_SUCCESS));
     executor_->bufferSliceSize_ = 16384;
     LINK fakeLink = MakeFakeLink();
     SetupOpTransportForRank(1, fakeLink);
@@ -1301,7 +1302,6 @@ TEST_F(CollBatchSendRecvGroupExecutorTest, ProcessNewRankSendSlice_TwoSlicesSame
     EXPECT_EQ(ret, HCCL_SUCCESS);
     EXPECT_EQ(executor_->sendLoadedSize_[0], 32u);
     EXPECT_EQ(pending, 1u);
-    algRes_.slaveStreams.clear();
 }
 
 // ============================================================================
@@ -1312,6 +1312,7 @@ TEST_F(CollBatchSendRecvGroupExecutorTest, ProcessPreloadedSendSlice_Basic)
 {
     SetStreamNum(2, 2);
     SetupAlgResResp(6, 4 * 1024 * 1024);
+    MOCKER(hrtMemAsyncCopy).stubs().will(returnValue(HCCL_SUCCESS));
     executor_->bufferSliceSize_ = 16384;
     LINK fakeLink = MakeFakeLink();
     SetupOpTransportForRank(1, fakeLink);
@@ -1415,6 +1416,7 @@ TEST_F(CollBatchSendRecvGroupExecutorTest, ProcessRdmaSendSlice_Basic)
 {
     SetStreamNum(2, 2);
     SetupAlgResResp(6, 4 * 1024 * 1024);
+    MOCKER(hrtMemAsyncCopy).stubs().will(returnValue(HCCL_SUCCESS));
     executor_->rdmaDataBlockSize_ = 32768;
     LINK fakeLink = MakeFakeLink();
     SetupOpTransportForRank(5, fakeLink);

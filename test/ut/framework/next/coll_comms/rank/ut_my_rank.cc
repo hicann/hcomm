@@ -16,6 +16,7 @@
 #include "rank_graph_v2.h"
 #include "hccl/hccl_res.h"
 #include <hccl/hccl_comm.h>
+#include "hcomm_adapter_hccp.h"
 #include "hcomm_c_adpt.h"
 #include "channel_process.h"
 #include "base_config_legacy.h"
@@ -31,6 +32,91 @@
 #include "ccu_res.h"
 
 using namespace hccl;
+
+namespace {
+// UT stub state is only used by the single-threaded host multi-QP tests.
+u32 g_hostConfigDeviceLogicId = 0;
+u32 g_hostConfigDevicePhyId = 0;
+HcclResult g_getDeviceResult = HCCL_SUCCESS;
+HcclResult g_getDevicePhyIdResult = HCCL_SUCCESS;
+std::string g_hostMultiQpMode;
+std::string g_hostMultiQpCount;
+std::string g_hostMultiQpPorts;
+int g_hostConfigFailureKey = -1;
+std::vector<HccnCfgKey> g_hostConfigReadKeys;
+u32 g_getDeviceCallCount = 0;
+u32 g_getDevicePhyIdCallCount = 0;
+
+void ResetHostMultiQpStub()
+{
+    g_hostConfigDeviceLogicId = 4;
+    g_hostConfigDevicePhyId = 3;
+    g_getDeviceResult = HCCL_SUCCESS;
+    g_getDevicePhyIdResult = HCCL_SUCCESS;
+    g_hostMultiQpMode = "multi_qp";
+    g_hostMultiQpCount = "4";
+    g_hostMultiQpPorts = "20001,20002";
+    g_hostConfigFailureKey = -1;
+    g_hostConfigReadKeys.clear();
+    g_getDeviceCallCount = 0;
+    g_getDevicePhyIdCallCount = 0;
+}
+
+HcclResult StubGetDeviceForHostMultiQp(s32* deviceLogicId)
+{
+    ++g_getDeviceCallCount;
+    if (g_getDeviceResult == HCCL_SUCCESS && deviceLogicId != nullptr) {
+        *deviceLogicId = static_cast<s32>(g_hostConfigDeviceLogicId);
+    }
+    return g_getDeviceResult;
+}
+
+HcclResult StubGetDevicePhyIdForHostMultiQp(u32 deviceLogicId, u32& devicePhyId, bool isRefresh)
+{
+    ++g_getDevicePhyIdCallCount;
+    EXPECT_EQ(deviceLogicId, g_hostConfigDeviceLogicId);
+    EXPECT_FALSE(isRefresh);
+    if (g_getDevicePhyIdResult == HCCL_SUCCESS) {
+        devicePhyId = g_hostConfigDevicePhyId;
+    }
+    return g_getDevicePhyIdResult;
+}
+
+int StubRaGetHostMultiQpConfig(RaInfo* info, HccnCfgKey key, char* value, unsigned int* valueLen)
+{
+    if (info == nullptr || value == nullptr || valueLen == nullptr) {
+        return -1;
+    }
+    EXPECT_EQ(info->mode, NETWORK_PEER_ONLINE);
+    EXPECT_EQ(info->phyId, g_hostConfigDevicePhyId);
+    EXPECT_EQ(*valueLen, MyRankUtils::HOST_NIC_CONFIG_BUFFER_SIZE);
+    g_hostConfigReadKeys.emplace_back(key);
+    if (g_hostConfigFailureKey == static_cast<int>(key)) {
+        return -1;
+    }
+
+    const std::string* configValue = nullptr;
+    if (key == HCCN_CFG_UDP_PORT_MODE) {
+        configValue = &g_hostMultiQpMode;
+    } else if (key == HCCN_CFG_MULTI_QP_COUNT) {
+        configValue = &g_hostMultiQpCount;
+    } else if (key == HCCN_CFG_MULTI_QP_UDP_PORTS) {
+        configValue = &g_hostMultiQpPorts;
+    }
+    if (configValue == nullptr || configValue->empty()) {
+        *valueLen = 0;
+        return 0;
+    }
+    const std::size_t contentLength = configValue->size();
+    if (contentLength >= *valueLen) {
+        return -1;
+    }
+    configValue->copy(value, contentLength);
+    value[contentLength] = '\0';
+    *valueLen = static_cast<unsigned int>(contentLength + 1U);
+    return 0;
+}
+} // namespace
 
 HcclResult GetAllMemoryStub(CommMems*, std::vector<HcclMem>& mems, std::vector<std::string>& tags, uint64_t& version)
 {
@@ -180,6 +266,15 @@ protected:
             epPair->handleToLoc_[handles[i]] = {engine, i};
             myRank->handleToEpPair_[handles[i]] = epPair;
         }
+    }
+
+    void ExpectFillRoceSrcPortListSuccess(
+        HcclChannelDesc& hcclDesc, HcommChannelDesc& hcommDesc, std::vector<uint16_t>& srcPortBuf,
+        const std::vector<uint16_t>& expectedPorts)
+    {
+        EXPECT_EQ(MyRankUtils::FillRoceSrcPortList(hcclDesc, hcommDesc, srcPortBuf), HCCL_SUCCESS);
+        ASSERT_NE(hcommDesc.roceAttr.srcPortList, nullptr);
+        EXPECT_EQ(srcPortBuf, expectedPorts);
     }
 
     uint32_t DEFAULT_MODE = 0;
@@ -2028,6 +2123,7 @@ TEST_F(MyRankTest, Ut_FillRoceSrcPortList_When_CommAddrToIpFail_Expect_SrcPortLi
     portConfig.ipPairToPorts.clear();
     portConfig.ipPairToPorts["1.0.0.0,2.0.0.0"] = {10001};
 
+    MOCKER(hrtGetDevice).stubs().will(returnValue(HCCL_E_RUNTIME));
     MOCKER(hcomm::CommAddrToIpAddress).stubs().will(returnValue(HCCL_E_NOT_SUPPORT));
 
     HcclChannelDesc hcclDesc{};
@@ -2053,6 +2149,7 @@ TEST_F(MyRankTest, Ut_FillRoceSrcPortList_When_ConfigAvailable_Expect_SrcPortLis
         Hccl::EnvConfig::GetInstance().GetRdmaConfig().GetMultiQpSrcPortConfig());
     portConfig.ipPairToPorts.clear();
     portConfig.ipPairToPorts["1.0.0.0,2.0.0.0"] = {10001, 10002};
+    MOCKER(hrtGetDevice).stubs().will(returnValue(HCCL_E_RUNTIME));
 
     HcclChannelDesc hcclDesc{};
     ASSERT_EQ(HcclChannelDescInit(&hcclDesc, 1), HCCL_SUCCESS);
@@ -2071,6 +2168,147 @@ TEST_F(MyRankTest, Ut_FillRoceSrcPortList_When_ConfigAvailable_Expect_SrcPortLis
     EXPECT_EQ(hcommDesc.roceAttr.srcPortList[1], 10002u);
     EXPECT_EQ(hcommDesc.roceAttr.srcPortList[2], 10001u);
     EXPECT_EQ(hcommDesc.roceAttr.srcPortList[3], 10002u);
+
+    portConfig.ipPairToPorts.clear();
+}
+
+TEST_F(MyRankTest, Ut_ParseHostMultiQpConfig_CoversValidAndInvalidValues)
+{
+    uint32_t parsed = 0;
+    EXPECT_TRUE(MyRankUtils::ParseStrictDecimal("1", 1, 32, parsed));
+    EXPECT_EQ(parsed, 1U);
+    EXPECT_TRUE(MyRankUtils::ParseStrictDecimal("32", 1, 32, parsed));
+    EXPECT_EQ(parsed, 32U);
+    EXPECT_FALSE(MyRankUtils::ParseStrictDecimal("", 1, 32, parsed));
+    EXPECT_FALSE(MyRankUtils::ParseStrictDecimal("0", 1, 32, parsed));
+    EXPECT_FALSE(MyRankUtils::ParseStrictDecimal("+1", 1, 32, parsed));
+    EXPECT_FALSE(MyRankUtils::ParseStrictDecimal("33", 1, 32, parsed));
+
+    std::vector<uint16_t> ports;
+    EXPECT_TRUE(MyRankUtils::ParseMultiQpUdpPorts("10001,10001,65535", ports));
+    EXPECT_EQ(ports, (std::vector<uint16_t>{10001, 10001, 65535}));
+    EXPECT_FALSE(MyRankUtils::ParseMultiQpUdpPorts("10001,", ports));
+    EXPECT_FALSE(MyRankUtils::ParseMultiQpUdpPorts("0", ports));
+
+    std::string tooManyPorts = "1";
+    for (u32 i = 0; i < Hccl::MultiQpSrcPortConfig::CONFIG_SRC_PORT_NUM_MAX; ++i) {
+        tooManyPorts += ",1";
+    }
+    EXPECT_FALSE(MyRankUtils::ParseMultiQpUdpPorts(tooManyPorts, ports));
+}
+
+TEST_F(MyRankTest, Ut_ReadHostNicMultiQpCount_ReadsLatestCountOnly)
+{
+    ResetHostMultiQpStub();
+    MOCKER(hrtGetDevice).stubs().will(invoke(StubGetDeviceForHostMultiQp));
+    MOCKER(hrtGetDevicePhyIdByIndex).stubs().will(invoke(StubGetDevicePhyIdForHostMultiQp));
+    MOCKER(RaGetHccnCfg).stubs().will(invoke(StubRaGetHostMultiQpConfig));
+
+    uint32_t qpCount = 0;
+    MyRankUtils::ReadHostNicMultiQpCount(qpCount);
+    EXPECT_EQ(qpCount, 4U);
+    EXPECT_EQ(g_hostConfigReadKeys, (std::vector<HccnCfgKey>{HCCN_CFG_UDP_PORT_MODE, HCCN_CFG_MULTI_QP_COUNT}));
+
+    g_hostConfigReadKeys.clear();
+    g_hostMultiQpCount = "5";
+    MyRankUtils::ReadHostNicMultiQpCount(qpCount);
+    EXPECT_EQ(qpCount, 5U);
+    EXPECT_EQ(g_hostConfigReadKeys, (std::vector<HccnCfgKey>{HCCN_CFG_UDP_PORT_MODE, HCCN_CFG_MULTI_QP_COUNT}));
+
+    g_hostConfigReadKeys.clear();
+    g_hostMultiQpMode.clear();
+    MyRankUtils::ReadHostNicMultiQpCount(qpCount);
+    EXPECT_EQ(qpCount, 0U);
+    EXPECT_EQ(g_hostConfigReadKeys, (std::vector<HccnCfgKey>{HCCN_CFG_UDP_PORT_MODE}));
+}
+
+TEST_F(MyRankTest, Ut_ReadHostNicMultiQpUdpPorts_ReadsLatestPortsOnly)
+{
+    ResetHostMultiQpStub();
+    MOCKER(hrtGetDevice).stubs().will(invoke(StubGetDeviceForHostMultiQp));
+    MOCKER(hrtGetDevicePhyIdByIndex).stubs().will(invoke(StubGetDevicePhyIdForHostMultiQp));
+    MOCKER(RaGetHccnCfg).stubs().will(invoke(StubRaGetHostMultiQpConfig));
+
+    std::vector<uint16_t> ports;
+    MyRankUtils::ReadHostNicMultiQpUdpPorts(ports);
+    EXPECT_EQ(ports, (std::vector<uint16_t>{20001, 20002}));
+    EXPECT_EQ(g_hostConfigReadKeys, (std::vector<HccnCfgKey>{HCCN_CFG_UDP_PORT_MODE, HCCN_CFG_MULTI_QP_UDP_PORTS}));
+
+    g_hostConfigReadKeys.clear();
+    g_hostMultiQpPorts = "30001";
+    MyRankUtils::ReadHostNicMultiQpUdpPorts(ports);
+    EXPECT_EQ(ports, (std::vector<uint16_t>{30001}));
+    EXPECT_EQ(g_hostConfigReadKeys, (std::vector<HccnCfgKey>{HCCN_CFG_UDP_PORT_MODE, HCCN_CFG_MULTI_QP_UDP_PORTS}));
+
+    g_hostConfigReadKeys.clear();
+    g_hostConfigFailureKey = HCCN_CFG_MULTI_QP_UDP_PORTS;
+    MyRankUtils::ReadHostNicMultiQpUdpPorts(ports);
+    EXPECT_TRUE(ports.empty());
+}
+
+TEST_F(MyRankTest, Ut_FillRoceSrcPortList_HostConfigPriority)
+{
+    auto& portConfig = const_cast<Hccl::MultiQpSrcPortConfig&>(
+        Hccl::EnvConfig::GetInstance().GetRdmaConfig().GetMultiQpSrcPortConfig());
+    portConfig.ipPairToPorts.clear();
+    portConfig.ipPairToPorts["1.0.0.0,2.0.0.0"] = {10001, 10002};
+    ResetHostMultiQpStub();
+    MOCKER(hrtGetDevice).stubs().will(invoke(StubGetDeviceForHostMultiQp));
+    MOCKER(hrtGetDevicePhyIdByIndex).stubs().will(invoke(StubGetDevicePhyIdForHostMultiQp));
+    MOCKER(RaGetHccnCfg).stubs().will(invoke(StubRaGetHostMultiQpConfig));
+
+    HcclChannelDesc hcclDesc{};
+    ASSERT_EQ(HcclChannelDescInit(&hcclDesc, 1), HCCL_SUCCESS);
+    hcclDesc.channelProtocol = COMM_PROTOCOL_ROCE;
+    CreateEndpointDesc(hcclDesc.localEndpoint, COMM_PROTOCOL_ROCE, "1.0.0.0");
+    CreateEndpointDesc(hcclDesc.remoteEndpoint, COMM_PROTOCOL_ROCE, "2.0.0.0");
+
+    HcommChannelDesc hcommDesc = MyRankUtils::ChannelDescHccl2Hcomm(hcclDesc, config);
+    hcommDesc.exchangeAllMems = false;
+    hcommDesc.roceAttr.queueNum = 5;
+    std::vector<uint16_t> srcPortBuf;
+
+    ASSERT_NO_FATAL_FAILURE(
+        ExpectFillRoceSrcPortListSuccess(hcclDesc, hcommDesc, srcPortBuf, {20001, 20002, 20001, 20002, 20001}));
+    EXPECT_EQ(g_hostConfigReadKeys, (std::vector<HccnCfgKey>{HCCN_CFG_UDP_PORT_MODE, HCCN_CFG_MULTI_QP_UDP_PORTS}));
+
+    g_hostConfigReadKeys.clear();
+    g_hostMultiQpMode.clear();
+    ASSERT_NO_FATAL_FAILURE(
+        ExpectFillRoceSrcPortListSuccess(hcclDesc, hcommDesc, srcPortBuf, {10001, 10002, 10001, 10002, 10001}));
+    EXPECT_EQ(g_hostConfigReadKeys, (std::vector<HccnCfgKey>{HCCN_CFG_UDP_PORT_MODE}));
+
+    g_hostConfigReadKeys.clear();
+    g_getDevicePhyIdResult = HCCL_E_RUNTIME;
+    ASSERT_NO_FATAL_FAILURE(
+        ExpectFillRoceSrcPortListSuccess(hcclDesc, hcommDesc, srcPortBuf, {10001, 10002, 10001, 10002, 10001}));
+    EXPECT_TRUE(g_hostConfigReadKeys.empty());
+
+    g_getDevicePhyIdResult = HCCL_SUCCESS;
+    g_getDeviceResult = HCCL_E_RUNTIME;
+    const u32 phyIdCallCount = g_getDevicePhyIdCallCount;
+    ASSERT_NO_FATAL_FAILURE(
+        ExpectFillRoceSrcPortListSuccess(hcclDesc, hcommDesc, srcPortBuf, {10001, 10002, 10001, 10002, 10001}));
+    EXPECT_EQ(g_getDevicePhyIdCallCount, phyIdCallCount);
+    EXPECT_TRUE(g_hostConfigReadKeys.empty());
+
+    g_getDeviceResult = HCCL_SUCCESS;
+    portConfig.ipPairToPorts.clear();
+    EXPECT_EQ(MyRankUtils::FillRoceSrcPortList(hcclDesc, hcommDesc, srcPortBuf), HCCL_SUCCESS);
+    EXPECT_EQ(hcommDesc.roceAttr.srcPortList, nullptr);
+
+    g_hostMultiQpMode = "multi_qp";
+    g_hostMultiQpPorts = "30001";
+    hcommDesc.roceAttr.queueNum = 3;
+    ASSERT_NO_FATAL_FAILURE(ExpectFillRoceSrcPortListSuccess(hcclDesc, hcommDesc, srcPortBuf, {30001, 30001, 30001}));
+
+    hcommDesc.exchangeAllMems = true;
+    const u32 getDeviceCallCount = g_getDeviceCallCount;
+    const u32 skipPhyIdCallCount = g_getDevicePhyIdCallCount;
+    EXPECT_EQ(MyRankUtils::FillRoceSrcPortList(hcclDesc, hcommDesc, srcPortBuf), HCCL_SUCCESS);
+    EXPECT_EQ(hcommDesc.roceAttr.srcPortList, nullptr);
+    EXPECT_EQ(g_getDeviceCallCount, getDeviceCallCount);
+    EXPECT_EQ(g_getDevicePhyIdCallCount, skipPhyIdCallCount);
 
     portConfig.ipPairToPorts.clear();
 }

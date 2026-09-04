@@ -176,3 +176,17 @@ HcclResult HrtRaGetTpAttrAsync(
 }
 
 } // namespace Hccl
+
+extern "C" HCCP_ATTRI_VISI_DEF int
+RaGetHccnCfg(struct RaInfo* info, enum HccnCfgKey key, char* value, unsigned int* valueLen)
+{
+    (void)info;
+    (void)key;
+    if (value != nullptr && valueLen != nullptr && *valueLen > 0U) {
+        value[0] = '\0';
+    }
+    if (valueLen != nullptr) {
+        *valueLen = 0U;
+    }
+    return 0;
+}

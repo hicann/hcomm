@@ -108,6 +108,165 @@ inline const char* GetTlsStatusStr(Hccl::TlsStatus tlsStatus)
     return "UNKNOWN";
 }
 
+bool ParseStrictDecimal(const std::string& value, uint32_t minValue, uint32_t maxValue, uint32_t& parsed)
+{
+    const auto isDecimalDigit = [](unsigned char character) {
+        return std::isdigit(character) != 0;
+    };
+    const bool hasValidDecimalFormat = !value.empty() && std::all_of(value.begin(), value.end(), isDecimalDigit);
+    if (!hasValidDecimalFormat) {
+        HCCL_WARNING("[%s] value[%s] is not a valid decimal number", __func__, value.c_str());
+        return false;
+    }
+
+    errno = 0;
+    char* end = nullptr;
+    const unsigned long number = std::strtoul(value.c_str(), &end, 10);
+    if (errno == ERANGE || end != value.c_str() + value.size()) {
+        HCCL_WARNING("[%s] parse value[%s] failed", __func__, value.c_str());
+        return false;
+    }
+    if (number < minValue || number > maxValue) {
+        HCCL_WARNING("[%s] value[%s] is out of range[%u, %u]", __func__, value.c_str(), minValue, maxValue);
+        return false;
+    }
+
+    parsed = static_cast<uint32_t>(number);
+    return true;
+}
+
+bool ParseMultiQpUdpPorts(const std::string& value, std::vector<std::uint16_t>& ports)
+{
+    if (value.empty()) {
+        HCCL_WARNING("[%s] ports config is empty", __func__);
+        return false;
+    }
+
+    std::vector<std::uint16_t> parsedPorts;
+    std::size_t start = 0;
+    while (start <= value.size()) {
+        const std::size_t comma = value.find(',', start);
+        const std::string token = value.substr(start, comma == std::string::npos ? std::string::npos : comma - start);
+        uint32_t port = 0;
+        if (!ParseStrictDecimal(token, 1, Hccl::MultiQpSrcPortConfig::CONFIG_SRC_PORT_ID_MAX, port)) {
+            HCCL_WARNING("[%s] invalid port[%s]", __func__, token.c_str());
+            return false;
+        }
+        parsedPorts.emplace_back(static_cast<std::uint16_t>(port));
+        if (parsedPorts.size() > Hccl::MultiQpSrcPortConfig::CONFIG_SRC_PORT_NUM_MAX) {
+            HCCL_WARNING(
+                "[%s] ports count[%zu] exceeds the maximum[%u]", __func__, parsedPorts.size(),
+                Hccl::MultiQpSrcPortConfig::CONFIG_SRC_PORT_NUM_MAX);
+            return false;
+        }
+        if (comma == std::string::npos) {
+            break;
+        }
+        start = comma + 1;
+    }
+
+    ports = std::move(parsedPorts);
+    return true;
+}
+
+bool ReadHostConfigValue(RaInfo& info, HccnCfgKey key, std::string& value)
+{
+    std::vector<char> buffer(HOST_NIC_CONFIG_BUFFER_SIZE, '\0');
+    uint32_t valueLen = static_cast<uint32_t>(buffer.size());
+    const int ret = RaGetHccnCfg(&info, key, buffer.data(), &valueLen);
+    // 配置文件不存在或配置项为空时，RaGetHccnCfg返回成功和空值，不会进入该分支
+    if (ret != 0) {
+        HCCL_WARNING("[%s] RaGetHccnCfg failed, phyId[%u], key[%d], ret[%d]", __func__, info.phyId, key, ret);
+        return false;
+    }
+
+    valueLen = std::min<uint32_t>(valueLen, static_cast<uint32_t>(buffer.size()));
+    value.assign(buffer.data(), valueLen);
+    if (!value.empty() && value.back() == '\0') {
+        value.pop_back();
+    }
+    return true;
+}
+
+static bool
+ReadHostNicMultiQpConfigItem(uint32_t devicePhyId, HccnCfgKey key, const char* itemName, std::string& itemValue)
+{
+    RaInfo info{};
+    info.mode = NETWORK_PEER_ONLINE;
+    info.phyId = devicePhyId;
+    std::string mode;
+    if (!ReadHostConfigValue(info, HCCN_CFG_UDP_PORT_MODE, mode)) {
+        return false;
+    }
+    if (mode.empty()) {
+        HCCL_WARNING("[%s] no host multi-qp config, phyId[%u]", __func__, devicePhyId);
+        return false;
+    }
+    if (mode != "multi_qp") {
+        HCCL_WARNING("[%s] invalid udp_port_mode[%s], phyId[%u]", __func__, mode.c_str(), devicePhyId);
+        return false;
+    }
+
+    if (!ReadHostConfigValue(info, key, itemValue)) {
+        return false;
+    }
+    if (itemValue.empty()) {
+        HCCL_WARNING("[%s] incomplete host multi-qp config, phyId[%u] %s[0]", __func__, devicePhyId, itemName);
+        return false;
+    }
+    return true;
+}
+
+void ReadHostNicMultiQpCount(uint32_t& qpCount)
+{
+    qpCount = 0;
+    s32 deviceLogicId = INVALID_INT;
+    uint32_t devicePhyId = INVALID_UINT;
+    if ((hrtGetDevice(&deviceLogicId) != HCCL_SUCCESS)
+        || (hrtGetDevicePhyIdByIndex(static_cast<uint32_t>(deviceLogicId), devicePhyId, false) != HCCL_SUCCESS)) {
+        return;
+    }
+
+    std::string count;
+    if (!ReadHostNicMultiQpConfigItem(devicePhyId, HCCN_CFG_MULTI_QP_COUNT, "multi_qp_count", count)) {
+        return;
+    }
+
+    uint32_t parsedQpCount = 0;
+    if (!ParseStrictDecimal(count, 1, Hccl::MultiQpSrcPortConfig::CONFIG_SRC_PORT_NUM_MAX, parsedQpCount)) {
+        HCCL_WARNING("[%s] invalid multi_qp_count[%s], phyId[%u]", __func__, count.c_str(), devicePhyId);
+        return;
+    }
+
+    qpCount = parsedQpCount;
+    HCCL_INFO("[%s] host config valid, phyId[%u] count[%u]", __func__, devicePhyId, qpCount);
+}
+
+void ReadHostNicMultiQpUdpPorts(std::vector<std::uint16_t>& qpUdpPorts)
+{
+    qpUdpPorts.clear();
+    s32 deviceLogicId = INVALID_INT;
+    uint32_t devicePhyId = INVALID_UINT;
+    if ((hrtGetDevice(&deviceLogicId) != HCCL_SUCCESS)
+        || (hrtGetDevicePhyIdByIndex(static_cast<uint32_t>(deviceLogicId), devicePhyId, false) != HCCL_SUCCESS)) {
+        return;
+    }
+
+    std::string ports;
+    if (!ReadHostNicMultiQpConfigItem(devicePhyId, HCCN_CFG_MULTI_QP_UDP_PORTS, "multi_qp_udp_ports", ports)) {
+        return;
+    }
+
+    std::vector<std::uint16_t> parsedQpUdpPorts;
+    if (!ParseMultiQpUdpPorts(ports, parsedQpUdpPorts)) {
+        HCCL_WARNING("[%s] invalid multi_qp_udp_ports[%s], phyId[%u]", __func__, ports.c_str(), devicePhyId);
+        return;
+    }
+
+    qpUdpPorts = std::move(parsedQpUdpPorts);
+    HCCL_INFO("[%s] host config valid, phyId[%u] ports[%zu]", __func__, devicePhyId, qpUdpPorts.size());
+}
+
 } // namespace MyRankUtils
 
 HcclResult MyRankUtils::FillRoceSrcPortList(
@@ -120,28 +279,33 @@ HcclResult MyRankUtils::FillRoceSrcPortList(
             hcommDesc.exchangeAllMems);
         return HCCL_SUCCESS;
     }
-    const auto& qpSrcPortConfig = Hccl::EnvConfig::GetInstance().GetRdmaConfig().GetMultiQpSrcPortConfig();
-    if (!qpSrcPortConfig.IsAvailable()) {
-        HCCL_INFO(
-            "[%s] skip: multiQpSrcPortConfig not available (env HCCL_RDMA_QP_PORT_CONFIG_PATH unset or "
-            "MultiQpSrcPort.cfg empty)",
-            __func__);
-        return HCCL_SUCCESS;
-    }
-    Hccl::IpAddress localIp;
-    Hccl::IpAddress remoteIp;
-    HcclResult localRet = CommAddrToIpAddress(hcclDesc.localEndpoint.commAddr, localIp);
-    HcclResult remoteRet = CommAddrToIpAddress(hcclDesc.remoteEndpoint.commAddr, remoteIp);
-    CHK_PRT_RET(
-        localRet != HCCL_SUCCESS || remoteRet != HCCL_SUCCESS,
-        HCCL_ERROR("[%s] CommAddrToIpAddress failed: localRet[%d] remoteRet[%d]", __func__, localRet, remoteRet),
-        HCCL_E_INTERNAL);
-    auto ports = Hccl::GetMultiQpSrcPortsByIpPair(qpSrcPortConfig, localIp, remoteIp);
+
+    std::vector<std::uint16_t> ports;
+    ReadHostNicMultiQpUdpPorts(ports);
     if (ports.empty()) {
-        HCCL_INFO(
-            "[%s] skip: no matching ports for localIp[%s] remoteIp[%s]", __func__, localIp.GetIpStr().c_str(),
-            remoteIp.GetIpStr().c_str());
-        return HCCL_SUCCESS;
+        const auto& qpSrcPortConfig = Hccl::EnvConfig::GetInstance().GetRdmaConfig().GetMultiQpSrcPortConfig();
+        if (!qpSrcPortConfig.IsAvailable()) {
+            HCCL_INFO(
+                "[%s] skip: multiQpSrcPortConfig not available (env HCCL_RDMA_QP_PORT_CONFIG_PATH unset or "
+                "MultiQpSrcPort.cfg empty)",
+                __func__);
+            return HCCL_SUCCESS;
+        }
+        Hccl::IpAddress localIp;
+        Hccl::IpAddress remoteIp;
+        HcclResult localRet = CommAddrToIpAddress(hcclDesc.localEndpoint.commAddr, localIp);
+        HcclResult remoteRet = CommAddrToIpAddress(hcclDesc.remoteEndpoint.commAddr, remoteIp);
+        CHK_PRT_RET(
+            localRet != HCCL_SUCCESS || remoteRet != HCCL_SUCCESS,
+            HCCL_ERROR("[%s] CommAddrToIpAddress failed: localRet[%d] remoteRet[%d]", __func__, localRet, remoteRet),
+            HCCL_E_INTERNAL);
+        ports = Hccl::GetMultiQpSrcPortsByIpPair(qpSrcPortConfig, localIp, remoteIp);
+        if (ports.empty()) {
+            HCCL_INFO(
+                "[%s] skip: no matching ports for localIp[%s] remoteIp[%s]", __func__, localIp.GetIpStr().c_str(),
+                remoteIp.GetIpStr().c_str());
+            return HCCL_SUCCESS;
+        }
     }
     u32 queueNum = hcommDesc.roceAttr.queueNum;
     srcPortBuf.resize(queueNum);

@@ -239,7 +239,25 @@ private:
 
 namespace MyRankUtils {
 
+constexpr std::size_t HOST_NIC_CONFIG_BUFFER_SIZE = 2048;
+
+// 将 HCCL 通道描述转换为 HCOMM 通道描述。
 HcommChannelDesc ChannelDescHccl2Hcomm(const HcclChannelDesc& hcclDesc, const hccl::CommConfig& commConfig);
+
+// 将字符串解析为指定范围内的十进制整数。
+bool ParseStrictDecimal(const std::string& value, uint32_t minValue, uint32_t maxValue, uint32_t& parsed);
+
+// 将逗号分隔的字符串解析为多 QP UDP 端口列表。
+bool ParseMultiQpUdpPorts(const std::string& value, std::vector<std::uint16_t>& ports);
+
+// 读取指定的 Host 网卡配置项。
+bool ReadHostConfigValue(RaInfo& info, HccnCfgKey key, std::string& value);
+
+// 读取并校验 Host 网卡的多 QP 数量。
+void ReadHostNicMultiQpCount(uint32_t& qpCount);
+
+// 读取并校验 Host 网卡的多 QP UDP 端口列表。
+void ReadHostNicMultiQpUdpPorts(std::vector<std::uint16_t>& qpUdpPorts);
 
 HcclResult
 FillRoceSrcPortList(const HcclChannelDesc& hcclDesc, HcommChannelDesc& hcommDesc, std::vector<uint16_t>& srcPortBuf);

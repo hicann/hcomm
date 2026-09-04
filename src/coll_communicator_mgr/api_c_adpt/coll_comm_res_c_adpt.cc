@@ -71,7 +71,16 @@ static u32 ResolveQueueNum(const Hccl::EnvRdmaConfig& rdmaConfig, const HcclChan
     if (channelDesc.roceAttr.queueNum != INVALID_UINT) { // 用户有配置qp数量，使用用户配置的
         return channelDesc.roceAttr.queueNum;
     }
-    // 查询channelDesc，localEndpoint与remoteEndpoint的CommAddr字段，得到ip对
+
+    if (channelDesc.channelProtocol == COMM_PROTOCOL_ROCE
+        && channelDesc.localEndpoint.loc.locType == ENDPOINT_LOC_TYPE_HOST) {
+        u32 hostQpCount = 0;
+        MyRankUtils::ReadHostNicMultiQpCount(hostQpCount);
+        if (hostQpCount > 0) {
+            return hostQpCount;
+        }
+    }
+
     const auto& qpSrcPortConfig = rdmaConfig.GetMultiQpSrcPortConfig();
     const CommAddr& localCommAddr = channelDesc.localEndpoint.commAddr;
     const CommAddr& remoteCommAddr = channelDesc.remoteEndpoint.commAddr;

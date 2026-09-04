@@ -62,6 +62,86 @@ static int StubRaGetHccnCfgRoceQosDscp(struct RaInfo* info, enum HccnCfgKey key,
     return 0;
 }
 
+namespace {
+// UT stub state is only used by the single-threaded ResolveQueueNum test.
+s32 g_hostConfigDeviceLogicId = 0;
+u32 g_hostConfigDevicePhyId = 0;
+HcclResult g_getDeviceResult = HCCL_SUCCESS;
+HcclResult g_getDevicePhyIdResult = HCCL_SUCCESS;
+std::string g_hostMultiQpMode;
+std::string g_hostMultiQpCount;
+std::vector<HccnCfgKey> g_hostConfigReadKeys;
+u32 g_getDeviceCallCount = 0;
+u32 g_getDevicePhyIdCallCount = 0;
+
+void ResetHostMultiQpCountStub()
+{
+    g_hostConfigDeviceLogicId = 6;
+    g_hostConfigDevicePhyId = 3;
+    g_getDeviceResult = HCCL_SUCCESS;
+    g_getDevicePhyIdResult = HCCL_SUCCESS;
+    g_hostMultiQpMode = "multi_qp";
+    g_hostMultiQpCount = "4";
+    g_hostConfigReadKeys.clear();
+    g_getDeviceCallCount = 0;
+    g_getDevicePhyIdCallCount = 0;
+}
+
+HcclResult StubGetDeviceForHostMultiQp(s32* deviceLogicId)
+{
+    ++g_getDeviceCallCount;
+    if (g_getDeviceResult == HCCL_SUCCESS && deviceLogicId != nullptr) {
+        *deviceLogicId = g_hostConfigDeviceLogicId;
+    }
+    return g_getDeviceResult;
+}
+
+HcclResult StubGetDevicePhyIdForHostMultiQp(u32 deviceLogicId, u32& devicePhyId, bool isRefresh)
+{
+    ++g_getDevicePhyIdCallCount;
+    EXPECT_EQ(deviceLogicId, static_cast<u32>(g_hostConfigDeviceLogicId));
+    EXPECT_FALSE(isRefresh);
+    if (g_getDevicePhyIdResult == HCCL_SUCCESS) {
+        devicePhyId = g_hostConfigDevicePhyId;
+    }
+    return g_getDevicePhyIdResult;
+}
+
+int StubRaGetHostMultiQpCount(RaInfo* info, HccnCfgKey key, char* value, unsigned int* valueLen)
+{
+    if (info == nullptr || value == nullptr || valueLen == nullptr) {
+        return -1;
+    }
+    EXPECT_EQ(info->mode, NETWORK_PEER_ONLINE);
+    EXPECT_EQ(info->phyId, g_hostConfigDevicePhyId);
+    EXPECT_EQ(*valueLen, MyRankUtils::HOST_NIC_CONFIG_BUFFER_SIZE);
+    g_hostConfigReadKeys.emplace_back(key);
+
+    const std::string* configValue = nullptr;
+    if (key == HCCN_CFG_UDP_PORT_MODE) {
+        configValue = &g_hostMultiQpMode;
+    } else if (key == HCCN_CFG_MULTI_QP_COUNT) {
+        configValue = &g_hostMultiQpCount;
+    }
+    if (configValue == nullptr) {
+        *valueLen = 0;
+        return 0;
+    }
+    if (configValue->empty()) {
+        *valueLen = 0;
+        return 0;
+    }
+    const std::size_t requiredValueLen = configValue->size() + 1U;
+    if (*valueLen < requiredValueLen) {
+        return -1;
+    }
+    std::copy(configValue->begin(), configValue->end(), value);
+    value[configValue->size()] = '\0';
+    *valueLen = static_cast<unsigned int>(requiredValueLen);
+    return 0;
+}
+} // namespace
+
 static HcclMemHandle g_userMemHandle = reinterpret_cast<HcclMemHandle>(0x1111);
 static HcclMemHandle g_symMemHandle = reinterpret_cast<HcclMemHandle>(0x2222);
 static ChannelHandle g_testChannel = static_cast<ChannelHandle>(0x3333);
@@ -277,6 +357,77 @@ TEST_F(HcclChannelDescTest, Ut_ProcessRoceChannelDesc_When_IsCommunicatorV2_Is_T
     MOCKER(HcommDpuChannelRegisterDfx).stubs().will(returnValue(0));
     ret = HcclChannelAcquire(comm, CommEngine::COMM_ENGINE_CPU, channelDesc.data(), 1, channels.data());
     EXPECT_EQ(ret, HCCL_SUCCESS);
+}
+
+TEST_F(HcclChannelDescTest, Ut_ProcessRoceChannelDesc_HostCountPriority)
+{
+    auto& portConfig = const_cast<Hccl::MultiQpSrcPortConfig&>(
+        Hccl::EnvConfig::GetInstance().GetRdmaConfig().GetMultiQpSrcPortConfig());
+    portConfig.ipPairToPorts.clear();
+    portConfig.ipPairToPorts["1.0.0.0,2.0.0.0"] = {10001, 10002, 10003};
+    ResetHostMultiQpCountStub();
+    MOCKER(hrtGetDevice).stubs().will(invoke(StubGetDeviceForHostMultiQp));
+    MOCKER(hrtGetDevicePhyIdByIndex).stubs().will(invoke(StubGetDevicePhyIdForHostMultiQp));
+    MOCKER(RaGetHccnCfg).stubs().will(invoke(StubRaGetHostMultiQpCount));
+
+    EndpointLocType localLocType = ENDPOINT_LOC_TYPE_HOST;
+    auto resolveQueueNum = [this, &localLocType](uint32_t requestedQueueNum) {
+        HcclChannelDesc input{};
+        HcclChannelDesc output{};
+        InitRoceChannelDesc(input);
+        EXPECT_EQ(HcclChannelDescInit(&output, 1), HCCL_SUCCESS);
+        input.roceAttr.queueNum = requestedQueueNum;
+        input.localEndpoint.loc.locType = localLocType;
+        input.localEndpoint.commAddr.type = COMM_ADDR_TYPE_IP_V4;
+        input.localEndpoint.commAddr.addr = Hccl::IpAddress("1.0.0.0").GetBinaryAddress().addr;
+        input.remoteEndpoint.commAddr.type = COMM_ADDR_TYPE_IP_V4;
+        input.remoteEndpoint.commAddr.addr = Hccl::IpAddress("2.0.0.0").GetBinaryAddress().addr;
+        EXPECT_EQ(ProcessHcclResPackReq(input, output, hcclCommPtr.get()), HCCL_SUCCESS);
+        return output.roceAttr.queueNum;
+    };
+
+    EXPECT_EQ(resolveQueueNum(7), 7U);
+    EXPECT_EQ(g_getDeviceCallCount, 0U);
+    EXPECT_TRUE(g_hostConfigReadKeys.empty());
+
+    EXPECT_EQ(resolveQueueNum(INVALID_UINT), 4U);
+    EXPECT_EQ(g_getDeviceCallCount, 1U);
+    EXPECT_EQ(g_getDevicePhyIdCallCount, 1U);
+    EXPECT_EQ(g_hostConfigReadKeys, (std::vector<HccnCfgKey>{HCCN_CFG_UDP_PORT_MODE, HCCN_CFG_MULTI_QP_COUNT}));
+
+    localLocType = ENDPOINT_LOC_TYPE_DEVICE;
+    g_hostConfigReadKeys.clear();
+    const u32 getDeviceCallCount = g_getDeviceCallCount;
+    EXPECT_EQ(resolveQueueNum(INVALID_UINT), 3U);
+    EXPECT_EQ(g_getDeviceCallCount, getDeviceCallCount);
+    EXPECT_TRUE(g_hostConfigReadKeys.empty());
+
+    localLocType = ENDPOINT_LOC_TYPE_HOST;
+    g_hostConfigReadKeys.clear();
+    g_hostMultiQpMode.clear();
+    EXPECT_EQ(resolveQueueNum(INVALID_UINT), 3U);
+    EXPECT_EQ(g_hostConfigReadKeys, (std::vector<HccnCfgKey>{HCCN_CFG_UDP_PORT_MODE}));
+
+    g_hostConfigReadKeys.clear();
+    g_getDevicePhyIdResult = HCCL_E_RUNTIME;
+    EXPECT_EQ(resolveQueueNum(INVALID_UINT), 3U);
+    EXPECT_TRUE(g_hostConfigReadKeys.empty());
+
+    g_getDevicePhyIdResult = HCCL_SUCCESS;
+    g_getDeviceResult = HCCL_E_RUNTIME;
+    const u32 phyIdCallCount = g_getDevicePhyIdCallCount;
+    EXPECT_EQ(resolveQueueNum(INVALID_UINT), 3U);
+    EXPECT_EQ(g_getDevicePhyIdCallCount, phyIdCallCount);
+    EXPECT_TRUE(g_hostConfigReadKeys.empty());
+
+    g_getDeviceResult = HCCL_SUCCESS;
+    portConfig.ipPairToPorts.clear();
+    EXPECT_EQ(resolveQueueNum(INVALID_UINT), Hccl::EnvConfig::GetInstance().GetRdmaConfig().GetRdmaQueueNum());
+
+    MOCKER_CPP(&hccl::hcclComm::IsCommunicatorV2).stubs().will(returnValue(false));
+    EXPECT_EQ(resolveQueueNum(6), 6U);
+
+    portConfig.ipPairToPorts.clear();
 }
 
 TEST_F(HcclChannelDescTest, Ut_ProcessRoceChannelDesc_When_TcIsInvaild_ReturnHCCLEPARA)
