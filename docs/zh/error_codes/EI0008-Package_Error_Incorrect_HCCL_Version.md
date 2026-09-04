@@ -22,4 +22,4 @@ The Toolkit (cann-hcomm) and ops (cann-hccl) versions are inconsistent. The loca
 
 ## 解决方法
 
-请安装相同的版本，本端的toolkit\(cann-hcomm\)版本、ops\(cann-hccl\)版本必须和远端对应的版本一致。
+请安装相同的版本，本端的toolkit (cann-hcomm)版本、ops (cann-hccl)版本必须和远端对应的版本一致。

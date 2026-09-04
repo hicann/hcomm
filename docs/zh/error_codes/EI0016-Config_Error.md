@@ -11,7 +11,7 @@ Value %s for config %s is invalid. Expected value: %s.
 报错示例如下：
 
 ```text
-Value Disable for config  "tls"  is invalid. Expected value:  "All ranks are consistent. Current status: rankList for enabled tls:[80.48.25.34/0]; rankList for disabled tls:[80.48.25.34/1,2,3,4,5,6,7]; rankList for query failure tls:N/A." .
+Value Disable for config "tls" is invalid. Expected value: "All ranks are consistent. Current status: rankList for enabled tls:[80.48.25.34/0]; rankList for disabled tls:[80.48.25.34/1,2,3,4,5,6,7]; rankList for query failure tls:N/A".
 ```
 
 ## 解决方法

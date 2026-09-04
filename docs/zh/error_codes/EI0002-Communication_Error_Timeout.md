@@ -5,13 +5,13 @@
 报错格式如下，占位符%s的含义依次为对端Rank ID、任务信息、通信算子信息、通信域信息：
 
 ```text
-An timeout occurs when the Notify register waits for execution. Waiting peer rank: %s; task information: %s; communication operator information: %s; communicator: %s.
+A timeout occurs when the Notify register waits for execution. Waiting peer rank: %s; task information: %s; communication operator information: %s; communicator: %s.
 ```
 
 报错示例如下：
 
 ```text
-An timeout occurs when the Notify register waits for execution. Waiting peer rank: 4; task information: streamID:[90], taskID[686], taskType[Notify Wait], tag[AllReduce_80.48.9.154%enp48s3u1u1_60000_0_1779783710697217ringAllReduceMeshSmallCountExecutor_device], AlgType(level 0-1-2):[ring-ring-NHR].; communication operator information: notify id:[0x00000000000018fc], stage:[0], remote rank:[4]; communicator: none.
+A timeout occurs when the Notify register waits for execution. Waiting peer rank: 4; task information: streamID:[90], taskID[686], taskType[Notify Wait], tag[AllReduce_80.48.9.154%enp48s3u1u1_60000_0_1779783710697217ringAllReduceMeshSmallCountExecutor_device], AlgType(level 0-1-2):[ring-ring-NHR].; communication operator information: notify id:[0x00000000000018fc], stage:[0], remote rank:[4]; communicator: none.
 ```
 
 ## 可能原因

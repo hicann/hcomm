@@ -16,4 +16,4 @@ P2P communication failed. Reason: Device ID 0 in module 0 and device ID 9 in mod
 
 ## Solution
 
-Ensure that the NPU card is normal and entering environment variables 'export HCCL_INTRA_ROCE_ENABLE=1'.
+Ensure that the NPU card is normal and enter environment variable `export HCCL_INTRA_ROCE_ENABLE=1`.
