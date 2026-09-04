@@ -860,7 +860,7 @@ typedef enum {
     SOC_TYPE_CLOUD_V3,  /* Ascend910A3 */
     SOC_TYPE_BS9SX1A,   /* BS9SX1A */
     SOC_TYPE_CLOUD_V4,  /* Ascend950 */
-    SOC_TYPE_CLOUD_V5,  /* Ascend910_96 */
+    SOC_TYPE_CLOUD_V5,  /* Ascend960 */
     SOC_TYPE_MC62CM12A, /* MC62CM12A */
     SOC_TYPE_MAX
 } HAL_KERNEL_SOC_TYPE;
@@ -1090,7 +1090,7 @@ enum txatu_user_module_type { TXATU_USER_MODULE_RTS = 0x0, TXATU_USER_MODULE_MAX
  * @param [in]  host_addr_size: host physical address size
  * @param [out]  device_phy_addr: device physical address
  * @return   0 Success, others for fail
- * @note Support: Ascend950/Ascend910_96
+ * @note Support: Ascend950/Ascend960
  */
 int hal_kernel_agentdrv_add_tx_atu(
     u32 udevid, enum txatu_user_module_type type, u64 host_phy_addr, u64 host_addr_size, u64* device_phy_addr);
@@ -1103,7 +1103,7 @@ int hal_kernel_agentdrv_add_tx_atu(
  * @param [in]  host_phy_addr: host physical address to update
  * @param [in]  host_addr_size: host physical address size
  * @return   0 Success, others for fail
- * @note Support: Ascend950/Ascend910_96
+ * @note Support: Ascend950/Ascend960
  */
 
 int hal_kernel_agentdrv_update_tx_atu(
@@ -1114,7 +1114,7 @@ int hal_kernel_agentdrv_update_tx_atu(
  * @param [in]  udevid: unified device id in device
  * @param [in]  type: txatu_user_module_type
  * @return   0 Success, others for fail
- * @note Support: Ascend950/Ascend910_96
+ * @note Support: Ascend950/Ascend960
  */
 int hal_kernel_agentdrv_del_tx_atu(u32 udevid, enum txatu_user_module_type type);
 

@@ -1970,7 +1970,7 @@ DLLEXPORT DV_ONLINE DVresult halShmemDestroyHandle(const char* name);
  * @brief Configure the whitelist of nodes with ipc mem shared memory
  * @attention Available online, not offline. mutually exclusive with halShmemSetAttribute interface.
  * 1. The maximum number of PIDs that can be set for a shmem is:
- *     for Ascend950, Ascend910_55, Ascend910_96, is 65535;
+ *     for Ascend950, Ascend910_55, Ascend960, is 65535;
  *     for Ascend310B, Ascend910, Ascend310P, Ascend910B, Ascend910_93, is 32768.
  * @param [in] name: name used for sharing between processes
  * @param [in] pid: host pid whitelist array

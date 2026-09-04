@@ -60,8 +60,7 @@ DevType HrtGetDeviceType()
         return DevType::DEV_TYPE_950;
     }
 
-    if (targetChipVerStr.find("Ascend910_96") != std::string::npos
-        || targetChipVerStr.find("Ascend960") != std::string::npos
+    if (targetChipVerStr.find("Ascend960") != std::string::npos
         || targetChipVerStr.find("ascend960") != std::string::npos) {
         HCCL_INFO("[HrtGetDeviceType]DeviceType = DevType::DEV_TYPE_960.");
         return DevType::DEV_TYPE_960;

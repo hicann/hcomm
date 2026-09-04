@@ -129,11 +129,6 @@ HcclResult hrtGetHcclV2Support([[maybe_unused]] bool* isSupport)
         *isSupport = true;
         return HcclResult::HCCL_SUCCESS;
     }
-    if (strstr(socNamePtr, "Ascend910_96") != nullptr) {
-        g_socV2SupportStatus = HcclV2SupportStatus::SUPPORTED;
-        *isSupport = true;
-        return HcclResult::HCCL_SUCCESS;
-    }
     if (strstr(socNamePtr, "Ascend960") != nullptr || strstr(socNamePtr, "ascend960") != nullptr) {
         g_socV2SupportStatus = HcclV2SupportStatus::SUPPORTED;
         *isSupport = true;
@@ -575,8 +570,7 @@ HcclResult hrtGetDeviceTypeBySocVersion(std::string& socVersion, DevType& devTyp
         return HCCL_SUCCESS;
     }
 
-    if (socVersion.find("Ascend910_96") != std::string::npos || socVersion.find("Ascend960") != std::string::npos
-        || socVersion.find("ascend960") != std::string::npos) {
+    if (socVersion.find("Ascend960") != std::string::npos || socVersion.find("ascend960") != std::string::npos) {
         devType = DevType::DEV_TYPE_960;
         return HCCL_SUCCESS;
     }
@@ -642,8 +636,7 @@ HcclResult __hrtGetDeviceType(DevType& devType)
         return HCCL_SUCCESS;
     }
 
-    if (socName.find("Ascend910_96") != std::string::npos || socName.find("Ascend960") != std::string::npos
-        || socName.find("ascend960") != std::string::npos) {
+    if (socName.find("Ascend960") != std::string::npos || socName.find("ascend960") != std::string::npos) {
         devType = DevType::DEV_TYPE_960;
         g_deviceType = devType;
         HCCL_DEBUG("[hrtGetDeviceType]DeviceType = %d.", static_cast<s32>(g_deviceType));

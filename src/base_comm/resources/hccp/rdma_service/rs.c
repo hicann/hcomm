@@ -2233,8 +2233,8 @@ RS_ATTRI_VISI_DEF enum ProductType RsGetProductType(int devId)
         type = PRODUCT_TYPE_910_93;
     } else if (fnmatch("910B[a-zA-Z1-9_]*", (const char *)chipInfo.name, 0) == 0) {
         type = PRODUCT_TYPE_910B;
-    } else if (fnmatch("910_96[a-zA-Z1-9_]*", (const char *)chipInfo.name, 0) == 0) {
-        type = PRODUCT_TYPE_910_96;
+    } else if (fnmatch("960[a-zA-Z1-9_]*", (const char *)chipInfo.name, 0) == 0) {
+        type = PRODUCT_TYPE_960;
     } else if (fnmatch("910[a-zA-Z1-9]*", (const char *)chipInfo.name, 0) == 0) {
         type = PRODUCT_TYPE_910;
     } else if (fnmatch("310p[a-zA-Z1-9]*", (const char *)chipInfo.name, 0) == 0) {

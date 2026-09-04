@@ -103,8 +103,7 @@ bool IsSupportHCCLV2(const char* socNamePtr)
         return true;
     }
 
-    if (targetChipVerStr.find("Ascend910_96") != std::string::npos
-        || targetChipVerStr.find("Ascend960") != std::string::npos
+    if (targetChipVerStr.find("Ascend960") != std::string::npos
         || targetChipVerStr.find("ascend960") != std::string::npos) {
         return true;
     }

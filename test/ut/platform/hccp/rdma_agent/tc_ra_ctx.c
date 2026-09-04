@@ -121,7 +121,7 @@ void TcRaGetDevEidInfoList()
 
 int StubDlHalGetChipInfo(unsigned int devId, halChipInfo* chipInfo)
 {
-    strncpy_s(chipInfo->name, 32, "910_96", 7);
+    strncpy_s(chipInfo->name, 32, "960", 7);
     return 0;
 }
 

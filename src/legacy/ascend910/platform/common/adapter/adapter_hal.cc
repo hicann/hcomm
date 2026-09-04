@@ -658,8 +658,7 @@ HcclResult hrtHalGetDeviceType(const uint32_t devId, DevType& devType)
         return HCCL_SUCCESS;
     }
 
-    if (chipName.find("Ascend910_96") != std::string::npos || chipName.find("Ascend960") != std::string::npos
-        || chipName.find("ascend960") != std::string::npos) {
+    if (chipName.find("Ascend960") != std::string::npos || chipName.find("ascend960") != std::string::npos) {
         devType = DevType::DEV_TYPE_960;
         return HCCL_SUCCESS;
     }
