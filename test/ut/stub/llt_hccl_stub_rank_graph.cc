@@ -90,4 +90,34 @@ std::shared_ptr<Hccl::RankGraph> RankGraphStub::Create2PGraph()
     rankGraph.InitInnerRanks();
     return std::make_shared<Hccl::RankGraph>(rankGraph);
 }
+
+std::shared_ptr<Hccl::RankGraph> RankGraphStub::Create1PGraph()
+{
+    Hccl::RankGraph rankGraph(0);
+    std::shared_ptr<Hccl::NetInstance> netInstLayer0 = InitNetInstance(0, "layer0");
+    std::shared_ptr<Hccl::NetInstance::Peer> peer0 = InitPeer(0, 0, 0, 60001);
+
+    uint32_t topoInstId = 0;
+    auto topoInstance = std::make_shared<Hccl::NetInstance::TopoInstance>(topoInstId);
+    std::unordered_map<uint32_t, std::shared_ptr<Hccl::NetInstance::TopoInstance>> topoInsts_;
+    topoInstance->topoType = Hccl::TopoType::MESH_1D;
+    std::set<Hccl::RankId> rankSet = {0};
+    topoInstance->ranks = std::move(rankSet);
+    topoInsts_[topoInstId] = topoInstance;
+    netInstLayer0->topoInsts_ = std::move(topoInsts_);
+
+    peer0->AddNetInstance(netInstLayer0);
+    netInstLayer0->AddRankId(peer0->GetRankId());
+    netInstLayer0->AddNode(peer0);
+
+    char rank0Address[] = "192.168.1.0";
+    Hccl::IpAddress rank0Addr(rank0Address);
+    auto iface0 = InitConnInterface(rank0Addr);
+    peer0->AddConnInterface(0, iface0);
+
+    rankGraph.AddPeer(peer0);
+    rankGraph.AddNetInstance(netInstLayer0);
+    rankGraph.InitInnerRanks();
+    return std::make_shared<Hccl::RankGraph>(rankGraph);
+}
 } // namespace hccl

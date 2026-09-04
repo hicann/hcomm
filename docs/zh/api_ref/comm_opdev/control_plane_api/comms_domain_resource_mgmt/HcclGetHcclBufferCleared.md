@@ -45,7 +45,7 @@ HcclResult HcclGetHcclBufferCleared(HcclComm comm, void **buffer, uint64_t *size
 
 ## 约束说明
 
-无。
+如果通信域仅包含一个rank则不会申请HCCL通信内存，出参`buffer`为空指针，`size`为0。
 
 ## 调用示例
 

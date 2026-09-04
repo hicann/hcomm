@@ -22,6 +22,7 @@ public:
     explicit RankGraphStub() = default;
     ~RankGraphStub() = default;
     std::shared_ptr<Hccl::RankGraph> Create2PGraph();
+    std::shared_ptr<Hccl::RankGraph> Create1PGraph();
 
 private:
     std::shared_ptr<Hccl::NetInstance::Peer>

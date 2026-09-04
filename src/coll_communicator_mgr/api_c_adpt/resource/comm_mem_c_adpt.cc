@@ -135,6 +135,12 @@ HcclResult GetHcclBufferWithClearFlag(HcclComm comm, void** buffer, uint64_t* si
     const std::string& commId = hcclComm->GetIdentifier();
     hccl::CollComm* collComm = hcclComm->GetCollComm();
     CHK_PTR_NULL(collComm);
+    if (collComm->GetRankSize() == 1) {
+        HCCL_RUN_WARNING("[%s] comm[%s] is single rank, return nullptr", __func__, commId.c_str());
+        *buffer = nullptr;
+        *size = 0;
+        return HCCL_SUCCESS;
+    }
     auto myRank = collComm->GetMyRank();
     CHK_PTR_NULL(myRank);
     CommMems* commMem = myRank->GetCommMems();
@@ -158,19 +164,25 @@ HcclResult HcclGetHcclBuffer(HcclComm comm, void** buffer, uint64_t* size)
 #endif
 
     auto* hcclComm = static_cast<hccl::hcclComm*>(comm);
+    std::string commId = hcclComm->GetIdentifier();
     CollComm* collComm = hcclComm->GetCollComm();
     hccl::MyRank* myRank = nullptr;
     if (collComm != nullptr) {
         myRank = collComm->GetMyRank();
-    }
-    if (collComm != nullptr && hcclComm->GetConnectMode() != 0 && myRank != nullptr) {
-        CommMems* commMem = myRank->GetCommMems();
-        CHK_PTR_NULL(commMem);
-        CHK_RET(commMem->GetHcclBuffer(*buffer, *size));
-        return HCCL_SUCCESS;
+        if (collComm->GetRankSize() == 1) {
+            HCCL_RUN_WARNING("[%s] comm[%s] is single rank, return nullptr", __func__, commId.c_str());
+            *buffer = nullptr;
+            *size = 0;
+            return HCCL_SUCCESS;
+        }
+        if (hcclComm->GetConnectMode() != 0 && myRank != nullptr) {
+            CommMems* commMem = myRank->GetCommMems();
+            CHK_PTR_NULL(commMem);
+            CHK_RET(commMem->GetHcclBuffer(*buffer, *size));
+            return HCCL_SUCCESS;
+        }
     }
 
-    std::string commId = hcclComm->GetIdentifier();
     HCCL_RUN_INFO("Entry-%s:comm[%s]", __func__, commId.c_str());
     HcclResult ret = HCCL_SUCCESS;
     CommBuffer commBuffer;
