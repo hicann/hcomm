@@ -553,8 +553,10 @@ TEST_F(AicpuTaskCacheEntryTest, SubmitCacheEntry_Success_OnlyWqe_Read)
     EXPECT_EQ(entry.SubmitCacheEntry(), HCCL_SUCCESS);
     EXPECT_TRUE(entry.wqeTaskArrayInfos_[0].locAddrRefreshInfoArray[0].needRefresh);
     EXPECT_EQ(entry.wqeTaskArrayInfos_[0].locAddrRefreshInfoArray[0].memIdx, 0U);
-    EXPECT_TRUE(entry.wqeTaskArrayInfos_[0].rmtAddrRefreshInfoArray[0].needRefresh);
-    EXPECT_EQ(entry.wqeTaskArrayInfos_[0].rmtAddrRefreshInfoArray[0].memIdx, 1U);
+
+    // 注意: WQE remote addr不再检查本地地址, 因此needRefresh预期为false, memIdx预期为默认值0U
+    EXPECT_FALSE(entry.wqeTaskArrayInfos_[0].rmtAddrRefreshInfoArray[0].needRefresh);
+    EXPECT_EQ(entry.wqeTaskArrayInfos_[0].rmtAddrRefreshInfoArray[0].memIdx, 0U);
 }
 
 TEST_F(AicpuTaskCacheEntryTest, SubmitCacheEntry_Success_OnlyWqe_WriteNonInline)
@@ -571,7 +573,9 @@ TEST_F(AicpuTaskCacheEntryTest, SubmitCacheEntry_Success_OnlyWqe_WriteNonInline)
 
     EXPECT_EQ(entry.SubmitCacheEntry(), HCCL_SUCCESS);
     EXPECT_TRUE(entry.wqeTaskArrayInfos_[0].locAddrRefreshInfoArray[0].needRefresh);
-    EXPECT_TRUE(entry.wqeTaskArrayInfos_[0].rmtAddrRefreshInfoArray[0].needRefresh);
+
+    // 注意: WQE remote addr不再检查本地地址, 因此needRefresh预期为false
+    EXPECT_FALSE(entry.wqeTaskArrayInfos_[0].rmtAddrRefreshInfoArray[0].needRefresh);
 }
 
 TEST_F(AicpuTaskCacheEntryTest, SubmitCacheEntry_Success_OnlyWqe_WriteInline)
@@ -587,7 +591,9 @@ TEST_F(AicpuTaskCacheEntryTest, SubmitCacheEntry_Success_OnlyWqe_WriteInline)
 
     EXPECT_EQ(entry.SubmitCacheEntry(), HCCL_SUCCESS);
     EXPECT_FALSE(entry.wqeTaskArrayInfos_[0].locAddrRefreshInfoArray[0].needRefresh);
-    EXPECT_TRUE(entry.wqeTaskArrayInfos_[0].rmtAddrRefreshInfoArray[0].needRefresh);
+
+    // 注意: WQE remote addr不再检查本地地址, 因此needRefresh预期为false
+    EXPECT_FALSE(entry.wqeTaskArrayInfos_[0].rmtAddrRefreshInfoArray[0].needRefresh);
 }
 
 TEST_F(AicpuTaskCacheEntryTest, SubmitCacheEntry_Success_OnlyWqe_WriteWithNotify)
@@ -604,7 +610,9 @@ TEST_F(AicpuTaskCacheEntryTest, SubmitCacheEntry_Success_OnlyWqe_WriteWithNotify
 
     EXPECT_EQ(entry.SubmitCacheEntry(), HCCL_SUCCESS);
     EXPECT_TRUE(entry.wqeTaskArrayInfos_[0].locAddrRefreshInfoArray[0].needRefresh);
-    EXPECT_TRUE(entry.wqeTaskArrayInfos_[0].rmtAddrRefreshInfoArray[0].needRefresh);
+
+    // 注意: WQE remote addr不再检查本地地址, 因此needRefresh预期为false
+    EXPECT_FALSE(entry.wqeTaskArrayInfos_[0].rmtAddrRefreshInfoArray[0].needRefresh);
 }
 
 TEST_F(AicpuTaskCacheEntryTest, SubmitCacheEntry_InvalidWqeType)
@@ -654,7 +662,9 @@ TEST_F(AicpuTaskCacheEntryTest, SubmitCacheEntry_Success_TokenInfoFlagSet)
 
     auto& tokenInfos = entry.tokenInfosMap_.begin()->second;
     EXPECT_TRUE(tokenInfos[0].needLocTokenIdFlag);
-    EXPECT_TRUE(tokenInfos[1].needRmtTokenIdAndValueFlag);
+
+    // 注意: WQE remote addr不再检查本地地址, 因此needRmtTokenIdAndValueFlag预期为false
+    EXPECT_FALSE(tokenInfos[1].needRmtTokenIdAndValueFlag);
 }
 
 // ===================== RefreshAndLaunch Tests =====================
@@ -696,8 +706,11 @@ TEST_F(AicpuTaskCacheEntryTest, RefreshAndLaunch_Success_SqeAndWqe)
     // 验证SubmitCacheEntry后AddrRefreshInfo已正确设置
     EXPECT_TRUE(entry.wqeTaskArrayInfos_[0].locAddrRefreshInfoArray[0].needRefresh);
     EXPECT_EQ(entry.wqeTaskArrayInfos_[0].locAddrRefreshInfoArray[0].memIdx, 0U);
-    EXPECT_TRUE(entry.wqeTaskArrayInfos_[0].rmtAddrRefreshInfoArray[0].needRefresh);
-    EXPECT_EQ(entry.wqeTaskArrayInfos_[0].rmtAddrRefreshInfoArray[0].memIdx, 1U);
+
+    // 注意: WQE remote addr不再检查本地地址, 因此needRefresh预期为false, memIdx为默认值0U
+    EXPECT_FALSE(entry.wqeTaskArrayInfos_[0].rmtAddrRefreshInfoArray[0].needRefresh);
+    EXPECT_EQ(entry.wqeTaskArrayInfos_[0].rmtAddrRefreshInfoArray[0].memIdx, 0U);
+
     EXPECT_TRUE(entry.sqeArrayInfos_[0].srcAddrRefreshInfoArray[0].needRefresh);
     EXPECT_TRUE(entry.sqeArrayInfos_[0].dstAddrRefreshInfoArray[0].needRefresh);
 
@@ -722,11 +735,12 @@ TEST_F(AicpuTaskCacheEntryTest, RefreshAndLaunch_Success_SqeAndWqe)
         newLocAddr, entry.wqeTaskArrayInfos_[0].wqeTaskArray[0].wqeWrite.u.sge.dataAddrHigh,
         entry.wqeTaskArrayInfos_[0].wqeTaskArray[0].wqeWrite.u.sge.dataAddrLow);
     EXPECT_EQ(newLocAddr, 0x50000ULL + 0x10);
+    // 注意: WQE remote addr不再检查本地地址, 因此地址不需要刷新, 仍然为初始值
     uint64_t newRmtAddr = 0;
     hcomm::AicpuTaskCacheEntry::CombineUint32ToUint64(
         newRmtAddr, entry.wqeTaskArrayInfos_[0].wqeTaskArray[0].wqeWrite.comm.rmtAddrHigh,
         entry.wqeTaskArrayInfos_[0].wqeTaskArray[0].wqeWrite.comm.rmtAddrLow);
-    EXPECT_EQ(newRmtAddr, 0x60000ULL + 0x20);
+    EXPECT_EQ(newRmtAddr, TEST_BASE_ADDR_1 + 0x20);
 
     // 清空launchOrder_避免调用硬件接口, 验证RefreshAndLaunch的校验和RefreshTokenInfos_逻辑
     entry.launchOrder_.clear();
@@ -735,7 +749,8 @@ TEST_F(AicpuTaskCacheEntryTest, RefreshAndLaunch_Success_SqeAndWqe)
     // 验证tokenInfos已刷新 (needLocTokenIdFlag/needRmtTokenIdAndValueFlag在SubmitCacheEntry时已设置)
     auto& tokenInfos = entry.tokenInfosMap_.begin()->second;
     EXPECT_TRUE(tokenInfos[0].needLocTokenIdFlag);
-    EXPECT_TRUE(tokenInfos[1].needRmtTokenIdAndValueFlag);
+    // 注意: WQE remote addr不再检查本地地址, 因此needRmtTokenIdAndValueFlag预期为false
+    EXPECT_FALSE(tokenInfos[1].needRmtTokenIdAndValueFlag);
 }
 
 // ===================== RefreshSqeTasks_ Tests =====================

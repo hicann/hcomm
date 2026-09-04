@@ -204,25 +204,25 @@ private:
     void ProfilingProcess(void* src, void* dst, u64 size, const StreamLite& stream, DmaOp dmaOp, u32 taskId);
 
     inline void BuildDbSqeProfInfoForProfilingProcess(
-        void* src, void* dst, u64 size, DmaOp dmaOp, DbSqeProfInfo& dbSqeProfInfo) const
+        void* loc, void* rmt, u64 size, DmaOp dmaOp, DbSqeProfInfo& dbSqeProfInfo) const
     {
-        FillDbSqeProfInfoDmaPub(dst, size, dmaOp, dbSqeProfInfo);
+        FillDbSqeProfInfoDmaPub(rmt, size, dmaOp, dbSqeProfInfo);
 
         // 构造DbSqeProfInfo (注意: 其他字段已在FillDbSqeProfInfo设置)
         dbSqeProfInfo.taskParamType = TaskParamType::TASK_UB;
-        dbSqeProfInfo.srcAddr = reinterpret_cast<uint64_t>(src);
+        dbSqeProfInfo.locAddr = reinterpret_cast<uint64_t>(loc);
     }
 
     void ReduceProfilingProcess(
         void* src, void* dst, u64 size, const ReduceIn& reduceIn, const StreamLite& stream, u32 taskId);
 
     inline void BuildDbSqeProfInfoForReduceProfilingProcess(
-        void* src, void* dst, u64 size, const ReduceIn& reduceIn, DbSqeProfInfo& dbSqeProfInfo) const
+        void* loc, void* rmt, u64 size, const ReduceIn& reduceIn, DbSqeProfInfo& dbSqeProfInfo) const
     {
         // 构造DbSqeProfInfo
         dbSqeProfInfo.isValid = true;
         dbSqeProfInfo.taskParamType = TaskParamType::TASK_UB_REDUCE_INLINE;
-        FillDbSqeProfInfoReducePub(src, dst, size, reduceIn, dbSqeProfInfo);
+        FillDbSqeProfInfoReducePub(loc, rmt, size, reduceIn, dbSqeProfInfo);
     }
 
     void ParseLocNotifyVec(std::vector<char>& data);
@@ -288,11 +288,11 @@ private:
         taskParam.taskPara.DMA.rmtEid = GetRmtEid();
     }
 
-    inline void FillDbSqeProfInfoDmaPub(void* dst, u64 size, DmaOp dmaOp, DbSqeProfInfo& dbSqeProfInfo) const
+    inline void FillDbSqeProfInfoDmaPub(void* rmt, u64 size, DmaOp dmaOp, DbSqeProfInfo& dbSqeProfInfo) const
     {
         // 构造DbSqeProfInfo
         dbSqeProfInfo.isValid = true;
-        dbSqeProfInfo.dstAddr = reinterpret_cast<uint64_t>(dst);
+        dbSqeProfInfo.rmtAddr = reinterpret_cast<uint64_t>(rmt);
         dbSqeProfInfo.size = size;
         dbSqeProfInfo.dmaOp = dmaOp;
         dbSqeProfInfo.locEid = GetLocEid();
@@ -316,10 +316,10 @@ private:
     }
 
     inline void FillDbSqeProfInfoReducePub(
-        void* src, void* dst, u64 size, const ReduceIn& reduceIn, DbSqeProfInfo& dbSqeProfInfo) const
+        void* loc, void* rmt, u64 size, const ReduceIn& reduceIn, DbSqeProfInfo& dbSqeProfInfo) const
     {
-        dbSqeProfInfo.srcAddr = reinterpret_cast<uint64_t>(src);
-        dbSqeProfInfo.dstAddr = reinterpret_cast<uint64_t>(dst);
+        dbSqeProfInfo.locAddr = reinterpret_cast<uint64_t>(loc);
+        dbSqeProfInfo.rmtAddr = reinterpret_cast<uint64_t>(rmt);
         dbSqeProfInfo.size = size;
         dbSqeProfInfo.locEid = GetLocEid();
         dbSqeProfInfo.rmtEid = GetRmtEid();
@@ -379,13 +379,13 @@ private:
     WriteWithNotifyProfilingProcess(void* src, void* dst, u64 size, const StreamLite& stream, u32 taskId, u64 notifyId);
 
     inline void BuildDbSqeProfInfoForWriteWithNotify(
-        void* src, void* dst, u64 size, u64 notifyId, DbSqeProfInfo& dbSqeProfInfo) const
+        void* loc, void* rmt, u64 size, u64 notifyId, DbSqeProfInfo& dbSqeProfInfo) const
     {
-        FillDbSqeProfInfoDmaPub(dst, size, DmaOp::HCCL_DMA_WRITE, dbSqeProfInfo);
+        FillDbSqeProfInfoDmaPub(rmt, size, DmaOp::HCCL_DMA_WRITE, dbSqeProfInfo);
 
         // 构造DbSqeProfInfo (注意: 其他字段已在FillDbSqeProfInfo设置)
         dbSqeProfInfo.taskParamType = TaskParamType::TASK_WRITE_WITH_NOTIFY;
-        dbSqeProfInfo.srcAddr = reinterpret_cast<uint64_t>(src);
+        dbSqeProfInfo.locAddr = reinterpret_cast<uint64_t>(loc);
         dbSqeProfInfo.notifyId = notifyId;
     }
 
@@ -393,20 +393,20 @@ private:
         void* src, void* dst, u64 size, const ReduceIn& reduceIn, const StreamLite& stream, u32 taskId, u64 notifyId);
 
     inline void BuildDbSqeProfInfoForWriteReduceWithNotify(
-        void* src, void* dst, u64 size, const ReduceIn& reduceIn, u64 notifyId, DbSqeProfInfo& dbSqeProfInfo) const
+        void* loc, void* rmt, u64 size, const ReduceIn& reduceIn, u64 notifyId, DbSqeProfInfo& dbSqeProfInfo) const
     {
         // 构造DbSqeProfInfo
         dbSqeProfInfo.isValid = true;
         dbSqeProfInfo.taskParamType = TaskParamType::TASK_WRITE_REDUCE_WITH_NOTIFY;
-        FillDbSqeProfInfoReducePub(src, dst, size, reduceIn, dbSqeProfInfo);
+        FillDbSqeProfInfoReducePub(loc, rmt, size, reduceIn, dbSqeProfInfo);
         dbSqeProfInfo.notifyId = notifyId;
     }
 
     void NotifyRecordProfilingProcess(void* dst, u64 size, const StreamLite& stream, u32 taskId, u64 notifyId);
 
-    inline void BuildDbSqeProfInfoForNotifyRecord(void* dst, u64 size, u64 notifyId, DbSqeProfInfo& dbSqeProfInfo) const
+    inline void BuildDbSqeProfInfoForNotifyRecord(void* rmt, u64 size, u64 notifyId, DbSqeProfInfo& dbSqeProfInfo) const
     {
-        FillDbSqeProfInfoDmaPub(dst, size, DmaOp::HCCL_DMA_WRITE, dbSqeProfInfo);
+        FillDbSqeProfInfoDmaPub(rmt, size, DmaOp::HCCL_DMA_WRITE, dbSqeProfInfo);
 
         // 构造DbSqeProfInfo (注意: 其他字段已在FillDbSqeProfInfo设置)
         dbSqeProfInfo.taskParamType = TaskParamType::TASK_UB_INLINE_WRITE;

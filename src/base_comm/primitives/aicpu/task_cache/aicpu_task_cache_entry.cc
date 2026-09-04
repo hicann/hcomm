@@ -328,8 +328,8 @@ inline HcclResult AicpuTaskCacheEntry::SubmitWqeAddrRefreshInfoAndTokenInfo_()
             // 打印WQE AddrRefreshInfo
             HCCL_INFO(
                 "[AicpuTaskCacheEntry][SubmitCacheEntry] wqeTaskArrayInfos_[%u][%u]: "
-                "srcAddrRefreshInfo[needRefresh-%d memIdx-%u] needLocTokenIdFlag[%d] "
-                "dstAddrRefreshInfo[needRefresh-%d memIdx-%u] needRmtTokenIdAndValueFlag[%d]",
+                "locAddrRefreshInfo[needRefresh-%d memIdx-%u] needLocTokenIdFlag[%d] "
+                "rmtAddrRefreshInfo[needRefresh-%d memIdx-%u] needRmtTokenIdAndValueFlag[%d]",
                 arrayIdx, wqeIdx, wqeTaskArrayInfo.locAddrRefreshInfoArray[wqeIdx].needRefresh,
                 wqeTaskArrayInfo.locAddrRefreshInfoArray[wqeIdx].memIdx,
                 tokenInfos[wqeTaskArrayInfo.locAddrRefreshInfoArray[wqeIdx].memIdx].needLocTokenIdFlag,
@@ -353,11 +353,14 @@ inline HcclResult AicpuTaskCacheEntry::SubmitDbSqeProfRefreshInfo_()
             case TaskParamTypeVal::TASK_UB_REDUCE_INLINE:
             case TaskParamTypeVal::TASK_WRITE_WITH_NOTIFY:
             case TaskParamTypeVal::TASK_WRITE_REDUCE_WITH_NOTIFY:
-                CHK_RET(UpdateAddrRefreshInfo_(dbSqeProfInfo.srcAddr, dbSqeProfAndRefreshInfo.srcAddrRefreshInfo));
-                CHK_RET(UpdateAddrRefreshInfo_(dbSqeProfInfo.dstAddr, dbSqeProfAndRefreshInfo.dstAddrRefreshInfo));
+                CHK_RET(UpdateAddrRefreshInfo_(
+                    dbSqeProfInfo.locAddr, dbSqeProfAndRefreshInfo.locAddrRefreshInfo, AddrType::kAddrTypeLocal));
+                CHK_RET(UpdateAddrRefreshInfo_(
+                    dbSqeProfInfo.rmtAddr, dbSqeProfAndRefreshInfo.rmtAddrRefreshInfo, AddrType::kAddrTypeRemote));
                 break;
             case TaskParamTypeVal::TASK_UB_INLINE_WRITE:
-                CHK_RET(UpdateAddrRefreshInfo_(dbSqeProfInfo.dstAddr, dbSqeProfAndRefreshInfo.dstAddrRefreshInfo));
+                CHK_RET(UpdateAddrRefreshInfo_(
+                    dbSqeProfInfo.rmtAddr, dbSqeProfAndRefreshInfo.rmtAddrRefreshInfo, AddrType::kAddrTypeRemote));
                 break;
             default:
                 HCCL_ERROR(
@@ -638,15 +641,18 @@ HcclResult AicpuTaskCacheEntry::UpdateSqeAddrRefreshInfo_(
         case Rt91095StarsSqeType::RT_91095_SQE_TYPE_SDMA: {
             Rt91095StarsMemcpySqe* memcpySqePtr = (Rt91095StarsMemcpySqe*)sqePtr;
             CHK_RET(UpdateAddrRefreshInfo_(
-                memcpySqePtr->u.strideMode0.srcAddrLow, memcpySqePtr->u.strideMode0.srcAddrHigh, srcAddrRefreshInfo));
+                memcpySqePtr->u.strideMode0.srcAddrLow, memcpySqePtr->u.strideMode0.srcAddrHigh, srcAddrRefreshInfo,
+                AddrType::kAddrTypeUnknown));
             CHK_RET(UpdateAddrRefreshInfo_(
-                memcpySqePtr->u.strideMode0.dstAddrLow, memcpySqePtr->u.strideMode0.dstAddrHigh, dstAddrRefreshInfo));
+                memcpySqePtr->u.strideMode0.dstAddrLow, memcpySqePtr->u.strideMode0.dstAddrHigh, dstAddrRefreshInfo,
+                AddrType::kAddrTypeUnknown));
             break;
         }
         case Rt91095StarsSqeType::RT_91095_SQE_TYPE_WRITE_VALUE: {
             Rt91095StarsWriteValueSqe* writeValueSqePtr = (Rt91095StarsWriteValueSqe*)sqePtr;
             CHK_RET(UpdateAddrRefreshInfo_(
-                writeValueSqePtr->writeAddrLow, writeValueSqePtr->writeAddrHigh, dstAddrRefreshInfo));
+                writeValueSqePtr->writeAddrLow, writeValueSqePtr->writeAddrHigh, dstAddrRefreshInfo,
+                AddrType::kAddrTypeUnknown));
             break;
         }
         default:
@@ -672,20 +678,25 @@ HcclResult AicpuTaskCacheEntry::UpdateWqeAddrRefreshInfoAndTokenInfo_(
         case UdmaSqOpcode::UDMA_OPC_READ: // UdmaSqeWrite
             // normal read
             CHK_RET(UpdateAddrRefreshInfo_(
-                wqeTask.wqeWrite.u.sge.dataAddrLow, wqeTask.wqeWrite.u.sge.dataAddrHigh, locAddrRefreshInfo));
+                wqeTask.wqeWrite.u.sge.dataAddrLow, wqeTask.wqeWrite.u.sge.dataAddrHigh, locAddrRefreshInfo,
+                AddrType::kAddrTypeLocal));
             CHK_RET(UpdateAddrRefreshInfo_(
-                wqeTask.wqeWrite.comm.rmtAddrLow, wqeTask.wqeWrite.comm.rmtAddrHigh, rmtAddrRefreshInfo));
+                wqeTask.wqeWrite.comm.rmtAddrLow, wqeTask.wqeWrite.comm.rmtAddrHigh, rmtAddrRefreshInfo,
+                AddrType::kAddrTypeRemote));
             break;
         case UdmaSqOpcode::UDMA_OPC_WRITE: { // UdmaSqeWrite
             const uint32_t inlineEn = wqeTask.wqeWrite.comm.inlineEn;
             if (inlineEn) { // inline write
                 CHK_RET(UpdateAddrRefreshInfo_(
-                    wqeTask.wqeWrite.comm.rmtAddrLow, wqeTask.wqeWrite.comm.rmtAddrHigh, rmtAddrRefreshInfo));
+                    wqeTask.wqeWrite.comm.rmtAddrLow, wqeTask.wqeWrite.comm.rmtAddrHigh, rmtAddrRefreshInfo,
+                    AddrType::kAddrTypeRemote));
             } else { // normal write or write reduce
                 CHK_RET(UpdateAddrRefreshInfo_(
-                    wqeTask.wqeWrite.u.sge.dataAddrLow, wqeTask.wqeWrite.u.sge.dataAddrHigh, locAddrRefreshInfo));
+                    wqeTask.wqeWrite.u.sge.dataAddrLow, wqeTask.wqeWrite.u.sge.dataAddrHigh, locAddrRefreshInfo,
+                    AddrType::kAddrTypeLocal));
                 CHK_RET(UpdateAddrRefreshInfo_(
-                    wqeTask.wqeWrite.comm.rmtAddrLow, wqeTask.wqeWrite.comm.rmtAddrHigh, rmtAddrRefreshInfo));
+                    wqeTask.wqeWrite.comm.rmtAddrLow, wqeTask.wqeWrite.comm.rmtAddrHigh, rmtAddrRefreshInfo,
+                    AddrType::kAddrTypeRemote));
             }
             break;
         }
@@ -693,10 +704,10 @@ HcclResult AicpuTaskCacheEntry::UpdateWqeAddrRefreshInfoAndTokenInfo_(
             // write with notify (对于给定slice的最后一个UB chunk)
             CHK_RET(UpdateAddrRefreshInfo_(
                 wqeTask.wqeWriteWithNotify.localU.sge.dataAddrLow, wqeTask.wqeWriteWithNotify.localU.sge.dataAddrHigh,
-                locAddrRefreshInfo));
+                locAddrRefreshInfo, AddrType::kAddrTypeLocal));
             CHK_RET(UpdateAddrRefreshInfo_(
                 wqeTask.wqeWriteWithNotify.comm.rmtAddrLow, wqeTask.wqeWriteWithNotify.comm.rmtAddrHigh,
-                rmtAddrRefreshInfo));
+                rmtAddrRefreshInfo, AddrType::kAddrTypeRemote));
             break;
         default:
             // ub_conn_lite.cc中未使用的WQE类型, 告警后报错
@@ -730,13 +741,29 @@ inline HcclResult AicpuTaskCacheEntry::UpdateTokenFlagsByAddrRefreshInfo_(
     return HCCL_SUCCESS;
 }
 
-HcclResult AicpuTaskCacheEntry::UpdateAddrRefreshInfo_(const uint64_t addr, AddrRefreshInfo& addrRefreshInfo) const
+HcclResult AicpuTaskCacheEntry::UpdateAddrRefreshInfo_(
+    const uint64_t addr, AddrRefreshInfo& addrRefreshInfo, const AddrType addrType) const
 {
     // 默认不是dynamic memory (e.g., user input/ouput), 认为无需刷新
     addrRefreshInfo.needRefresh = false;
 
+    // 注意: 假设地址vector中前两个为local地址, 后续为remote地址
+    constexpr uint32_t kNumLocAddr = 2;
+    uint32_t startMemIdx = 0;
+    uint32_t endMemIdx = 0;
+    if (addrType == AddrType::kAddrTypeUnknown) { // 遍历所有地址信息
+        startMemIdx = 0;
+        endMemIdx = cachedBaseAddrs_.size();
+    } else if (addrType == AddrType::kAddrTypeLocal) { // 遍历local地址信息
+        startMemIdx = 0;
+        endMemIdx = kNumLocAddr;
+    } else { // 遍历remote地址信息
+        startMemIdx = kNumLocAddr;
+        endMemIdx = cachedBaseAddrs_.size();
+    }
+
     // 检查是否为任意一段dynamic memory
-    for (uint32_t memIdx = 0; memIdx < cachedBaseAddrs_.size(); memIdx++) {
+    for (uint32_t memIdx = startMemIdx; memIdx < endMemIdx; memIdx++) {
         // Memory range: [baseAddr, baseAddr + memSize)
         const uint64_t baseAddr = cachedBaseAddrs_[memIdx];
         const uint64_t memSize = cachedMemSizes_[memIdx];
@@ -1231,11 +1258,11 @@ inline HcclResult AicpuTaskCacheEntry::RefreshDbSqeProfAddrs_(
 {
     // 注意: dbSqeProfInfo中的src/dstAddr, 需要根据DbSqeProfAndRefreshInfo中的src/dstAddrRefreshInfo进行刷新,
     // 才能填充DfxTaskInfo
-    if (profAndRefreshInfo.srcAddrRefreshInfo.needRefresh) {
-        RefreshTaskAddr_(profAndRefreshInfo.dbSqeProfInfo.srcAddr, profAndRefreshInfo.srcAddrRefreshInfo, baseAddrs);
+    if (profAndRefreshInfo.locAddrRefreshInfo.needRefresh) {
+        RefreshTaskAddr_(profAndRefreshInfo.dbSqeProfInfo.locAddr, profAndRefreshInfo.locAddrRefreshInfo, baseAddrs);
     }
-    if (profAndRefreshInfo.dstAddrRefreshInfo.needRefresh) {
-        RefreshTaskAddr_(profAndRefreshInfo.dbSqeProfInfo.dstAddr, profAndRefreshInfo.dstAddrRefreshInfo, baseAddrs);
+    if (profAndRefreshInfo.rmtAddrRefreshInfo.needRefresh) {
+        RefreshTaskAddr_(profAndRefreshInfo.dbSqeProfInfo.rmtAddr, profAndRefreshInfo.rmtAddrRefreshInfo, baseAddrs);
     }
     return HCCL_SUCCESS;
 }
@@ -1285,11 +1312,11 @@ inline HcclResult AicpuTaskCacheEntry::FillSlotUbDma_(
         slot, streamLite, taskId, GetUbLinkTypeVal_(ubTransportLiteImplPtr),
         static_cast<u8>(Hccl::DfxTransportType::DFX_TRANSPORT_TYPE_UB), reinterpret_cast<u64>(ubTransportLiteImplPtr));
     slot->taskPara.ubDma.sqeAddr = reinterpret_cast<u64>(sqePtr);
-    slot->taskPara.ubDma.srcAddr = profInfo.srcAddr;
-    slot->taskPara.ubDma.dstAddr = profInfo.dstAddr;
+    slot->taskPara.ubDma.srcAddr = profInfo.locAddr;
+    slot->taskPara.ubDma.dstAddr = profInfo.rmtAddr;
     slot->taskPara.ubDma.size = profInfo.size;
     if (static_cast<u8>(profInfo.taskParamType) == TaskParamTypeVal::TASK_UB_INLINE_WRITE) {
-        slot->taskPara.ubDma.notifyId = static_cast<u32>(profInfo.dstAddr);
+        slot->taskPara.ubDma.notifyId = static_cast<u32>(profInfo.rmtAddr);
     } else if (static_cast<u8>(profInfo.taskParamType) == TaskParamTypeVal::TASK_UB) {
         slot->taskPara.ubDma.notifyId = INVALID_U32;
     } else {
@@ -1310,8 +1337,8 @@ inline HcclResult AicpuTaskCacheEntry::FillSlotReduce_(
         slot, streamLite, taskId, GetUbLinkTypeVal_(ubTransportLiteImplPtr),
         static_cast<u8>(Hccl::DfxTransportType::DFX_TRANSPORT_TYPE_UB), reinterpret_cast<u64>(ubTransportLiteImplPtr));
     slot->taskPara.Reduce.sqeAddr = reinterpret_cast<u64>(sqePtr);
-    slot->taskPara.Reduce.srcAddr = profInfo.srcAddr;
-    slot->taskPara.Reduce.dstAddr = profInfo.dstAddr;
+    slot->taskPara.Reduce.srcAddr = profInfo.locAddr;
+    slot->taskPara.Reduce.dstAddr = profInfo.rmtAddr;
     slot->taskPara.Reduce.size = profInfo.size;
     slot->taskPara.Reduce.reduceOp = static_cast<u8>(profInfo.reduceOp);
     if (static_cast<u8>(profInfo.taskParamType) == TaskParamTypeVal::TASK_UB_REDUCE_INLINE) {

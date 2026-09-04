@@ -192,8 +192,8 @@ union WqeTask {
 struct DbSqeProfInfo {
     bool isValid = false;
     TaskParamType taskParamType;
-    uint64_t srcAddr;        // TASK_UB, TASK_UB_REDUCE_INLINE, TASK_WRITE_WITH_NOTIFY, TASK_WRITE_REDUCE_WITH_NOTIFY
-    uint64_t dstAddr;        // TASK_UB_INLINE_WRITE, TASK_UB, TASK_UB_REDUCE_INLINE, TASK_WRITE_WITH_NOTIFY,
+    uint64_t locAddr;        // TASK_UB, TASK_UB_REDUCE_INLINE, TASK_WRITE_WITH_NOTIFY, TASK_WRITE_REDUCE_WITH_NOTIFY
+    uint64_t rmtAddr;        // TASK_UB_INLINE_WRITE, TASK_UB, TASK_UB_REDUCE_INLINE, TASK_WRITE_WITH_NOTIFY,
                              // TASK_WRITE_REDUCE_WITH_NOTIFY
     uint64_t size;           // TASK_UB_INLINE_WRITE, TASK_UB, TASK_UB_REDUCE_INLINE, TASK_WRITE_WITH_NOTIFY,
                              // TASK_WRITE_REDUCE_WITH_NOTIFY

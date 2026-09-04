@@ -141,8 +141,8 @@ struct DbSqeProfAndRefreshInfo {
     DbSqeProfInfo dbSqeProfInfo;
 
     // 用于刷新DbSqeProfInfo中的地址, SubmitCacheEntry时设置, RefreshAndLaunch时使用
-    AddrRefreshInfo srcAddrRefreshInfo;
-    AddrRefreshInfo dstAddrRefreshInfo;
+    AddrRefreshInfo locAddrRefreshInfo;
+    AddrRefreshInfo rmtAddrRefreshInfo;
 
     uint32_t wqeArrayIdx; // 反向定位DbSqe对应的WQE数组
 };
@@ -155,6 +155,8 @@ struct TokenInfo {
     uint32_t rmtTokenId = 0;
     uint32_t rmtTokenValue = 0;
 };
+
+enum class AddrType : uint8_t { kAddrTypeUnknown = 0, kAddrTypeLocal = 1, kAddrTypeRemote = 2 };
 
 // aicpu task cache单向依赖RtsqA5/UbConnLite, 下发SQE/WQE
 // aicpu task cache单向依赖UbTransportLiteImpl, 获取token id/value
@@ -213,15 +215,18 @@ private:
         vector<TokenInfo>& tokenInfos);
     inline HcclResult UpdateTokenFlagsByAddrRefreshInfo_(
         const AddrRefreshInfo& addrRefreshInfo, vector<TokenInfo>& tokenInfos, bool isLoc);
-    inline HcclResult
-    UpdateAddrRefreshInfo_(const uint32_t addrLow, const uint32_t addrHigh, AddrRefreshInfo& addrRefreshInfo) const
+    inline HcclResult UpdateAddrRefreshInfo_(
+        const uint32_t addrLow, const uint32_t addrHigh, AddrRefreshInfo& addrRefreshInfo,
+        const AddrType addrType = AddrType::kAddrTypeUnknown) const
     {
         // 拼接地址
         uint64_t addr = 0;
         AicpuTaskCacheEntry::CombineUint32ToUint64(addr, addrHigh, addrLow);
-        return UpdateAddrRefreshInfo_(addr, addrRefreshInfo);
+        return UpdateAddrRefreshInfo_(addr, addrRefreshInfo, addrType);
     }
-    HcclResult UpdateAddrRefreshInfo_(const uint64_t addr, AddrRefreshInfo& addrRefreshInfo) const;
+    HcclResult UpdateAddrRefreshInfo_(
+        const uint64_t addr, AddrRefreshInfo& addrRefreshInfo,
+        const AddrType addrType = AddrType::kAddrTypeUnknown) const;
 
     // 刷新下发SQE
     inline HcclResult RefreshSqeTasks_(const SqeArrayInfo& sqeArrayInfo, const uint64_t* baseAddrs);
@@ -333,6 +338,7 @@ private:
 
     // Cached memory ranges: InitCacheEntry时初始化, SubmitCacheEntry时用于计算AddrRefreshInfo,
     // RefreshAndLaunch时无需更新
+    // 注意: 假设vector中前两个元素为curRank的local user input&output
     vector<uint64_t> cachedBaseAddrs_;
     vector<uint64_t> cachedMemSizes_;
 
