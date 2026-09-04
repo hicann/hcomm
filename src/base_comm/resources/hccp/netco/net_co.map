@@ -12,7 +12,9 @@
 {
 global:
     NetCoDestruct;
+    NetCoFdEventDispatch;
     NetCoInitFactory;
+    NetCoTblAddUpd;
 local:
     *;
 };
