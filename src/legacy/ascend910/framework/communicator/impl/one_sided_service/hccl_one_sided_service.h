@@ -153,6 +153,7 @@ private:
     std::unordered_map<std::string, HcclBuf> desc2HcclBufMapRoce_{};
 
     std::set<GlobalMemRecord*> boundMemPtrSet_{};
+    std::shared_mutex boundMemPtrSetMtx_;
     s32 deviceLogicId_{HOST_DEVICE_ID};
     std::vector<HcclMemDesc> localMemIpcDescs_;
     std::vector<HcclMemDesc> localMemRoceDescs_;

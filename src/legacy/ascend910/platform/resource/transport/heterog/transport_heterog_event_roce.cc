@@ -31,6 +31,7 @@ std::mutex TransportHeterogEventRoce::gAllLinkVecRecvCompMutex;
 std::mutex TransportHeterogEventRoce::gPollTagRqLock;
 std::mutex TransportHeterogEventRoce::gPollDataRqLock;
 std::mutex TransportHeterogEventRoce::gPollDataSqLock;
+std::mutex TransportHeterogEventRoce::gEschedAckMutex;
 
 u32 TransportHeterogEventRoce::gEschedAckRef = 0;
 u32 TransportHeterogEventRoce::gAllLinkInitCount = 0;
@@ -47,6 +48,7 @@ constexpr s32 DATA_QP_APPEND = 2;
 
 atomic<u32> g_tagRecvWqeNum;  // qp0上的recv wqe的数量,recv端消耗
 atomic<u32> g_dataRecvWqeNum; // qp1上的recv wqe的数量,send端消耗
+std::shared_mutex TransportHeterogEventRoce::gQpnMapMutex;
 map<u32, TransportHeterogEventRoce*> TransportHeterogEventRoce::gQpnToTransportMap; // tag qpn和transport映射
 map<u32, atomic<u32>> TransportHeterogEventRoce::gQpnToSqMaxWrMap;                  // data qpn和sq max wr深度映射
 bool TransportHeterogEventRoce::gNeedRepoEvent = true;
@@ -113,6 +115,7 @@ TransportHeterogEventRoce::~TransportHeterogEventRoce()
 
 HcclResult TransportHeterogEventRoce::RegisterEschedAckCallback()
 {
+    std::lock_guard<std::mutex> lock(gEschedAckMutex);
     if (gEschedAckRef == 0) {
         CHK_RET(DlHalFunction::GetInstance().DlHalFunctionInit());
 
@@ -135,6 +138,7 @@ HcclResult TransportHeterogEventRoce::RegisterEschedAckCallback()
 
 HcclResult TransportHeterogEventRoce::DeregisterEschedAckCallback()
 {
+    std::lock_guard<std::mutex> lock(gEschedAckMutex);
     if (gEschedAckRef > 0) {
         gEschedAckRef--;
     } else if (gEschedAckRef == 0) {
@@ -493,6 +497,7 @@ HcclResult TransportHeterogEventRoce::CreateCqAndQp()
     }
 
     if (srqInit_) {
+        std::unique_lock<std::shared_mutex> lock(gQpnMapMutex);
         gQpnToTransportMap[tagQpInfo_.qp->qp_num] = this;
         gQpnToSqMaxWrMap[dataQpInfo_.qp->qp_num] = MAX_WR_NUM;
     }
@@ -658,13 +663,16 @@ HcclResult TransportHeterogEventRoce::ParseTagSrqes(const struct ibv_wc* wc, int
             envelope->transData.count);
 
         HcclEnvelopeSummary envelopSummary(*envelope, wc[i].status);
-        if (gQpnToTransportMap.count(wc[i].qp_num) != 0) {
-            gQpnToTransportMap[wc[i].qp_num]->SaveEnvelope(envelopSummary);
-        } else {
-            HCCL_ERROR(
-                "The transport does not exist, wrId[%llu] status[%u] opcode[%u] qpn[%u]", wc[i].wr_id, wc[i].status,
-                wc[i].opcode, wc[i].qp_num);
-            return HCCL_E_PTR;
+        {
+            std::shared_lock<std::shared_mutex> lock(gQpnMapMutex);
+            if (gQpnToTransportMap.count(wc[i].qp_num) != 0) {
+                gQpnToTransportMap[wc[i].qp_num]->SaveEnvelope(envelopSummary);
+            } else {
+                HCCL_ERROR(
+                    "The transport does not exist, wrId[%llu] status[%u] opcode[%u] qpn[%u]", wc[i].wr_id, wc[i].status,
+                    wc[i].opcode, wc[i].qp_num);
+                return HCCL_E_PTR;
+            }
         }
 
         CHK_RET(FreeMemBlock(info->buf));
@@ -685,13 +693,16 @@ HcclResult TransportHeterogEventRoce::ParseDataSrqes(const struct ibv_wc* wc, in
         CHK_PTR_NULL(wrPtr);
         CHK_RET(SupplyDataRecvWqe());
         wrPtr->transportRequest.status = wc[i].status;
-        if (gQpnToSqMaxWrMap.count(wc[i].qp_num) != 0) {
-            gQpnToSqMaxWrMap[wc[i].qp_num]++;
-        } else {
-            HCCL_ERROR(
-                "The qpn does not exist, wrId[%llu] status[%u] opcode[%u] qpn[%u]", wc[i].wr_id, wc[i].status,
-                wc[i].opcode, wc[i].qp_num);
-            return HCCL_E_PTR;
+        {
+            std::shared_lock<std::shared_mutex> lock(gQpnMapMutex);
+            if (gQpnToSqMaxWrMap.count(wc[i].qp_num) != 0) {
+                gQpnToSqMaxWrMap[wc[i].qp_num]++;
+            } else {
+                HCCL_ERROR(
+                    "The qpn does not exist, wrId[%llu] status[%u] opcode[%u] qpn[%u]", wc[i].wr_id, wc[i].status,
+                    wc[i].opcode, wc[i].qp_num);
+                return HCCL_E_PTR;
+            }
         }
 
         CHK_RET(DeregMr(

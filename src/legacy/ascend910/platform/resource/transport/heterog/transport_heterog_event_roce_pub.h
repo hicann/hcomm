@@ -85,6 +85,7 @@ private:
     static std::mutex gPollTagRqLock;
     static std::mutex gPollDataRqLock;
     static std::mutex gPollDataSqLock;
+    static std::mutex gEschedAckMutex;
 
     static u32 gEschedAckRef;
     static u32 gAllLinkInitCount;
@@ -108,6 +109,7 @@ private:
     HcclResult ParseDataSrqes(const struct ibv_wc* wc, int num);
     HcclResult CheckTagRecvWqe();
     HcclResult CheckDataRecvWqe();
+    static std::shared_mutex gQpnMapMutex;
     static std::map<u32, TransportHeterogEventRoce*> gQpnToTransportMap;
     static std::map<u32, std::atomic<u32>> gQpnToSqMaxWrMap;
     static bool gNeedRepoEvent;

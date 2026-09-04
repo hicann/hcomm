@@ -33,6 +33,7 @@ MemNameRepository* MemNameRepository::GetInstance(s32 deviceLogicID)
 
 HcclResult MemNameRepository::SetDeviceUnavailable(bool unavailable)
 {
+    std::unique_lock<std::mutex> lock(memMutex_);
     unavailable_ = unavailable;
     HCCL_RUN_INFO("SetDeviceUnavailable unavailable[%d]", unavailable);
     return HCCL_SUCCESS;

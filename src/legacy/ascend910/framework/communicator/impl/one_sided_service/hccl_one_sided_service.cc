@@ -559,6 +559,7 @@ HcclResult HcclOneSidedService::BindMem(void* memRecordHandle, const std::string
     CHK_RET(memRecordPtr->BindToComm(commIdentifier));
 
     // 是否重复绑定在前面BindToComm已经检查过了
+    std::unique_lock lock(boundMemPtrSetMtx_);
     auto emplaceResult = boundMemPtrSet_.emplace(memRecordPtr);
     CHK_PRT_RET(
         emplaceResult.second == false,
@@ -579,6 +580,7 @@ HcclResult HcclOneSidedService::UnbindMem(void* memRecordHandle, const std::stri
     auto memRecordPtr = static_cast<GlobalMemRecord*>(memRecordHandle);
     CHK_RET(memRecordPtr->UnbindFromComm(commIdentifier));
 
+    std::unique_lock lock(boundMemPtrSetMtx_);
     const auto eraseCount = boundMemPtrSet_.erase(memRecordPtr);
     CHK_PRT_RET(
         eraseCount == 0,
@@ -606,16 +608,19 @@ HcclResult HcclOneSidedService::DeInit()
     }
 
     // 检查是否还绑定着全局内存
-    if (!boundMemPtrSet_.empty()) {
-        HCCL_ERROR("[HcclOneSidedService][DeInit] There are memories still bound to this comm; please unbind them "
-                   "before destroying the comm.");
-        HCCL_ERROR("[HcclOneSidedService][DeInit] List of bound memories:");
-        for (auto handle : boundMemPtrSet_) {
-            auto memRecordPtr = static_cast<GlobalMemRecord*>(handle);
-            const auto info = memRecordPtr->PrintInfo();
-            HCCL_ERROR("[HcclOneSidedService][DeInit][Bound mem] ptr:%p, %s", handle, info.c_str());
+    {
+        std::shared_lock lock(boundMemPtrSetMtx_);
+        if (!boundMemPtrSet_.empty()) {
+            HCCL_ERROR("[HcclOneSidedService][DeInit] There are memories still bound to this comm; please unbind them "
+                       "before destroying the comm.");
+            HCCL_ERROR("[HcclOneSidedService][DeInit] List of bound memories:");
+            for (auto handle : boundMemPtrSet_) {
+                auto memRecordPtr = static_cast<GlobalMemRecord*>(handle);
+                const auto info = memRecordPtr->PrintInfo();
+                HCCL_ERROR("[HcclOneSidedService][DeInit][Bound mem] ptr:%p, %s", handle, info.c_str());
+            }
+            return HCCL_E_PARA;
         }
-        return HCCL_E_PARA;
     }
 
     if (prepared_) {
@@ -876,6 +881,7 @@ HcclResult HcclOneSidedService::RegBoundMem(
 
 HcclResult HcclOneSidedService::RegisterBoundMems()
 {
+    std::shared_lock lock(boundMemPtrSetMtx_);
     localMemIpcDescs_.reserve(boundMemPtrSet_.size());
     localMemRoceDescs_.reserve(boundMemPtrSet_.size());
     localMemIpcDescs_.clear();

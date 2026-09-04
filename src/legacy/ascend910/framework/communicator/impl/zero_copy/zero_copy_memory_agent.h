@@ -126,7 +126,6 @@ public:
 
     static bool IsActivateCommMemoryAddr(void* virPtr, u64 length);
     static HcclResult GetRingBufferAddr(u64& bufferPtr, u64& headPtr, u64& tailPtr);
-    static bool IsAddressMgrInited();
 
     bool IsPaused() const;
     bool IsResumed() const;
@@ -179,6 +178,7 @@ private:
     }
 
     void CheckSnapshotStatus();
+    static HcclResult CheckAddressMgrWithoutLock();
 
     // member variables
     bool initiated_;
@@ -220,6 +220,7 @@ private:
     std::unordered_map<u32, ZeroCopyMemoryAgentSendMgr> sendMgrs_;
     std::unordered_map<u32, ZeroCopyMemoryAgentRecvMgr> recvMgrs_;
 
+    static std::shared_mutex g_addressMgrMutex_;
     static std::unique_ptr<ZeroCopyAddressMgr> addressMgr_;
     bool isPaused_{false}; // need to be paused when snapshot
 };
