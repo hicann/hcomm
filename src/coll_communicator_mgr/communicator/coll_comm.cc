@@ -19,6 +19,7 @@
 
 #include <cstdint>
 #include <exception>
+#include <unordered_set>
 #include "launch_aicpu.h"
 #include "launch_device.h"
 
@@ -257,6 +258,11 @@ HcclResult CollComm::DeregisterWindow(HcclCommSymWindow winHandle)
 
     HcclResult ret = symmetricMemory_->DeregisterUrmaSymmetricMem(winHandle);
     if (ret == HCCL_SUCCESS && getResourceRet == HCCL_SUCCESS) {
+        // 对称内存窗口注销后，同步删除本地memTag到memHandle索引。
+        {
+            std::unique_lock<std::shared_mutex> lock(registeredSymMemHandleMapMtx_);
+            registeredSymMemHandleMap_.erase(resource.memTag);
+        }
         UnregisterSymmetricMemoryResource(resource);
     }
     return ret;
@@ -268,9 +274,8 @@ HcclResult CollComm::GetCommSymWin(void* ptr, size_t size, HcclCommSymWindow* wi
     return symmetricMemory_->FindUrmaSymmetricWindow(ptr, size, winHandle, offset);
 }
 
-HcclResult CollComm::RegisterPendingSymmetricMemHandles(std::vector<HcclMemHandle>& memHandles)
+HcclResult CollComm::RegisterPendingSymmetricMemHandles()
 {
-    memHandles.clear();
     if (symmetricMemory_ == nullptr) {
         return HCCL_SUCCESS;
     }
@@ -282,7 +287,6 @@ HcclResult CollComm::RegisterPendingSymmetricMemHandles(std::vector<HcclMemHandl
         return HCCL_SUCCESS;
     }
 
-    std::vector<std::pair<void*, SymmetricMemoryResource>> registeredResources;
     for (const SymmetricMemoryRegisterInfo& registerInfo : registerInfos) {
         SymmetricMemoryResource resource;
         HcclResult ret = RegisterSymmetricMemoryResource(registerInfo.userVa, registerInfo.userSize, resource);
@@ -291,10 +295,6 @@ HcclResult CollComm::RegisterPendingSymmetricMemHandles(std::vector<HcclMemHandl
                 "[CollComm][RegisterPendingSymmetricMemHandles] register symmetric memory failed, "
                 "win[%p], userVa[%p], size[%zu], ret[%d].",
                 registerInfo.devWin, registerInfo.userVa, registerInfo.userSize, ret);
-            for (const auto& registeredResource : registeredResources) {
-                symmetricMemory_->RemoveRegisteredMemoryResource(registeredResource.first);
-                UnregisterSymmetricMemoryResource(registeredResource.second);
-            }
             return ret;
         }
 
@@ -305,17 +305,44 @@ HcclResult CollComm::RegisterPendingSymmetricMemHandles(std::vector<HcclMemHandl
                 "win[%p], userVa[%p], size[%zu], ret[%d].",
                 registerInfo.devWin, registerInfo.userVa, registerInfo.userSize, ret);
             UnregisterSymmetricMemoryResource(resource);
-            for (const auto& registeredResource : registeredResources) {
-                symmetricMemory_->RemoveRegisteredMemoryResource(registeredResource.first);
-                UnregisterSymmetricMemoryResource(registeredResource.second);
-            }
             return ret;
         }
-        registeredResources.emplace_back(registerInfo.devWin, resource);
-        // 仅返回本次新注册的memHandle，避免普通URMA重复携带历史对称内存句柄。
-        memHandles.emplace_back(static_cast<HcclMemHandle>(resource.memHandle));
+        // 注册成功后加入本地索引，供新建通道和后续复用通道使用。
+        {
+            std::unique_lock<std::shared_mutex> lock(registeredSymMemHandleMapMtx_);
+            registeredSymMemHandleMap_[resource.memTag] = static_cast<HcclMemHandle>(resource.memHandle);
+        }
     }
 
+    return HCCL_SUCCESS;
+}
+
+HcclResult CollComm::GetAllRegisteredSymMemHandles(std::vector<HcclMemHandle>& memHandles) const
+{
+    memHandles.clear();
+    std::shared_lock<std::shared_mutex> lock(registeredSymMemHandleMapMtx_);
+    for (const auto& registeredMem : registeredSymMemHandleMap_) {
+        memHandles.emplace_back(registeredMem.second);
+    }
+    HCCL_INFO("[CollComm][GetAllRegisteredSymMemHandles] registeredMemHandleNum[%zu].", memHandles.size());
+    return HCCL_SUCCESS;
+}
+
+HcclResult CollComm::GetRemoteMissingSymMemHandles(
+    const std::vector<std::string>& remoteMemTags, std::vector<HcclMemHandle>& memHandles) const
+{
+    memHandles.clear();
+    const std::unordered_set<std::string> remoteMemTagSet(remoteMemTags.begin(), remoteMemTags.end());
+    std::shared_lock<std::shared_mutex> lock(registeredSymMemHandleMapMtx_);
+    // 返回目标通道远端尚未拥有的本地句柄。
+    for (const auto& registeredMem : registeredSymMemHandleMap_) {
+        if (remoteMemTagSet.find(registeredMem.first) == remoteMemTagSet.end()) {
+            memHandles.emplace_back(registeredMem.second);
+        }
+    }
+    HCCL_INFO(
+        "[CollComm][GetRemoteMissingSymMemHandles] remoteMemTagNum[%zu], missingMemHandleNum[%zu].",
+        remoteMemTags.size(), memHandles.size());
     return HCCL_SUCCESS;
 }
 

@@ -449,6 +449,7 @@ static HcclResult MergeSymmetricMemHandles(
     if (!IsUbUrmaChannelProtocol(channelDesc.channelProtocol)) {
         return HCCL_SUCCESS;
     }
+    // 保留通道原有的业务内存句柄，再与对称内存句柄去重合并，避免直接覆盖调用方入参。
     if (channelDesc.memHandleNum != 0) {
         CHK_PTR_NULL(channelDesc.memHandles);
         for (uint32_t handleIdx = 0; handleIdx < channelDesc.memHandleNum; ++handleIdx) {
@@ -467,43 +468,123 @@ static HcclResult MergeSymmetricMemHandles(
     return HCCL_SUCCESS;
 }
 
-static HcclResult AppendSymmetricMemHandles(
-    hccl::CollComm* collComm, std::vector<HcclChannelDesc>& channelDescFinals,
-    std::vector<std::vector<HcclMemHandle>>& mergedMemHandles, bool& hasSymmetricMemHandles)
+static HcclResult BuildChannelSymMemHandles(
+    hccl::CollComm* collComm, hccl::MyRank* myRank, const std::vector<HcclChannelDesc>& channelDescFinals,
+    const std::vector<ChannelHandle>& existingChannelHandles, const std::vector<HcclMemHandle>& registeredSymMemHandles,
+    std::vector<std::vector<HcclMemHandle>>& channelSymMemHandles, std::vector<bool>& channelSymMemAppended,
+    size_t& appendedChannelCount)
 {
-    CHK_PTR_NULL(collComm);
-    hasSymmetricMemHandles = false;
-    if (!HasUbUrmaChannel(channelDescFinals)) {
-        return HCCL_SUCCESS;
-    }
-    // 只有UB/URMA类channel需要追加symmetric memHandle参与建链交换。
-    std::vector<HcclMemHandle> symmetricMemHandles;
-    CHK_RET(collComm->RegisterPendingSymmetricMemHandles(symmetricMemHandles));
-    if (symmetricMemHandles.empty()) {
-        return HCCL_SUCCESS;
-    }
-    hasSymmetricMemHandles = true;
+    for (size_t idx = 0; idx < channelDescFinals.size(); ++idx) {
+        if (!IsUbUrmaChannelProtocol(channelDescFinals[idx].channelProtocol)) {
+            continue;
+        }
 
+        std::vector<std::string> remoteMemTags;
+        if (existingChannelHandles[idx] == 0) {
+            // 新建通道尚未交换过对称内存，需要携带本地全部已注册句柄。
+            channelSymMemHandles[idx] = registeredSymMemHandles;
+        } else {
+            // 复用通道仅需携带其远端内存记录中缺失的句柄。
+            CommMem* remoteMems = nullptr;
+            uint32_t memNum = 0;
+            // 读取已有通道上次双向交换后缓存的远端memTag，不会发起新的远端查询。
+            CHK_RET(myRank->ChannelGetRemoteMems(existingChannelHandles[idx], &memNum, &remoteMems, remoteMemTags));
+            // 各Rank的对称窗口使用相同memTag，据此筛出该通道本轮尚未交换的本地句柄。
+            CHK_RET(collComm->GetRemoteMissingSymMemHandles(remoteMemTags, channelSymMemHandles[idx]));
+        }
+        HCCL_INFO(
+            "[BuildChannelSymMemHandles] channelIdx[%zu], remoteRank[%u], existing[%d], "
+            "remoteMemTagNum[%zu], missingSymmetricMemHandleNum[%zu].",
+            idx, channelDescFinals[idx].remoteRank, existingChannelHandles[idx] != 0, remoteMemTags.size(),
+            channelSymMemHandles[idx].size());
+        if (!channelSymMemHandles[idx].empty()) {
+            channelSymMemAppended[idx] = true;
+            ++appendedChannelCount;
+        }
+    }
+    return HCCL_SUCCESS;
+}
+
+static HcclResult ApplyChannelSymMemHandles(
+    std::vector<HcclChannelDesc>& channelDescFinals,
+    const std::vector<std::vector<HcclMemHandle>>& channelSymMemHandles, const std::vector<bool>& channelSymMemAppended,
+    std::vector<std::vector<HcclMemHandle>>& mergedMemHandles)
+{
     mergedMemHandles.clear();
     mergedMemHandles.resize(channelDescFinals.size());
     for (size_t idx = 0; idx < channelDescFinals.size(); ++idx) {
-        CHK_RET(MergeSymmetricMemHandles(channelDescFinals[idx], symmetricMemHandles, mergedMemHandles[idx]));
+        if (channelSymMemAppended[idx]) {
+            // mergedMemHandles持有channelDescFinals[idx].memHandles指向的内存，保证建链期间有效。
+            CHK_RET(MergeSymmetricMemHandles(channelDescFinals[idx], channelSymMemHandles[idx], mergedMemHandles[idx]));
+        }
     }
+    return HCCL_SUCCESS;
+}
+
+// 建链前完成pending窗口注册，并按每条通道的新建或复用状态准备需要交换的对称内存句柄。
+static HcclResult PrepareChannelSymMemHandles(
+    hccl::CollComm* collComm, hccl::MyRank* myRank, CommEngine engine, std::vector<HcclChannelDesc>& channelDescFinals,
+    std::vector<std::vector<HcclMemHandle>>& mergedMemHandles, std::vector<bool>& channelSymMemAppended)
+{
+    CHK_PTR_NULL(collComm);
+    CHK_PTR_NULL(myRank);
+    channelSymMemAppended.assign(channelDescFinals.size(), false);
+    if (!HasUbUrmaChannel(channelDescFinals)) {
+        return HCCL_SUCCESS;
+    }
+
+    // 对称内存窗口在建链时延迟注册，并加入本地持久化句柄索引。
+    CHK_RET(collComm->RegisterPendingSymmetricMemHandles());
+
+    std::vector<HcclMemHandle> registeredSymMemHandles;
+    // 获取本地全部已注册句柄，包括历史注册的句柄，供新建通道使用。
+    CHK_RET(collComm->GetAllRegisteredSymMemHandles(registeredSymMemHandles));
+    if (registeredSymMemHandles.empty()) {
+        return HCCL_SUCCESS;
+    }
+
+    std::vector<ChannelHandle> existingChannelHandles(channelDescFinals.size(), 0);
+    // QueryChannels返回0表示通道未创建，返回有效句柄表示可以复用已有通道。
+    CHK_RET(myRank->QueryChannels(
+        engine, channelDescFinals.data(), static_cast<uint32_t>(channelDescFinals.size()),
+        existingChannelHandles.data()));
+
+    std::vector<std::vector<HcclMemHandle>> channelSymMemHandles(channelDescFinals.size());
+    size_t appendedChannelCount = 0;
+    CHK_RET(BuildChannelSymMemHandles(
+        collComm, myRank, channelDescFinals, existingChannelHandles, registeredSymMemHandles, channelSymMemHandles,
+        channelSymMemAppended, appendedChannelCount));
+    if (appendedChannelCount == 0) {
+        return HCCL_SUCCESS;
+    }
+
+    CHK_RET(
+        ApplyChannelSymMemHandles(channelDescFinals, channelSymMemHandles, channelSymMemAppended, mergedMemHandles));
     HCCL_INFO(
-        "[AppendSymmetricMemHandles] append symmetric memHandles success, channelNum[%zu], symMemHandleNum[%zu], "
-        "protocols[UB_CTP/UBC_TP/UBOE].",
-        channelDescFinals.size(), symmetricMemHandles.size());
+        "[PrepareChannelSymMemHandles] prepare symmetric memHandles success, channelNum[%zu], "
+        "appendedChannelCount[%zu], protocols[UB_CTP/UBC_TP/UBOE/UB_RTP].",
+        channelDescFinals.size(), appendedChannelCount);
     return HCCL_SUCCESS;
 }
 
 static HcclResult UpdateSymmetricRemoteMems(
     hccl::CollComm* collComm, const hccl::MyRank* myRank, const std::vector<HcclChannelDesc>& channelDescFinals,
-    const ChannelHandle* channels, uint32_t channelNum)
+    const ChannelHandle* channels, uint32_t channelNum, const std::vector<bool>& channelSymMemAppended)
 {
     CHK_PTR_NULL(collComm);
     CHK_PTR_NULL(myRank);
     CHK_PTR_NULL(channels);
+    CHK_PRT_RET(
+        channelSymMemAppended.size() != channelNum,
+        HCCL_ERROR(
+            "[UpdateSymmetricRemoteMems] appended state size[%zu] does not match channelNum[%u].",
+            channelSymMemAppended.size(), channelNum),
+        HCCL_E_PARA);
     for (uint32_t idx = 0; idx < channelNum; ++idx) {
+        // 仅对本次交换了新句柄的通道更新远端对称内存信息。
+        if (!channelSymMemAppended[idx]) {
+            continue;
+        }
         const HcclChannelDesc& channelDesc = channelDescFinals[idx];
         if (!IsUbUrmaChannelProtocol(channelDesc.channelProtocol)) {
             continue;
@@ -612,15 +693,18 @@ static HcclResult PrepareV2ChannelAcquire(hccl::hcclComm* hcclComm, HcclComm com
 // 非共享路径 HcclChannelAcquire 与共享路径 HcclChannelAcquireWithConfig 共用。
 static HcclResult FinalizeV2ChannelAcquire(
     hccl::hcclComm* hcclComm, CommEngine engine, const std::vector<HcclChannelDesc>& channelDescFinals,
-    ChannelHandle* channels, uint32_t channelNum, bool hasSymmetricMemHandles, u64 beginTime)
+    ChannelHandle* channels, uint32_t channelNum, const std::vector<bool>& channelSymMemAppended, u64 beginTime)
 {
     hccl::CollComm* collComm = hcclComm->GetCollComm();
     CHK_PTR_NULL(collComm);
 
-    if (hasSymmetricMemHandles) {
+    if (std::any_of(channelSymMemAppended.begin(), channelSymMemAppended.end(), [](bool appended) {
+            return appended;
+        })) {
         hccl::MyRank* myRank = collComm->GetMyRank();
         CHK_PTR_NULL(myRank);
-        CHK_RET(UpdateSymmetricRemoteMems(collComm, myRank, channelDescFinals, channels, channelNum));
+        CHK_RET(UpdateSymmetricRemoteMems(
+            collComm, myRank, channelDescFinals, channels, channelNum, channelSymMemAppended));
     }
 
     if (engine == COMM_ENGINE_CPU) {
@@ -703,17 +787,22 @@ HcclResult HcclChannelAcquire(
 
         CHK_RET(PrepareV2ChannelAcquire(hcclComm, comm, engine));
 
-        bool hasSymmetricMemHandles = false;
+        hccl::MyRank* myRank = collComm->GetMyRank();
+        CHK_PTR_NULL(myRank);
+        std::vector<bool> channelSymMemAppended;
         if (IsAicpuEngine(engine)) {
-            CHK_RET(AppendSymmetricMemHandles(collComm, channelDescFinals, mergedMemHandles, hasSymmetricMemHandles));
+            CHK_RET(PrepareChannelSymMemHandles(
+                collComm, myRank, engine, channelDescFinals, mergedMemHandles, channelSymMemAppended));
         }
+        const bool hasSymmetricMemHandles
+            = std::any_of(channelSymMemAppended.begin(), channelSymMemAppended.end(), [](bool appended) {
+                  return appended;
+              });
         HCCL_INFO(
-            "[HcclChannelAcquire] AppendSymmetricMemHandles done, group[%s], engine[%d], channelNum[%u], "
+            "[HcclChannelAcquire] PrepareChannelSymMemHandles done, group[%s], engine[%d], channelNum[%u], "
             "hasSymmetricMemHandles[%d], mergedMemHandleGroups[%zu].",
             commTag.c_str(), engine, channelNum, hasSymmetricMemHandles, mergedMemHandles.size());
 
-        hccl::MyRank* myRank = collComm->GetMyRank();
-        CHK_PTR_NULL(myRank);
         ret = myRank->CreateChannels(engine, commTag, channelDescFinals.data(), channelNum, channels);
         CHK_PRT_RET(
             (ret == HCCL_E_AGAIN || ret == HCCL_E_UNAVAIL),
@@ -729,7 +818,7 @@ HcclResult HcclChannelAcquire(
             ret);
 
         CHK_RET(FinalizeV2ChannelAcquire(
-            hcclComm, engine, channelDescFinals, channels, channelNum, hasSymmetricMemHandles, beginTime));
+            hcclComm, engine, channelDescFinals, channels, channelNum, channelSymMemAppended, beginTime));
     } else {
         hccl::CollComm* collComm = hcclComm->GetCollComm();
         if (collComm != nullptr) {
@@ -1360,11 +1449,14 @@ HcclResult HcclChannelAcquireWithConfig(
     CHK_RET(ValidateSharedQueueDescs(channelDescFinals));
 
     std::vector<std::vector<HcclMemHandle>> mergedMemHandles;
-    bool hasSymmetricMemHandles = false;
+    std::vector<bool> channelSymMemAppended;
     if (IsAicpuEngine(engine)) {
         hccl::CollComm* collComm = hcclComm->GetCollComm();
         CHK_PTR_NULL(collComm);
-        CHK_RET(AppendSymmetricMemHandles(collComm, channelDescFinals, mergedMemHandles, hasSymmetricMemHandles));
+        hccl::MyRank* myRank = collComm->GetMyRank();
+        CHK_PTR_NULL(myRank);
+        CHK_RET(PrepareChannelSymMemHandles(
+            collComm, myRank, engine, channelDescFinals, mergedMemHandles, channelSymMemAppended));
     }
 
     auto* cfg = static_cast<hccl::HcclChannelConfigData*>(config);
@@ -1381,7 +1473,7 @@ HcclResult HcclChannelAcquireWithConfig(
         hcclComm, engine, channelNum, channels, isNewChannel, channelDescFinals, sharedQueueTag));
 
     CHK_RET(FinalizeV2ChannelAcquire(
-        hcclComm, engine, channelDescFinals, channels, channelNum, hasSymmetricMemHandles, beginTime));
+        hcclComm, engine, channelDescFinals, channels, channelNum, channelSymMemAppended, beginTime));
 
     HCCL_RUN_INFO(
         "[%s] acquire shared jetty channels success, group[%s], engine[%s], channelNum[%u], take time [%lld]us.",

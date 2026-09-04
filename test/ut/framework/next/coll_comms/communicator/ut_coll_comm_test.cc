@@ -306,7 +306,7 @@ TEST_F(TestCollComm, Ut_ApplyHcclCommConfig_When_InvalidServiceLevel_Expect_EPar
     EXPECT_EQ(ApplyHcclCommConfig(&config, coll.GetCommConfig(), opExpansionMode), HCCL_E_PARA);
 }
 
-TEST_F(TestCollComm, Ut_RegisterPendingSymmetricMemHandles_When_HasPendingWindow_Expect_ReturnMemHandleOnce)
+TEST_F(TestCollComm, Ut_RegisterPendingSymmetricMemHandles_When_PendingConsumed_Expect_RegisteredHandleRetained)
 {
     MOCKER_CPP(hrtMalloc).stubs().will(invoke(StubCollCommUrmaHrtMalloc));
     MOCKER_CPP(hrtMemSyncCopy).stubs().will(returnValue(HCCL_SUCCESS));
@@ -321,18 +321,28 @@ TEST_F(TestCollComm, Ut_RegisterPendingSymmetricMemHandles_When_HasPendingWindow
     void* ptr = reinterpret_cast<void*>(0x8000000);
     EXPECT_EQ(coll.RegisterWindow(ptr, 0x2000, &win), HCCL_SUCCESS);
 
-    std::vector<HcclMemHandle> memHandles;
-    EXPECT_EQ(coll.RegisterPendingSymmetricMemHandles(memHandles), HCCL_SUCCESS);
-    ASSERT_EQ(memHandles.size(), 1U);
-    EXPECT_NE(memHandles[0], nullptr);
+    EXPECT_EQ(coll.RegisterPendingSymmetricMemHandles(), HCCL_SUCCESS);
 
     SymmetricMemoryResource resource;
     EXPECT_EQ(coll.symmetricMemory_->GetRegisteredMemoryResource(win, resource), HCCL_SUCCESS);
-    EXPECT_EQ(resource.memHandle, static_cast<void*>(memHandles[0]));
+    EXPECT_NE(resource.memHandle, nullptr);
 
-    memHandles.clear();
-    EXPECT_EQ(coll.RegisterPendingSymmetricMemHandles(memHandles), HCCL_SUCCESS);
+    EXPECT_EQ(coll.RegisterPendingSymmetricMemHandles(), HCCL_SUCCESS);
+
+    std::vector<HcclMemHandle> memHandles;
+    EXPECT_EQ(coll.GetAllRegisteredSymMemHandles(memHandles), HCCL_SUCCESS);
+    ASSERT_EQ(memHandles.size(), 1U);
+    EXPECT_EQ(memHandles[0], static_cast<HcclMemHandle>(resource.memHandle));
+
+    std::vector<std::string> remoteMemTags;
+    remoteMemTags.emplace_back(resource.memTag);
+    EXPECT_EQ(coll.GetRemoteMissingSymMemHandles(remoteMemTags, memHandles), HCCL_SUCCESS);
     EXPECT_TRUE(memHandles.empty());
+
+    remoteMemTags[0] = "unrelated_tag";
+    EXPECT_EQ(coll.GetRemoteMissingSymMemHandles(remoteMemTags, memHandles), HCCL_SUCCESS);
+    ASSERT_EQ(memHandles.size(), 1U);
+    EXPECT_EQ(memHandles[0], static_cast<HcclMemHandle>(resource.memHandle));
 }
 
 TEST_F(TestCollComm, Ut_UpdateSymmetricRemoteMem_When_ChannelReturnsRemoteMem_Expect_UpdateWindow)

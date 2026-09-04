@@ -144,22 +144,52 @@ int StubRaGetHostMultiQpCount(RaInfo* info, HccnCfgKey key, char* value, unsigne
 
 static HcclMemHandle g_userMemHandle = reinterpret_cast<HcclMemHandle>(0x1111);
 static HcclMemHandle g_symMemHandle = reinterpret_cast<HcclMemHandle>(0x2222);
+static const std::string g_symMemTag = "__hccl_sym_win__ut";
 static ChannelHandle g_testChannel = static_cast<ChannelHandle>(0x3333);
 static void* g_testDevChannelEntity = reinterpret_cast<void*>(0x5678);
 // UT stub state, used in single-threaded test execution and reset in SetUp.
 static HcclChannelDesc g_capturedChannelDesc{};
 static std::vector<HcclMemHandle> g_capturedMemHandles;
+static bool g_remoteHasSymMemTag = false;
 
-HcclResult StubRegisterPendingSymmetricMemHandles(std::vector<HcclMemHandle>& memHandles)
+void StubSetRemoteTags(const std::vector<std::string>& remoteMemTags)
 {
-    memHandles.clear();
-    memHandles.emplace_back(g_symMemHandle);
-    return HCCL_SUCCESS;
+    g_remoteHasSymMemTag = false;
+    for (const std::string& memTag : remoteMemTags) {
+        if (memTag == g_symMemTag) {
+            g_remoteHasSymMemTag = true;
+            break;
+        }
+    }
 }
 
-HcclResult StubRegisterPendingSymmetricMemHandlesEmpty(std::vector<HcclMemHandle>& memHandles)
+void StubFillSymHandles(std::vector<HcclMemHandle>& memHandles)
 {
     memHandles.clear();
+    if (!g_remoteHasSymMemTag) {
+        memHandles.emplace_back(g_symMemHandle);
+    }
+}
+
+void MockRemoteMems(uint32_t& remoteMemNum, CommMem*& remoteMems, const std::vector<std::string>& remoteMemTags)
+{
+    MOCKER_CPP(
+        &MyRank::ChannelGetRemoteMems,
+        HcclResult(MyRank::*)(ChannelHandle, uint32_t*, CommMem**, std::vector<std::string>&) const)
+        .expects(once())
+        .with(mockcpp::any(), outBoundP(&remoteMemNum), outBoundP(&remoteMems), outBound(remoteMemTags))
+        .will(returnValue(HCCL_SUCCESS));
+}
+
+HcclResult StubQueryExistingChannels(
+    MyRank* self, CommEngine engine, const HcclChannelDesc* channelDescs, uint32_t channelNum, ChannelHandle* channels)
+{
+    (void)self;
+    (void)engine;
+    (void)channelDescs;
+    for (uint32_t idx = 0; idx < channelNum; ++idx) {
+        channels[idx] = g_testChannel;
+    }
     return HCCL_SUCCESS;
 }
 
@@ -242,6 +272,7 @@ public:
     {
         g_capturedChannelDesc = {};
         g_capturedMemHandles.clear();
+        g_remoteHasSymMemTag = false;
         g_testChannel = static_cast<ChannelHandle>(0x3333);
         const char* fakeA5SocName = "Ascend950PR_958b";
         MOCKER(aclrtGetSocName).stubs().will(returnValue(fakeA5SocName));
@@ -311,6 +342,22 @@ protected:
         channelDesc.roceAttr.retryInterval = 20;
         channelDesc.localEndpoint.loc.locType = ENDPOINT_LOC_TYPE_DEVICE;
         channelDesc.localEndpoint.loc.device.devPhyId = 0U;
+    }
+
+    void InitSymMemChannelDesc(HcclChannelDesc& channelDesc) const
+    {
+        ASSERT_EQ(HcclChannelDescInit(&channelDesc, 1), HCCL_SUCCESS);
+        channelDesc.remoteRank = 2;
+        channelDesc.channelProtocol = COMM_PROTOCOL_UBOE;
+        channelDesc.notifyNum = 1;
+        channelDesc.memHandles = &g_userMemHandle;
+        channelDesc.memHandleNum = 1;
+    }
+
+    void MockConsumedPendingSymMem()
+    {
+        MOCKER(&hcomm::ClusterMonitor::RegisterToClusterMonitor).stubs().will(returnValue(HCCL_SUCCESS));
+        MOCKER_CPP(&CollComm::RegisterPendingSymmetricMemHandles).expects(once()).will(returnValue(HCCL_SUCCESS));
     }
 
     void ExpectRoceSlTcInHcommChannelDesc(uint32_t hcclQos, uint8_t expectSl, uint8_t expectTc)
@@ -646,23 +693,61 @@ TEST_F(ProcessHcclChannelDescTest, Ut_ProcessHcclChannelDesc_When_Hccs_DoesNotCo
     EXPECT_EQ(out.ubMemAttr.pathMode, 0xFFu);
 }
 
-TEST_F(HcclChannelDescTest, Ut_HcclChannelAcquire_When_AicpuUrma_AppendSymmetricMemHandle)
+TEST_F(HcclChannelDescTest, Ut_HcclChannelAcquire_When_PendingConsumed_AppendHistoricalSymmetricMemHandle)
 {
     std::vector<HcclChannelDesc> channelDesc(1);
     std::vector<ChannelHandle> channels(1);
-    ASSERT_EQ(HcclChannelDescInit(channelDesc.data(), 1), HCCL_SUCCESS);
-    channelDesc[0].remoteRank = 2;
-    channelDesc[0].channelProtocol = COMM_PROTOCOL_UBOE;
-    channelDesc[0].notifyNum = 1;
-    channelDesc[0].memHandles = &g_userMemHandle;
-    channelDesc[0].memHandleNum = 1;
+    InitSymMemChannelDesc(channelDesc[0]);
 
-    MOCKER(&hcomm::ClusterMonitor::RegisterToClusterMonitor).stubs().will(returnValue(HCCL_SUCCESS));
-    MOCKER_CPP(&CollComm::RegisterPendingSymmetricMemHandles).expects(once()).will(returnValue(HCCL_SUCCESS));
-    MOCKER_CPP(&MyRank::CreateChannels).stubs().will(returnValue(HCCL_SUCCESS));
+    MockConsumedPendingSymMem();
+    MOCKER_CPP(&CollComm::GetAllRegisteredSymMemHandles)
+        .expects(once())
+        .with(processWith(StubFillSymHandles))
+        .will(returnValue(HCCL_SUCCESS));
+    MOCKER_CPP(&MyRank::QueryChannels).expects(once()).will(returnValue(HCCL_SUCCESS));
+    MOCKER_CPP(&MyRank::CreateChannels).stubs().will(invoke(StubCreateChannelsCapture));
+    uint32_t remoteMemNum = 1;
+    CommMem remoteMem{};
+    CommMem* remoteMems = &remoteMem;
+    const std::vector<std::string> remoteMemTags{g_symMemTag};
+    MockRemoteMems(remoteMemNum, remoteMems, remoteMemTags);
+    MOCKER_CPP(&CollComm::UpdateSymmetricRemoteMem).expects(once()).will(returnValue(HCCL_SUCCESS));
 
     ret = HcclChannelAcquire(comm, CommEngine::COMM_ENGINE_AICPU, channelDesc.data(), 1, channels.data());
     EXPECT_EQ(ret, HCCL_SUCCESS);
+    ASSERT_EQ(g_capturedMemHandles.size(), 2U);
+    EXPECT_EQ(g_capturedMemHandles[0], g_userMemHandle);
+    EXPECT_EQ(g_capturedMemHandles[1], g_symMemHandle);
+}
+
+TEST_F(HcclChannelDescTest, Ut_HcclChannelAcquire_When_ExistingChannelHasSymmetricTag_NotAppendHandle)
+{
+    std::vector<HcclChannelDesc> channelDesc(1);
+    std::vector<ChannelHandle> channels(1);
+    InitSymMemChannelDesc(channelDesc[0]);
+
+    MockConsumedPendingSymMem();
+    MOCKER_CPP(&CollComm::GetAllRegisteredSymMemHandles)
+        .expects(once())
+        .with(processWith(StubFillSymHandles))
+        .will(returnValue(HCCL_SUCCESS));
+    MOCKER_CPP(&CollComm::GetRemoteMissingSymMemHandles)
+        .expects(once())
+        .with(processWith(StubSetRemoteTags), processWith(StubFillSymHandles))
+        .will(returnValue(HCCL_SUCCESS));
+    MOCKER_CPP(&MyRank::QueryChannels).expects(once()).will(invoke(StubQueryExistingChannels));
+    uint32_t remoteMemNum = 1;
+    CommMem remoteMem{};
+    CommMem* remoteMems = &remoteMem;
+    const std::vector<std::string> remoteMemTags{g_symMemTag};
+    MockRemoteMems(remoteMemNum, remoteMems, remoteMemTags);
+    MOCKER_CPP(&MyRank::CreateChannels).stubs().will(invoke(StubCreateChannelsCapture));
+    MOCKER_CPP(&CollComm::UpdateSymmetricRemoteMem).expects(never());
+
+    ret = HcclChannelAcquire(comm, CommEngine::COMM_ENGINE_AICPU, channelDesc.data(), 1, channels.data());
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+    ASSERT_EQ(g_capturedMemHandles.size(), 1U);
+    EXPECT_EQ(g_capturedMemHandles[0], g_userMemHandle);
 }
 
 TEST_F(HcclChannelDescTest, Ut_HcclChannelAcquire_When_CpuUrma_NotAppendSymmetricMemHandle)

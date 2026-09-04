@@ -16,7 +16,10 @@
 #include <functional>
 #include <memory>
 #include <mutex>
+#include <shared_mutex>
 #include <string>
+#include <unordered_map>
+#include <utility>
 #include <vector>
 #include "my_rank.h"
 #include "rank_graph.h"
@@ -122,7 +125,11 @@ public:
     HcclResult RegisterWindow(void* ptr, size_t size, HcclCommSymWindow* winHandle);
     HcclResult DeregisterWindow(HcclCommSymWindow winHandle);
     HcclResult GetCommSymWin(void* ptr, size_t size, HcclCommSymWindow* winHandle, size_t* offset);
-    HcclResult RegisterPendingSymmetricMemHandles(std::vector<HcclMemHandle>& memHandles);
+    HcclResult RegisterPendingSymmetricMemHandles();
+    // 获取本地全部已完成注册的对称内存句柄。
+    HcclResult GetAllRegisteredSymMemHandles(std::vector<HcclMemHandle>& memHandles) const;
+    HcclResult GetRemoteMissingSymMemHandles(
+        const std::vector<std::string>& remoteMemTags, std::vector<HcclMemHandle>& memHandles) const;
     HcclResult
     UpdateSymmetricRemoteMem(uint32_t remoteRank, const CommMem* remoteMems, const std::vector<std::string>& memTags);
     HcclResult GetHcclBinHandle(aclrtBinHandle& binHcclHandle);
@@ -182,6 +189,10 @@ private:
 
     CollCommInitMode initMode_{CollCommInitMode::fullMode}; // 初始化模式
     std::unique_ptr<SymmetricMemory, SymmetricMemoryDeleter> symmetricMemory_{nullptr};
+    // 保护registeredSymMemHandleMap_：查询时加共享锁，注册和注销时加独占锁。
+    mutable std::shared_mutex registeredSymMemHandleMapMtx_;
+    // 本地已注册对称内存索引：memTag -> memHandle，供建链时查询全部或远端缺失的句柄。
+    std::unordered_map<std::string, HcclMemHandle> registeredSymMemHandleMap_{};
     aclrtBinHandle binHcclHandle_{nullptr};
     std::mutex binHcclmutex_;
     mutable std::mutex commMutex_;
