@@ -16,8 +16,19 @@
 #include "launch_aicpu.h"
 #include "aicpu_launch_manager.h"
 #include "adapter_rts_common.h"
+#include "aicpu_ts_thread.h"
 
 using namespace hccl;
+
+static HcclResult StubThreadKernelLaunchForCommDevice(
+    std::vector<std::shared_ptr<hccl::Thread>>& newThreads, const std::string& commId,
+    std::unique_ptr<ThreadHandle[]>& aicpuHandle, aclrtBinHandle binHandle)
+{
+    for (size_t i = 0; i < newThreads.size(); ++i) {
+        aicpuHandle[i] = static_cast<ThreadHandle>(0x5000 + i);
+    }
+    return HCCL_SUCCESS;
+}
 
 class ThreadManagerTest : public BaseInit {
 public:
@@ -110,4 +121,69 @@ TEST_F(ThreadManagerTest, Ut_ResetThreadLocalNotifies_When_OrderLaunchThreadRegi
     ret = threadManager->RegisterOrderLaunchThread(threads[0]);
     EXPECT_EQ(ret, HCCL_SUCCESS);
     EXPECT_EQ(threadManager->ResetThreadLocalNotifies(), HCCL_SUCCESS);
+}
+
+/* ======================== HcclDedicatedThreadAcquire DEVICE ======================== */
+
+static void MockAicpuThreadEnv()
+{
+    MOCKER(hrtGetDeviceType).stubs().with(outBound(DevType::DEV_TYPE_950)).will(returnValue(HCCL_SUCCESS));
+    bool isDeviceSide{false};
+    MOCKER(GetRunSideIsDevice).stubs().with(outBound(isDeviceSide)).will(returnValue(HCCL_SUCCESS));
+    MOCKER(hrtGetDevice).stubs().with(mockcpp::any()).will(returnValue(HCCL_SUCCESS));
+    MOCKER(hrtGetDevicePhyIdByIndex).stubs().with(mockcpp::any(), mockcpp::any()).will(returnValue(HCCL_SUCCESS));
+}
+
+TEST_F(ThreadManagerTest, Ut_DedicatedThreadAcquire_When_DeviceTypeInvalid_Expect_HCCL_E_PARA)
+{
+    ThreadHandle thread = 0;
+    HcclResult ret = threadManager->HcclDedicatedThreadAcquire(HCCL_DED_THREAD_TYPE_INVALID, 1, &thread);
+    EXPECT_EQ(ret, HCCL_E_PARA);
+}
+
+TEST_F(ThreadManagerTest, Ut_DedicatedThreadAcquire_When_DeviceThreadNullptr_Expect_HCCL_E_PTR)
+{
+    HcclResult ret
+        = threadManager->HcclDedicatedThreadAcquire(HCCL_DED_THREAD_TYPE_AICPU_ORDER_LAUNCH_DEVICE, 1, nullptr);
+    EXPECT_EQ(ret, HCCL_E_PTR);
+}
+
+TEST_F(ThreadManagerTest, Ut_DedicatedThreadAcquire_When_DeviceCreateSuccess_Expect_NonZeroThread)
+{
+    MockAicpuThreadEnv();
+    MOCKER_CPP(&AicpuLaunchMgr::ThreadKernelLaunchForComm).stubs().will(invoke(StubThreadKernelLaunchForCommDevice));
+
+    ThreadHandle thread = 0;
+    HcclResult ret
+        = threadManager->HcclDedicatedThreadAcquire(HCCL_DED_THREAD_TYPE_AICPU_ORDER_LAUNCH_DEVICE, 1, &thread);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+    EXPECT_NE(thread, static_cast<ThreadHandle>(0));
+}
+
+TEST_F(ThreadManagerTest, Ut_DedicatedThreadAcquire_When_DeviceRepeatedAcquire_Expect_SameThread)
+{
+    MockAicpuThreadEnv();
+    MOCKER_CPP(&AicpuLaunchMgr::ThreadKernelLaunchForComm).stubs().will(invoke(StubThreadKernelLaunchForCommDevice));
+
+    ThreadHandle thread1 = 0;
+    HcclResult ret
+        = threadManager->HcclDedicatedThreadAcquire(HCCL_DED_THREAD_TYPE_AICPU_ORDER_LAUNCH_DEVICE, 1, &thread1);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+    EXPECT_NE(thread1, static_cast<ThreadHandle>(0));
+
+    ThreadHandle thread2 = 0;
+    ret = threadManager->HcclDedicatedThreadAcquire(HCCL_DED_THREAD_TYPE_AICPU_ORDER_LAUNCH_DEVICE, 1, &thread2);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+    EXPECT_EQ(thread1, thread2);
+}
+
+TEST_F(ThreadManagerTest, Ut_DedicatedThreadAcquire_When_DeviceKernelLaunchFail_Expect_Error)
+{
+    MockAicpuThreadEnv();
+    MOCKER_CPP(&AicpuLaunchMgr::ThreadKernelLaunchForComm).stubs().will(returnValue(HCCL_E_INTERNAL));
+
+    ThreadHandle thread = 0;
+    HcclResult ret
+        = threadManager->HcclDedicatedThreadAcquire(HCCL_DED_THREAD_TYPE_AICPU_ORDER_LAUNCH_DEVICE, 1, &thread);
+    EXPECT_NE(ret, HCCL_SUCCESS);
 }

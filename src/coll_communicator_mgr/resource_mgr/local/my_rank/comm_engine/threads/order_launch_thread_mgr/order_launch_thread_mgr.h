@@ -63,7 +63,8 @@ public:
     HcclResult SetAttachedStream(const std::string& group, u32 graphId, void* stream);
     HcclResult EnsureOrderThread(
         OrderThreadMode mode, const std::string& group, uint32_t notifyNumPerThread, ThreadHandle& thread);
-    HcclResult EnsureDeviceOrderThread(const std::string& group, uint32_t notifyNumPerThread, ThreadHandle& thread);
+    HcclResult EnsureDeviceOrderThread(
+        CollComm* collComm, const std::string& group, uint32_t notifyNumPerThread, ThreadHandle& thread);
     ThreadHandle GetHcomAttachedThreadByGroup(const std::string& group);
     HcclResult OrderLaunchThreadAcquire(
         HcclDedicatedThreadType useType, CollComm* collComm, const std::string& group, uint32_t notifyNumPerThread,
@@ -86,8 +87,7 @@ private:
     std::unordered_map<u64, OrderLaunchContextRes> contextResMap_;
     std::unordered_map<u32, ThreadHandle> hcomAttachedThreadMap_; // graphId -> 附属从 thread（图模式使用）
     std::unordered_map<std::string, u32> groupGraphMap_;          // group -> graphId 映射
-    std::unordered_map<std::string, ThreadHandle> groupDeviceThreadMap_; // group -> device 级保序 thread
-    u32 blockNum_{0}; // AICPU block 数（懒加载缓存，0=未查询）
+    u32 blockNum_{0};                                             // AICPU block 数（懒加载缓存，0=未查询）
 };
 
 } // namespace hccl

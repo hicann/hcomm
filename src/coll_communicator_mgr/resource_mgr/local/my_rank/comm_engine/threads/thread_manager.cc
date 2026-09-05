@@ -703,6 +703,47 @@ ThreadMgr::HcclUnfoldThreadAcquire(HcclDedicatedThreadType useType, uint32_t not
     return HCCL_SUCCESS;
 }
 
+HcclResult ThreadMgr::HcclDeviceOrderThreadCreate(
+    HcclDedicatedThreadType useType, uint32_t notifyNumPerThread, ThreadHandle* thread)
+{
+    CHK_PRT_RET(thread == nullptr, HCCL_ERROR("[%s] thread is null", __func__), HCCL_E_PTR);
+    auto it = dedicatedThreadMap_.find(useType);
+    if (it != dedicatedThreadMap_.end() && it->second != 0) {
+        *thread = it->second;
+        HCCL_INFO("[%s] reuse device order thread[0x%llx], comm[%s]", __func__, *thread, commId_.c_str());
+        return HCCL_SUCCESS;
+    }
+
+    CommEngine engine = CommEngine::COMM_ENGINE_AICPU;
+    ThreadType type = THREAD_TYPE_TS;
+    ThreadConfig config;
+    HcommResult initRet = ThreadConfigInit(&config, 1);
+    CHK_PRT_RET(initRet != 0, HCCL_ERROR("[%s] ThreadConfigInit failed, ret[%d]", __func__, initRet), HCCL_E_INTERNAL);
+    config.notifyNumPerThread = static_cast<uint16_t>(notifyNumPerThread);
+
+    NotifyLoadType notifyLoadType;
+    StreamType streamType;
+    CHK_RET(GetNotifyLoadType(engine, type, notifyLoadType));
+    CHK_RET(GetStreamType(engine, type, streamType));
+
+    std::lock_guard<std::mutex> threadMtx(threadMutex_);
+    std::lock_guard<std::mutex> mapMtx(threadMapMutex_);
+
+    std::vector<std::shared_ptr<Thread>> newThreads;
+    CHK_RET(CreateAndInitThreads(engine, streamType, notifyLoadType, 1, &config, newThreads));
+
+    std::unique_ptr<ThreadHandle[]> hostHandle;
+    CHK_RET(AssignThreadHandles(engine, newThreads, thread, hostHandle));
+
+    threads_.reserve(threads_.size() + newThreads.size());
+    CHK_RET(StoreThreadsAndBuildHandleMap(engine, newThreads, hostHandle));
+
+    dedicatedThreadMap_[useType] = *thread;
+
+    HCCL_INFO("[%s] created device order thread[0x%llx], comm[%s]", __func__, *thread, commId_.c_str());
+    return HCCL_SUCCESS;
+}
+
 HcclResult ThreadMgr::HcclDedicatedThreadAcquire(
     HcclDedicatedThreadType useType, uint32_t notifyNumPerThread, ThreadHandle* thread)
 {
@@ -714,6 +755,8 @@ HcclResult ThreadMgr::HcclDedicatedThreadAcquire(
     std::lock_guard<std::mutex> lock(dedicatedThreadMutex_);
     if (useType == HCCL_DED_THREAD_TYPE_AICPU_LAUNCH || useType == HCCL_DED_THREAD_TYPE_AICPU_LAUNCH_GE) {
         CHK_RET(HcclUnfoldThreadAcquire(useType, notifyNumPerThread, thread));
+    } else if (useType == HCCL_DED_THREAD_TYPE_AICPU_ORDER_LAUNCH_DEVICE) {
+        CHK_RET(HcclDeviceOrderThreadCreate(useType, notifyNumPerThread, thread));
     } else {
         HCCL_ERROR("[%s] unsupport dedThreadType[%u]", __func__, useType);
         return HCCL_E_NOT_SUPPORT;

@@ -256,23 +256,6 @@ TEST_F(OrderLaunchThreadMgrTest, Ut_EnsureOrderThread_When_AclgraphMode_Expect_S
 
 /* ======================== EnsureDeviceOrderThread ======================== */
 
-TEST_F(OrderLaunchThreadMgrTest, Ut_EnsureDeviceOrderThread_When_New_Expect_Success)
-{
-    MockGetCurrentContext(0x100);
-    MockHcommThreadAlloc(HCCL_SUCCESS);
-    MockAclrtGetDeviceInfo(1);
-    mgr_->RegisterOrderLaunch("group1");
-    mgr_->RegisterOrderLaunch("group2");
-
-    ThreadHandle warmup = 0;
-    mgr_->EnsureDeviceOrderThread("warmup", 1, warmup);
-
-    ThreadHandle thread = 0;
-    HcclResult ret = mgr_->EnsureDeviceOrderThread("group1", 1, thread);
-    EXPECT_EQ(ret, HCCL_SUCCESS);
-    EXPECT_NE(thread, static_cast<ThreadHandle>(0));
-}
-
 TEST_F(OrderLaunchThreadMgrTest, Ut_EnsureDeviceOrderThread_When_GroupCountLeBlockNum_Expect_ThreadZero)
 {
     MockGetCurrentContext(0x100);
@@ -280,60 +263,27 @@ TEST_F(OrderLaunchThreadMgrTest, Ut_EnsureDeviceOrderThread_When_GroupCountLeBlo
     mgr_->RegisterOrderLaunch("group1");
 
     ThreadHandle thread = 0;
-    HcclResult ret = mgr_->EnsureDeviceOrderThread("group1", 1, thread);
+    HcclResult ret = mgr_->EnsureDeviceOrderThread(nullptr, "group1", 1, thread);
     EXPECT_EQ(ret, HCCL_SUCCESS);
     EXPECT_EQ(thread, static_cast<ThreadHandle>(0));
 }
 
-TEST_F(OrderLaunchThreadMgrTest, Ut_EnsureDeviceOrderThread_When_HcommThreadAllocFails_Expect_Error)
+TEST_F(OrderLaunchThreadMgrTest, Ut_EnsureDeviceOrderThread_When_CollCommNullAndNotDisabled_Expect_Error)
 {
     MockGetCurrentContext(0x100);
-    MockHcommThreadAlloc(static_cast<HcommResult>(HCCL_E_RUNTIME));
+    MockHcommThreadAlloc(HCCL_SUCCESS);
     MockAclrtGetDeviceInfo(1);
     mgr_->RegisterOrderLaunch("group1");
     mgr_->RegisterOrderLaunch("group2");
 
-    ThreadHandle warmup = 0;
-    mgr_->EnsureDeviceOrderThread("warmup", 1, warmup);
+    ThreadHandle warmup1 = 0;
+    mgr_->EnsureOrderThread(OrderThreadMode::OPBASE, "warmup1", 1, warmup1);
+    ThreadHandle warmup2 = 0;
+    mgr_->EnsureOrderThread(OrderThreadMode::OPBASE, "warmup2", 1, warmup2);
 
     ThreadHandle thread = 0;
-    HcclResult ret = mgr_->EnsureDeviceOrderThread("group1", 1, thread);
+    HcclResult ret = mgr_->EnsureDeviceOrderThread(nullptr, "group1", 1, thread);
     EXPECT_NE(ret, HCCL_SUCCESS);
-}
-
-TEST_F(OrderLaunchThreadMgrTest, Ut_EnsureDeviceOrderThread_When_SameGroup_Expect_Reuse)
-{
-    MockGetCurrentContext(0x100);
-    MockHcommThreadAlloc(HCCL_SUCCESS);
-    MockAclrtGetDeviceInfo(1);
-    mgr_->RegisterOrderLaunch("group1");
-    mgr_->RegisterOrderLaunch("group2");
-
-    ThreadHandle thread1 = 0;
-    mgr_->EnsureDeviceOrderThread("group1", 1, thread1);
-
-    ThreadHandle thread2 = 0;
-    HcclResult ret = mgr_->EnsureDeviceOrderThread("group1", 1, thread2);
-    EXPECT_EQ(ret, HCCL_SUCCESS);
-    EXPECT_EQ(thread1, thread2);
-}
-
-TEST_F(OrderLaunchThreadMgrTest, Ut_EnsureDeviceOrderThread_When_DifferentGroup_Expect_NewThread)
-{
-    MockGetCurrentContext(0x100);
-    MockHcommThreadAlloc(HCCL_SUCCESS);
-    MockAclrtGetDeviceInfo(1);
-    mgr_->RegisterOrderLaunch("group1");
-    mgr_->RegisterOrderLaunch("group2");
-    mgr_->RegisterOrderLaunch("group3");
-
-    ThreadHandle thread1 = 0;
-    mgr_->EnsureDeviceOrderThread("group1", 1, thread1);
-
-    ThreadHandle thread2 = 0;
-    HcclResult ret = mgr_->EnsureDeviceOrderThread("group2", 1, thread2);
-    EXPECT_EQ(ret, HCCL_SUCCESS);
-    EXPECT_NE(thread1, thread2);
 }
 
 /* ======================== GetHcomAttachedThreadByGroup ======================== */
@@ -511,7 +461,7 @@ TEST_F(OrderLaunchThreadMgrTest, Ut_OrderLaunchThreadAcquire_When_GeNotSet_Expec
     EXPECT_EQ(thread, static_cast<ThreadHandle>(0));
 }
 
-TEST_F(OrderLaunchThreadMgrTest, Ut_OrderLaunchThreadAcquire_When_Device_Expect_Success)
+TEST_F(OrderLaunchThreadMgrTest, Ut_OrderLaunchThreadAcquire_When_DeviceCollCommNull_Expect_Error)
 {
     MockGetCurrentContext(0x100);
     MockHcommThreadAlloc(HCCL_SUCCESS);
@@ -519,14 +469,15 @@ TEST_F(OrderLaunchThreadMgrTest, Ut_OrderLaunchThreadAcquire_When_Device_Expect_
     mgr_->RegisterOrderLaunch("group1");
     mgr_->RegisterOrderLaunch("group2");
 
-    ThreadHandle warmup = 0;
-    mgr_->EnsureDeviceOrderThread("warmup", 1, warmup);
+    ThreadHandle warmup1 = 0;
+    mgr_->EnsureOrderThread(OrderThreadMode::OPBASE, "warmup1", 1, warmup1);
+    ThreadHandle warmup2 = 0;
+    mgr_->EnsureOrderThread(OrderThreadMode::OPBASE, "warmup2", 1, warmup2);
 
     ThreadHandle thread = 0;
     HcclResult ret
         = mgr_->OrderLaunchThreadAcquire(HCCL_DED_THREAD_TYPE_AICPU_ORDER_LAUNCH_DEVICE, nullptr, "group1", 1, thread);
-    EXPECT_EQ(ret, HCCL_SUCCESS);
-    EXPECT_NE(thread, static_cast<ThreadHandle>(0));
+    EXPECT_NE(ret, HCCL_SUCCESS);
 }
 
 /* ======================== Destroy ======================== */
@@ -554,14 +505,9 @@ TEST_F(OrderLaunchThreadMgrTest, Ut_Destroy_When_HasResources_Expect_NoCrash)
 TEST_F(OrderLaunchThreadMgrTest, Ut_Destroy_When_HasDeviceOrderThread_Expect_NoCrash)
 {
     MockGetCurrentContext(0x100);
-    MockHcommThreadAlloc(HCCL_SUCCESS);
-    MockHcommThreadFree(HCCL_SUCCESS);
     MockAclrtGetDeviceInfo(1);
     mgr_->RegisterOrderLaunch("group1");
     mgr_->RegisterOrderLaunch("group2");
-
-    ThreadHandle thread = 0;
-    mgr_->EnsureDeviceOrderThread("group1", 1, thread);
 
     mgr_.reset();
     SUCCEED();

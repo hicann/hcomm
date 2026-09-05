@@ -92,19 +92,6 @@ void OrderLaunchThreadMgr::Destroy()
     }
     hcomAttachedThreadMap_.clear();
     groupGraphMap_.clear();
-
-    for (auto& entry : groupDeviceThreadMap_) {
-        if (entry.second != 0) {
-            HcommResult ret = HcommThreadFree(&entry.second, 1);
-            if (ret != HCCL_SUCCESS) {
-                HCCL_WARNING(
-                    "[OrderLaunchThreadMgr] HcommThreadFree deviceOrderThread[0x%llx] failed, ret[%d], group[%s]",
-                    entry.second, ret, entry.first.c_str());
-            }
-            entry.second = 0;
-        }
-    }
-    groupDeviceThreadMap_.clear();
 }
 
 HcclResult OrderLaunchThreadMgr::RegisterOrderLaunch(const std::string& group)
@@ -146,17 +133,6 @@ HcclResult OrderLaunchThreadMgr::UnRegisterOrderLaunch(const std::string& group)
     }
 
     groupCtxMap_.erase(it);
-
-    auto devIt = groupDeviceThreadMap_.find(group);
-    if (devIt != groupDeviceThreadMap_.end() && devIt->second != 0) {
-        HcommResult ret = HcommThreadFree(&devIt->second, 1);
-        if (ret != HCCL_SUCCESS) {
-            HCCL_WARNING(
-                "[OrderLaunchThreadMgr][%s] HcommThreadFree deviceOrderThread[0x%llx] failed, ret[%d], group[%s]",
-                __func__, devIt->second, ret, group.c_str());
-        }
-        groupDeviceThreadMap_.erase(devIt);
-    }
 
     HCCL_INFO("%s success, group[%s]", __func__, group.c_str());
     return HCCL_SUCCESS;
@@ -296,7 +272,7 @@ HcclResult OrderLaunchThreadMgr::EnsureOrderThread(
 }
 
 HcclResult OrderLaunchThreadMgr::EnsureDeviceOrderThread(
-    const std::string& group, uint32_t notifyNumPerThread, ThreadHandle& thread)
+    CollComm* collComm, const std::string& group, uint32_t notifyNumPerThread, ThreadHandle& thread)
 {
     std::unique_lock<std::mutex> lock(mutex_);
     thread = 0;
@@ -312,28 +288,16 @@ HcclResult OrderLaunchThreadMgr::EnsureDeviceOrderThread(
         return HCCL_SUCCESS;
     }
 
-    auto it = groupDeviceThreadMap_.find(group);
-    if (it != groupDeviceThreadMap_.end() && it->second != 0) {
-        thread = it->second;
-        HCCL_INFO(
-            "[OrderLaunchThreadMgr][%s] reuse device order thread[0x%llx], group[%s]", __func__, thread, group.c_str());
-        return HCCL_SUCCESS;
-    }
-
-    HCCL_INFO(
-        "[OrderLaunchThreadMgr][%s] creating new device order thread, group[%s], notifyNumPerThread[%u]", __func__,
-        group.c_str(), notifyNumPerThread);
-
-    ThreadHandle targetThread = 0;
-    HcommResult ret = HcommThreadAlloc(COMM_ENGINE_AICPU_TS, 1, &notifyNumPerThread, &targetThread);
     CHK_PRT_RET(
-        ret != HCCL_SUCCESS,
-        HCCL_ERROR("[%s] HcommThreadAlloc failed, ret[%d], group[%s]", __func__, ret, group.c_str()),
-        static_cast<HcclResult>(ret));
+        collComm == nullptr, HCCL_ERROR("[%s] collComm is null, group[%s]", __func__, group.c_str()), HCCL_E_PTR);
+    CommEngineResMgr* engineResMgr = collComm->GetCommEngineResMgr();
+    CHK_PRT_RET(
+        engineResMgr == nullptr, HCCL_ERROR("[%s] engineResMgr is null, group[%s]", __func__, group.c_str()),
+        HCCL_E_PTR);
+    CHK_RET(engineResMgr->HcclDedicatedThreadAcquire(
+        HCCL_DED_THREAD_TYPE_AICPU_ORDER_LAUNCH_DEVICE, notifyNumPerThread, &thread));
 
-    thread = targetThread;
-    groupDeviceThreadMap_[group] = targetThread;
-    HCCL_INFO("[OrderLaunchThreadMgr] Created new device order thread[0x%llx], group[%s]", targetThread, group.c_str());
+    HCCL_INFO("[OrderLaunchThreadMgr][%s] device order thread[0x%llx], group[%s]", __func__, thread, group.c_str());
     return HCCL_SUCCESS;
 }
 
@@ -391,7 +355,7 @@ HcclResult OrderLaunchThreadMgr::RegisterDfx(
     if (useType == HCCL_DED_THREAD_TYPE_AICPU_ORDER_LAUNCH_DEVICE) {
         HcclCommDfx* hcclCommDfx = collComm->GetHcclCommDfx();
         if (hcclCommDfx != nullptr) {
-            const std::string kernelName = "RunAicpuThreadInit";
+            const std::string kernelName = "RunAicpuIndOpThreadInit";
             CHK_RET(hcclCommDfx->ReportKernel(beginTime, commId, kernelName, SalGetTid(), false));
             HCCL_INFO("[%s] DEVICE order launch thread ReportKernel done, comm[%s]", __func__, commId.c_str());
         }
@@ -449,7 +413,7 @@ HcclResult OrderLaunchThreadMgr::OrderLaunchThreadAcquire(
             break;
         }
         case HCCL_DED_THREAD_TYPE_AICPU_ORDER_LAUNCH_DEVICE: {
-            HcclResult ret = EnsureDeviceOrderThread(group, notifyNumPerThread, thread);
+            HcclResult ret = EnsureDeviceOrderThread(collComm, group, notifyNumPerThread, thread);
             CHK_PRT_RET(
                 ret != HCCL_SUCCESS, HCCL_ERROR("[%s] EnsureDeviceOrderThread failed, ret[%d]", __func__, ret), ret);
             break;
@@ -459,8 +423,10 @@ HcclResult OrderLaunchThreadMgr::OrderLaunchThreadAcquire(
             return HCCL_E_PARA;
     }
 
-    if (thread != 0 && collComm != nullptr && useType != HCCL_DED_THREAD_TYPE_AICPU_ORDER_LAUNCH_DEVICE) {
-        CHK_RET(RegisterThreadToComm(collComm, thread));
+    if (thread != 0 && collComm != nullptr) {
+        if (useType != HCCL_DED_THREAD_TYPE_AICPU_ORDER_LAUNCH_DEVICE) {
+            CHK_RET(RegisterThreadToComm(collComm, thread));
+        }
         CHK_RET(RegisterDfx(collComm, useType, thread, beginTime, group));
     }
 
