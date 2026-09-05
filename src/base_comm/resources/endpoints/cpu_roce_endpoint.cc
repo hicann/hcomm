@@ -110,9 +110,20 @@ HcclResult CpuRoceEndpoint::Init()
         "CpuRoceEndpoint::%s success, devPhyId[%u], ipAddr[%s], ctxHandle[%p]", __func__, devPhyId,
         ipAddr.Describe().c_str(), ctxHandle_);
 
+    // useAllocMemBase：见 RoceRegedMemMgr 类注（本质 D2N=UB；当前以 lbMax>0 代理，待 HCCP 接口）
+    Capabilities caps{};
+    HcclResult capRet = GetCapabilities(caps);
+    if (capRet != HCCL_SUCCESS) {
+        HCCL_ERROR("[CpuRoceEndpoint][%s] GetCapabilities failed, ret[%d]", __func__, capRet);
+        CHK_RET(ReleaseEndpointCtx());
+        return capRet;
+    }
+    const bool useAllocMemBase = (caps.lbMax > 0);
+    HCCL_INFO("[CpuRoceEndpoint::Init] lbMax[%d] useAllocMemBase[%d]", caps.lbMax, static_cast<int>(useAllocMemBase));
+
     MemMgrCacheKey key{devPhyId, COMM_PROTOCOL_ROCE, ipAddr, LocTypeToPortType(endpointDesc_.loc.locType)};
-    auto createMgr = [this]() {
-        return std::make_shared<RoceRegedMemMgr>(ctxHandle_);
+    auto createMgr = [this, useAllocMemBase]() {
+        return std::make_shared<RoceRegedMemMgr>(ctxHandle_, useAllocMemBase);
     };
     auto ret = AttachCache(key, createMgr);
     if (ret != HCCL_SUCCESS) {
@@ -128,17 +139,19 @@ HcclResult CpuRoceEndpoint::GetCapabilities(Capabilities& caps)
     HCCL_INFO("[CpuRoceEndpoint::%s] START.", __func__);
     static constexpr uint64_t RDMA_MAX_WR_LENGTH = 1ULL * 1024 * 1024 * 1024; // 单次RDMA操作最大长度1GB
     if (!isCapabilitiesAvailable_) {
+        // Init 在创建 mem mgr 前就会调用；用 ctxHandle_，不依赖 regedMemMgr_。
         // 待 HCCP 提供查询设备支持的最大发送消息的接口后，查询设备实际值。
+        CHK_PTR_NULL(ctxHandle_);
         capabilities_.maxMsgSize = RDMA_MAX_WR_LENGTH;
-        CHK_SMART_PTR_NULL(regedMemMgr_);
-        uint32_t ret = RaGetLbMax(regedMemMgr_->GetRdmaHandle(), &(capabilities_.lbMax));
+        capabilities_.lbMax = 0;
+        uint32_t ret = RaGetLbMax(ctxHandle_, &(capabilities_.lbMax));
         HCCL_DEBUG("[CpuRoceEndpoint::GetCapabilities] lbMax = %d.", capabilities_.lbMax);
         CHK_PRT_RET(
             ret != 0,
             HCCL_ERROR(
                 "[CpuRoceEndpoint::GetCapabilities][GetLbMax]errNo[0x%016llx] RaGetLbMax fail. "
                 "return[%u], params: rdmaHandle[%p], lbMax[%d]",
-                HCCL_ERROR_CODE(HCCL_E_NETWORK), ret, regedMemMgr_->GetRdmaHandle(), capabilities_.lbMax),
+                HCCL_ERROR_CODE(HCCL_E_NETWORK), ret, ctxHandle_, capabilities_.lbMax),
             HCCL_E_NETWORK);
         isCapabilitiesAvailable_ = true;
     }
