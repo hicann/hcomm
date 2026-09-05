@@ -149,7 +149,7 @@ struct Rt91095StarsSqeHeader {
     uint8_t ptrMode : 1;
     uint8_t rttMode : 1;
     uint8_t headUpdate : 1;
-    uint8_t reserved : 1;
+    uint8_t sqeProf : 1; // SQE profiling标记(未开启L1时为0)；A5不启用，恒为0
     uint16_t numBlocks;
 
     /* word1 */

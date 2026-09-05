@@ -8,7 +8,9 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include <thread>
 #include <vector>
+#include <algorithm>
 
 #include "gtest/gtest.h"
 #include <mockcpp/mockcpp.hpp>
@@ -23,6 +25,8 @@
 #include "drv_api_exception.h"
 #include "rtsq_base.h"
 #include "internal_exception.h"
+#include "sqe_build_a5.h"
+#include "adapter_rts_common.h"
 #undef protected
 #undef private
 
@@ -52,6 +56,8 @@ protected:
     virtual void TearDown()
     {
         SetPlfDebugConfigValue(0);
+        // 重置SQE profiling置位开关，防止用例异常路径(THROW)泄漏状态污染后续用例
+        Hccl::SetSqeProfilingEnabled(false);
         GlobalMockObject::verify();
         std::cout << "A Test case in RtsqA5 TearDown" << std::endl;
     }
@@ -611,4 +617,197 @@ TEST_F(RtsqA5Test, Ut_LaunchNewTask_SingleSqe_Success)
 
     auto* sqHeader = reinterpret_cast<Rt91095StarsSqeHeader*>(mockSq);
     EXPECT_EQ(sqHeader->type, static_cast<uint8_t>(Rt91095StarsSqeType::RT_91095_SQE_TYPE_NOTIFY_RECORD));
+}
+
+TEST_F(RtsqA5Test, Ut_SqeProfilingDisabled_SqeProfStaysZero)
+{
+    Hccl::SetSqeProfilingEnabled(false);
+
+    RtsqA5 rtsq(fakedevPhyId, fakeStreamId, fakeSqId);
+    rtsq.NotifyWait(0);
+
+    auto* header = reinterpret_cast<Rt91095StarsSqeHeader*>(rtsq.locBuf);
+    EXPECT_EQ(header->sqeProf, 0U);
+}
+
+TEST_F(RtsqA5Test, Ut_SqeProfilingEnabled_SqeProfSetToOne)
+{
+    Hccl::SetSqeProfilingEnabled(true);
+
+    RtsqA5 rtsq(fakedevPhyId, fakeStreamId, fakeSqId);
+    rtsq.NotifyWait(0);
+
+    auto* header = reinterpret_cast<Rt91095StarsSqeHeader*>(rtsq.locBuf);
+    EXPECT_EQ(header->sqeProf, 1U);
+
+    Hccl::SetSqeProfilingEnabled(false);
+}
+
+TEST_F(RtsqA5Test, Ut_NotifyWait_WithProfiling_SqeProfSetToOne)
+{
+    Hccl::SetSqeProfilingEnabled(true);
+
+    RtsqA5 rtsq(fakedevPhyId, fakeStreamId, fakeSqId);
+    rtsq.NotifyWait(0);
+
+    auto* header = reinterpret_cast<Rt91095StarsSqeHeader*>(rtsq.locBuf);
+    EXPECT_EQ(header->sqeProf, 1U);
+
+    Hccl::SetSqeProfilingEnabled(false);
+}
+
+TEST_F(RtsqA5Test, Ut_SdmaCopy_WithProfiling_SqeProfSetToOne)
+{
+    Hccl::SetSqeProfilingEnabled(true);
+
+    RtsqA5 rtsq(fakedevPhyId, fakeStreamId, fakeSqId);
+    rtsq.SdmaCopy(0x100, 0x200, 0x300, 0x400);
+
+    auto* header = reinterpret_cast<Rt91095StarsSqeHeader*>(rtsq.locBuf);
+    EXPECT_EQ(header->sqeProf, 1U);
+
+    Hccl::SetSqeProfilingEnabled(false);
+}
+
+TEST_F(RtsqA5Test, Ut_NotifyWait_WithoutProfiling_SqeProfStaysZero)
+{
+    Hccl::SetSqeProfilingEnabled(false);
+
+    RtsqA5 rtsq(fakedevPhyId, fakeStreamId, fakeSqId);
+    rtsq.NotifyWait(0);
+
+    auto* header = reinterpret_cast<Rt91095StarsSqeHeader*>(rtsq.locBuf);
+    EXPECT_EQ(header->sqeProf, 0U);
+}
+
+TEST_F(RtsqA5Test, Ut_SqeProfiling_ToggleOffThenBuild_SqeProfStaysZero)
+{
+    // 开关推送关闭后，后续构建的SQE不再置位
+    Hccl::SetSqeProfilingEnabled(true);
+    Hccl::SetSqeProfilingEnabled(false);
+
+    RtsqA5 rtsq(fakedevPhyId, fakeStreamId, fakeSqId);
+    rtsq.NotifyWait(0);
+
+    auto* header = reinterpret_cast<Rt91095StarsSqeHeader*>(rtsq.locBuf);
+    EXPECT_EQ(header->sqeProf, 0U);
+}
+
+TEST_F(RtsqA5Test, Ut_NotifyWait_EnabledOnOtherThread_SqeProfStaysZero)
+{
+    RtsqA5 rtsq(fakedevPhyId, fakeStreamId, fakeSqId);
+    // 开关为线程级变量：其他线程置1不影响本线程，本线程未经报到口开启时读初始值0
+    std::thread toggleThread([]() {
+        Hccl::SetSqeProfilingEnabled(true);
+    });
+    toggleThread.join();
+
+    std::thread buildThread([&rtsq]() {
+        rtsq.NotifyWait(0);
+    });
+    buildThread.join();
+
+    auto* header = reinterpret_cast<Rt91095StarsSqeHeader*>(rtsq.locBuf);
+    EXPECT_EQ(header->sqeProf, 0U);
+
+    // 同线程内开启后构建，置位生效：第二次NotifyWait写入locBuf第二槽位，须取新槽位header断言
+    Hccl::SetSqeProfilingEnabled(true);
+    rtsq.NotifyWait(0);
+    auto* secondHeader = reinterpret_cast<Rt91095StarsSqeHeader*>(rtsq.locBuf + RTSQ_SQE_SIZE);
+    EXPECT_EQ(secondHeader->sqeProf, 1U);
+
+    Hccl::SetSqeProfilingEnabled(false);
+}
+
+TEST_F(RtsqA5Test, Ut_InlineBuildFunctions_WithProfiling_SqeProfSetToOne)
+{
+    Hccl::SetSqeProfilingEnabled(true);
+    std::vector<uint8_t> sqeBuf(128, 0);
+    auto* header = reinterpret_cast<Rt91095StarsSqeHeader*>(sqeBuf.data());
+    auto resetAndBuild = [&sqeBuf, header](auto buildFunc) {
+        std::fill(sqeBuf.begin(), sqeBuf.end(), 0);
+        buildFunc();
+        return header->sqeProf;
+    };
+
+    // 内联Build函数10个（.h）
+    EXPECT_EQ(1U, resetAndBuild([&]() {
+                  Hccl::BuildA5SqeNotifyWait(1, 1, 1, sqeBuf.data());
+              }));
+    EXPECT_EQ(1U, resetAndBuild([&]() {
+                  Hccl::BuildA5SqeNotifyWait(1, 1, 1, 68, sqeBuf.data());
+              }));
+    EXPECT_EQ(1U, resetAndBuild([&]() {
+                  Hccl::BuildA5SqeNotifyRecord(1, 1, 1, sqeBuf.data());
+              }));
+    EXPECT_EQ(1U, resetAndBuild([&]() {
+                  Hccl::BuildA5SqeCnt1toNNotifyRecord(1, 1, 1, 8, sqeBuf.data());
+              }));
+    EXPECT_EQ(1U, resetAndBuild([&]() {
+                  Hccl::BuildA5SqeCnt1toNNotifyWait(1, 1, 1, 8, sqeBuf.data());
+              }));
+    EXPECT_EQ(1U, resetAndBuild([&]() {
+                  Hccl::BuildA5SqeCntNto1NotifyRecord(1, 1, 1, 8, sqeBuf.data());
+              }));
+    EXPECT_EQ(1U, resetAndBuild([&]() {
+                  Hccl::BuildA5SqeCntNto1NotifyWait(1, 1, 1, 8, sqeBuf.data());
+              }));
+    EXPECT_EQ(1U, resetAndBuild([&]() {
+                  Hccl::BuildA5SqeSdmaCopy(1, 1, 0x100, 0x200, 0x30, 0, 0, sqeBuf.data());
+              }));
+    EXPECT_EQ(1U, resetAndBuild([&]() {
+                  Hccl::BuildA5SqeUbDbSend(1, 1, Hccl::UbJettyLiteId(0, 1, 2), 3, sqeBuf.data());
+              }));
+    EXPECT_EQ(1U, resetAndBuild([&]() {
+                  Hccl::BuildA5SqeP2pWriteValue(1, 1, 0x1000, 0x5a, sqeBuf.data());
+              }));
+
+    Hccl::SetSqeProfilingEnabled(false);
+}
+
+TEST_F(RtsqA5Test, Ut_NonInlineBuild_WithProfiling_SqeProfSetToOne)
+{
+    Hccl::SetSqeProfilingEnabled(true);
+    // COND类型SQE约68字节，buffer开128字节覆盖全部SQE类型
+    std::vector<uint8_t> sqeBuf(128, 0);
+    auto* header1 = reinterpret_cast<Rt91095StarsSqeHeader*>(sqeBuf.data());
+    auto resetAndBuild = [&sqeBuf, header1](auto buildFunc) {
+        std::fill(sqeBuf.begin(), sqeBuf.end(), 0);
+        buildFunc();
+        return header1->sqeProf;
+    };
+
+    // 非内联Build函数3个（.cc），last=true/false分别覆盖clear与nop分支
+    EXPECT_EQ(1U, resetAndBuild([&]() {
+                  Hccl::BuildA5SqeCCoreNotifyWait(1, 1, 0x2000, 0x2004, true, sqeBuf.data());
+              }));
+    EXPECT_EQ(1U, resetAndBuild([&]() {
+                  Hccl::BuildA5SqeCCoreNotifyWait(1, 1, 0x2000, 0x2004, false, sqeBuf.data());
+              }));
+    EXPECT_EQ(1U, resetAndBuild([&]() {
+                  Hccl::BuildA5SqeCCoreNotifyRecord(1, 1, 0x3000, 0x3004, sqeBuf.data());
+              }));
+    EXPECT_EQ(1U, resetAndBuild([&]() {
+                  Hccl::BuildA5SqeRdmaDbSend(1, 1, 0x4000, 0x1234, sqeBuf.data());
+              }));
+
+    Hccl::SetSqeProfilingEnabled(false);
+}
+
+TEST_F(RtsqA5Test, Ut_NonInlineBuild_WithoutProfiling_SqeProfStaysZero)
+{
+    Hccl::SetSqeProfilingEnabled(false);
+    std::vector<uint8_t> sqeBuf(128, 0);
+    auto* header = reinterpret_cast<Rt91095StarsSqeHeader*>(sqeBuf.data());
+
+    Hccl::BuildA5SqeCCoreNotifyWait(1, 1, 0x2000, 0x2004, true, sqeBuf.data());
+    EXPECT_EQ(header->sqeProf, 0U);
+
+    std::fill(sqeBuf.begin(), sqeBuf.end(), 0);
+    Hccl::BuildA5SqeCCoreNotifyRecord(1, 1, 0x3000, 0x3004, sqeBuf.data());
+    EXPECT_EQ(header->sqeProf, 0U);
+
+    std::fill(sqeBuf.begin(), sqeBuf.end(), 0);
+    Hccl::BuildA5SqeRdmaDbSend(1, 1, 0x4000, 0x1234, sqeBuf.data());
+    EXPECT_EQ(header->sqeProf, 0U);
 }

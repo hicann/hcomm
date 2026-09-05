@@ -29,6 +29,7 @@
 #include "channel.h"
 #include "aicpu_ts_channel_helper.h"
 #include "unified_platform/pub_inc/config_plf_log_v2.h"
+#include "sqe_build_a5.h"
 
 using Hccl::PLF_DATA_OP;
 
@@ -70,7 +71,33 @@ HcclResult HcommThreadGetNotifyId(ThreadHandle thread, uint32_t notifyIdx, uint3
     return HCCL_SUCCESS;
 }
 
+namespace {
+// 刷新SQE profiling置位开关：L1开启且设备为960(A6)时推送1，否则推送0。
+// 须先于HcclDfxRegOpInfoByCommId全部提前return执行，否则开关从开到关后无法刷回0，
+// SQE将永久错误置位，故收敛在唯一入口先行调用。
+void RefreshSqeProfilingState()
+{
+    bool isSqeProfEnabled = false;
+    if (Hccl::DfxProfilingHandlerLite::GetInstance().GetProfL1State()) {
+        DevType devType = DevType::DEV_TYPE_COUNT;
+        (void)hrtGetDeviceType(devType);
+        isSqeProfEnabled = (devType == DevType::DEV_TYPE_960);
+    }
+    Hccl::SetSqeProfilingEnabled(isSqeProfEnabled);
+}
+
+HcclResult HcclDfxRegOpInfoByCommIdImpl(char* commId, void* hcclDfxOpInfo);
+} // namespace
+
 HcclResult HcclDfxRegOpInfoByCommId(char* commId, void* hcclDfxOpInfo)
+{
+    RefreshSqeProfilingState();
+
+    return HcclDfxRegOpInfoByCommIdImpl(commId, hcclDfxOpInfo);
+}
+
+namespace {
+HcclResult HcclDfxRegOpInfoByCommIdImpl(char* commId, void* hcclDfxOpInfo)
 {
     if (!GetProfilingEnable() && !hcomm::GetTaskExceptionEnable()) {
         return HCCL_SUCCESS;
@@ -94,6 +121,7 @@ HcclResult HcclDfxRegOpInfoByCommId(char* commId, void* hcclDfxOpInfo)
 
     return HCCL_SUCCESS;
 }
+} // namespace
 
 int32_t HcommLocalCopyOnThread(ThreadHandle thread, void* dst, const void* src, uint64_t len)
 {

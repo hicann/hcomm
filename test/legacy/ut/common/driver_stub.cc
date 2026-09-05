@@ -9,6 +9,7 @@
  */
 
 #include "ascend_hal.h"
+#include "adapter_rts_common.h"
 
 drvError_t halResourceIdCheck(struct drvResIdKey* info) { return drvError_t::DRV_ERROR_NONE; }
 
@@ -49,4 +50,10 @@ drvError_t drvGetLocalDevIDByHostDevID(uint32_t host_dev_id, uint32_t* local_dev
 drvError_t drvMemcpy(DVdeviceptr dst, size_t destMax, DVdeviceptr src, size_t ByteCount)
 {
     return drvError_t::DRV_ERROR_NONE;
+}
+
+HcclResult hrtGetDeviceType(DevType& devType)
+{
+    devType = DevType::DEV_TYPE_COUNT;
+    return HCCL_SUCCESS;
 }

@@ -219,7 +219,7 @@ HcclUBMemcpySqe::HcclUBMemcpySqe()
     sqe->header.ptrMode = 0U;
     sqe->header.rttMode = 0U;
     sqe->header.headUpdate = 0U;
-    sqe->header.reserved = 0U;
+    sqe->header.sqeProf = 0U;
     sqe->header.numBlocks = 0U;
 
     sqe->kernelCredit = RT_STARS_DEFAULT_KERNEL_CREDIT;

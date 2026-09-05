@@ -10,8 +10,13 @@
 
 #include "sqe_build_a5.h"
 #include "communicator_impl_lite_manager.h"
+#include "adapter_rts_common.h"
 
 namespace Hccl {
+
+thread_local uint8_t g_sqeProfBit = 0;
+
+void SetSqeProfilingEnabled(bool isEnabled) { g_sqeProfBit = isEnabled ? 1U : 0U; }
 
 u32 GetKernelExecTimeoutFromEnvConfig()
 {
@@ -127,11 +132,12 @@ void BuildA5SqeCCoreNotifyWait(u32 streamId, u32 taskId, u64 waitAddr, u64 actAd
         }
     }
 
+    sqe->header.sqeProf = g_sqeProfBit;
     HCCL_INFO(
-        "[SQE]CCoreWait: waitAddr=%llu, actAddr=%llu, last=%u, streamId=%u, taskId=%u, "
+        "[SQE]CCoreWait: waitAddr=%llu, actAddr=%llu, last=%u, streamId=%u, taskId=%u, sqeProf=%u, "
         "ISA=%08x %08x %08x %08x %08x %08x %08x",
-        waitAddr, actAddr, last, streamId, taskId, sqe->ldrImm1, sqe->ldrImm2, sqe->beq, sqe->clear.llwi1,
-        sqe->clear.lhwi1, sqe->clear.sw, sqe->clear.nop[0]);
+        waitAddr, actAddr, last, streamId, taskId, static_cast<uint32_t>(sqe->header.sqeProf), sqe->ldrImm1,
+        sqe->ldrImm2, sqe->beq, sqe->clear.llwi1, sqe->clear.lhwi1, sqe->clear.sw, sqe->clear.nop[0]);
 }
 
 void BuildA5SqeCCoreNotifyRecord(u32 streamId, u32 taskId, u64 writeAddr, u64 valueAddr, uint8_t* const sqeIn)
@@ -157,10 +163,12 @@ void BuildA5SqeCCoreNotifyRecord(u32 streamId, u32 taskId, u64 writeAddr, u64 va
         ConstructNop(nop);
     }
 
+    sqe->header.sqeProf = g_sqeProfBit;
     HCCL_INFO(
-        "[SQE]CCoreWrite: writeAddr=%p, valueAddr=%p, streamId=%u, taskId=%u, "
+        "[SQE]CCoreWrite: writeAddr=%p, valueAddr=%p, streamId=%u, taskId=%u, sqeProf=%u, "
         "ISA=%08x %08x %08x %08x %08x",
-        writeAddr, valueAddr, streamId, taskId, sqe->ldrImm, sqe->llwi1, sqe->lhwi1, sqe->sw, sqe->nop[0]);
+        writeAddr, valueAddr, streamId, taskId, static_cast<uint32_t>(sqe->header.sqeProf), sqe->ldrImm, sqe->llwi1,
+        sqe->lhwi1, sqe->sw, sqe->nop[0]);
 }
 
 // 写64bit值的形式来完成敲DB
@@ -183,6 +191,7 @@ void BuildA5SqeRdmaDbSend(u32 streamId, u32 taskId, u64 dbAddr, u64 dbValue, uin
     sqe->writeValuePart[1] = static_cast<uint32_t>((dbValue >> UINT32_BIT_NUM) & MASK_32_BIT); // high 32 bit
 
     sqe->va = 1U;
+    sqe->header.sqeProf = g_sqeProfBit;
 }
 
 } // namespace Hccl

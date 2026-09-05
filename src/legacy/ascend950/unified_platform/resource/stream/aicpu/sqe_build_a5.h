@@ -21,6 +21,9 @@ constexpr u32 LOW_BITS = 16;
 
 u32 GetKernelExecTimeoutFromEnvConfig();
 
+extern thread_local uint8_t g_sqeProfBit;
+void SetSqeProfilingEnabled(bool isEnabled);
+
 inline void SetSqeHeaderTaskFields(void* sqe, u32 taskId)
 {
     auto header = reinterpret_cast<Rt91095StarsSqeHeader*>(sqe);
@@ -44,6 +47,7 @@ inline void BuildA5SqeNotifyWait(u32 streamId, u32 taskId, u32 notifyId, uint8_t
         = RT_STARS_NEVER_TIMEOUT_KERNEL_CREDIT; // wait任务需要设置为0xff，否则会触发rtsq的超时机制，即使record了也wait不到
     sqe->notifyId = notifyId;
     sqe->timeout = GetKernelExecTimeoutFromEnvConfig();
+    sqe->header.sqeProf = g_sqeProfBit;
 }
 
 inline void BuildA5SqeNotifyWait(u32 streamId, u32 taskId, u32 notifyId, u32 timeout, uint8_t* const sqeIn)
@@ -61,6 +65,7 @@ inline void BuildA5SqeNotifyWait(u32 streamId, u32 taskId, u32 notifyId, u32 tim
     sqe->subType = static_cast<uint16_t>(Rt91095NotifySubType::NOTIFY_SUB_TYPE_SINGLE_NOTIFY_WAIT);
     sqe->notifyId = notifyId;
     sqe->timeout = timeout;
+    sqe->header.sqeProf = g_sqeProfBit;
 }
 
 inline void BuildA5SqeNotifyRecord(u32 streamId, u32 taskId, u32 notifyId, uint8_t* const sqeIn)
@@ -75,6 +80,7 @@ inline void BuildA5SqeNotifyRecord(u32 streamId, u32 taskId, u32 notifyId, uint8
     sqe->kernelCredit = RT_STARS_DEFAULT_KERNEL_CREDIT;
     sqe->subType = static_cast<uint16_t>(Rt91095NotifySubType::NOTIFY_SUB_TYPE_SINGLE_NOTIFY_RECORD);
     sqe->notifyId = notifyId;
+    sqe->header.sqeProf = g_sqeProfBit;
 }
 
 inline void BuildA5SqeCnt1toNNotifyRecord(u32 streamId, u32 taskId, u32 notifyId, u32 cntValue, uint8_t* const sqeIn)
@@ -93,6 +99,7 @@ inline void BuildA5SqeCnt1toNNotifyRecord(u32 streamId, u32 taskId, u32 notifyId
     sqe->subType = static_cast<uint16_t>(Rt91095NotifySubType::NOTIFY_SUB_TYPE_COUNT_NOTIFY_RECORD);
     sqe->notifyId = notifyId;
     sqe->cntValue = cntValue;
+    sqe->header.sqeProf = g_sqeProfBit;
 }
 
 inline void BuildA5SqeCnt1toNNotifyWait(u32 streamId, u32 taskId, u32 notifyId, u32 cntValue, uint8_t* const sqeIn)
@@ -111,6 +118,7 @@ inline void BuildA5SqeCnt1toNNotifyWait(u32 streamId, u32 taskId, u32 notifyId, 
     sqe->subType = static_cast<uint16_t>(Rt91095NotifySubType::NOTIFY_SUB_TYPE_COUNT_NOTIFY_WAIT);
     sqe->notifyId = notifyId;
     sqe->cntValue = cntValue;
+    sqe->header.sqeProf = g_sqeProfBit;
 }
 
 inline void BuildA5SqeCntNto1NotifyRecord(u32 streamId, u32 taskId, u32 notifyId, u32 cntValue, uint8_t* const sqeIn)
@@ -129,6 +137,7 @@ inline void BuildA5SqeCntNto1NotifyRecord(u32 streamId, u32 taskId, u32 notifyId
     sqe->subType = static_cast<uint16_t>(Rt91095NotifySubType::NOTIFY_SUB_TYPE_COUNT_NOTIFY_RECORD);
     sqe->notifyId = notifyId;
     sqe->cntValue = cntValue;
+    sqe->header.sqeProf = g_sqeProfBit;
 }
 
 inline void BuildA5SqeCntNto1NotifyWait(u32 streamId, u32 taskId, u32 notifyId, u32 cntValue, uint8_t* const sqeIn)
@@ -147,6 +156,7 @@ inline void BuildA5SqeCntNto1NotifyWait(u32 streamId, u32 taskId, u32 notifyId, 
     sqe->subType = static_cast<uint16_t>(Rt91095NotifySubType::NOTIFY_SUB_TYPE_COUNT_NOTIFY_WAIT);
     sqe->notifyId = notifyId;
     sqe->cntValue = cntValue;
+    sqe->header.sqeProf = g_sqeProfBit;
 }
 
 inline void BuildA5SqeSdmaCopy(
@@ -172,6 +182,7 @@ inline void BuildA5SqeSdmaCopy(
     sqe->u.strideMode0.srcAddrHigh = static_cast<uint32_t>((srcAddr & 0xffffffff00000000U) >> 32);
     sqe->u.strideMode0.dstAddrLow = static_cast<uint32_t>(dstAddr & 0x00000000ffffffffU);
     sqe->u.strideMode0.dstAddrHigh = static_cast<uint32_t>((dstAddr & 0xffffffff00000000U) >> 32);
+    sqe->header.sqeProf = g_sqeProfBit;
 }
 
 inline void
@@ -190,6 +201,7 @@ BuildA5SqeUbDbSend(u32 streamId, u32 taskId, const UbJettyLiteId& jettyLiteId, u
     sqe->funcId1 = jettyLiteId.GetFuncId();
     sqe->piValue1 = piValue;
     sqe->dieId1 = jettyLiteId.GetDieId();
+    sqe->header.sqeProf = g_sqeProfBit;
 }
 
 inline void BuildA5SqeP2pWriteValue(u32 streamId, u32 taskId, u64 remoteAddr, u32 writeValue, uint8_t* const sqeIn)
@@ -206,6 +218,7 @@ inline void BuildA5SqeP2pWriteValue(u32 streamId, u32 taskId, u64 remoteAddr, u3
     sqe->awsize = RtStarsWriteValueSizeType::RT_STARS_WRITE_VALUE_SIZE_TYPE_32BIT;
     sqe->writeValuePart[0] = writeValue;
     sqe->va = 1;
+    sqe->header.sqeProf = g_sqeProfBit;
 }
 
 u32 GetKernelExecTimeoutFromEnvConfig();
