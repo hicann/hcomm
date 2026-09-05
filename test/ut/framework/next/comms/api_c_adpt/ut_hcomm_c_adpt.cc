@@ -12,12 +12,15 @@
 #include "mockcpp/mokc.h"
 #include <cstddef>
 #include <cstdlib>
+#include <memory>
 #include <mockcpp/mockcpp.hpp>
 #include <string>
+#include "endpoint.h"
 #include "hcomm_c_adpt.h"
 #include "hcomm_res_defs.h"
 #include "hcomm_channel.h"
 #include "channel_process.h"
+#include "../../../../../../src/base_comm/hcomm_res_mgr.h"
 #include "../../../../../../src/base_comm/resources/endpoints/mgr/endpoint_mgr.h"
 #include "hcomm_c_adpt_common.h"
 #include "env_config/env_config_v2.h"
@@ -372,6 +375,39 @@ TEST_F(HcommCAdptTest, ut_HcommChannelGetRemoteMems_When_Normal_Expect_Success)
 
 namespace {
 
+class ChannelAdptStubEndpoint final : public Endpoint {
+public:
+    explicit ChannelAdptStubEndpoint(const EndpointDesc& desc) : Endpoint(desc) {}
+    HcclResult Init() override { return HCCL_SUCCESS; }
+    RegedMemMgr* GetRegedMemMgr() override { return nullptr; }
+    void* GetRdmaHandle() override { return nullptr; }
+    bool IsCtxHandleValid() const override { return false; }
+};
+
+class ScopedChannelAdptStubEndpoint {
+public:
+    explicit ScopedChannelAdptStubEndpoint(EndpointLocType locType = ENDPOINT_LOC_TYPE_DEVICE)
+    {
+        EndpointDesc desc{};
+        desc.loc.locType = locType;
+        auto ep = std::make_unique<ChannelAdptStubEndpoint>(desc);
+        handle_ = reinterpret_cast<EndpointHandle>(ep.get());
+        HcommResMgr::GetInstance().GetEndpointMgr().Add(handle_, std::move(ep));
+    }
+
+    ~ScopedChannelAdptStubEndpoint()
+    {
+        if (handle_ != nullptr) {
+            HcommResMgr::GetInstance().GetEndpointMgr().Remove(handle_);
+        }
+    }
+
+    EndpointHandle Get() const { return handle_; }
+
+private:
+    EndpointHandle handle_ = nullptr;
+};
+
 uint32_t gCapturedChannelDescQos = 0U;
 uint32_t gCapturedChannelDescSqDepth = 0U;
 const char* gCapturedChannelDescChannelName = nullptr;
@@ -392,7 +428,8 @@ HcclResult CaptureCreateChannelsLoop(
 TEST_F(HcommCAdptTest, ut_HcommCollectiveChannelCreate_When_Normal_Expect_Success)
 {
     gCapturedChannelDescSqDepth = 0U;
-    EndpointHandle endpointHandle = reinterpret_cast<EndpointHandle>(0x12345);
+    ScopedChannelAdptStubEndpoint stubEndpoint;
+    EndpointHandle endpointHandle = stubEndpoint.Get();
     HcommChannelDesc channelDesc{};
     ASSERT_EQ(HcommChannelDescInit(&channelDesc, 1), HCCL_SUCCESS);
     channelDesc.remoteEndpoint.protocol = COMM_PROTOCOL_UBC_TP;
@@ -604,7 +641,8 @@ TEST_F(HcommCAdptTest, ut_HcommEndpointGetDescs_When_Uboe_Expect_Ipv4Desc)
 
 TEST_F(HcommCAdptTest, ut_HcommChannelCreate_When_NotAiCpu_Expect_Success)
 {
-    EndpointHandle endpointHandle = reinterpret_cast<EndpointHandle>(0x12345);
+    ScopedChannelAdptStubEndpoint stubEndpoint;
+    EndpointHandle endpointHandle = stubEndpoint.Get();
     HcommChannelDesc channelDesc{};
     (void)HcommChannelDescInit(&channelDesc, 1);
     ChannelHandle channels[1] = {0};
@@ -675,7 +713,8 @@ TEST_F(HcommCAdptTest, ut_HcommChannelCreate_AICPU_When_CreateLoopMocked_PreAllo
 {
     // CreateChannelsLoop 被 mock 返回 SUCCESS 但未填充 targetChannels，
     // PreAllocAicpuChannels 拿到空指针 channel 返回 E_PTR
-    EndpointHandle endpointHandle = reinterpret_cast<EndpointHandle>(0x12345);
+    ScopedChannelAdptStubEndpoint stubEndpoint;
+    EndpointHandle endpointHandle = stubEndpoint.Get();
     HcommChannelDesc channelDesc{};
     (void)HcommChannelDescInit(&channelDesc, 1);
     ChannelHandle channels[1] = {0};
@@ -686,7 +725,8 @@ TEST_F(HcommCAdptTest, ut_HcommChannelCreate_AICPU_When_CreateLoopMocked_PreAllo
 
 TEST_F(HcommCAdptTest, ut_HcommCollectiveChannelCreate_CPU_Expect_Success)
 {
-    EndpointHandle endpointHandle = reinterpret_cast<EndpointHandle>(0x12345);
+    ScopedChannelAdptStubEndpoint stubEndpoint;
+    EndpointHandle endpointHandle = stubEndpoint.Get();
     HcommChannelDesc channelDesc{};
     (void)HcommChannelDescInit(&channelDesc, 1);
     ChannelHandle channels[1] = {0};
@@ -697,7 +737,8 @@ TEST_F(HcommCAdptTest, ut_HcommCollectiveChannelCreate_CPU_Expect_Success)
 
 TEST_F(HcommCAdptTest, ut_HcommCollectiveChannelCreate_CCU_Expect_Success)
 {
-    EndpointHandle endpointHandle = reinterpret_cast<EndpointHandle>(0x12345);
+    ScopedChannelAdptStubEndpoint stubEndpoint;
+    EndpointHandle endpointHandle = stubEndpoint.Get();
     HcommChannelDesc channelDesc{};
     (void)HcommChannelDescInit(&channelDesc, 1);
     ChannelHandle channels[1] = {0};
@@ -709,7 +750,8 @@ TEST_F(HcommCAdptTest, ut_HcommCollectiveChannelCreate_CCU_Expect_Success)
 TEST_F(HcommCAdptTest, ut_HcommCollectiveChannelCreate_V1Desc_ClearsQosField)
 {
     gCapturedChannelDescQos = 0U;
-    EndpointHandle endpointHandle = reinterpret_cast<EndpointHandle>(0x12345);
+    ScopedChannelAdptStubEndpoint stubEndpoint;
+    EndpointHandle endpointHandle = stubEndpoint.Get();
     HcommChannelDesc channelDesc{};
     ASSERT_EQ(HcommChannelDescInit(&channelDesc, 1), HCCL_SUCCESS);
     channelDesc.header.version = HCOMM_CHANNEL_VERSION_ONE;
@@ -729,7 +771,8 @@ TEST_F(HcommCAdptTest, ut_HcommCollectiveChannelCreate_CurrentDescWithSmallSize_
     static const char channelName[] = "channel-name";
     gCapturedChannelDescQos = 0U;
     gCapturedChannelDescChannelName = nullptr;
-    EndpointHandle endpointHandle = reinterpret_cast<EndpointHandle>(0x12345);
+    ScopedChannelAdptStubEndpoint stubEndpoint;
+    EndpointHandle endpointHandle = stubEndpoint.Get();
     HcommChannelDesc channelDesc{};
     ASSERT_EQ(HcommChannelDescInit(&channelDesc, 1), HCCL_SUCCESS);
     channelDesc.header.version = HCOMM_CHANNEL_VERSION;
@@ -775,22 +818,11 @@ TEST_F(HcommCAdptTest, ut_HcommEndpointGetListenPort_When_HandleInvalid_Expect_E
     EXPECT_EQ(ret, HCCL_E_NOT_FOUND);
 }
 
-class StubEndpoint final : public Endpoint {
-public:
-    explicit StubEndpoint() : Endpoint(EndpointDesc{}) {}
-    HcclResult Init() override { return HCCL_SUCCESS; }
-    // 内存方法在 RegedMemMgr 上，Endpoint 不再 override；此处返回空 RegedMemMgr。
-    RegedMemMgr* GetRegedMemMgr() override { return nullptr; }
-    void* GetRdmaHandle() override { return nullptr; }
-    bool IsCtxHandleValid() const override { return false; }
-    // ServerSocketGetListenPort 未 override → 走基类默认 HCCL_E_NOT_SUPPORT
-};
-
 TEST_F(HcommCAdptTest, ut_HcommEndpointGetListenPort_When_ServerSocketNotSupport_Expect_E_NOT_SUPPORT)
 {
     uint32_t port = 0;
     EndpointHandle endpointHandle = reinterpret_cast<EndpointHandle>(0x12345);
-    StubEndpoint stubEndpoint;
+    ChannelAdptStubEndpoint stubEndpoint(EndpointDesc{});
 
     // HcommEndpointMap 收编为 hcomm::EndpointMgr::Get
     MOCKER_CPP(&hcomm::EndpointMgr::Get, Endpoint * (hcomm::EndpointMgr::*)(EndpointHandle))

@@ -12,9 +12,13 @@
 #include "mockcpp/mokc.h"
 #include <mockcpp/mockcpp.hpp>
 #include "hcomm_c_adpt.h"
+#include "hcomm_result_defs.h"
 #include "hcomm_res_defs.h"
 #include "hcomm_channel.h"
 #include "adapter_rts.h"
+#include "hccp.h"
+#include "acl/acl.h"
+#include <cstdint>
 
 class CheckUbAttrTest : public testing::Test {
 protected:
@@ -135,6 +139,29 @@ TEST_F(
     EXPECT_EQ(channelDesc.ubAttr.sqDepth, HCCL_COMM_SQ_DEPTH_CONFIG_NOT_SET);
 }
 
+TEST_F(CheckUbAttrTest, Ut_CheckChannelDescQos_When_NotSetOrInRange_Expect_Success)
+{
+    HcommChannelDesc channelDesc{};
+    ASSERT_EQ(HcommChannelDescInit(&channelDesc, 1), HCCL_SUCCESS);
+
+    channelDesc.qos = 0xFFFFFFFFU;
+    EXPECT_EQ(CheckChannelDescQos(channelDesc), HCOMM_SUCCESS);
+
+    channelDesc.qos = 0U;
+    EXPECT_EQ(CheckChannelDescQos(channelDesc), HCOMM_SUCCESS);
+
+    channelDesc.qos = 7U;
+    EXPECT_EQ(CheckChannelDescQos(channelDesc), HCOMM_SUCCESS);
+}
+
+TEST_F(CheckUbAttrTest, Ut_CheckChannelDescQos_When_OutOfRange_Expect_E_PARA)
+{
+    HcommChannelDesc channelDesc{};
+    ASSERT_EQ(HcommChannelDescInit(&channelDesc, 1), HCCL_SUCCESS);
+    channelDesc.qos = 8U;
+    EXPECT_EQ(CheckChannelDescQos(channelDesc), HCOMM_E_PARA);
+}
+
 // 直调 HcommChannelCreate 归一化路径：HcommChannelDesc.qos → roceAttr.sl/tc
 TEST_F(CheckUbAttrTest, Ut_CheckRoceAttr_When_QosUnset_KeepOriginalSlTc)
 {
@@ -145,14 +172,14 @@ TEST_F(CheckUbAttrTest, Ut_CheckRoceAttr_When_QosUnset_KeepOriginalSlTc)
     channelDesc.roceAttr.tc = 120;
     channelDesc.qos = 0xFFFFFFFFU;
 
-    ASSERT_EQ(CheckRoceAttr(channelDesc), HCCL_SUCCESS);
+    ASSERT_EQ(CheckRoceAttr(channelDesc, ENDPOINT_LOC_TYPE_HOST), HCCL_SUCCESS);
     EXPECT_EQ(channelDesc.roceAttr.sl, 3);
     EXPECT_EQ(channelDesc.roceAttr.tc, 120);
 }
 
 TEST_F(CheckUbAttrTest, Ut_CheckRoceAttr_When_QosSet_MapsSlAndDefaultDscpTc)
 {
-    // ApplyRoceQosCompatToSlTc 仅 950/960 生效，需 mock 设备类型
+    // ApplyRoceQosCompatToSlTc 仅 950/960 生效（含 host/device RoCE），需 mock 设备类型
     MOCKER(hrtGetDeviceType).stubs().with(outBound(DevType::DEV_TYPE_950)).will(returnValue(HCCL_SUCCESS));
 
     HcommChannelDesc channelDesc{};
@@ -162,9 +189,78 @@ TEST_F(CheckUbAttrTest, Ut_CheckRoceAttr_When_QosSet_MapsSlAndDefaultDscpTc)
     channelDesc.roceAttr.tc = 120;
     channelDesc.qos = 4; // 未 mock HCCN 时回退默认 DSCP=33，TC=33<<2
 
-    ASSERT_EQ(CheckRoceAttr(channelDesc), HCCL_SUCCESS);
+    ASSERT_EQ(CheckRoceAttr(channelDesc, ENDPOINT_LOC_TYPE_HOST), HCCL_SUCCESS);
     EXPECT_EQ(channelDesc.roceAttr.sl, 4);
     EXPECT_EQ(channelDesc.roceAttr.tc, static_cast<uint8_t>(33U << 2U));
+}
+
+static uint32_t gCapturedRaGetHccnCfgMode = UINT32_MAX;
+
+static int StubRaGetHccnCfgCaptureMode(struct RaInfo* info, enum HccnCfgKey key, char* value, unsigned int* valueLen)
+{
+    (void)key;
+    (void)value;
+    (void)valueLen;
+    if (info != nullptr) {
+        gCapturedRaGetHccnCfgMode = info->mode;
+    }
+    return -1;
+}
+
+TEST_F(CheckUbAttrTest, Ut_CheckRoceAttr_When_LocalHostLoc_UsesPeerOnlineHccnMode)
+{
+    gCapturedRaGetHccnCfgMode = UINT32_MAX;
+    MOCKER(hrtGetDeviceType).stubs().with(outBound(DevType::DEV_TYPE_950)).will(returnValue(HCCL_SUCCESS));
+    s32 userDevId = 0;
+    s32 phyDevId = 0;
+    MOCKER(hrtGetDevice).stubs().with(outBoundP(&userDevId)).will(returnValue(HCCL_SUCCESS));
+    MOCKER(aclrtGetPhyDevIdByUserDevId)
+        .stubs()
+        .with(mockcpp::any(), outBoundP(&phyDevId))
+        .will(returnValue(ACL_SUCCESS));
+    MOCKER(RaGetHccnCfg).stubs().will(invoke(StubRaGetHccnCfgCaptureMode));
+
+    HcommChannelDesc channelDesc{};
+    ASSERT_EQ(HcommChannelDescInit(&channelDesc, 1), HCCL_SUCCESS);
+    channelDesc.remoteEndpoint.protocol = COMM_PROTOCOL_ROCE;
+    channelDesc.qos = 4;
+
+    ASSERT_EQ(CheckRoceAttr(channelDesc, ENDPOINT_LOC_TYPE_HOST), HCCL_SUCCESS);
+    EXPECT_EQ(gCapturedRaGetHccnCfgMode, static_cast<uint32_t>(NETWORK_PEER_ONLINE));
+}
+
+TEST_F(CheckUbAttrTest, Ut_CheckRoceAttr_When_LocalDeviceLoc_UsesOfflineHccnMode)
+{
+    gCapturedRaGetHccnCfgMode = UINT32_MAX;
+    MOCKER(hrtGetDeviceType).stubs().with(outBound(DevType::DEV_TYPE_950)).will(returnValue(HCCL_SUCCESS));
+    s32 userDevId = 0;
+    s32 phyDevId = 0;
+    MOCKER(hrtGetDevice).stubs().with(outBoundP(&userDevId)).will(returnValue(HCCL_SUCCESS));
+    MOCKER(aclrtGetPhyDevIdByUserDevId)
+        .stubs()
+        .with(mockcpp::any(), outBoundP(&phyDevId))
+        .will(returnValue(ACL_SUCCESS));
+    MOCKER(RaGetHccnCfg).stubs().will(invoke(StubRaGetHccnCfgCaptureMode));
+
+    HcommChannelDesc channelDesc{};
+    ASSERT_EQ(HcommChannelDescInit(&channelDesc, 1), HCCL_SUCCESS);
+    channelDesc.remoteEndpoint.protocol = COMM_PROTOCOL_ROCE;
+    channelDesc.qos = 4;
+
+    ASSERT_EQ(CheckRoceAttr(channelDesc, ENDPOINT_LOC_TYPE_DEVICE), HCCL_SUCCESS);
+    EXPECT_EQ(gCapturedRaGetHccnCfgMode, static_cast<uint32_t>(NETWORK_OFFLINE));
+}
+
+TEST_F(CheckUbAttrTest, Ut_CheckRoceAttr_When_UnsupportedLocType_Expect_E_PARA)
+{
+    MOCKER(hrtGetDeviceType).stubs().with(outBound(DevType::DEV_TYPE_950)).will(returnValue(HCCL_SUCCESS));
+
+    HcommChannelDesc channelDesc{};
+    ASSERT_EQ(HcommChannelDescInit(&channelDesc, 1), HCCL_SUCCESS);
+    channelDesc.remoteEndpoint.protocol = COMM_PROTOCOL_ROCE;
+    channelDesc.qos = 4;
+
+    EXPECT_EQ(CheckRoceAttr(channelDesc, ENDPOINT_LOC_TYPE_RESERVED), HCCL_E_PARA);
 }
 
 TEST_F(CheckUbAttrTest, Ut_CheckRoceAttr_When_DeviceTypeNot950Or960_Expect_SkipQosCompat)
@@ -178,7 +274,7 @@ TEST_F(CheckUbAttrTest, Ut_CheckRoceAttr_When_DeviceTypeNot950Or960_Expect_SkipQ
     channelDesc.roceAttr.tc = 120;
     channelDesc.qos = 4;
 
-    ASSERT_EQ(CheckRoceAttr(channelDesc), HCCL_SUCCESS);
+    ASSERT_EQ(CheckRoceAttr(channelDesc, ENDPOINT_LOC_TYPE_HOST), HCCL_SUCCESS);
     EXPECT_EQ(channelDesc.roceAttr.sl, 3);
     EXPECT_EQ(channelDesc.roceAttr.tc, 120);
 }
@@ -192,5 +288,5 @@ TEST_F(CheckUbAttrTest, Ut_CheckRoceAttr_When_DeviceTypeInvalid_Expect_ReturnHCC
     channelDesc.remoteEndpoint.protocol = COMM_PROTOCOL_ROCE;
     channelDesc.qos = 4;
 
-    EXPECT_EQ(CheckRoceAttr(channelDesc), HCCL_E_PARA);
+    EXPECT_EQ(CheckRoceAttr(channelDesc, ENDPOINT_LOC_TYPE_HOST), HCCL_E_PARA);
 }

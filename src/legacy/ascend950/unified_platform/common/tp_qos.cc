@@ -102,10 +102,10 @@ uint32_t TpQosResolveQosSlGroupIdx(const uint32_t qos, const uint32_t numGroups)
     return (qos * numGroups) / slPolicy8;
 }
 
-bool TpQosGetDscpByQosFromHccnCfg(const uint32_t devPhyId, uint8_t qos, uint8_t& dscpOut)
+bool TpQosGetDscpByQosFromHccnCfg(const uint32_t devPhyId, uint8_t qos, uint8_t& dscpOut, NetworkMode networkMode)
 {
     struct RaInfo info {};
-    info.mode = NETWORK_OFFLINE;
+    info.mode = static_cast<int>(networkMode);
     info.phyId = devPhyId;
 
     std::vector<char> value(kHccnCfgValueBufLen, 0);
@@ -117,8 +117,8 @@ bool TpQosGetDscpByQosFromHccnCfg(const uint32_t devPhyId, uint8_t qos, uint8_t&
     }
     const std::string cfgLog(value.data(), logLen);
     HCCL_INFO(
-        "[TpQos][%s] RaGetHccnCfg ret[%d] phyId[%u] valueLen[%u] qos_dscp[%s].", __func__, ret, devPhyId, valueLen,
-        cfgLog.c_str());
+        "[TpQos][%s] RaGetHccnCfg ret[%d] phyId[%u] mode[%d] valueLen[%u] qos_dscp[%s].", __func__, ret, devPhyId,
+        static_cast<int>(networkMode), valueLen, cfgLog.c_str());
     if (ret != 0 || valueLen == 0U) {
         return false;
     }

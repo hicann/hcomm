@@ -68,7 +68,8 @@ typedef struct {
                 pathMode; ///< UB_MEM访问路径模式：0表示默认路径(有单路径走单路径，无单路径走多路径)，1为单路径，2为多路径；0xFF表示使用默认值0
         } ubMemAttr;
     };
-    uint32_t qos;            ///< 通信域QoS 与协议解耦
+    uint32_t qos; ///< 通道 QoS（与协议解耦；集合通信场景通常来自通信域 hcclQos）；取值范围：[0, 7]，或 0xFFFFFFFF
+                  ///< 表示未配置。未配置时：RoCE 不改写 roceAttr.sl/tc；UB 类协议由内部默认 QoS（4）决定。
     const char* channelName; ///< channel业务匹配标识，两端需相同；NULL表示匿名channel
 } HcommChannelDesc;
 

@@ -33,18 +33,44 @@
 #include "adapter_rts_common.h"
 #include "tp_qos.h"
 #include "hccl/hccl_types.h"
+#include "env_config.h"
+#include "hccp_common.h"
 
 using namespace hcomm;
 
 constexpr uint32_t kDscpToRoceTcShift = 2U; // RoCE TC = DSCP << 2（DiffServ 高 6 位为 DSCP）
 
-static HcommResult ApplyRoceQosCompatToSlTc(HcommChannelDesc& channelDesc)
+static HcommResult GetNetworkModeByLocType(EndpointLocType localLocType, NetworkMode& networkModeOut)
+{
+    // host RoCE：PEER_ONLINE 读 /etc/hcomm.cfg；device RoCE：OFFLINE 经 HDC 读 /etc/hccl.cfg
+    if (localLocType == ENDPOINT_LOC_TYPE_HOST) {
+        networkModeOut = NETWORK_PEER_ONLINE;
+        return HCCL_SUCCESS;
+    }
+    if (localLocType == ENDPOINT_LOC_TYPE_DEVICE) {
+        networkModeOut = NETWORK_OFFLINE;
+        return HCCL_SUCCESS;
+    }
+    HCCL_ERROR("[GetNetworkModeByLocType] unsupported localLocType[%d].", static_cast<int>(localLocType));
+    return HCCL_E_PARA;
+}
+
+static HcommResult GetEndPointLocType(EndpointHandle endpointHandle, EndpointLocType& localLocTypeOut)
+{
+    void* endpointRaw = nullptr;
+    CHK_RET(static_cast<HcclResult>(HcommEndpointGet(endpointHandle, &endpointRaw)));
+    auto* endpoint = static_cast<Endpoint*>(endpointRaw);
+    localLocTypeOut = endpoint->GetEndpointDesc().loc.locType;
+    return HCCL_SUCCESS;
+}
+
+static HcommResult ApplyRoceQosCompatToSlTc(HcommChannelDesc& channelDesc, EndpointLocType localLocType)
 {
     if (channelDesc.qos == HCCL_COMM_QOS_CONFIG_NOT_SET) {
         return HCCL_SUCCESS;
     }
 
-    // qos_dscp 仅 950/960 设备 HCCN 支持（按枚举精确匹配，避免代际数值比较误伤）
+    // qos_dscp→TC 映射仅 950/960 生效（host/device RoCE 均支持；按 DevType 枚举匹配，避免代际数值比较误伤）
     DevType deviceType = DevType::DEV_TYPE_COUNT;
     CHK_RET(hrtGetDeviceType(deviceType));
     if (deviceType >= DevType::DEV_TYPE_COUNT) {
@@ -57,22 +83,26 @@ static HcommResult ApplyRoceQosCompatToSlTc(HcommChannelDesc& channelDesc)
 
     const uint8_t sl = static_cast<uint8_t>(channelDesc.qos & 0xFFU);
     uint8_t dscp = Hccl::kUboeDefaultDscp;
+    NetworkMode networkMode = NETWORK_OFFLINE;
+    CHK_RET(static_cast<HcclResult>(GetNetworkModeByLocType(localLocType, networkMode)));
     s32 userDevId = 0;
     s32 phyDevId = 0;
     if (hrtGetDevice(&userDevId) != HCCL_SUCCESS || aclrtGetPhyDevIdByUserDevId(userDevId, &phyDevId) != ACL_SUCCESS) {
-        HCCL_WARNING(
+        HCCL_RUN_WARNING(
             "[ApplyRoceQosCompatToSlTc] get phyDevId failed, userDevId[%d], fallback to default dscp[%u].", userDevId,
             static_cast<unsigned>(dscp));
     } else {
-        (void)Hccl::TpQosGetDscpByQosFromHccnCfg(static_cast<uint32_t>(phyDevId), sl, dscp);
+        (void)Hccl::TpQosGetDscpByQosFromHccnCfg(static_cast<uint32_t>(phyDevId), sl, dscp, networkMode);
     }
 
     channelDesc.roceAttr.sl = sl;
     channelDesc.roceAttr.tc = static_cast<uint8_t>((static_cast<uint32_t>(dscp) << kDscpToRoceTcShift) & 0xFFU);
     HCCL_INFO(
-        "[ApplyRoceQosCompatToSlTc] qos compat: qos[%u] userDevId[%d] phyDevId[%d] dscp[%u] sl[%u] tc[%u].",
-        channelDesc.qos, userDevId, phyDevId, static_cast<unsigned>(dscp),
-        static_cast<unsigned>(channelDesc.roceAttr.sl), static_cast<unsigned>(channelDesc.roceAttr.tc));
+        "[ApplyRoceQosCompatToSlTc] qos compat: qos[%u] localLocType[%d] networkMode[%d] userDevId[%d] phyDevId[%d] "
+        "dscp[%u] sl[%u] tc[%u].",
+        channelDesc.qos, static_cast<int>(localLocType), static_cast<int>(networkMode), userDevId, phyDevId,
+        static_cast<unsigned>(dscp), static_cast<unsigned>(channelDesc.roceAttr.sl),
+        static_cast<unsigned>(channelDesc.roceAttr.tc));
     return HCCL_SUCCESS;
 }
 
@@ -211,7 +241,19 @@ HcommResult CheckUbMemAttr(HcommChannelDesc& channelDesc)
     return HCOMM_SUCCESS;
 }
 
-HcommResult CheckRoceAttr(HcommChannelDesc& channelDesc)
+HcommResult CheckChannelDescQos(const HcommChannelDesc& channelDesc)
+{
+    if (channelDesc.qos == HCCL_COMM_QOS_CONFIG_NOT_SET
+        || (channelDesc.qos >= EnvConfig::HCCL_QOS_MIN && channelDesc.qos <= EnvConfig::HCCL_QOS_MAX)) {
+        return HCOMM_SUCCESS;
+    }
+    HCCL_ERROR(
+        "[%s] invalid channelDesc.qos[%u], must be 0xFFFFFFFF or in [%u,%u]", __func__, channelDesc.qos,
+        EnvConfig::HCCL_QOS_MIN, EnvConfig::HCCL_QOS_MAX);
+    return HCOMM_E_PARA;
+}
+
+HcommResult CheckRoceAttr(HcommChannelDesc& channelDesc, EndpointLocType localLocType)
 {
     if (channelDesc.remoteEndpoint.protocol != COMM_PROTOCOL_ROCE) {
         return HCCL_SUCCESS;
@@ -227,7 +269,7 @@ HcommResult CheckRoceAttr(HcommChannelDesc& channelDesc)
         HCCL_INFO("[%s] set roceAttr.cqAttrFlags to 0.", __func__);
     }
 
-    return ApplyRoceQosCompatToSlTc(channelDesc);
+    return ApplyRoceQosCompatToSlTc(channelDesc, localLocType);
 }
 
 namespace {
@@ -318,11 +360,13 @@ HcommResult ProcessHcommChannelDescs(const HcommChannelDesc& channelDesc, HcommC
 }
 
 HcommResult NormalizeHcommChannelDescs(
-    HcommChannelDesc* channelDescs, uint32_t channelNum, std::vector<HcommChannelDesc>& channelDescFinals,
-    CommEngine engine)
+    EndpointHandle endpointHandle, HcommChannelDesc* channelDescs, uint32_t channelNum,
+    std::vector<HcommChannelDesc>& channelDescFinals, CommEngine engine)
 {
     channelDescFinals.clear();
     channelDescFinals.reserve(channelNum);
+    EndpointLocType localLocType = ENDPOINT_LOC_TYPE_DEVICE;
+    CHK_RET(static_cast<HcclResult>(GetEndPointLocType(endpointHandle, localLocType)));
     for (uint32_t idx = 0; idx < channelNum; ++idx) {
         HcommChannelDesc channelDescFinal{};
         HcommResult ret = HcommChannelDescInit(&channelDescFinal, 1);
@@ -332,6 +376,11 @@ HcommResult NormalizeHcommChannelDescs(
         ret = ProcessHcommChannelDescs(channelDescs[idx], channelDescFinal);
         if (ret != HCOMM_SUCCESS) {
             HCCL_ERROR("[%s] failed to normalize channelDesc[%u], ret[%d].", __func__, idx, ret);
+            return ret;
+        }
+        ret = CheckChannelDescQos(channelDescFinal);
+        if (ret != HCOMM_SUCCESS) {
+            HCCL_ERROR("[%s] CheckChannelDescQos failed, ret[%d].", __func__, ret);
             return ret;
         }
         ret = CheckUbAttr(channelDescFinal, engine);
@@ -344,7 +393,7 @@ HcommResult NormalizeHcommChannelDescs(
             HCCL_ERROR("[%s] CheckUbMemAttr failed, ret[%d].", __func__, ret);
             return ret;
         }
-        ret = CheckRoceAttr(channelDescFinal);
+        ret = CheckRoceAttr(channelDescFinal, localLocType);
         if (ret != HCOMM_SUCCESS) {
             HCCL_ERROR("[%s] CheckRoceAttr failed, ret[%d].", __func__, ret);
             return ret;
@@ -366,7 +415,8 @@ HcommResult HcommCollectiveChannelCreate(
     CHK_PRT_RET(
         (channelNum == 0), HCCL_ERROR("[%s] Invalid channelNum, channelNum[%u]", __func__, channelNum), HCCL_E_PARA);
     std::vector<HcommChannelDesc> channelDescFinals;
-    CHK_RET(static_cast<HcclResult>(NormalizeHcommChannelDescs(channelDescs, channelNum, channelDescFinals, engine)));
+    CHK_RET(static_cast<HcclResult>(
+        NormalizeHcommChannelDescs(endpointHandle, channelDescs, channelNum, channelDescFinals, engine)));
     auto startut = std::chrono::steady_clock::now();
     HCCL_INFO(
         "[%s] START. endpointHandle[0x%llx], engine[%s], channelNum[%u].", __func__, endpointHandle,
@@ -417,7 +467,8 @@ HcommResult HcommChannelCreate(
     CHK_PRT_RET(
         (channelNum == 0), HCCL_ERROR("[%s] Invalid channelNum, channelNum[%u]", __func__, channelNum), HCCL_E_PARA);
     std::vector<HcommChannelDesc> channelDescFinals;
-    CHK_RET(static_cast<HcclResult>(NormalizeHcommChannelDescs(channelDescs, channelNum, channelDescFinals, engine)));
+    CHK_RET(static_cast<HcclResult>(
+        NormalizeHcommChannelDescs(endpointHandle, channelDescs, channelNum, channelDescFinals, engine)));
     auto endpoint = HcommResMgr::GetInstance().GetEndpointMgr().Get(endpointHandle);
     auto startut = std::chrono::steady_clock::now();
     HCCL_INFO(
@@ -655,7 +706,8 @@ HcommResult HcommChannelCreateWithConfig(
     (void)HcommResMgrInit();
 
     std::vector<HcommChannelDesc> channelDescFinals;
-    CHK_RET(static_cast<HcclResult>(NormalizeHcommChannelDescs(channelDescs, channelNum, channelDescFinals, engine)));
+    CHK_RET(static_cast<HcclResult>(
+        NormalizeHcommChannelDescs(endpointHandle, channelDescs, channelNum, channelDescFinals, engine)));
     // NormalizeHcommChannelDescs 内部已调 CheckUbAttr，此处仅补共享模式专有校验
     CHK_RET(ValidateSharedQueueConfig(channelDescFinals));
 
