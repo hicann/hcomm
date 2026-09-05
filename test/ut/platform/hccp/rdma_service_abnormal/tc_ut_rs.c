@@ -39,7 +39,6 @@
 #include "dl_hal_function.h"
 #include "dl_ibverbs_function.h"
 #include "dl.h"
-#include "tls.h"
 #include "rs_esched.h"
 #include "rs_ctx_inner.h"
 

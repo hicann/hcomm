@@ -47,7 +47,6 @@
 #include "rs_ub_dfx.h"
 #include "rs_ub.h"
 #include "stub/verbs_exp.h"
-#include "tls.h"
 #include "encrypt.h"
 #include "rs_epoll.h"
 #include "tc_ut_rs.h"

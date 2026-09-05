@@ -35,7 +35,6 @@
 #include "tc_ut_rs_ub.h"
 #include "rs_drv_rdma.h"
 #include "stub/verbs_exp.h"
-#include "tls.h"
 #include "encrypt.h"
 #include "rs_epoll.h"
 #include "rs_socket.h"
