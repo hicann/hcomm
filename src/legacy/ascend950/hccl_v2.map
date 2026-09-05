@@ -167,6 +167,7 @@ global:
     HcomSetWorkspaceResourceV2;
     HcomSupportDeterministicOptimV2;
     HcomUnloadTaskV2;
+    HcomGetCcuTaskInfo;
     HcommFlushV2;
     HrtResetXpuDevice;
     HrtSetXpuDevice;

@@ -193,6 +193,7 @@ global:
         "Hccl::DevCapability::Init(Hccl::DevType)";  # _ZN4Hccl13DevCapability4InitENS_7DevTypeE
         "Hccl::DfxProfilingHandlerLite::GetInstance()";  # _ZN4Hccl23DfxProfilingHandlerLite11GetInstanceEv
         "Hccl::ExceptionInfo::GetErrorCode(Hccl::ExceptionType const&)";  # _ZN4Hccl13ExceptionInfo12GetErrorCodeERKNS_13ExceptionTypeE
+        "Hccl::ExceptionInfo::GetErrorMsg(Hccl::ExceptionType const&)";  # _ZN4Hccl13ExceptionInfo11GetErrorMsgERKNS_13ExceptionTypeE
         "Hccl::GetCommAddr(CommAddr&, Hccl::IpAddress const&)";  # _ZN4Hccl11GetCommAddrER8CommAddrRKNS_9IpAddressE
         "Hccl::GlobalMirrorTasks::FindTaskInfo(unsigned int, unsigned int, unsigned int, Hccl::TaskInfo*&) const";  # _ZNK4Hccl17GlobalMirrorTasks12FindTaskInfoEjjjRPNS_8TaskInfoE
         "Hccl::GlobalMirrorTasks::GetQueue(unsigned int, unsigned int) const";  # _ZNK4Hccl17GlobalMirrorTasks8GetQueueEjj
@@ -286,9 +287,11 @@ global:
         "Hccl::RankTableInfo::RankTableInfo(Hccl::BinaryStream&)";  # _ZN4Hccl13RankTableInfoC1ERNS_12BinaryStreamE
         "Hccl::RmaBufSliceLite::RmaBufSliceLite(unsigned long long, unsigned long long, unsigned int, unsigned int)";  # _ZN4Hccl15RmaBufSliceLiteC1Eyyjj
         "Hccl::RmtRmaBufSliceLite::RmtRmaBufSliceLite(unsigned long long, unsigned long long, unsigned int, unsigned int, unsigned int, unsigned int)";  # _ZN4Hccl18RmtRmaBufSliceLiteC1Eyyjjjj
+        "Hccl::RtsqBase::QuerySqHead() const";  # _ZNK4Hccl8RtsqBase11QuerySqHeadEv
         "Hccl::RtsqBase::QuerySqTail() const";  # _ZNK4Hccl8RtsqBase11QuerySqTailEv
         "Hccl::TaskInfo::TaskInfo(unsigned int, unsigned int, unsigned int, Hccl::TaskParam const&, std::shared_ptr<Hccl::DfxOpInfo> const&, bool)";  # _ZN4Hccl8TaskInfoC1EjjjRKNS_9TaskParamERKSt10shared_ptrINS_9DfxOpInfoEEb
         "Hccl::UbTransportLiteImpl::GetRmtRmaBufSliceLite(Hccl::Buffer const&)";  # _ZN4Hccl19UbTransportLiteImpl21GetRmtRmaBufSliceLiteERKNS_6BufferE
+        "Hccl::StreamLite::GetRtsq() const";  # _ZNK4Hccl10StreamLite7GetRtsqEv
         "hccl::AlgWrap::GetInstance()";  # _ZN4hccl7AlgWrap11GetInstanceEv
         "hccl::CCLBufferManager::CCLBufferManager()";  # _ZN4hccl16CCLBufferManagerC1Ev
         "hccl::CCLBufferManager::CleanCCLbuffer()";  # _ZN4hccl16CCLBufferManager14CleanCCLbufferEv
