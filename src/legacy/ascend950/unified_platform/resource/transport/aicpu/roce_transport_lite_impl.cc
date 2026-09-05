@@ -12,6 +12,7 @@
 #include "binary_stream.h"
 #include "log.h"
 #include "dfx_profiling_handler_lite.h"
+#include "unified_platform/pub_inc/config_plf_log_v2.h"
 #include "sal.h"
 
 namespace Hccl {
@@ -562,6 +563,7 @@ void RoceTransportLiteImpl::ReportDmaTask(
     slot->transportType = static_cast<u8>(DfxTransportType::DFX_TRANSPORT_TYPE_ROCE);
     slot->channelHandle = reinterpret_cast<u64>(this);
     slot->taskPara.Dma.sqeAddr = stream.GetRtsq()->GetSqeAddr();
+    PLF_CONFIG_INFO(Hccl::PLF_TASK, "[%s] %s", __func__, slot->Describe().c_str());
 }
 
 void RoceTransportLiteImpl::ReportReduceTask(
@@ -594,6 +596,7 @@ void RoceTransportLiteImpl::ReportReduceTask(
     slot->taskPara.Reduce.size = size;
     slot->taskPara.Reduce.notifyId = static_cast<u32>(notifyId);
     slot->taskPara.Reduce.reduceOp = static_cast<u8>(ConvertReduceOpToHcclReduceOp(reduceIn.reduceOp));
+    PLF_CONFIG_INFO(Hccl::PLF_TASK, "[%s] %s", __func__, slot->Describe().c_str());
 }
 
 void RoceTransportLiteImpl::ReportNotifyWaitTask(u64 notifyId, const StreamLite& stream, u32 taskId)
@@ -617,6 +620,7 @@ void RoceTransportLiteImpl::ReportNotifyWaitTask(u64 notifyId, const StreamLite&
     slot->transportType = static_cast<u8>(DfxTransportType::DFX_TRANSPORT_TYPE_ROCE);
     slot->channelHandle = reinterpret_cast<u64>(this);
     slot->taskPara.Notify.sqeAddr = stream.GetRtsq()->GetSqeAddr();
+    PLF_CONFIG_INFO(Hccl::PLF_TASK, "[%s] %s", __func__, slot->Describe().c_str());
 }
 
 bool RoceTransportLiteImpl::IsReportTask() const

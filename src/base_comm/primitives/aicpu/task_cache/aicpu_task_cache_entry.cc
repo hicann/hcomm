@@ -1315,15 +1315,10 @@ inline HcclResult AicpuTaskCacheEntry::FillSlotUbDma_(
     slot->taskPara.ubDma.srcAddr = profInfo.locAddr;
     slot->taskPara.ubDma.dstAddr = profInfo.rmtAddr;
     slot->taskPara.ubDma.size = profInfo.size;
-    if (static_cast<u8>(profInfo.taskParamType) == TaskParamTypeVal::TASK_UB_INLINE_WRITE) {
-        slot->taskPara.ubDma.notifyId = static_cast<u32>(profInfo.rmtAddr);
-    } else if (static_cast<u8>(profInfo.taskParamType) == TaskParamTypeVal::TASK_UB) {
-        slot->taskPara.ubDma.notifyId = INVALID_U32;
-    } else {
-        slot->taskPara.ubDma.notifyId = static_cast<u32>(profInfo.notifyId);
-    }
+    slot->taskPara.ubDma.notifyId = profInfo.notifyId;
     slot->taskPara.ubDma.jettyHandle = profInfo.jettyHandle;
     slot->taskPara.ubDma.jettyId = profInfo.jettyId;
+    PLF_CONFIG_INFO(PLF_TASK, "[%s] %s", __func__, slot->Describe().c_str());
     return HCCL_SUCCESS;
 }
 
@@ -1341,13 +1336,10 @@ inline HcclResult AicpuTaskCacheEntry::FillSlotReduce_(
     slot->taskPara.Reduce.dstAddr = profInfo.rmtAddr;
     slot->taskPara.Reduce.size = profInfo.size;
     slot->taskPara.Reduce.reduceOp = static_cast<u8>(profInfo.reduceOp);
-    if (static_cast<u8>(profInfo.taskParamType) == TaskParamTypeVal::TASK_UB_REDUCE_INLINE) {
-        slot->taskPara.Reduce.notifyId = INVALID_U32;
-    } else {
-        slot->taskPara.Reduce.notifyId = static_cast<u32>(profInfo.notifyId);
-    }
+    slot->taskPara.Reduce.notifyId = profInfo.notifyId;
     slot->taskPara.Reduce.jettyHandle = profInfo.jettyHandle;
     slot->taskPara.Reduce.jettyId = profInfo.jettyId;
+    PLF_CONFIG_INFO(PLF_TASK, "[%s] %s", __func__, slot->Describe().c_str());
     return HCCL_SUCCESS;
 }
 
@@ -1398,6 +1390,7 @@ inline HcclResult AicpuTaskCacheEntry::FillSlotNotify_(
         slot, streamLite, taskId, Hccl::DfxLinkTypeVal::LINK_ONCHIP,
         static_cast<u8>(Hccl::DfxTransportType::DFX_TRANSPORT_TYPE_LOCAL), DFX_INVALID_U64);
     slot->taskPara.Notify.sqeAddr = reinterpret_cast<u64>(sqePtr);
+    PLF_CONFIG_INFO(PLF_TASK, "[%s] %s", __func__, slot->Describe().c_str());
     return HCCL_SUCCESS;
 }
 
@@ -1422,6 +1415,7 @@ inline HcclResult AicpuTaskCacheEntry::FillSlotSdma_(
         slot->taskPara.Reduce.notifyId = INVALID_U32;
         slot->taskPara.Reduce.reduceOp = ConvertSdmaOpCodeToReduceOp_(sdmaSqe->opcode);
     }
+    PLF_CONFIG_INFO(PLF_TASK, "[%s] %s", __func__, slot->Describe().c_str());
     return HCCL_SUCCESS;
 }
 

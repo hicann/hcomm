@@ -89,7 +89,6 @@ TEST_F(TaskErrMsgTest, Ut_GenerateTaskErrMsg_When_NotifyWait_Expect_NotifyFields
     HcclCommTaskExceptionLite::GetInstance().GenerateTaskErrMsg(taskInfo, errMsgInfo, exceptionInfo);
 
     EXPECT_EQ(errMsgInfo.notifyId, 100u);
-    EXPECT_EQ(errMsgInfo.notifyValue, 200u);
     EXPECT_EQ(errMsgInfo.reduceType, 255u);
 }
 
@@ -104,7 +103,6 @@ TEST_F(TaskErrMsgTest, Ut_GenerateTaskErrMsg_When_NotifyRecord_Expect_NotifyFiel
     HcclCommTaskExceptionLite::GetInstance().GenerateTaskErrMsg(taskInfo, errMsgInfo, exceptionInfo);
 
     EXPECT_EQ(errMsgInfo.notifyId, 300u);
-    EXPECT_EQ(errMsgInfo.notifyValue, 400u);
     EXPECT_EQ(errMsgInfo.reduceType, 255u);
 }
 

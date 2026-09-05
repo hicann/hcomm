@@ -332,11 +332,11 @@ private:
     void ExecProfilingAll(
         const RmaBufferLite& loc, const Buffer& rmt, const u64 totalSize,
         const BaseTransportLiteImpl::TransferOp& transferOp, const StreamLite& stream, u32 taskId,
-        const uint32_t notifyId);
+        const uint32_t notifyIdx);
 
     inline void BuildDbSqeProfInfoForExecProfilingAll(
         const RmaBufferLite& loc, const Buffer& rmt, const u64 totalSize,
-        const BaseTransportLiteImpl::TransferOp& transferOp, const uint32_t notifyId, DbSqeProfInfo& dbSqeProfInfo)
+        const BaseTransportLiteImpl::TransferOp& transferOp, const uint32_t notifyIdx, DbSqeProfInfo& dbSqeProfInfo)
     {
         if (transferOp.transType == TransferType::READ) {
             BuildDbSqeProfInfoForProfilingProcess(
@@ -362,16 +362,17 @@ private:
             BuildDbSqeProfInfoForWriteWithNotify(
                 reinterpret_cast<void*>(GetRmaBufSlicelite(loc).GetAddr()),
                 reinterpret_cast<void*>(GetRmtRmaBufSliceLite(rmt).GetAddr()), totalSize,
-                GetRmtNotifySliceLite(notifyId).GetAddr(), dbSqeProfInfo);
+                GetRmtNotifySliceLite(notifyIdx).GetNotifyId(), dbSqeProfInfo);
         } else if (transferOp.transType == TransferType::WRITE_REDUCE_WITH_NOTIFY) {
             BuildDbSqeProfInfoForWriteReduceWithNotify(
                 reinterpret_cast<void*>(GetRmaBufSlicelite(loc).GetAddr()),
                 reinterpret_cast<void*>(GetRmtRmaBufSliceLite(rmt).GetAddr()), totalSize, transferOp.reduceIn,
-                GetRmtNotifySliceLite(notifyId).GetAddr(), dbSqeProfInfo);
+                GetRmtNotifySliceLite(notifyIdx).GetNotifyId(), dbSqeProfInfo);
         } else if (transferOp.transType == TransferType::NOTIFY_RECORD) {
             BuildDbSqeProfInfoForNotifyRecord(
-                reinterpret_cast<void*>(GetRmtNotifySliceLite(notifyId).GetAddr()),
-                GetRmtNotifySliceLite(notifyId).GetSize(), GetRmtNotifySliceLite(notifyId).GetAddr(), dbSqeProfInfo);
+                reinterpret_cast<void*>(GetRmtNotifySliceLite(notifyIdx).GetAddr()),
+                GetRmtNotifySliceLite(notifyIdx).GetSize(), GetRmtNotifySliceLite(notifyIdx).GetNotifyId(),
+                dbSqeProfInfo);
         }
     }
 
@@ -544,17 +545,12 @@ private:
     }
 
     void FillSlotUbDmaInfo(
-        DfxTaskInfo* slot, const StreamLite& stream, u32 taskId, u64 srcAddr, u64 dstAddr, u64 size,
+        const StreamLite& stream, u32 taskId, TaskParamTypeVal taskType, u64 srcAddr, u64 dstAddr, u64 size,
         u32 notifyId) const;
     void FillSlotReduceInfo(
-        DfxTaskInfo* slot, const StreamLite& stream, u32 taskId, u64 srcAddr, u64 dstAddr, u64 size, u32 notifyId,
-        u8 reduceOp) const;
-    void ReportWriteWithNotifyTask(
-        const RmaBufSliceLite& locSlice, const RmtRmaBufSliceLite& rmtSlice, const RmtRmaBufSliceLite& rmtNotifySlice,
-        const StreamLite& stream, u32 taskId);
-    void ReportWriteReduceWithNotifyTask(
-        const RmaBufSliceLite& locSlice, const RmtRmaBufSliceLite& rmtSlice, const RmtRmaBufSliceLite& rmtNotifySlice,
-        const ReduceIn& reduceIn, const StreamLite& stream, u32 taskId);
+        const StreamLite& stream, u32 taskId, TaskParamTypeVal taskType, u64 srcAddr, u64 dstAddr, u64 size,
+        u32 notifyId, u8 reduceOp) const;
+    void FillSlotWaitInfo(const StreamLite& stream, u32 taskId) const;
 };
 
 } // namespace Hccl

@@ -412,6 +412,7 @@ void TaskExceptionHost::ProcessException(rtExceptionInfo_t* exceptionInfo, const
 
     if (strlen(errorMessage.tag) > 0) {
         hasAicpuReport_ = true;
+        HCCL_RUN_INFO("[TaskExceptionHost]ErrorMessageReport: %s", errorMessage.Describe().c_str());
         HandleAicpuErrorReport(exceptionInfo, errorMessage, taskInfo);
     } else {
         HandleHostErrorReport(exceptionInfo, taskInfo);
@@ -533,7 +534,9 @@ void TaskExceptionHost::PrintGroupErrorMessage(
     groupRankContent += "], localRank[";
     groupRankContent += std::to_string(errorMessage.rankId);
     groupRankContent += "], remoteRank[";
-    groupRankContent += std::to_string(errorMessage.remoteUserRank);
+    groupRankContent += errorMessage.remoteUserRank == Hccl::DFX_INVALID_RANKID ?
+                            "local" :
+                            std::to_string(errorMessage.remoteUserRank);
     groupRankContent += "]";
 
     PrintGroupErrorLog(stageErrInfo, groupRankContent);
@@ -614,6 +617,8 @@ void TaskExceptionHost::PrintOpDataErrorMessage(
     opDataContent += opDataStr.str();
     opDataContent += "dataType[";
     opDataContent += GetDataTypeEnumStr(errorMessage.dataType);
+    opDataContent += "], tag[";
+    opDataContent += errorMessage.tag;
     opDataContent += "].";
 
     PrintOpDataErrorLog(stageErrInfo, opDataContent);
@@ -624,7 +629,9 @@ void TaskExceptionHost::ReportErrorMsg(
     const Hccl::TaskInfo& exceptionTaskInfo, [[maybe_unused]] const std::string& groupRankContent,
     const Hccl::ErrorMessageReport& errorMessage, rtExceptionInfo_t* exceptionInfo) const
 {
-    HCCL_RUN_INFO("[ReportErrorMsg] start, taskType[%d]", exceptionTaskInfo.taskParam_.taskType);
+    HCCL_RUN_INFO(
+        "[ReportErrorMsg] start, taskType[%s]",
+        Hccl::TaskParamTypeValToStr(static_cast<u8>(exceptionTaskInfo.taskParam_.taskType)).c_str());
 
     std::string clusterMonitorErrMsg = AicpuGetAndPrintClusterMonitorErr(exceptionInfo);
 
@@ -734,7 +741,9 @@ void GetTaskParam(Hccl::TaskParam& taskParam, const Hccl::ErrorMessageReport& er
             taskParam.taskPara.DMA.dst = reinterpret_cast<void*>(errMsgInfo.taskDstAddr);
             break;
         default:
-            HCCL_ERROR("[TaskException][HOST]%s taskType[%d] is not supported", __func__, taskParam.taskType);
+            HCCL_ERROR(
+                "[TaskException][HOST]%s taskType[%s] is not supported", __func__,
+                Hccl::TaskParamTypeValToStr(static_cast<u8>(taskParam.taskType)).c_str());
             return;
     }
 }

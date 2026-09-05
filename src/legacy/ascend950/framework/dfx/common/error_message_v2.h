@@ -14,11 +14,11 @@
 #include "kernel_param_lite.h"
 namespace Hccl {
 
-constexpr u32 TAG_MAX_LENGTH = 256;
+constexpr u32 OP_TAG_MAX_LENGTH = 288;
 constexpr u32 GROUP_NAME_MAX_LENTH = 127; // 最大的group name 长度
 
 struct ErrorMessageReport {
-    char tag[TAG_MAX_LENGTH] = {0};
+    char tag[OP_TAG_MAX_LENGTH] = {0};
     char group[GROUP_NAME_MAX_LENTH + 1] = {0};
     u32 remoteUserRank = 0;
     s32 streamId = 0;
@@ -49,6 +49,24 @@ struct ErrorMessageReport {
     uint8_t opType = 0;
     uint64_t jettyHandle = 0;
     uint32_t jettyId = 0;
+
+    std::string Describe() const
+    {
+        return Hccl::StringFormat(
+            "tag[%s], group[%s], remoteUserRank[%u], streamId[%d], taskId[%u], notifyId[%llu], "
+            "notifyValue[%u], stage[%d], rankId[%u], rankSize[%u], taskType[%s], linkType[%s], "
+            "size[%zu], count[%llu], dstAddr[0x%llx], srcAddr[0x%llx], opIndex[%u], reduceType[%u], "
+            "dataType[%u], locEid[%s], rmtEid[%s], taskDstAddr[0x%llx], taskSrcAddr[0x%llx], "
+            "rtCqErrorType[%u], rtCqErrorCode[%u], ubCqeStatus[%u], opType[%u], jettyHandle[0x%llx], "
+            "jettyId[%u]",
+            tag, group, remoteUserRank, streamId, taskId, static_cast<unsigned long long>(notifyId), notifyValue, stage,
+            rankId, rankSize, taskType.Describe().c_str(), linkType.Describe().c_str(), size,
+            static_cast<unsigned long long>(count), static_cast<unsigned long long>(dstAddr),
+            static_cast<unsigned long long>(srcAddr), opIndex, reduceType, dataType, locEid.Describe().c_str(),
+            rmtEid.Describe().c_str(), static_cast<unsigned long long>(taskDstAddr),
+            static_cast<unsigned long long>(taskSrcAddr), rtCqErrorType, rtCqErrorCode, ubCqeStatus, opType,
+            static_cast<unsigned long long>(jettyHandle), jettyId);
+    }
 };
 
 } // namespace Hccl

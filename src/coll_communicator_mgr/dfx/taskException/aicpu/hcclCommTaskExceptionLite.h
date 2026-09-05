@@ -73,7 +73,7 @@ private:
     HcclResult PrintTaskContextInfo(CollCommAicpu* aicpuComm, u32 sqId, u32 taskId);
     HcclResult
     CollectTaskContext(CollCommAicpu* aicpuComm, u32 sqId, u32 taskId, std::vector<Hccl::DfxTaskInfo*>& taskContext);
-    void PrintEid(const Hccl::DfxTaskInfo& taskInfo);
+    std::string GetParaInfo(const Hccl::DfxTaskInfo& taskInfo);
     std::string GetGroupInfo(CollCommAicpu* aicpuComm);
     u32 GetSqeId(uint16_t taskId, uint16_t streamId);
 
@@ -84,7 +84,8 @@ private:
     u32 GetRemoteRankId(const Hccl::DfxTaskInfo& taskInfo);
     std::string GetConciseTaskName(const Hccl::DfxTaskInfo& taskInfo);
     std::string GetNotifyInfo(const Hccl::DfxTaskInfo& taskInfo);
-    void GetNotifyIdFromSqe(u64 sqeAddr, u32& notifyId);
+    u32 GetNotifyIdFromSqe(u64 sqeAddr);
+    void GetSdmaSqeFields(u64 sqeAddr, u64& src, u64& dst, u64& size);
     u32 GetOpIndex(const Hccl::DfxTaskInfo* taskInfo);
     void PrintOpDataInfo(const Hccl::DfxTaskInfo* taskInfo);
     // dpu相关

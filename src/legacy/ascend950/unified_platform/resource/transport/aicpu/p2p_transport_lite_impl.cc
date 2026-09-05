@@ -14,6 +14,7 @@
 #include "exception_util.h"
 #include "communicator_impl_lite_manager.h"
 #include "res_pub.h"
+#include "unified_platform/pub_inc/config_plf_log_v2.h"
 
 namespace Hccl {
 constexpr u32 NOTIFY_RECORD_WRITE_VALUE = 1;
@@ -277,6 +278,7 @@ void P2PTransportLiteImpl::BuildP2PRead(const StreamLite& stream, const RmaBuffe
         slot->transportType = static_cast<u8>(DfxTransportType::DFX_TRANSPORT_TYPE_SDMA);
         slot->channelHandle = reinterpret_cast<u64>(this);
         slot->taskPara.Dma.sqeAddr = stream.GetRtsq()->GetSqeAddr();
+        PLF_CONFIG_INFO(Hccl::PLF_TASK, "[%s] %s", __func__, slot->Describe().c_str());
         src += offset;
         dst += offset;
     }
@@ -351,6 +353,7 @@ void P2PTransportLiteImpl::BuildP2PReadReduce(
         slot->taskPara.Reduce.size = blockSize;
         slot->taskPara.Reduce.notifyId = INVALID_U32;
         slot->taskPara.Reduce.reduceOp = static_cast<u8>(ConvertReduceOpToHcclReduceOp(reduceIn.reduceOp));
+        PLF_CONFIG_INFO(Hccl::PLF_TASK, "[%s] %s", __func__, slot->Describe().c_str());
         src += offset;
         dst += offset;
     }
@@ -394,6 +397,7 @@ void P2PTransportLiteImpl::Post(u32 index, const StreamLite& stream)
     slot->transportType = static_cast<u8>(DfxTransportType::DFX_TRANSPORT_TYPE_SDMA);
     slot->channelHandle = reinterpret_cast<u64>(this);
     slot->taskPara.Notify.sqeAddr = stream.GetRtsq()->GetSqeAddr();
+    PLF_CONFIG_INFO(Hccl::PLF_TASK, "[%s] %s", __func__, slot->Describe().c_str());
     return;
 }
 
@@ -428,6 +432,7 @@ void P2PTransportLiteImpl::WaitWithTimeout(u32 index, const StreamLite& stream, 
     slot->transportType = static_cast<u8>(DfxTransportType::DFX_TRANSPORT_TYPE_SDMA);
     slot->channelHandle = reinterpret_cast<u64>(this);
     slot->taskPara.Notify.sqeAddr = stream.GetRtsq()->GetSqeAddr();
+    PLF_CONFIG_INFO(Hccl::PLF_TASK, "[%s] %s", __func__, slot->Describe().c_str());
     return;
 }
 

@@ -12,6 +12,7 @@
 #include "hccl_common.h"
 #include "aicpu/aicpu_hccl_sqcq.h"
 #include "device_capacity.h"
+#include "unified_platform/pub_inc/config_plf_log_v2.h"
 
 namespace hccl {
 AicpuTsThread::AicpuTsThread(StreamType streamType, uint32_t notifyNum, const NotifyLoadType notifyLoadType)
@@ -244,6 +245,7 @@ HcclResult AicpuTsThread::LocalNotifyRecord(uint32_t notifyId) const
     slot->transportType = static_cast<u8>(Hccl::DfxTransportType::DFX_TRANSPORT_TYPE_LOCAL);
     slot->channelHandle = DFX_INVALID_U64;
     slot->taskPara.Notify.sqeAddr = rtsq->GetSqeAddr();
+    PLF_CONFIG_INFO(Hccl::PLF_TASK, "[%s] %s", __func__, slot->Describe().c_str());
 
     return HCCL_SUCCESS;
 }
@@ -274,13 +276,51 @@ HcclResult AicpuTsThread::LocalNotifyWait(uint32_t notifyId, uint32_t timeout) c
     slot->transportType = static_cast<u8>(Hccl::DfxTransportType::DFX_TRANSPORT_TYPE_LOCAL);
     slot->channelHandle = DFX_INVALID_U64;
     slot->taskPara.Notify.sqeAddr = rtsq->GetSqeAddr();
+    PLF_CONFIG_INFO(Hccl::PLF_TASK, "[%s] %s", __func__, slot->Describe().c_str());
 
     return HCCL_SUCCESS;
 }
 
-template <typename Operation, typename ReportOp>
-HcclResult
-AicpuTsThread::LocalProcess(void* dst, const void* src, uint64_t size, Operation&& op, ReportOp&& reportOp) const
+HcclResult AicpuTsThread::LocalCopyReport(uint32_t taskId, Hccl::StreamLite* sl, Hccl::RtsqBase* rtsq) const
+{
+    auto* slot = sl->NextTaskSlot();
+    slot->taskType = Hccl::TaskParamTypeVal::TASK_SDMA;
+    slot->sqId = sl->GetSqId();
+    slot->taskId = taskId;
+    const void* copyOpInfo = sl->GetLatestDfxOpInfo();
+    slot->dfxOpInfo = (copyOpInfo != nullptr) ? reinterpret_cast<u64>(copyOpInfo) : DFX_INVALID_U64;
+    slot->linkType = Hccl::DfxLinkTypeVal::LINK_ONCHIP;
+    slot->transportType = static_cast<u8>(Hccl::DfxTransportType::DFX_TRANSPORT_TYPE_LOCAL);
+    slot->channelHandle = DFX_INVALID_U64;
+    slot->taskPara.Dma.sqeAddr = rtsq->GetSqeAddr();
+    PLF_CONFIG_INFO(Hccl::PLF_TASK, "[%s] %s", __func__, slot->Describe().c_str());
+    return HCCL_SUCCESS;
+}
+
+HcclResult AicpuTsThread::LocalReduceReport(
+    void* dst, const void* src, uint64_t size, HcommReduceOp reduceOp, uint32_t taskId, Hccl::StreamLite* sl,
+    Hccl::RtsqBase* rtsq) const
+{
+    auto* slot = sl->NextTaskSlot();
+    slot->taskType = Hccl::TaskParamTypeVal::TASK_REDUCE_INLINE;
+    slot->sqId = sl->GetSqId();
+    slot->taskId = taskId;
+    const void* reduceOpInfo = sl->GetLatestDfxOpInfo();
+    slot->dfxOpInfo = (reduceOpInfo != nullptr) ? reinterpret_cast<u64>(reduceOpInfo) : DFX_INVALID_U64;
+    slot->linkType = Hccl::DfxLinkTypeVal::LINK_ONCHIP;
+    slot->transportType = static_cast<u8>(Hccl::DfxTransportType::DFX_TRANSPORT_TYPE_LOCAL);
+    slot->channelHandle = DFX_INVALID_U64;
+    slot->taskPara.Reduce.sqeAddr = rtsq->GetSqeAddr();
+    slot->taskPara.Reduce.srcAddr = reinterpret_cast<u64>(src);
+    slot->taskPara.Reduce.dstAddr = reinterpret_cast<u64>(dst);
+    slot->taskPara.Reduce.size = size;
+    slot->taskPara.Reduce.notifyId = INVALID_U32;
+    slot->taskPara.Reduce.reduceOp = static_cast<u8>(reduceOp);
+    PLF_CONFIG_INFO(Hccl::PLF_TASK, "[%s] %s", __func__, slot->Describe().c_str());
+    return HCCL_SUCCESS;
+}
+
+HcclResult AicpuTsThread::LocalCopy(void* dst, const void* src, uint64_t size) const
 {
     void* streamLitePtr = GetStreamLitePtr();
     Hccl::StreamLite* streamLite = static_cast<Hccl::StreamLite*>(streamLitePtr);
@@ -288,20 +328,15 @@ AicpuTsThread::LocalProcess(void* dst, const void* src, uint64_t size, Operation
 
     uint64_t dstAddr = reinterpret_cast<uint64_t>(dst);
     uint64_t srcAddr = reinterpret_cast<uint64_t>(src);
-    uint8_t* dstByte = static_cast<uint8_t*>(dst);
-    const uint8_t* srcByte = static_cast<const uint8_t*>(src);
-
     uint64_t remainSize = size;
     uint64_t doneSize = 0;
 
     while (remainSize > 0) {
         uint64_t realSize = remainSize > SDMA_SEND_MAX_SIZE ? SDMA_SEND_MAX_SIZE : remainSize;
-        u64 beginTime = ProfGetCurCpuTimestamp();
         u32 taskId = rtsq->GetTaskId();
 
-        CHK_RET(op(dstAddr + doneSize, srcAddr + doneSize, realSize));
-        CHK_RET(
-            reportOp(dstByte + doneSize, srcByte + doneSize, realSize, beginTime, taskId, streamLite->GetSqId(), rtsq));
+        CHK_RET(pImpl_->SdmaCopy(dstAddr + doneSize, srcAddr + doneSize, realSize));
+        CHK_RET(LocalCopyReport(taskId, streamLite, rtsq));
 
         doneSize += realSize;
         remainSize -= realSize;
@@ -309,62 +344,32 @@ AicpuTsThread::LocalProcess(void* dst, const void* src, uint64_t size, Operation
     return HCCL_SUCCESS;
 }
 
-HcclResult AicpuTsThread::LocalCopy(void* dst, const void* src, uint64_t size) const
-{
-    return LocalProcess(
-        dst, src, size,
-        [this](uint64_t dst, uint64_t src, uint64_t size) {
-            return pImpl_->SdmaCopy(dst, src, size);
-        },
-        [this](
-            [[maybe_unused]] void* dst, [[maybe_unused]] const void* src, [[maybe_unused]] uint64_t size,
-            [[maybe_unused]] uint64_t beginTime, uint32_t taskId, uint32_t sqId, const Hccl::RtsqBase* rtsq) {
-            Hccl::StreamLite* sl = static_cast<Hccl::StreamLite*>(GetStreamLitePtr());
-            auto* slot = sl->NextTaskSlot();
-            slot->taskType = Hccl::TaskParamTypeVal::TASK_SDMA;
-            slot->sqId = sqId;
-            slot->taskId = taskId;
-            const void* copyOpInfo = sl->GetLatestDfxOpInfo();
-            slot->dfxOpInfo = (copyOpInfo != nullptr) ? reinterpret_cast<u64>(copyOpInfo) : DFX_INVALID_U64;
-            slot->linkType = Hccl::DfxLinkTypeVal::LINK_ONCHIP;
-            slot->transportType = static_cast<u8>(Hccl::DfxTransportType::DFX_TRANSPORT_TYPE_LOCAL);
-            slot->channelHandle = DFX_INVALID_U64;
-            slot->taskPara.Dma.sqeAddr = rtsq->GetSqeAddr();
-            return HCCL_SUCCESS;
-        });
-}
-
 HcclResult AicpuTsThread::LocalReduce(
     void* dst, const void* src, uint64_t size, HcommDataType dataType, HcommReduceOp reduceOp) const
 {
     uint32_t dataTypeRaw = static_cast<uint32_t>(dataType);
-    uint32_t reduceOpRaw = static_cast<uint32_t>(reduceOp);
-    return LocalProcess(
-        dst, src, size,
-        [this, &dataTypeRaw, &reduceOpRaw](uint64_t d, uint64_t s, uint64_t size) {
-            return pImpl_->SdmaReduce(d, s, size, dataTypeRaw, reduceOpRaw);
-        },
-        [this, &dataType, &reduceOp](
-            void* dst, const void* src, uint64_t size, [[maybe_unused]] uint64_t beginTime, uint32_t taskId,
-            uint32_t sqId, const Hccl::RtsqBase* rtsq) {
-            Hccl::StreamLite* sl = static_cast<Hccl::StreamLite*>(GetStreamLitePtr());
-            auto* slot = sl->NextTaskSlot();
-            slot->taskType = Hccl::TaskParamTypeVal::TASK_REDUCE_INLINE;
-            slot->sqId = sqId;
-            slot->taskId = taskId;
-            const void* reduceOpInfo = sl->GetLatestDfxOpInfo();
-            slot->dfxOpInfo = (reduceOpInfo != nullptr) ? reinterpret_cast<u64>(reduceOpInfo) : DFX_INVALID_U64;
-            slot->linkType = Hccl::DfxLinkTypeVal::LINK_ONCHIP;
-            slot->transportType = static_cast<u8>(Hccl::DfxTransportType::DFX_TRANSPORT_TYPE_LOCAL);
-            slot->channelHandle = DFX_INVALID_U64;
-            slot->taskPara.Reduce.sqeAddr = rtsq->GetSqeAddr();
-            slot->taskPara.Reduce.srcAddr = reinterpret_cast<u64>(src);
-            slot->taskPara.Reduce.dstAddr = reinterpret_cast<u64>(dst);
-            slot->taskPara.Reduce.size = size;
-            slot->taskPara.Reduce.notifyId = INVALID_U32;
-            slot->taskPara.Reduce.reduceOp = static_cast<u8>(reduceOp);
-            return HCCL_SUCCESS;
-        });
+    void* streamLitePtr = GetStreamLitePtr();
+    Hccl::StreamLite* streamLite = static_cast<Hccl::StreamLite*>(streamLitePtr);
+    Hccl::RtsqBase* rtsq = streamLite->GetRtsq();
+
+    uint64_t dstAddr = reinterpret_cast<uint64_t>(dst);
+    uint64_t srcAddr = reinterpret_cast<uint64_t>(src);
+    uint64_t remainSize = size;
+    uint64_t doneSize = 0;
+
+    while (remainSize > 0) {
+        uint64_t realSize = remainSize > SDMA_SEND_MAX_SIZE ? SDMA_SEND_MAX_SIZE : remainSize;
+        u32 taskId = rtsq->GetTaskId();
+
+        CHK_RET(pImpl_->SdmaReduce(dstAddr + doneSize, srcAddr + doneSize, realSize, dataTypeRaw, reduceOp));
+        CHK_RET(LocalReduceReport(
+            static_cast<uint8_t*>(dst) + doneSize, static_cast<const uint8_t*>(src) + doneSize, realSize, reduceOp,
+            taskId, streamLite, rtsq));
+
+        doneSize += realSize;
+        remainSize -= realSize;
+    }
+    return HCCL_SUCCESS;
 }
 
 // Private functions

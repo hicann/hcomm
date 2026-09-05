@@ -10,8 +10,11 @@
 
 #ifndef RES_PUB_H
 #define RES_PUB_H
+#include <map>
+#include <string>
 #include "hccl/hccl_types.h"
 #include "hccl/base.h"
+#include "string_util.h"
 constexpr u32 INVALID_U32 = UINT32_MAX;
 constexpr u64 DFX_INVALID_U64 = UINT64_MAX;
 constexpr s32 INVALID_RANKID = INT32_MAX;
@@ -116,6 +119,77 @@ constexpr u32 DFX_INVALID_RANKID = 0xFFFFFFFF;
 
 enum DfxTaskRole : u8 { NEW_TASK_ROLE_DST = 0, NEW_TASK_ROLE_SRC = 1 };
 
+inline std::string TaskParamTypeValToStr(u8 val)
+{
+    static const std::map<TaskParamTypeVal, std::string> taskParamTypeValStrMap = {
+        {TaskParamTypeVal::TASK_SDMA, "TASK_SDMA"},
+        {TaskParamTypeVal::TASK_RDMA, "TASK_RDMA"},
+        {TaskParamTypeVal::TASK_REDUCE_INLINE, "TASK_REDUCE_INLINE"},
+        {TaskParamTypeVal::TASK_REDUCE_TBE, "TASK_REDUCE_TBE"},
+        {TaskParamTypeVal::TASK_NOTIFY_RECORD, "TASK_NOTIFY_RECORD"},
+        {TaskParamTypeVal::TASK_NOTIFY_WAIT, "TASK_NOTIFY_WAIT"},
+        {TaskParamTypeVal::TASK_SEND_NOTIFY, "TASK_SEND_NOTIFY"},
+        {TaskParamTypeVal::TASK_SEND_PAYLOAD, "TASK_SEND_PAYLOAD"},
+        {TaskParamTypeVal::TASK_WRITE_WITH_NOTIFY, "TASK_WRITE_WITH_NOTIFY"},
+        {TaskParamTypeVal::TASK_WRITE_REDUCE_WITH_NOTIFY, "TASK_WRITE_REDUCE_WITH_NOTIFY"},
+        {TaskParamTypeVal::TASK_CCU, "TASK_CCU"},
+        {TaskParamTypeVal::TASK_AICPU_KERNEL, "TASK_AICPU_KERNEL"},
+        {TaskParamTypeVal::TASK_AICPU_REDUCE, "TASK_AICPU_REDUCE"},
+        {TaskParamTypeVal::TASK_AIV, "TASK_AIV"},
+        {TaskParamTypeVal::TASK_UB_INLINE_WRITE, "TASK_UB_INLINE_WRITE"},
+        {TaskParamTypeVal::TASK_UB_REDUCE_INLINE, "TASK_UB_REDUCE_INLINE"},
+        {TaskParamTypeVal::TASK_UB, "TASK_UB"},
+        {TaskParamTypeVal::TASK_DPU_KERNEL, "TASK_DPU_KERNEL"},
+        {TaskParamTypeVal::TASK_DPU_THREAD_FENCE, "TASK_DPU_THREAD_FENCE"},
+        {TaskParamTypeVal::TASK_DPU_CHANNEL_FENCE, "TASK_DPU_CHANNEL_FENCE"},
+        {TaskParamTypeVal::TASK_DPU_INLINE_WRITE, "TASK_DPU_INLINE_WRITE"},
+        {TaskParamTypeVal::TASK_DPU_NOTIFY_WAIT, "TASK_DPU_NOTIFY_WAIT"},
+        {TaskParamTypeVal::TASK_DPU_WRITE_WITH_NOTIFY, "TASK_DPU_WRITE_WITH_NOTIFY"},
+    };
+    auto iter = taskParamTypeValStrMap.find(static_cast<TaskParamTypeVal>(val));
+    if (iter == taskParamTypeValStrMap.end()) {
+        return "TaskParamTypeVal(" + std::to_string(val) + ")";
+    }
+    return iter->second;
+}
+
+inline std::string DfxLinkTypeValToStr(u8 val)
+{
+    static const std::map<DfxLinkTypeVal, std::string> dfxLinkTypeValStrMap = {
+        {DfxLinkTypeVal::LINK_ONCHIP, "LINK_ONCHIP"},
+        {DfxLinkTypeVal::LINK_HCCS, "LINK_HCCS"},
+        {DfxLinkTypeVal::LINK_PCIE, "LINK_PCIE"},
+        {DfxLinkTypeVal::LINK_ROCE, "LINK_ROCE"},
+        {DfxLinkTypeVal::LINK_SIO, "LINK_SIO"},
+        {DfxLinkTypeVal::LINK_HCCS_SW, "LINK_HCCS_SW"},
+        {DfxLinkTypeVal::LINK_STANDARD_ROCE, "LINK_STANDARD_ROCE"},
+        {DfxLinkTypeVal::LINK_UB, "LINK_UB"},
+        {DfxLinkTypeVal::LINK_UBoE, "LINK_UBoE"},
+        {DfxLinkTypeVal::LINK_RESERVED, "LINK_RESERVED"},
+    };
+    auto iter = dfxLinkTypeValStrMap.find(static_cast<DfxLinkTypeVal>(val));
+    if (iter == dfxLinkTypeValStrMap.end()) {
+        return "DfxLinkTypeVal(" + std::to_string(val) + ")";
+    }
+    return iter->second;
+}
+
+inline std::string DfxTransportTypeToStr(u8 val)
+{
+    static const std::map<DfxTransportType, std::string> dfxTransportTypeStrMap = {
+        {DfxTransportType::DFX_TRANSPORT_TYPE_SDMA, "DFX_TRANSPORT_TYPE_SDMA"},
+        {DfxTransportType::DFX_TRANSPORT_TYPE_RDMA, "DFX_TRANSPORT_TYPE_RDMA"},
+        {DfxTransportType::DFX_TRANSPORT_TYPE_LOCAL, "DFX_TRANSPORT_TYPE_LOCAL"},
+        {DfxTransportType::DFX_TRANSPORT_TYPE_UB, "DFX_TRANSPORT_TYPE_UB"},
+        {DfxTransportType::DFX_TRANSPORT_TYPE_ROCE, "DFX_TRANSPORT_TYPE_ROCE"},
+    };
+    auto iter = dfxTransportTypeStrMap.find(static_cast<DfxTransportType>(val));
+    if (iter == dfxTransportTypeStrMap.end()) {
+        return "DfxTransportType(" + std::to_string(val) + ")";
+    }
+    return iter->second;
+}
+
 } // namespace Hccl
 
 namespace Hccl {
@@ -154,14 +228,28 @@ struct DfxDfxOpInfo {
     // 固定长度尾部字段（288B，offset 71-358）
     char algTag[288]{0}; // 算子标签字符串，来源于 dfxOpInfo_->algTag_，288 = TAG_MAX_LENGTH(256) + 32 余量
     // 总计 360B：8B字段56B + 4B字段12B + 1B字段3B + algTag 288B + 尾部padding 1B（对齐到8B）
+
+    std::string Describe() const
+    {
+        return StringFormat(
+            "commHandle[%p], count[%llu], srcAddr[0x%llx], dstAddr[0x%llx], srcSize[%llu], dstSize[%llu], "
+            "hcclCommDfxLite[%p], opIndex[%u], cpuWaitAicpuNotifyId[%u], aicpuWaitCpuNotifyId[%u], "
+            "opType[%u], algType[%u], dataType[%u], algTag[%s]",
+            commHandle, static_cast<unsigned long long>(count), static_cast<unsigned long long>(srcAddr),
+            static_cast<unsigned long long>(dstAddr), static_cast<unsigned long long>(srcSize),
+            static_cast<unsigned long long>(dstSize), hcclCommDfxLite, opIndex, cpuWaitAicpuNotifyId,
+            aicpuWaitCpuNotifyId, opType, algType, dataType, algTag);
+    }
 };
 
 struct DfxTaskParaNotify { // Notify 任务参数（NOTIFY_RECORD/NOTIFY_WAIT）
     u64 sqeAddr;           // SQE 中的偏移地址
+    std::string Describe() const { return StringFormat("sqeAddr[0x%llx]", static_cast<unsigned long long>(sqeAddr)); }
 };
 
 struct DfxTaskParaDma { // SDMA 任务参数，信息从 SQE 获取
     u64 sqeAddr;        // SQE 中的偏移地址
+    std::string Describe() const { return StringFormat("sqeAddr[0x%llx]", static_cast<unsigned long long>(sqeAddr)); }
 };
 
 struct DfxTaskParaUbDma {      // UB DMA 任务参数
@@ -173,6 +261,14 @@ struct DfxTaskParaUbDma {      // UB DMA 任务参数
                                //   write with notify SQE 中无此字段；cnt notify 不支持跨片
     uint64_t jettyHandle{0};   // taskException 用于 dump jetty context
     uint32_t jettyId{0};       // taskException 用于 dump jetty context
+    std::string Describe() const
+    {
+        return StringFormat(
+            "srcAddr[0x%llx], dstAddr[0x%llx], size[0x%llx], notifyId[0x%x], "
+            "jettyHandle[0x%llx], jettyId[%u]",
+            static_cast<unsigned long long>(srcAddr), static_cast<unsigned long long>(dstAddr),
+            static_cast<unsigned long long>(size), notifyId, static_cast<unsigned long long>(jettyHandle), jettyId);
+    }
 };
 
 struct DfxTaskParaReduce {     // UB Reduce 任务参数
@@ -184,11 +280,24 @@ struct DfxTaskParaReduce {     // UB Reduce 任务参数
     u8 reduceOp; // Reduce 操作类型枚举值（HcclReduceOp 底层 uint8_t，仅 Reduce 类 task 有效）
     uint64_t jettyHandle{0}; // taskException 用于 dump jetty context
     uint32_t jettyId{0};     // taskException 用于 dump jetty context
+    std::string Describe() const
+    {
+        return StringFormat(
+            "srcAddr[0x%llx], dstAddr[0x%llx], size[0x%llx], notifyId[0x%x], reduceOp[%u], "
+            "jettyHandle[0x%llx], jettyId[%u]",
+            static_cast<unsigned long long>(srcAddr), static_cast<unsigned long long>(dstAddr),
+            static_cast<unsigned long long>(size), notifyId, reduceOp, static_cast<unsigned long long>(jettyHandle),
+            jettyId);
+    }
 };
 
 struct DfxTaskParaWriteValue { // P2P WriteValue 任务参数
     u64 sqeAddr;               // SQE 中的偏移地址
     u32 notifyId{INVALID_U32}; // Notify ID，来源于 ParaReduce::notifyID，taskException 使用
+    std::string Describe() const
+    {
+        return StringFormat("sqeAddr[0x%llx], notifyId[0x%x]", static_cast<unsigned long long>(sqeAddr), notifyId);
+    }
 };
 
 struct DfxTaskInfo {
@@ -217,6 +326,41 @@ struct DfxTaskInfo {
     // 尾部填充 1B 对齐到 64B
 
     bool IsTaskTypeValid() const { return taskType < static_cast<u8>(TaskParamTypeVal::TASK_PARAM_TYPE_COUNT); }
+    std::string Describe() const
+    {
+        std::string result = StringFormat(
+            "DfxTaskInfo: sqId[%u], taskId(sqeId)[%u], taskType[%s], linkType[%s], transportType[%s], "
+            "channelHandle[0x%llx], ",
+            sqId, taskId, TaskParamTypeValToStr(taskType).c_str(), DfxLinkTypeValToStr(linkType).c_str(),
+            DfxTransportTypeToStr(transportType).c_str(), static_cast<unsigned long long>(channelHandle));
+
+        auto type = static_cast<TaskParamTypeVal>(taskType);
+        switch (type) {
+            case TaskParamTypeVal::TASK_UB:
+            case TaskParamTypeVal::TASK_UB_INLINE_WRITE:
+            case TaskParamTypeVal::TASK_WRITE_WITH_NOTIFY:
+                result += taskPara.ubDma.Describe();
+                break;
+            case TaskParamTypeVal::TASK_UB_REDUCE_INLINE:
+            case TaskParamTypeVal::TASK_WRITE_REDUCE_WITH_NOTIFY:
+            case TaskParamTypeVal::TASK_REDUCE_INLINE:
+                result += taskPara.Reduce.Describe();
+                break;
+            case TaskParamTypeVal::TASK_SDMA:
+            case TaskParamTypeVal::TASK_RDMA:
+                result += taskPara.Dma.Describe();
+                break;
+            case TaskParamTypeVal::TASK_NOTIFY_RECORD:
+            case TaskParamTypeVal::TASK_NOTIFY_WAIT:
+            case TaskParamTypeVal::TASK_SEND_NOTIFY:
+                result += taskPara.Notify.Describe();
+                break;
+            default:
+                result += "taskType not supported";
+                break;
+        }
+        return result;
+    }
 };
 } // namespace Hccl
 #endif // RES_PUB_H

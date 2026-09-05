@@ -192,22 +192,22 @@ union WqeTask {
 struct DbSqeProfInfo {
     bool isValid = false;
     TaskParamType taskParamType;
-    uint64_t locAddr;        // TASK_UB, TASK_UB_REDUCE_INLINE, TASK_WRITE_WITH_NOTIFY, TASK_WRITE_REDUCE_WITH_NOTIFY
-    uint64_t rmtAddr;        // TASK_UB_INLINE_WRITE, TASK_UB, TASK_UB_REDUCE_INLINE, TASK_WRITE_WITH_NOTIFY,
-                             // TASK_WRITE_REDUCE_WITH_NOTIFY
-    uint64_t size;           // TASK_UB_INLINE_WRITE, TASK_UB, TASK_UB_REDUCE_INLINE, TASK_WRITE_WITH_NOTIFY,
-                             // TASK_WRITE_REDUCE_WITH_NOTIFY
-    Eid locEid;              // TASK_UB_INLINE_WRITE, TASK_UB, TASK_UB_REDUCE_INLINE, TASK_WRITE_WITH_NOTIFY,
-                             // TASK_WRITE_REDUCE_WITH_NOTIFY
-    Eid rmtEid;              // TASK_UB_INLINE_WRITE, TASK_UB, TASK_UB_REDUCE_INLINE, TASK_WRITE_WITH_NOTIFY,
-                             // TASK_WRITE_REDUCE_WITH_NOTIFY
-    DmaOp dmaOp;             // TASK_UB
-    HcclReduceOp reduceOp;   // TASK_UB_REDUCE_INLINE, TASK_WRITE_REDUCE_WITH_NOTIFY
-    HcclDataType dataType;   // TASK_UB_REDUCE_INLINE, TASK_WRITE_REDUCE_WITH_NOTIFY
-    u64 notifyId;            // TASK_UB_INLINE_WRITE, TASK_WRITE_WITH_NOTIFY, TASK_WRITE_REDUCE_WITH_NOTIFY
-    uint64_t jettyHandle{0}; // TASK_UB_INLINE_WRITE
-    uint32_t jettyId{0};     // TASK_UB_INLINE_WRITE, TASK_UB, TASK_UB_REDUCE_INLINE, TASK_WRITE_WITH_NOTIFY,
-                             // TASK_WRITE_REDUCE_WITH_NOTIFY
+    uint64_t locAddr;          // TASK_UB, TASK_UB_REDUCE_INLINE, TASK_WRITE_WITH_NOTIFY, TASK_WRITE_REDUCE_WITH_NOTIFY
+    uint64_t rmtAddr;          // TASK_UB_INLINE_WRITE, TASK_UB, TASK_UB_REDUCE_INLINE, TASK_WRITE_WITH_NOTIFY,
+                               // TASK_WRITE_REDUCE_WITH_NOTIFY
+    uint64_t size;             // TASK_UB_INLINE_WRITE, TASK_UB, TASK_UB_REDUCE_INLINE, TASK_WRITE_WITH_NOTIFY,
+                               // TASK_WRITE_REDUCE_WITH_NOTIFY
+    Eid locEid;                // TASK_UB_INLINE_WRITE, TASK_UB, TASK_UB_REDUCE_INLINE, TASK_WRITE_WITH_NOTIFY,
+                               // TASK_WRITE_REDUCE_WITH_NOTIFY
+    Eid rmtEid;                // TASK_UB_INLINE_WRITE, TASK_UB, TASK_UB_REDUCE_INLINE, TASK_WRITE_WITH_NOTIFY,
+                               // TASK_WRITE_REDUCE_WITH_NOTIFY
+    DmaOp dmaOp;               // TASK_UB
+    HcclReduceOp reduceOp;     // TASK_UB_REDUCE_INLINE, TASK_WRITE_REDUCE_WITH_NOTIFY
+    HcclDataType dataType;     // TASK_UB_REDUCE_INLINE, TASK_WRITE_REDUCE_WITH_NOTIFY
+    u32 notifyId{INVALID_U32}; // TASK_UB_INLINE_WRITE, TASK_WRITE_WITH_NOTIFY, TASK_WRITE_REDUCE_WITH_NOTIFY
+    uint64_t jettyHandle{0};   // TASK_UB_INLINE_WRITE
+    uint32_t jettyId{0};       // TASK_UB_INLINE_WRITE, TASK_UB, TASK_UB_REDUCE_INLINE, TASK_WRITE_WITH_NOTIFY,
+                               // TASK_WRITE_REDUCE_WITH_NOTIFY
 };
 
 } // namespace Hccl

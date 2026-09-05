@@ -355,7 +355,7 @@ void RtsqA5::NotifyWait(u32 notifyId, u32 timeout)
 {
     BuildA5SqeNotifyWait(streamId_, taskId_, notifyId, timeout, GetCurrSqeBuffer());
     HCCL_INFO(
-        "RtsqA5::NotifyWait: streamId %u, taskId %u, notifyId %u, timeout[%u ms]", streamId_, taskId_, notifyId,
+        "RtsqA5::NotifyWait: streamId %u, taskId %u, notifyId %u, timeout[%u s]", streamId_, taskId_, notifyId,
         timeout);
     RefreshInfo();
 }

@@ -171,10 +171,10 @@ TEST_F(TaskInfoTest, test_get_para_dma)
     TaskInfo taskInfo = InitTaskInfo();
     taskInfo.taskParam_.taskType = TaskParamType::TASK_RDMA;
     taskInfo.remoteRank_ = 3;
-    ParaDMA paraDMA{(void*)0xaaaa, (void*)0xbbbb, 0xa, 0xaaaabbbbcccc, 1, DfxLinkType::ONCHIP};
+    ParaDMA paraDMA{(void*)0xaaaa, (void*)0xbbbb, 0xa, 123, 1, DfxLinkType::ONCHIP};
     taskInfo.taskParam_.taskPara.DMA = paraDMA;
     EXPECT_EQ(
-        taskInfo.GetParaInfo(), "src:[0xaaaa], dst:[0xbbbb], size:[0xa], notify id:[0x0000aaaabbbbcccc], link "
+        taskInfo.GetParaInfo(), "src:[0xaaaa], dst:[0xbbbb], size:[0xa], notify id:[123], link "
                                 "type:[DfxLinkType::ONCHIP], remote rank:[3]");
 }
 
@@ -187,14 +187,14 @@ TEST_F(TaskInfoTest, test_get_para_reduce)
         (void*)0xaaaa,
         (void*)0xbbbb,
         0xa,
-        0xaaaabbbbcccc,
+        123,
         1,
         DfxLinkType::HCCS,
         HcclReduceOp::HCCL_REDUCE_SUM,
         HcclDataType::HCCL_DATA_TYPE_INT32};
     taskInfo.taskParam_.taskPara.Reduce = paraReduce;
     EXPECT_EQ(
-        taskInfo.GetParaInfo(), "src:[0xaaaa], dst:[0xbbbb], size:[0xa], notify id:[0x0000aaaabbbbcccc], op:[0], data "
+        taskInfo.GetParaInfo(), "src:[0xaaaa], dst:[0xbbbb], size:[0xa], notify id:[123], op:[0], data "
                                 "type:[2], link type:[DfxLinkType::HCCS], remote rank:[local]");
 }
 
@@ -203,9 +203,9 @@ TEST_F(TaskInfoTest, test_get_para_notify)
     TaskInfo taskInfo = InitTaskInfo();
     taskInfo.taskParam_.taskType = TaskParamType::TASK_NOTIFY_WAIT;
     taskInfo.remoteRank_ = 3;
-    taskInfo.taskParam_.taskPara.Notify.notifyID = 0xaaaabbbbcccc;
+    taskInfo.taskParam_.taskPara.Notify.notifyID = 123;
     taskInfo.taskParam_.taskPara.Notify.value = 0xa;
-    EXPECT_EQ(taskInfo.GetParaInfo(), "notify id:[0x0000aaaabbbbcccc], value:[10], remote rank:[3]");
+    EXPECT_EQ(taskInfo.GetParaInfo(), "notify id:[123], value:[10], remote rank:[3]");
 }
 
 TEST_F(TaskInfoTest, test_GetIndopBaseInfo)

@@ -407,34 +407,20 @@ void UbTransportLiteImpl::Post(u32 index, const StreamLite& stream)
         FillDbSqeProfInfoDmaPub(
             reinterpret_cast<void*>(rmtBuffSliceLite.GetAddr()), rmtBuffSliceLite.GetSize(), DmaOp::HCCL_DMA_WRITE,
             dbSqeProfInfo);
-        dbSqeProfInfo.notifyId = rmtBuffSliceLite.GetAddr();
+        dbSqeProfInfo.notifyId = rmtBuffSliceLite.GetNotifyId();
     }
     PostLaunchWqe(stream, ubConnLitePtr, needCacheTask, pendingSqeCnt, isReportTask, dbSqeProfInfo);
 
     // 构建rts 的 sqe
     BuildUbDbSendTask(stream, conn->GetUbJettyLiteId(), connOut.pi);
 
-    HCCL_INFO("UbTransportLiteImpl::Post notifyId[0x%llx], pi=%u", rmtBuffSliceLite.GetAddr(), connOut.pi);
-    if (isReportTask) {
-        TaskParam taskParam{};
-        taskParam.taskType = TaskParamType::TASK_UB_INLINE_WRITE;
-        taskParam.beginTime = ProfGetCurCpuTimestamp();
-        FillTaskParamDmaPub(
-            taskParam, reinterpret_cast<void*>(rmtBuffSliceLite.GetAddr()), rmtBuffSliceLite.GetSize(),
-            DmaOp::HCCL_DMA_WRITE);
-        taskParam.taskPara.DMA.notifyID = rmtBuffSliceLite.GetAddr();
-        taskParam.taskPara.DMA.notifyValue = 1;
+    HCCL_INFO(
+        "UbTransportLiteImpl::Post notifyId[%u], pi=[%u], locEid[%s], rmtEid[%s]", rmtBuffSliceLite.GetNotifyId(),
+        connOut.pi, GetLocEid().Describe().c_str(), GetRmtEid().Describe().c_str());
 
-        HCCL_INFO(
-            "[UbTransportLiteImpl::%s] locEid[%s], rmtEid[%s]", __func__, GetLocEid().Describe().c_str(),
-            GetRmtEid().Describe().c_str());
-        AddTaskCallback(stream, taskId, taskParam);
-        DfxTaskInfo* slot = stream.NextTaskSlot();
-        slot->taskType = TaskParamTypeVal::TASK_UB_INLINE_WRITE;
-        FillSlotUbDmaInfo(
-            slot, stream, taskId, 0, rmtBuffSliceLite.GetAddr(), rmtBuffSliceLite.GetSize(),
-            rmtBuffSliceLite.GetNotifyId());
-    }
+    NotifyRecordProfilingProcess(
+        reinterpret_cast<void*>(rmtBuffSliceLite.GetAddr()), rmtBuffSliceLite.GetSize(), stream, taskId,
+        rmtBuffSliceLite.GetNotifyId());
 }
 
 void UbTransportLiteImpl::Wait(u32 index, const StreamLite& stream)
@@ -452,23 +438,15 @@ void UbTransportLiteImpl::WaitWithTimeout(u32 index, const StreamLite& stream, u
         return;
     }
 
-    TaskParam taskParam{};
-    taskParam.taskType = TaskParamType::TASK_NOTIFY_WAIT;
-    taskParam.beginTime = ProfGetCurCpuTimestamp();
-    taskParam.taskPara.Notify.notifyID = notifyId;
-    taskParam.taskPara.Notify.value = 1;
-
-    AddTaskCallback(stream, taskId, taskParam);
-    DfxTaskInfo* slot = stream.NextTaskSlot();
-    slot->taskType = TaskParamTypeVal::TASK_NOTIFY_WAIT;
-    slot->sqId = stream.GetSqId();
-    slot->taskId = taskId;
-    const void* opInfo = stream.GetLatestDfxOpInfo();
-    slot->dfxOpInfo = (opInfo != nullptr) ? reinterpret_cast<u64>(opInfo) : INVALID_U64;
-    slot->linkType = (linkType_ == DfxLinkType::UB) ? DfxLinkTypeVal::LINK_UB : DfxLinkTypeVal::LINK_UBoE;
-    slot->transportType = static_cast<u8>(DfxTransportType::DFX_TRANSPORT_TYPE_UB);
-    slot->channelHandle = reinterpret_cast<u64>(this);
-    slot->taskPara.Notify.sqeAddr = stream.GetRtsq()->GetSqeAddr();
+    if (callback_) {
+        TaskParam taskParam{};
+        taskParam.taskType = TaskParamType::TASK_NOTIFY_WAIT;
+        taskParam.beginTime = ProfGetCurCpuTimestamp();
+        taskParam.taskPara.Notify.notifyID = notifyId;
+        taskParam.taskPara.Notify.value = 1;
+        AddTaskCallback(stream, taskId, taskParam);
+    }
+    FillSlotWaitInfo(stream, taskId);
 }
 
 void UbTransportLiteImpl::ProfilingProcess(
@@ -478,16 +456,17 @@ void UbTransportLiteImpl::ProfilingProcess(
         return;
     }
 
-    TaskParam taskParam{};
-    taskParam.taskType = TaskParamType::TASK_UB;
-    taskParam.beginTime = ProfGetCurCpuTimestamp();
-    FillTaskParamDmaPub(taskParam, dst, size, dmaOp);
-    taskParam.taskPara.DMA.src = src;
-
-    AddTaskCallback(stream, taskId, taskParam);
-    DfxTaskInfo* slot = stream.NextTaskSlot();
-    slot->taskType = TaskParamTypeVal::TASK_UB;
-    FillSlotUbDmaInfo(slot, stream, taskId, reinterpret_cast<u64>(src), reinterpret_cast<u64>(dst), size, INVALID_U32);
+    if (callback_) {
+        TaskParam taskParam{};
+        taskParam.taskType = TaskParamType::TASK_UB;
+        taskParam.beginTime = ProfGetCurCpuTimestamp();
+        FillTaskParamDmaPub(taskParam, dst, size, dmaOp);
+        taskParam.taskPara.DMA.src = src;
+        AddTaskCallback(stream, taskId, taskParam);
+    }
+    FillSlotUbDmaInfo(
+        stream, taskId, TaskParamTypeVal::TASK_UB, reinterpret_cast<u64>(src), reinterpret_cast<u64>(dst), size,
+        INVALID_U32);
 }
 
 void UbTransportLiteImpl::ReduceProfilingProcess(
@@ -498,18 +477,17 @@ void UbTransportLiteImpl::ReduceProfilingProcess(
         return;
     }
 
-    TaskParam taskParam{};
-    taskParam.taskType = TaskParamType::TASK_UB_REDUCE_INLINE;
-    taskParam.beginTime = ProfGetCurCpuTimestamp();
-    FillTaskParamReducePub(taskParam, src, dst, size, reduceIn);
-    taskParam.taskPara.Reduce.notifyID = INVALID_VALUE_NOTIFYID;
-
-    AddTaskCallback(stream, taskId, taskParam);
-    DfxTaskInfo* slot = stream.NextTaskSlot();
-    slot->taskType = TaskParamTypeVal::TASK_UB_REDUCE_INLINE;
+    if (callback_) {
+        TaskParam taskParam{};
+        taskParam.taskType = TaskParamType::TASK_UB_REDUCE_INLINE;
+        taskParam.beginTime = ProfGetCurCpuTimestamp();
+        FillTaskParamReducePub(taskParam, src, dst, size, reduceIn);
+        taskParam.taskPara.Reduce.notifyID = INVALID_VALUE_NOTIFYID;
+        AddTaskCallback(stream, taskId, taskParam);
+    }
     FillSlotReduceInfo(
-        slot, stream, taskId, reinterpret_cast<u64>(src), reinterpret_cast<u64>(dst), size, INVALID_U32,
-        static_cast<u8>(ConvertReduceOpToHcclReduceOp(reduceIn.reduceOp)));
+        stream, taskId, TaskParamTypeVal::TASK_UB_REDUCE_INLINE, reinterpret_cast<u64>(src), reinterpret_cast<u64>(dst),
+        size, INVALID_U32, static_cast<u8>(ConvertReduceOpToHcclReduceOp(reduceIn.reduceOp)));
 }
 
 void UbTransportLiteImpl::WriteWithNotifyProfilingProcess(
@@ -519,19 +497,19 @@ void UbTransportLiteImpl::WriteWithNotifyProfilingProcess(
         return;
     }
 
-    TaskParam taskParam{};
-    taskParam.taskType = TaskParamType::TASK_WRITE_WITH_NOTIFY;
-    taskParam.beginTime = ProfGetCurCpuTimestamp();
-    FillTaskParamDmaPub(taskParam, dst, size, DmaOp::HCCL_DMA_WRITE);
-    taskParam.taskPara.DMA.src = src;
-    taskParam.taskPara.DMA.notifyID = notifyId;
-    taskParam.taskPara.DMA.notifyValue = 1;
-
-    AddTaskCallback(stream, taskId, taskParam);
-    DfxTaskInfo* slot = stream.NextTaskSlot();
-    slot->taskType = TaskParamTypeVal::TASK_WRITE_WITH_NOTIFY;
+    if (callback_) {
+        TaskParam taskParam{};
+        taskParam.taskType = TaskParamType::TASK_WRITE_WITH_NOTIFY;
+        taskParam.beginTime = ProfGetCurCpuTimestamp();
+        FillTaskParamDmaPub(taskParam, dst, size, DmaOp::HCCL_DMA_WRITE);
+        taskParam.taskPara.DMA.src = src;
+        taskParam.taskPara.DMA.notifyID = notifyId;
+        taskParam.taskPara.DMA.notifyValue = 1;
+        AddTaskCallback(stream, taskId, taskParam);
+    }
     FillSlotUbDmaInfo(
-        slot, stream, taskId, reinterpret_cast<u64>(src), reinterpret_cast<u64>(dst), size, static_cast<u32>(notifyId));
+        stream, taskId, TaskParamTypeVal::TASK_WRITE_WITH_NOTIFY, reinterpret_cast<u64>(src),
+        reinterpret_cast<u64>(dst), size, static_cast<u32>(notifyId));
 }
 
 void UbTransportLiteImpl::WriteReduceWithNotifyProfilingProcess(
@@ -541,17 +519,17 @@ void UbTransportLiteImpl::WriteReduceWithNotifyProfilingProcess(
         return;
     }
 
-    TaskParam taskParam{};
-    taskParam.taskType = TaskParamType::TASK_WRITE_REDUCE_WITH_NOTIFY;
-    taskParam.beginTime = ProfGetCurCpuTimestamp();
-    FillTaskParamReducePub(taskParam, src, dst, size, reduceIn);
-    taskParam.taskPara.Reduce.notifyID = notifyId;
-
-    AddTaskCallback(stream, taskId, taskParam);
-    DfxTaskInfo* slot = stream.NextTaskSlot();
-    slot->taskType = TaskParamTypeVal::TASK_WRITE_REDUCE_WITH_NOTIFY;
+    if (callback_) {
+        TaskParam taskParam{};
+        taskParam.taskType = TaskParamType::TASK_WRITE_REDUCE_WITH_NOTIFY;
+        taskParam.beginTime = ProfGetCurCpuTimestamp();
+        FillTaskParamReducePub(taskParam, src, dst, size, reduceIn);
+        taskParam.taskPara.Reduce.notifyID = notifyId;
+        AddTaskCallback(stream, taskId, taskParam);
+    }
     FillSlotReduceInfo(
-        slot, stream, taskId, reinterpret_cast<u64>(src), reinterpret_cast<u64>(dst), size, static_cast<u32>(notifyId),
+        stream, taskId, TaskParamTypeVal::TASK_WRITE_REDUCE_WITH_NOTIFY, reinterpret_cast<u64>(src),
+        reinterpret_cast<u64>(dst), size, static_cast<u32>(notifyId),
         static_cast<u8>(ConvertReduceOpToHcclReduceOp(reduceIn.reduceOp)));
 }
 
@@ -562,22 +540,26 @@ void UbTransportLiteImpl::NotifyRecordProfilingProcess(
         return;
     }
 
-    TaskParam taskParam{};
-    taskParam.taskType = TaskParamType::TASK_UB_INLINE_WRITE;
-    taskParam.beginTime = ProfGetCurCpuTimestamp();
-    FillTaskParamDmaPub(taskParam, dst, size, DmaOp::HCCL_DMA_WRITE);
-    taskParam.taskPara.DMA.notifyID = notifyId;
-    taskParam.taskPara.DMA.notifyValue = 1;
-
-    AddTaskCallback(stream, taskId, taskParam);
-    DfxTaskInfo* slot = stream.NextTaskSlot();
-    slot->taskType = TaskParamTypeVal::TASK_UB_INLINE_WRITE;
-    FillSlotUbDmaInfo(slot, stream, taskId, 0, reinterpret_cast<u64>(dst), size, static_cast<u32>(notifyId));
+    if (callback_) {
+        TaskParam taskParam{};
+        taskParam.taskType = TaskParamType::TASK_UB_INLINE_WRITE;
+        taskParam.beginTime = ProfGetCurCpuTimestamp();
+        FillTaskParamDmaPub(taskParam, dst, size, DmaOp::HCCL_DMA_WRITE);
+        taskParam.taskPara.DMA.notifyID = notifyId;
+        taskParam.taskPara.DMA.notifyValue = 1;
+        AddTaskCallback(stream, taskId, taskParam);
+    }
+    FillSlotUbDmaInfo(
+        stream, taskId, TaskParamTypeVal::TASK_UB_INLINE_WRITE, 0, reinterpret_cast<u64>(dst), size,
+        static_cast<u32>(notifyId));
 }
 
 void UbTransportLiteImpl::FillSlotUbDmaInfo(
-    DfxTaskInfo* slot, const StreamLite& stream, u32 taskId, u64 srcAddr, u64 dstAddr, u64 size, u32 notifyId) const
+    const StreamLite& stream, u32 taskId, TaskParamTypeVal taskType, u64 srcAddr, u64 dstAddr, u64 size,
+    u32 notifyId) const
 {
+    DfxTaskInfo* slot = stream.NextTaskSlot();
+    slot->taskType = static_cast<u8>(taskType);
     slot->sqId = stream.GetSqId();
     slot->taskId = taskId;
     const void* opInfo = stream.GetLatestDfxOpInfo();
@@ -592,12 +574,15 @@ void UbTransportLiteImpl::FillSlotUbDmaInfo(
     slot->taskPara.ubDma.notifyId = notifyId;
     slot->taskPara.ubDma.jettyHandle = GetJettyHandle();
     slot->taskPara.ubDma.jettyId = GetJettyId();
+    PLF_CONFIG_INFO(Hccl::PLF_TASK, "[%s] %s", __func__, slot->Describe().c_str());
 }
 
 void UbTransportLiteImpl::FillSlotReduceInfo(
-    DfxTaskInfo* slot, const StreamLite& stream, u32 taskId, u64 srcAddr, u64 dstAddr, u64 size, u32 notifyId,
+    const StreamLite& stream, u32 taskId, TaskParamTypeVal taskType, u64 srcAddr, u64 dstAddr, u64 size, u32 notifyId,
     u8 reduceOp) const
 {
+    DfxTaskInfo* slot = stream.NextTaskSlot();
+    slot->taskType = static_cast<u8>(taskType);
     slot->sqId = stream.GetSqId();
     slot->taskId = taskId;
     const void* opInfo = stream.GetLatestDfxOpInfo();
@@ -613,6 +598,22 @@ void UbTransportLiteImpl::FillSlotReduceInfo(
     slot->taskPara.Reduce.reduceOp = reduceOp;
     slot->taskPara.Reduce.jettyHandle = GetJettyHandle();
     slot->taskPara.Reduce.jettyId = GetJettyId();
+    PLF_CONFIG_INFO(Hccl::PLF_TASK, "[%s] %s", __func__, slot->Describe().c_str());
+}
+
+void UbTransportLiteImpl::FillSlotWaitInfo(const StreamLite& stream, u32 taskId) const
+{
+    DfxTaskInfo* slot = stream.NextTaskSlot();
+    slot->taskType = static_cast<u8>(TaskParamTypeVal::TASK_NOTIFY_WAIT);
+    slot->sqId = stream.GetSqId();
+    slot->taskId = taskId;
+    const void* opInfo = stream.GetLatestDfxOpInfo();
+    slot->dfxOpInfo = (opInfo != nullptr) ? reinterpret_cast<u64>(opInfo) : INVALID_U64;
+    slot->linkType = (linkType_ == DfxLinkType::UB) ? DfxLinkTypeVal::LINK_UB : DfxLinkTypeVal::LINK_UBoE;
+    slot->transportType = static_cast<u8>(DfxTransportType::DFX_TRANSPORT_TYPE_UB);
+    slot->channelHandle = reinterpret_cast<u64>(this);
+    slot->taskPara.Notify.sqeAddr = stream.GetRtsq()->GetSqeAddr();
+    PLF_CONFIG_INFO(Hccl::PLF_TASK, "[%s] %s", __func__, slot->Describe().c_str());
 }
 
 void UbTransportLiteImpl::Read(const RmaBufferLite& loc, const Buffer& rmt, const StreamLite& stream)
@@ -816,7 +817,7 @@ void UbTransportLiteImpl::ExecProfiling(
 
 void UbTransportLiteImpl::ExecProfilingAll(
     const RmaBufferLite& loc, const Buffer& rmt, const u64 totalSize,
-    const BaseTransportLiteImpl::TransferOp& transferOp, const StreamLite& stream, u32 taskId, const uint32_t notifyId)
+    const BaseTransportLiteImpl::TransferOp& transferOp, const StreamLite& stream, u32 taskId, const uint32_t notifyIdx)
 {
     if (transferOp.transType == TransferType::READ) {
         ProfilingProcess(
@@ -842,16 +843,16 @@ void UbTransportLiteImpl::ExecProfilingAll(
         WriteWithNotifyProfilingProcess(
             reinterpret_cast<void*>(GetRmaBufSlicelite(loc).GetAddr()),
             reinterpret_cast<void*>(GetRmtRmaBufSliceLite(rmt).GetAddr()), totalSize, stream, taskId,
-            GetRmtNotifySliceLite(notifyId).GetAddr());
+            GetRmtNotifySliceLite(notifyIdx).GetNotifyId());
     } else if (transferOp.transType == TransferType::WRITE_REDUCE_WITH_NOTIFY) {
         WriteReduceWithNotifyProfilingProcess(
             reinterpret_cast<void*>(GetRmaBufSlicelite(loc).GetAddr()),
             reinterpret_cast<void*>(GetRmtRmaBufSliceLite(rmt).GetAddr()), totalSize, transferOp.reduceIn, stream,
-            taskId, GetRmtNotifySliceLite(notifyId).GetAddr());
+            taskId, GetRmtNotifySliceLite(notifyIdx).GetNotifyId());
     } else if (transferOp.transType == TransferType::NOTIFY_RECORD) {
         NotifyRecordProfilingProcess(
-            reinterpret_cast<void*>(GetRmtNotifySliceLite(notifyId).GetAddr()),
-            GetRmtNotifySliceLite(notifyId).GetSize(), stream, taskId, GetRmtNotifySliceLite(notifyId).GetAddr());
+            reinterpret_cast<void*>(GetRmtNotifySliceLite(notifyIdx).GetAddr()),
+            GetRmtNotifySliceLite(notifyIdx).GetSize(), stream, taskId, GetRmtNotifySliceLite(notifyIdx).GetNotifyId());
     }
 }
 
@@ -1237,6 +1238,8 @@ void UbTransportLiteImpl::Drain(const StreamLite& stream)
     Fence();
     SetFenceConfig(cfg);
 
+    auto taskId = stream.GetRtsq()->GetTaskId();
+
     // 当前使用1个connection，下标为0 (当前只有一个connection，对应一个jetty)
     RmaConnLite* conn = connVec[0];
 
@@ -1253,66 +1256,39 @@ void UbTransportLiteImpl::Drain(const StreamLite& stream)
         rmtDrainBuffer_.addr, rmtDrainBuffer_.size, 0, rmtDrainBuffer_.tokenId, rmtDrainBuffer_.tokenValue, UINT32_MAX);
     conn->Read(drainNotifyBufSlice, drainConstBufSlice, cfg, stream, connOut);
 
-    const bool isReportTask = false; // Drain操作当前不构造TaskParam
+    const bool isReportTask = IsReportTask();
     // 展开下发WQE后, 展开下发DbSqe前, 按需缓存wqe及DbSqeIdx
     // 注意: pendingSqeCnt在下发DbSqe前已备份
     // 注意: 一定要在展开下发DbSqe前调用PostLaunchWqe, 否则如果下发DbSqe触发LaunchTask,
     // 而尚未调用PostLaunchWqe插入当前WQE数组，
     //     会导致AicpuTaskCache找不到当前WQE数组, 无法正确更新对应的DbSqeLocation
     DbSqeProfInfo dbSqeProfInfo;
+    if (needCacheTask && isReportTask) {
+        BuildDbSqeProfInfoForProfilingProcess(
+            reinterpret_cast<void*>(drainNotifyBufSlice.GetAddr()),
+            reinterpret_cast<void*>(drainConstBufSlice.GetAddr()), drainNotifyBufSlice.GetSize(), DmaOp::HCCL_DMA_READ,
+            dbSqeProfInfo);
+    }
     PostLaunchWqe(stream, ubConnLitePtr, needCacheTask, pendingSqeCnt, isReportTask, dbSqeProfInfo);
 
     BuildUbDbSendTask(stream, conn->GetUbJettyLiteId(), connOut.pi);
+    ProfilingProcess(
+        reinterpret_cast<void*>(drainNotifyBufSlice.GetAddr()), reinterpret_cast<void*>(drainConstBufSlice.GetAddr()),
+        drainNotifyBufSlice.GetSize(), stream, DmaOp::HCCL_DMA_READ, taskId);
 
+    auto waitTaskId = stream.GetRtsq()->GetTaskId();
     BuildNotifyWaitTask(stream, drainNotify_.notifyId);
-}
-
-void UbTransportLiteImpl::ReportWriteWithNotifyTask(
-    const RmaBufSliceLite& locSlice, const RmtRmaBufSliceLite& rmtSlice, const RmtRmaBufSliceLite& rmtNotifySlice,
-    const StreamLite& stream, u32 taskId)
-{
-    if (!IsReportTask()) {
-        return;
+    if (IsReportTask()) {
+        if (callback_) {
+            TaskParam taskParam{};
+            taskParam.taskType = TaskParamType::TASK_NOTIFY_WAIT;
+            taskParam.beginTime = ProfGetCurCpuTimestamp();
+            taskParam.taskPara.Notify.notifyID = drainNotify_.notifyId;
+            taskParam.taskPara.Notify.value = 1;
+            AddTaskCallback(stream, waitTaskId, taskParam);
+        }
+        FillSlotWaitInfo(stream, waitTaskId);
     }
-
-    TaskParam taskParam{};
-    taskParam.taskType = TaskParamType::TASK_WRITE_WITH_NOTIFY;
-    taskParam.beginTime = ProfGetCurCpuTimestamp();
-    FillTaskParamDmaPub(
-        taskParam, reinterpret_cast<void*>(rmtSlice.GetAddr()), locSlice.GetSize(), DmaOp::HCCL_DMA_WRITE);
-    taskParam.taskPara.DMA.src = reinterpret_cast<void*>(locSlice.GetAddr());
-    taskParam.taskPara.DMA.notifyID = rmtNotifySlice.GetAddr();
-    taskParam.taskPara.DMA.notifyValue = 1;
-
-    AddTaskCallback(stream, taskId, taskParam);
-    DfxTaskInfo* slot = stream.NextTaskSlot();
-    slot->taskType = TaskParamTypeVal::TASK_WRITE_WITH_NOTIFY;
-    FillSlotUbDmaInfo(
-        slot, stream, taskId, locSlice.GetAddr(), rmtSlice.GetAddr(), locSlice.GetSize(), rmtNotifySlice.GetNotifyId());
-}
-
-void UbTransportLiteImpl::ReportWriteReduceWithNotifyTask(
-    const RmaBufSliceLite& locSlice, const RmtRmaBufSliceLite& rmtSlice, const RmtRmaBufSliceLite& rmtNotifySlice,
-    const ReduceIn& reduceIn, const StreamLite& stream, u32 taskId)
-{
-    if (!IsReportTask()) {
-        return;
-    }
-
-    TaskParam taskParam{};
-    taskParam.taskType = TaskParamType::TASK_WRITE_REDUCE_WITH_NOTIFY;
-    taskParam.beginTime = ProfGetCurCpuTimestamp();
-    FillTaskParamReducePub(
-        taskParam, reinterpret_cast<void*>(locSlice.GetAddr()), reinterpret_cast<void*>(rmtSlice.GetAddr()),
-        locSlice.GetSize(), reduceIn);
-    taskParam.taskPara.Reduce.notifyID = rmtNotifySlice.GetAddr();
-
-    AddTaskCallback(stream, taskId, taskParam);
-    DfxTaskInfo* slot = stream.NextTaskSlot();
-    slot->taskType = TaskParamTypeVal::TASK_WRITE_REDUCE_WITH_NOTIFY;
-    FillSlotReduceInfo(
-        slot, stream, taskId, locSlice.GetAddr(), rmtSlice.GetAddr(), locSlice.GetSize(), rmtNotifySlice.GetNotifyId(),
-        static_cast<u8>(ConvertReduceOpToHcclReduceOp(reduceIn.reduceOp)));
 }
 
 void UbTransportLiteImpl::WriteWithNotify(
@@ -1351,13 +1327,15 @@ void UbTransportLiteImpl::WriteWithNotify(
         BuildDbSqeProfInfoForWriteWithNotify(
             reinterpret_cast<void*>(locRmaBufSlicelite.GetAddr()),
             reinterpret_cast<void*>(rmtRmaBufSlicelite.GetAddr()), locRmaBufSlicelite.GetSize(),
-            rmtNotifySliceLite.GetAddr(), dbSqeProfInfo);
+            rmtNotifySliceLite.GetNotifyId(), dbSqeProfInfo);
     }
     PostLaunchWqe(stream, ubConnLitePtr, needCacheTask, pendingSqeCnt, isReportTask, dbSqeProfInfo);
 
     BuildUbDbSendTask(stream, conn->GetUbJettyLiteId(), connOut.pi);
 
-    ReportWriteWithNotifyTask(locRmaBufSlicelite, rmtRmaBufSlicelite, rmtNotifySliceLite, stream, taskId);
+    WriteWithNotifyProfilingProcess(
+        reinterpret_cast<void*>(locRmaBufSlicelite.GetAddr()), reinterpret_cast<void*>(rmtRmaBufSlicelite.GetAddr()),
+        locRmaBufSlicelite.GetSize(), stream, taskId, rmtNotifySliceLite.GetNotifyId());
 }
 
 void UbTransportLiteImpl::WriteReduceWithNotify(
@@ -1399,14 +1377,15 @@ void UbTransportLiteImpl::WriteReduceWithNotify(
         BuildDbSqeProfInfoForWriteReduceWithNotify(
             reinterpret_cast<void*>(locRmaBufSlicelite.GetAddr()),
             reinterpret_cast<void*>(rmtRmaBufSlicelite.GetAddr()), locRmaBufSlicelite.GetSize(), reduceIn,
-            rmtNotifySliceLite.GetAddr(), dbSqeProfInfo);
+            rmtNotifySliceLite.GetNotifyId(), dbSqeProfInfo);
     }
     PostLaunchWqe(stream, ubConnLitePtr, needCacheTask, pendingSqeCnt, isReportTask, dbSqeProfInfo);
 
     BuildUbDbSendTask(stream, conn->GetUbJettyLiteId(), connOut.pi);
 
-    ReportWriteReduceWithNotifyTask(
-        locRmaBufSlicelite, rmtRmaBufSlicelite, rmtNotifySliceLite, reduceIn, stream, taskId);
+    WriteReduceWithNotifyProfilingProcess(
+        reinterpret_cast<void*>(locRmaBufSlicelite.GetAddr()), reinterpret_cast<void*>(rmtRmaBufSlicelite.GetAddr()),
+        locRmaBufSlicelite.GetSize(), reduceIn, stream, taskId, rmtNotifySliceLite.GetNotifyId());
 }
 
 void UbTransportLiteImpl::BatchOneSidedRead(

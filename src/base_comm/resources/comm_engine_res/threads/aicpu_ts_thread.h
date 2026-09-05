@@ -92,8 +92,10 @@ private:
 #ifdef CCL_KERNEL_AICPU
     HcclResult BuildComStreamInfo(const HcclStreamInfo& streamInfo, HcclComStreamInfo& comStreamInfo) const;
 #endif
-    template <typename Operation, typename ReportOp>
-    HcclResult LocalProcess(void* dst, const void* src, uint64_t size, Operation&& op, ReportOp&& reportOp) const;
+    HcclResult LocalCopyReport(uint32_t taskId, Hccl::StreamLite* sl, Hccl::RtsqBase* rtsq) const;
+    HcclResult LocalReduceReport(
+        void* dst, const void* src, uint64_t size, HcommReduceOp reduceOp, uint32_t taskId, Hccl::StreamLite* sl,
+        Hccl::RtsqBase* rtsq) const;
 
     // 成员变量（适配 AICPU-TS）
     bool isDeviceSide_ = false;
