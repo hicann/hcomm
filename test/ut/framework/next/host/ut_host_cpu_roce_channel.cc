@@ -164,6 +164,9 @@ protected:
 
     virtual void TearDown()
     {
+        auto& rdmaConfig = Hccl::EnvConfig::GetInstance().rdmaCfg;
+        rdmaConfig.multiQpSrcPortConfig_.ipPairToPorts.clear();
+        rdmaConfig.rdmaUdpSportsList.value.portsByPhyId.clear();
         GlobalMockObject::verify();
         std::cout << "A Test case in HostCpuRoceChannelTest TearDown" << std::endl;
         delete fakeSocket;
@@ -2195,6 +2198,54 @@ TEST_F(HostCpuRoceChannelTest, Ut_BuildConnection_When_PortsCountLessThanLoopTim
     portMap.clear();
 }
 
+TEST_F(HostCpuRoceChannelTest, Ut_BuildConnection_When_EnvPortsMatchPhyId_Expect_EnvPortsTakePriorityAndCycle)
+{
+    SetupBcMocks();
+    auto& rdmaConfig = Hccl::EnvConfig::GetInstance().rdmaCfg;
+    rdmaConfig.rdmaUdpSportsList.value.portsByPhyId[1] = {10001, 10002};
+    rdmaConfig.multiQpSrcPortConfig_.ipPairToPorts["1.0.0.0,2.0.0.0"] = {20001};
+
+    auto impl = std::make_unique<hcomm::HostCpuRoceChannel>(endpointHandle, channelDesc);
+    Endpoint* localEpPtr = reinterpret_cast<Endpoint*>(endpointHandle);
+    impl->localEp_ = localEpPtr->GetEndpointDesc();
+    impl->remoteEp_ = channelDesc.remoteEndpoint;
+    impl->devicePhyId_ = 1;
+    impl->lbMax_ = 0;
+    impl->channelDesc_.roceAttr.queueNum = 4;
+    impl->socket_ = fakeSocket;
+    impl->rdmaHandle_ = (void*)0x1000000;
+
+    EXPECT_EQ(impl->BuildConnection(), HCCL_SUCCESS);
+    ASSERT_EQ(impl->connections_.size(), 4u);
+    EXPECT_EQ(impl->connections_[0]->qpInfo_.udpSport, 10001u);
+    EXPECT_EQ(impl->connections_[1]->qpInfo_.udpSport, 10002u);
+    EXPECT_EQ(impl->connections_[2]->qpInfo_.udpSport, 10001u);
+    EXPECT_EQ(impl->connections_[3]->qpInfo_.udpSport, 10002u);
+}
+
+TEST_F(HostCpuRoceChannelTest, Ut_BuildConnection_When_EnvPortsDoNotMatchPhyId_Expect_FallbackToFileConfig)
+{
+    SetupBcMocks();
+    auto& rdmaConfig = Hccl::EnvConfig::GetInstance().rdmaCfg;
+    rdmaConfig.rdmaUdpSportsList.value.portsByPhyId[1] = {10001};
+    rdmaConfig.multiQpSrcPortConfig_.ipPairToPorts["1.0.0.0,2.0.0.0"] = {20001, 20002};
+
+    auto impl = std::make_unique<hcomm::HostCpuRoceChannel>(endpointHandle, channelDesc);
+    Endpoint* localEpPtr = reinterpret_cast<Endpoint*>(endpointHandle);
+    impl->localEp_ = localEpPtr->GetEndpointDesc();
+    impl->remoteEp_ = channelDesc.remoteEndpoint;
+    impl->devicePhyId_ = 0;
+    impl->lbMax_ = 0;
+    impl->channelDesc_.roceAttr.queueNum = 2;
+    impl->socket_ = fakeSocket;
+    impl->rdmaHandle_ = (void*)0x1000000;
+
+    EXPECT_EQ(impl->BuildConnection(), HCCL_SUCCESS);
+    ASSERT_EQ(impl->connections_.size(), 2u);
+    EXPECT_EQ(impl->connections_[0]->qpInfo_.udpSport, 20001u);
+    EXPECT_EQ(impl->connections_[1]->qpInfo_.udpSport, 20002u);
+}
+
 TEST_F(HostCpuRoceChannelTest, Ut_BuildConnection_When_CommAddrToIpFail_Expect_AllUdpSportZero)
 {
     SetupBcMocks();
@@ -2224,9 +2275,11 @@ TEST_F(HostCpuRoceChannelTest, Ut_BuildConnection_When_CommAddrToIpFail_Expect_A
 TEST_F(HostCpuRoceChannelTest, Ut_BuildConnection_When_ExchangeAllMemsTrue_Expect_AllUdpSportZero)
 {
     SetupBcMocks();
-    auto& portMap = Hccl::EnvConfig::GetInstance().rdmaCfg.multiQpSrcPortConfig_.ipPairToPorts;
+    auto& rdmaConfig = Hccl::EnvConfig::GetInstance().rdmaCfg;
+    auto& portMap = rdmaConfig.multiQpSrcPortConfig_.ipPairToPorts;
     portMap.clear();
     portMap["1.0.0.0,2.0.0.0"] = {10001, 10002};
+    rdmaConfig.rdmaUdpSportsList.value.portsByPhyId[0] = {20001, 20002};
 
     auto impl = std::make_unique<hcomm::HostCpuRoceChannel>(endpointHandle, channelDesc);
     Endpoint* localEpPtr = reinterpret_cast<Endpoint*>(endpointHandle);
@@ -2242,6 +2295,4 @@ TEST_F(HostCpuRoceChannelTest, Ut_BuildConnection_When_ExchangeAllMemsTrue_Expec
     ASSERT_EQ(impl->connections_.size(), 2u);
     EXPECT_EQ(impl->connections_[0]->qpInfo_.udpSport, 0u);
     EXPECT_EQ(impl->connections_[1]->qpInfo_.udpSport, 0u);
-
-    portMap.clear();
 }

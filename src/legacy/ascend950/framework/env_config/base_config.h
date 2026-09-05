@@ -128,6 +128,7 @@ public:
     u32 GetUbTimeOut() const;
     u32 GetRdmaQueueNum() const;
     u32 GetRdmaMultiQpThreshold() const;
+    const RdmaUdpSportsList& GetRdmaUdpSportsList() const;
     const MultiQpSrcPortConfig& GetMultiQpSrcPortConfig() const;
 
     static constexpr u32 HCCL_RDMA_TC_DEFAULT = 132;      // 默认的traffic class为132(33*4)
@@ -183,6 +184,7 @@ private:
     CfgField<std::string> qpPortConfigPath{
         "HCCL_RDMA_QP_PORT_CONFIG_PATH", "", Str2T<std::string>, CheckFilePath, SetRealPath};
     MultiQpSrcPortConfig multiQpSrcPortConfig_;
+    CfgField<RdmaUdpSportsList> rdmaUdpSportsList{"HCCL_RDMA_UDP_SPORTS_LIST", {}, CastRdmaUdpSportsList};
 };
 
 // 算法配置

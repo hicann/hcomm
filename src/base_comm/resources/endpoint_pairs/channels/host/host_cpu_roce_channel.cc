@@ -197,6 +197,31 @@ HcclResult HostCpuRoceChannel::BuildSocket()
     return HCCL_SUCCESS;
 }
 
+static std::vector<u16>
+GetConfiguredUdpSrcPorts(const HcommChannelDesc& channelDesc, u32 devicePhyId, const CommAddr& localCommAddr)
+{
+    if (channelDesc.exchangeAllMems) { // hixl场景填0
+        return {};
+    }
+
+    const auto& rdmaConfig = Hccl::EnvConfig::GetInstance().GetRdmaConfig();
+    const auto& udpSportsList = rdmaConfig.GetRdmaUdpSportsList();
+    std::vector<u16> srcPorts = Hccl::GetRdmaUdpSportsByPhyId(udpSportsList, devicePhyId);
+    if (!srcPorts.empty()) {
+        return srcPorts;
+    }
+
+    const auto& qpSrcPortConfig = rdmaConfig.GetMultiQpSrcPortConfig();
+    if (qpSrcPortConfig.IsAvailable()) {
+        Hccl::IpAddress localIp;
+        Hccl::IpAddress remoteIp;
+        (void)CommAddrToIpAddress(localCommAddr, localIp);
+        (void)CommAddrToIpAddress(channelDesc.remoteEndpoint.commAddr, remoteIp);
+        srcPorts = Hccl::GetMultiQpSrcPortsByIpPair(qpSrcPortConfig, localIp, remoteIp);
+    }
+    return srcPorts;
+}
+
 HcclResult HostCpuRoceChannel::BuildConnection()
 {
     u32 loopTimes = 0;
@@ -205,16 +230,7 @@ HcclResult HostCpuRoceChannel::BuildConnection()
     } else {
         loopTimes = channelDesc_.roceAttr.queueNum;
     }
-    std::vector<u16> srcPorts;
-    if (!channelDesc_.exchangeAllMems) { // hixl场景填0
-        const auto& qpSrcPortConfig = Hccl::EnvConfig::GetInstance().GetRdmaConfig().GetMultiQpSrcPortConfig();
-        if (qpSrcPortConfig.IsAvailable()) {
-            Hccl::IpAddress localIp, remoteIp;
-            (void)CommAddrToIpAddress(localEp_.commAddr, localIp);
-            (void)CommAddrToIpAddress(remoteEp_.commAddr, remoteIp);
-            srcPorts = Hccl::GetMultiQpSrcPortsByIpPair(qpSrcPortConfig, localIp, remoteIp);
-        }
-    }
+    const std::vector<u16> srcPorts = GetConfiguredUdpSrcPorts(channelDesc_, devicePhyId_, localEp_.commAddr);
     for (u32 i = 0; i < loopTimes; i++) {
         std::unique_ptr<HostRdmaConnection> conn;
         EXCEPTION_CATCH(conn = std::make_unique<HostRdmaConnection>(socket_, rdmaHandle_), return HCCL_E_INTERNAL);

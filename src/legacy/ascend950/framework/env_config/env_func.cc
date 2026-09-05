@@ -12,6 +12,7 @@
 #include <climits>
 #include <fstream>
 #include <linux/limits.h>
+#include <limits>
 #include <cctype>
 #include <algorithm>
 #include <sstream>
@@ -25,7 +26,88 @@
 
 namespace Hccl {
 
+static bool ParseRdmaUdpSportsDecimal(const std::string& value, u32 maxValue, u32& parsed)
+{
+    if (value.empty() || !std::all_of(value.begin(), value.end(), [](unsigned char ch) {
+            return std::isdigit(ch) != 0;
+        })) {
+        return false;
+    }
+
+    errno = 0;
+    char* end = nullptr;
+    const unsigned long number = std::strtoul(value.c_str(), &end, 10);
+    if (errno == ERANGE || end != value.c_str() + value.size() || number > maxValue) {
+        return false;
+    }
+    parsed = static_cast<u32>(number);
+    return true;
+}
+
+static std::vector<std::uint16_t> ParseRdmaUdpSportsPorts(const std::string& value)
+{
+    std::vector<std::uint16_t> ports;
+    size_t start = 0;
+    while (start <= value.size()) {
+        const size_t comma = value.find(',', start);
+        const std::string token = value.substr(start, comma == std::string::npos ? std::string::npos : comma - start);
+        u32 port = 0;
+        if (!ParseRdmaUdpSportsDecimal(token, MultiQpSrcPortConfig::CONFIG_SRC_PORT_ID_MAX, port) || port == 0) {
+            THROW<InvalidParamsException>("The UDP source port list contains an invalid port.");
+        }
+        ports.emplace_back(static_cast<std::uint16_t>(port));
+        if (ports.size() > MultiQpSrcPortConfig::CONFIG_SRC_PORT_NUM_MAX) {
+            THROW<InvalidParamsException>(StringFormat(
+                "One phy_dev_id has UDP source ports num[%zu] more than the threshold[%u].", ports.size(),
+                MultiQpSrcPortConfig::CONFIG_SRC_PORT_NUM_MAX));
+        }
+        if (comma == std::string::npos) {
+            break;
+        }
+        start = comma + 1U;
+    }
+    return ports;
+}
+
 /*----------------------------- cast functions -------------------------*/
+
+RdmaUdpSportsList CastRdmaUdpSportsList(const std::string& s)
+{
+    RdmaUdpSportsList list;
+    if (s.empty()) {
+        return list;
+    }
+    if (s.size() > RdmaUdpSportsList::CONFIG_VALUE_LEN_MAX) {
+        THROW<InvalidParamsException>("The value is too long.");
+    }
+
+    size_t start = 0;
+    while (start <= s.size()) {
+        const size_t semicolon = s.find(';', start);
+        const std::string deviceConfig
+            = s.substr(start, semicolon == std::string::npos ? std::string::npos : semicolon - start);
+        const size_t colon = deviceConfig.find(':');
+        if (deviceConfig.empty() || colon == std::string::npos || colon == 0U || colon + 1U >= deviceConfig.size()
+            || deviceConfig.find(':', colon + 1U) != std::string::npos) {
+            THROW<InvalidParamsException>("A device group has invalid separators or an empty field.");
+        }
+
+        u32 devicePhyId = 0;
+        if (!ParseRdmaUdpSportsDecimal(deviceConfig.substr(0, colon), std::numeric_limits<u32>::max(), devicePhyId)) {
+            THROW<InvalidParamsException>("A phy_dev_id is not a valid decimal integer.");
+        }
+        const auto insertResult
+            = list.portsByPhyId.emplace(devicePhyId, ParseRdmaUdpSportsPorts(deviceConfig.substr(colon + 1U)));
+        if (!insertResult.second) {
+            THROW<InvalidParamsException>(StringFormat("Phy_dev_id[%u] already exists.", devicePhyId));
+        }
+        if (semicolon == std::string::npos) {
+            break;
+        }
+        start = semicolon + 1U;
+    }
+    return list;
+}
 
 bool CastBin2Bool(const std::string& s)
 {
@@ -960,6 +1042,15 @@ HcclDetourType CastDetourType(const std::string& s)
 }
 
 /*----------------------- multi qp src port config --------------------------*/
+std::vector<std::uint16_t> GetRdmaUdpSportsByPhyId(const RdmaUdpSportsList& list, u32 devicePhyId)
+{
+    const auto iter = list.portsByPhyId.find(devicePhyId);
+    if (iter == list.portsByPhyId.end()) {
+        return {};
+    }
+    return iter->second;
+}
+
 std::vector<std::uint16_t>
 GetMultiQpSrcPortsByIpPair(const MultiQpSrcPortConfig& config, const IpAddress& srcIp, const IpAddress& dstIp)
 {
