@@ -105,7 +105,8 @@ HcclResult AlltoallvContinuousPipeline::Prepare(
     const u32 userRank, const A2aPipelineMemory& a2aPipelineMemory, const SubCommInfo& level0CommInfo,
     const SubCommInfo& level1CommInfo, const Stream& mainStream, std::vector<Stream>& subStream,
     std::vector<std::shared_ptr<LocalNotify>>& notifyMain, std::vector<std::shared_ptr<LocalNotify>>& notifySub,
-    std::vector<SendRecvInfo>& sendRecvInfoList, const HcclDataType dataType, const HcclWorkflowMode workMode)
+    std::vector<SendRecvInfo>& sendRecvInfoList, const HcclDataType dataType, const HcclWorkflowMode workMode,
+    u32 timeOut)
 {
     // 运行模式：当前只支持单算子
     workMode_ = workMode;
@@ -155,6 +156,10 @@ HcclResult AlltoallvContinuousPipeline::Prepare(
 
     // 收发信息
     CHK_RET(PrepareSendRecvInfo(sendRecvInfoList));
+
+    // 设置flag超时时间，多加60s
+    constexpr u16 waitFlagTimeout = 60;
+    waitFlagTimeoutSec_ = timeOut + waitFlagTimeout;
 
     return HCCL_SUCCESS;
 }
@@ -893,11 +898,11 @@ HcclResult AlltoallvContinuousPipeline::WaitValueOfRank(const u32 rank, const Hc
 {
     const auto* valuePtr = reinterpret_cast<u32*>(static_cast<u8*>(inBuffer_.ptr()) + infoOffsets_[0]) + rank;
     HcclUs lastUt = startTimeUs;
-    constexpr s64 timeout = 1800 * 1000 * 1000;          // 超时时间暂定为1800s
+    s64 timeout = static_cast<s64>(waitFlagTimeoutSec_) * 1000 * 1000;
     constexpr s64 printStateInterval = 30 * 1000 * 1000; // 每隔30s打印一次状态
     HCCL_DEBUG(
-        "[AlltoallvContinuousPipeline][WaitValueOfRank] start waiting value of rank[%u], valuePtr[%p].", rank,
-        valuePtr);
+        "[AlltoallvContinuousPipeline][WaitValueOfRank] start waiting value of rank[%u], valuePtr[%p], timeout[%llu]s.",
+        rank, valuePtr, waitFlagTimeoutSec_);
 
     while (flagAreaRefreshFlag_ == 0 || *valuePtr == 0) {
         const HcclUs currentUt = TIME_NOW();

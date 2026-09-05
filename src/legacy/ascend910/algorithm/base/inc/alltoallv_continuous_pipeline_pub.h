@@ -36,8 +36,8 @@ public:
         const u32 userRank, const A2aPipelineMemory& a2aPipelineMemory, const SubCommInfo& level0CommInfo,
         const SubCommInfo& level1CommInfo, const Stream& mainStream, std::vector<Stream>& subStream,
         std::vector<std::shared_ptr<LocalNotify>>& notifyMain, std::vector<std::shared_ptr<LocalNotify>>& notifySub,
-        std::vector<SendRecvInfo>& sendRecvInfoList, const HcclDataType dataType,
-        const HcclWorkflowMode workMode) override;
+        std::vector<SendRecvInfo>& sendRecvInfoList, const HcclDataType dataType, const HcclWorkflowMode workMode,
+        u32 timeOut) override;
     HcclResult RunAsync() override;
 
 private:
@@ -197,7 +197,7 @@ private:
 
     std::vector<u32> flagAreaRefreshData_;
 
-    u32 waitFlagTimeoutSec_{0}; // 等待Flag的超时时间，单位秒
+    u32 waitFlagTimeoutSec_{NOTIFY_DEFAULT_WAIT_TIME}; // 等待Flag的超时时间，单位秒
 
     u32 flagAreaRefreshFlag_{0}; // 标识flag区域已经被刷0，避免刷0的任务还没执行，下发态kernel就开始轮询
     u32 flagAreaRefreshValue_{1};

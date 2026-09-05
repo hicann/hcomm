@@ -527,5 +527,5 @@ HcclResult CollAlltoAllExecutor::RunTemplateWithVirtualLink(
         ret);
     return HCCL_SUCCESS;
 }
-
+void CollAlltoAllExecutor::SetWaitFlagTimeoutSec(u32 waitFlagTimeoutSec) { timeOut_ = waitFlagTimeoutSec; }
 } // namespace hccl

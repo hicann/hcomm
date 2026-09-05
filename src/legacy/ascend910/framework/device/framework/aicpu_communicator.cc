@@ -2421,6 +2421,11 @@ HcclResult HcclCommAicpu::Orchestrate(
             CHK_PTR_NULL(alltoAllExecutor);
             CHK_RET(alltoAllExecutor->SetExcutorExtraInfo(allMeshAggregationSendRecvInfo_, cclbufferSize_));
         }
+        if (algName == "RunAlltoAllVContinuousPipeline" || algName == "RunAlltoAllVPipelineFor91093") {
+            CollAlltoAllExecutor* alltoAllExecutor = dynamic_cast<CollAlltoAllExecutor*>(executor.get());
+            CHK_PTR_NULL(alltoAllExecutor);
+            alltoAllExecutor->SetWaitFlagTimeoutSec(commParam->config.notifyWaitTime);
+        }
     }
     auto waitStopExecCmdTimeoutMs = HcclGetWaitStopExecCmdTimeout();
     auto waitStopExecCmdTimeout = std::chrono::milliseconds(waitStopExecCmdTimeoutMs);

@@ -200,7 +200,7 @@ HcclResult CollAlltoAllVContinuousPipeline::KernelRun(const OpParam& param, Exec
     CHK_RET(tempAlg->Prepare(
         topoAttr_.userRank, a2aPipelineMemory, level0CommInfo, level1CommInfo, param.stream, algResResp_->slaveStreams,
         algResResp_->notifiesMain, algResResp_->notifiesAux, sendRecvInfoList, param.All2AllDataDes.sendType,
-        workflowMode_));
+        workflowMode_, timeOut_));
 
     CHK_RET(tempAlg->RunAsync());
 

@@ -38,6 +38,7 @@ public:
     RunAlltoAllVTemplateStaged(const std::unique_ptr<AlgTemplateBase>& executor, const SubCommInfo& commInfo);
     static HcclResult
     RunTemplateWithVirtualLink(const std::unique_ptr<AlgTemplateBase>& executor, const SubCommInfo& commInfo);
+    void SetWaitFlagTimeoutSec(u32 waitFlagTimeoutSec);
 
 protected:
     /* *************** 算法编排 *************** */
@@ -61,7 +62,7 @@ protected:
         u32& offsetCounter, u64& localLength, u64& remoteOffset, u32 meshAggregationRankSize) const;
     u64 CalAlltoAllVScratchMemSize(u64& workSpaceMemSize);
     bool HasMassTasks(std::vector<SendRecvInfo>& allMeshAggregationSendRecvInfo);
-
+    u32 timeOut_{NOTIFY_DEFAULT_WAIT_TIME};
     OpParam AlltoAllVParam_;
     std::vector<SendRecvInfo> allMeshAggregationSendRecvInfo_;
     SendRecvInfo localSendRecvInfo_;

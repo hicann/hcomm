@@ -240,7 +240,7 @@ HcclResult CollAlltoAllVPipelineFor91093::KernelRun(const OpParam& param, ExecMe
     CHK_RET(tempAlg->Prepare(
         topoAttr_.userRank, a2aPipelineMemory, level1CommInfo, level2CommInfo, param.stream, algResResp_->slaveStreams,
         algResResp_->notifiesMain, algResResp_->notifiesAux, sendRecvInfoList, param.All2AllDataDes.sendType,
-        workflowMode_));
+        workflowMode_, timeOut_));
 
     CHK_RET(tempAlg->RunAsync());
 

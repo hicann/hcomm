@@ -441,7 +441,8 @@ HcclResult ExecutorBase::Prepare(
     [[maybe_unused]] const Stream& mainStream, [[maybe_unused]] std::vector<Stream>& subStream,
     [[maybe_unused]] std::vector<std::shared_ptr<LocalNotify>>& notifyMain,
     [[maybe_unused]] std::vector<std::shared_ptr<LocalNotify>>& notifySub, std::vector<SendRecvInfo>& sendRecvInfoList,
-    [[maybe_unused]] const HcclDataType dataType, [[maybe_unused]] const HcclWorkflowMode workMode)
+    [[maybe_unused]] const HcclDataType dataType, [[maybe_unused]] const HcclWorkflowMode workMode,
+    [[maybe_unused]] u32 timeOut)
 {
     (void)a2aPipelineMemory;
     (void)sendRecvInfoList;

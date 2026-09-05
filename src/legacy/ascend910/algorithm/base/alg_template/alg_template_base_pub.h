@@ -447,7 +447,8 @@ public:
         const u32 userRank, const A2aPipelineMemory& a2aPipelineMemory, const SubCommInfo& level0CommInfo,
         const SubCommInfo& level1CommInfo, const Stream& mainStream, std::vector<Stream>& subStream,
         std::vector<std::shared_ptr<LocalNotify>>& notifyMain, std::vector<std::shared_ptr<LocalNotify>>& notifySub,
-        std::vector<SendRecvInfo>& sendRecvInfoList, const HcclDataType dataType, const HcclWorkflowMode workMode);
+        std::vector<SendRecvInfo>& sendRecvInfoList, const HcclDataType dataType, const HcclWorkflowMode workMode,
+        u32 timeOut);
 
     /* 12个参数 */
     // AlltoAllVFor310P
