@@ -176,9 +176,15 @@ void AddressInfo::DeserializeBackupAddrs(const nlohmann::json& addressInfoJson, 
 void AddressInfo::EidToAddr(std::string address)
 {
     if (address.length() != URMA_EID_LEN * URMA_EID_NUM_TWO) {
+        RPT_INPUT_ERR(
+            true, "EI0014", std::vector<std::string>({"value", "variable", "expect"}),
+            std::vector<std::string>({address, "addr", "A valid EID"}));
         THROW<InvalidParamsException>(
             StringFormat("[AddressInfo::%s] failed with rankAddrs : error in length. ", __func__));
     } else if (!IpAddress::IsEID(address)) {
+        RPT_INPUT_ERR(
+            true, "EI0014", std::vector<std::string>({"value", "variable", "expect"}),
+            std::vector<std::string>({address, "addr", "A valid EID"}));
         THROW<InvalidParamsException>(
             StringFormat("[AddressInfo::%s] failed with rankAddrs : error in format. ", __func__));
     }
@@ -194,6 +200,9 @@ void AddressInfo::IPV4ToAddr(std::string address)
     if (IpAddress::IsIPv4(address)) {
         ipFamily = AF_INET;
     } else {
+        RPT_INPUT_ERR(
+            true, "EI0014", std::vector<std::string>({"value", "variable", "expect"}),
+            std::vector<std::string>({address, "addr", "A valid IPv4 address"}));
         THROW<InvalidParamsException>(StringFormat("[AddressInfo::%s] failed with addrs is error. ", __func__));
     }
     IpAddress ipAddress0(address, ipFamily);
@@ -208,6 +217,9 @@ void AddressInfo::IPV6ToAddr(std::string address)
     if (IpAddress::IsIPv6(address)) {
         ipFamily = AF_INET6;
     } else {
+        RPT_INPUT_ERR(
+            true, "EI0014", std::vector<std::string>({"value", "variable", "expect"}),
+            std::vector<std::string>({address, "addr", "A valid IPv6 address"}));
         THROW<InvalidParamsException>(StringFormat("[AddressInfo::%s] failed with addr is error. ", __func__));
     }
     IpAddress ipAddress0(address, ipFamily);
