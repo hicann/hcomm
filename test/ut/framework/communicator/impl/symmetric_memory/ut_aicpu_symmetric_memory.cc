@@ -19,6 +19,7 @@
 #undef private
 #undef protected
 #include "hccl_sym_win.h"
+#include "hcomm/hcomm_team_entity_defs.h"
 
 using namespace hccl;
 
@@ -41,6 +42,15 @@ CommMem BuildValidCommMem(void* addr, uint64_t size, CommMemType type = COMM_MEM
     mem.addr = addr;
     mem.size = size;
     return mem;
+}
+
+// AIN 重构后 winHandle 为 HcommWindow*，SymmetricWindow 挂在 legacySymWindow 字段（device 指针语义，
+// UT 中直接存 host 地址）。构造仅填充本接口访问字段的包装句柄。
+HcommWindow WrapToHcommWindow(SymmetricWindow* symWin)
+{
+    HcommWindow win{};
+    win.legacySymWindow = reinterpret_cast<uint64_t>(symWin);
+    return win;
 }
 } // namespace
 
@@ -68,7 +78,8 @@ TEST_F(AicpuSymmetricMemoryTest, Ut_HcclSymWinGetRemoteAddr_When_WinHandleIsNull
 TEST_F(AicpuSymmetricMemoryTest, Ut_HcclSymWinGetRemoteAddr_When_PtrIsNull_Expect_ReturnIsHCCL_E_PTR)
 {
     SymmetricWindow win{};
-    HcclResult ret = HcclSymWinGetRemoteAddr(reinterpret_cast<HcclCommSymWindow>(&win), 0, 0, nullptr);
+    HcommWindow hWin = WrapToHcommWindow(&win);
+    HcclResult ret = HcclSymWinGetRemoteAddr(reinterpret_cast<HcclCommSymWindow>(&hWin), 0, 0, nullptr);
     EXPECT_EQ(ret, HCCL_E_PTR);
 }
 
@@ -78,7 +89,8 @@ TEST_F(AicpuSymmetricMemoryTest, Ut_HcclSymWinGetRemoteAddr_When_ModeIsNotURMA_E
     SymmetricWindow win{};
     win.mode = SymmetricMemoryMode::HCCS;        // 非 URMA
     void* ptr = reinterpret_cast<void*>(0xDEAD); // 哨兵值
-    HcclResult ret = HcclSymWinGetRemoteAddr(reinterpret_cast<HcclCommSymWindow>(&win), 0, 0, &ptr);
+    HcommWindow hWin = WrapToHcommWindow(&win);
+    HcclResult ret = HcclSymWinGetRemoteAddr(reinterpret_cast<HcclCommSymWindow>(&hWin), 0, 0, &ptr);
     EXPECT_EQ(ret, HCCL_E_NOT_SUPPORT);
     EXPECT_EQ(ptr, nullptr); // 验证 *ptr 被置为 nullptr
 }
@@ -88,7 +100,8 @@ TEST_F(AicpuSymmetricMemoryTest, Ut_HcclSymWinGetRemoteAddr_When_RemoteMemsIsNul
 {
     SymmetricWindow win = BuildUrmaSymmetricWindow(nullptr, 0);
     void* ptr = nullptr;
-    HcclResult ret = HcclSymWinGetRemoteAddr(reinterpret_cast<HcclCommSymWindow>(&win), 0, 0, &ptr);
+    HcommWindow hWin = WrapToHcommWindow(&win);
+    HcclResult ret = HcclSymWinGetRemoteAddr(reinterpret_cast<HcclCommSymWindow>(&hWin), 0, 0, &ptr);
     EXPECT_EQ(ret, HCCL_E_PTR);
 }
 
@@ -98,8 +111,9 @@ TEST_F(AicpuSymmetricMemoryTest, Ut_HcclSymWinGetRemoteAddr_When_PeerRankOutOfRa
     CommMem remoteMems[2] = {};
     SymmetricWindow win = BuildUrmaSymmetricWindow(remoteMems, 2);
     void* ptr = nullptr;
+    HcommWindow hWin = WrapToHcommWindow(&win);
     // peerRank=2 等于 remoteMemNum, >= 成立
-    HcclResult ret = HcclSymWinGetRemoteAddr(reinterpret_cast<HcclCommSymWindow>(&win), 0, 2, &ptr);
+    HcclResult ret = HcclSymWinGetRemoteAddr(reinterpret_cast<HcclCommSymWindow>(&hWin), 0, 2, &ptr);
     EXPECT_EQ(ret, HCCL_E_PARA);
 }
 
@@ -110,7 +124,8 @@ TEST_F(AicpuSymmetricMemoryTest, Ut_HcclSymWinGetRemoteAddr_When_RemoteMemAddrIs
     remoteMems[1] = BuildValidCommMem(nullptr, 1024, COMM_MEM_TYPE_DEVICE);
     SymmetricWindow win = BuildUrmaSymmetricWindow(remoteMems, 2);
     void* ptr = nullptr;
-    HcclResult ret = HcclSymWinGetRemoteAddr(reinterpret_cast<HcclCommSymWindow>(&win), 0, 1, &ptr);
+    HcommWindow hWin = WrapToHcommWindow(&win);
+    HcclResult ret = HcclSymWinGetRemoteAddr(reinterpret_cast<HcclCommSymWindow>(&hWin), 0, 1, &ptr);
     EXPECT_EQ(ret, HCCL_E_PARA);
 }
 
@@ -121,7 +136,8 @@ TEST_F(AicpuSymmetricMemoryTest, Ut_HcclSymWinGetRemoteAddr_When_RemoteMemTypeIs
     remoteMems[1] = BuildValidCommMem(reinterpret_cast<void*>(0x5000000), 1024, COMM_MEM_TYPE_INVALID);
     SymmetricWindow win = BuildUrmaSymmetricWindow(remoteMems, 2);
     void* ptr = nullptr;
-    HcclResult ret = HcclSymWinGetRemoteAddr(reinterpret_cast<HcclCommSymWindow>(&win), 0, 1, &ptr);
+    HcommWindow hWin = WrapToHcommWindow(&win);
+    HcclResult ret = HcclSymWinGetRemoteAddr(reinterpret_cast<HcclCommSymWindow>(&hWin), 0, 1, &ptr);
     EXPECT_EQ(ret, HCCL_E_PARA);
 }
 
@@ -132,8 +148,9 @@ TEST_F(AicpuSymmetricMemoryTest, Ut_HcclSymWinGetRemoteAddr_When_OffsetOutOfSize
     remoteMems[1] = BuildValidCommMem(reinterpret_cast<void*>(0x5000000), 1024, COMM_MEM_TYPE_DEVICE);
     SymmetricWindow win = BuildUrmaSymmetricWindow(remoteMems, 2);
     void* ptr = nullptr;
+    HcommWindow hWin = WrapToHcommWindow(&win);
     // offset=1024 等于 size, >= 成立
-    HcclResult ret = HcclSymWinGetRemoteAddr(reinterpret_cast<HcclCommSymWindow>(&win), 1024, 1, &ptr);
+    HcclResult ret = HcclSymWinGetRemoteAddr(reinterpret_cast<HcclCommSymWindow>(&hWin), 1024, 1, &ptr);
     EXPECT_EQ(ret, HCCL_E_PARA);
 }
 
@@ -147,7 +164,8 @@ TEST_F(AicpuSymmetricMemoryTest, Ut_HcclSymWinGetRemoteAddr_When_AllValid_Expect
     remoteMems[1] = BuildValidCommMem(baseAddr, size, COMM_MEM_TYPE_DEVICE);
     SymmetricWindow win = BuildUrmaSymmetricWindow(remoteMems, 2);
     void* ptr = nullptr;
-    HcclResult ret = HcclSymWinGetRemoteAddr(reinterpret_cast<HcclCommSymWindow>(&win), offset, 1, &ptr);
+    HcommWindow hWin = WrapToHcommWindow(&win);
+    HcclResult ret = HcclSymWinGetRemoteAddr(reinterpret_cast<HcclCommSymWindow>(&hWin), offset, 1, &ptr);
     EXPECT_EQ(ret, HCCL_SUCCESS);
     EXPECT_EQ(ptr, reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(baseAddr) + offset));
 }

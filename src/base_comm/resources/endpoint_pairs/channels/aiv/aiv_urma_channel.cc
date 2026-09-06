@@ -711,6 +711,12 @@ HcclResult AivUrmaChannel::GetRemoteMems(uint32_t* memNum, CommMem** remoteMem, 
     return transport_->GetRemoteMems(memNum, remoteMem, memInfos);
 }
 
+HcclResult AivUrmaChannel::UpdateMemInfo(HcommMemHandle* memHandles, uint32_t memHandleNum)
+{
+    CHK_PTR_NULL(transport_.get());
+    return transport_->UpdateMemInfo(memHandles, memHandleNum);
+}
+
 HcclResult AivUrmaChannel::Clean()
 {
     ReleaseDeviceChannelEntity();

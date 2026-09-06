@@ -69,38 +69,51 @@ HcommResult HcommTeamBindRemoteSyncMem(HcommTeamHandle team, const HcommTeamBind
     return HcommTeamMgr::GetInstance().BindSyncMem(team, remoteDesc);
 }
 
-HcommResult HcommTeamWindowRegister(
-    HcommTeamHandle worldTeam, const HcommTeamWindowDesc* desc, HcommWindowHandle* handle, HcommTeamWindowFlag flag)
+HcommResult HcommTeamWindowRegister(void* devLegacySymWin, HcclCommSymWindow* handle)
 {
-    CHK_PRT_RET(
-        (worldTeam == nullptr || handle == nullptr), HCCL_ERROR("[%s] nullptr parameter", __func__), HCOMM_E_PTR);
-    CHK_PRT_RET(
-        flag != HCOMM_TEAM_WINDOW_FLAG_SYMMETRIC,
-        HCCL_ERROR("[%s] flag[%d] is not supported, only support 0", __func__, flag), HCOMM_E_PARA);
-    /* desc 当前由后续 HcommTeamWindowBindRemoteMems 单独绑定 window 的 mems，注册阶段不消费，允许为 nullptr。 */
-    (void)desc;
-    return HcommTeamMgr::GetInstance().WindowRegister(worldTeam, handle);
+    CHK_PRT_RET(devLegacySymWin == nullptr, HCCL_ERROR("[%s] nullptr parameter", __func__), HCOMM_E_PTR);
+    CHK_PRT_RET(handle == nullptr, HCCL_ERROR("[%s] nullptr parameter", __func__), HCOMM_E_PTR);
+    return HcommTeamMgr::GetInstance().WindowRegister(devLegacySymWin, handle);
 }
 
-HcommResult
-HcommTeamWindowBindRemoteMems(HcommTeamHandle team, HcommWindowHandle handle, const HcommTeamWindowDesc* remoteDesc)
+HcommResult HcommTeamWindowDeregister(HcclCommSymWindow handle)
 {
-    if (team == nullptr || handle == nullptr || remoteDesc == nullptr || remoteDesc->mems == nullptr) {
-        HCCL_ERROR("[%s] nullptr parameter", __func__);
-        return HCOMM_E_PTR;
-    }
-    return HcommTeamMgr::GetInstance().BindWindow(team, handle, remoteDesc);
+    CHK_PRT_RET(handle == nullptr, HCCL_ERROR("[%s] nullptr parameter", __func__), HCOMM_E_PTR);
+    return HcommTeamMgr::GetInstance().WindowDeregister(handle);
 }
 
-HcommResult HcommTeamWindowDeregister(HcommTeamHandle worldTeam, HcommWindowHandle handle)
+HcommResult HcommTeamWindowSetSelfInfo(
+    HcclCommSymWindow handle, void* selfVa, uint64_t selfSize, const uint32_t* selfSlots, uint32_t selfSlotNum)
+{
+    CHK_PRT_RET(handle == nullptr, HCCL_ERROR("[%s] nullptr parameter", __func__), HCOMM_E_PTR);
+    CHK_PRT_RET(
+        (selfVa == nullptr || selfSize == 0) && (selfSlots == nullptr || selfSlotNum == 0),
+        HCCL_ERROR(
+            "[%s] nothing to set, selfVa[%p] selfSize[%llu] selfSlotNum[%u]", __func__, selfVa, selfSize, selfSlotNum),
+        HCOMM_E_PARA);
+    return HcommTeamMgr::GetInstance().SetWindowSelfInfo(handle, selfVa, selfSize, selfSlots, selfSlotNum);
+}
+
+HcommResult HcommTeamUpdateWindowRemoteMemByRank(
+    HcclCommSymWindow handle, const uint32_t* sizes, uint32_t sizeNum, const uint32_t* slots, uint32_t slotNum,
+    const CommMem* remoteMem)
 {
     CHK_PRT_RET(
-        (worldTeam == nullptr || handle == nullptr), HCCL_ERROR("[%s] nullptr parameter", __func__), HCOMM_E_PTR);
-    return HcommTeamMgr::GetInstance().WindowDeregister(worldTeam, handle);
+        (handle == nullptr || remoteMem == nullptr), HCCL_ERROR("[%s] nullptr parameter", __func__), HCOMM_E_PTR);
+    CHK_PRT_RET(
+        slotNum == 0 || slots == nullptr || sizes == nullptr || sizeNum == 0,
+        HCCL_ERROR("[%s] no layer slots or invalid sizes", __func__), HCOMM_E_PARA);
+    return HcommTeamMgr::GetInstance().UpdateWindowRemoteMemByRank(handle, sizes, sizeNum, slots, slotNum, *remoteMem);
 }
 
 HcommResult HcommTeamGetNetLayer(HcommTeamHandle team, uint32_t* netLayer)
 {
     CHK_PRT_RET((team == nullptr || netLayer == nullptr), HCCL_ERROR("[%s] nullptr parameter", __func__), HCOMM_E_PTR);
     return HcommTeamMgr::GetInstance().GetNetLayer(team, netLayer);
+}
+
+HcommResult HcommTeamGetEngine(HcommTeamHandle team, CommEngine* engine)
+{
+    CHK_PRT_RET((team == nullptr || engine == nullptr), HCCL_ERROR("[%s] nullptr parameter", __func__), HCOMM_E_PTR);
+    return HcommTeamMgr::GetInstance().GetEngine(team, engine);
 }

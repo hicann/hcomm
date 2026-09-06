@@ -51,10 +51,6 @@ HcommTeamMgr::~HcommTeamMgr()
         }
         windows_.clear();
     }
-    {
-        std::unique_lock<std::shared_mutex> lock(windowToTeamRwMutex_);
-        windowToTeamMap_.clear();
-    }
 }
 
 TeamEntry* HcommTeamMgr::FindTeamByHandleLocked(HcommTeamHandle handle)
@@ -67,7 +63,7 @@ TeamEntry* HcommTeamMgr::FindTeamByHandleLocked(HcommTeamHandle handle)
     return it->second.get();
 }
 
-WindowEntry* HcommTeamMgr::FindWindowByHandleLocked(HcommWindowHandle handle)
+WindowEntry* HcommTeamMgr::FindWindowByHandleLocked(HcclCommSymWindow handle)
 {
     auto it = windows_.find(handle);
     if (it == windows_.end()) {
@@ -94,9 +90,16 @@ HcommResult HcommTeamMgr::SyncWindowToDevice(WindowEntry* entry)
         HCCL_ERROR("[SyncWindowToDevice] devWindow is null");
         return HCOMM_E_PTR;
     }
-    return static_cast<HcommResult>(hrtMemSyncCopy(
+    // SyncWindowToDevice 前，把 host 指针替换为 device 副本地址，同步后还原，避免 device 侧拿到无效 host 指针
+    uint32_t* hostAccumIdPtr = entry->hostWindow.netWin.worldTeamAccumulateId;
+    if (entry->devWorldTeamAccumulateId != nullptr) {
+        entry->hostWindow.netWin.worldTeamAccumulateId = entry->devWorldTeamAccumulateId;
+    }
+    HcommResult ret = static_cast<HcommResult>(hrtMemSyncCopy(
         entry->devWindow, sizeof(HcommWindow), &entry->hostWindow, sizeof(HcommWindow),
         HcclRtMemcpyKind::HCCL_RT_MEMCPY_KIND_HOST_TO_DEVICE));
+    entry->hostWindow.netWin.worldTeamAccumulateId = hostAccumIdPtr; // 还原 host 指针，供后续更新
+    return ret;
 }
 
 HcommResult HcommTeamMgr::AllocAndCopyWorldTeamIds(TeamEntry* entry, const uint32_t* src, uint32_t memberNum)
@@ -176,7 +179,7 @@ HcommResult HcommTeamMgr::AllocChannelEntities(TeamEntry* entry)
         HCCL_ERROR("[AllocChannelEntities] hrtMalloc failed, totalChannels[%u] ret[%d]", totalChannels, ret), ret);
 
     // 逐个 channel 做 D2D 拷贝：把 ChannelHandle 指向的 ChannelEntity 本体拷贝到连续内存对应偏移
-    // 偏移按前缀和 sum(channelNumPerMember[0..peer-1]) + channelIdx 计算
+    // 偏移按前缀和 channelCntAccumulatePerMember[peer-1] + channelIdx 计算（此处用线性 offset 累加实现）
     uint32_t offset = 0;
     for (uint32_t peer = 0; peer < memberNum; peer++) {
         for (uint32_t idx = 0; idx < entry->channelsList[peer].size(); idx++) {
@@ -203,23 +206,30 @@ HcommResult HcommTeamMgr::AllocChannelEntities(TeamEntry* entry)
 HcommResult HcommTeamMgr::AllocChannelNumsArray(TeamEntry* entry)
 {
     uint32_t memberNum = entry->hostTeam.memberNum;
+    // 计算前缀和（起始下标）：channelCntAccumulatePerMember[i] = sum(channelNumPerMember[0..i-1])
+    std::vector<uint32_t> accumulateNums(memberNum, 0);
+    uint32_t acc = 0;
+    for (uint32_t i = 0; i < memberNum; i++) {
+        accumulateNums[i] = acc;
+        acc += entry->hostChannelNums[i];
+    }
     void* devPtr = nullptr;
     HcommResult ret = static_cast<HcommResult>(hrtMalloc(&devPtr, static_cast<uint64_t>(memberNum * sizeof(uint32_t))));
     if (ret != HCOMM_SUCCESS) {
-        HCCL_ERROR("[AllocChannelNumsArray] hrtMalloc channelNums failed, ret[%d]", ret);
+        HCCL_ERROR("[AllocChannelNumsArray] hrtMalloc channelCntAccumulatePerMember failed, ret[%d]", ret);
         return ret;
     }
 
     ret = static_cast<HcommResult>(hrtMemSyncCopy(
-        devPtr, static_cast<uint64_t>(memberNum * sizeof(uint32_t)), entry->hostChannelNums.data(),
+        devPtr, static_cast<uint64_t>(memberNum * sizeof(uint32_t)), accumulateNums.data(),
         static_cast<uint64_t>(memberNum * sizeof(uint32_t)), HcclRtMemcpyKind::HCCL_RT_MEMCPY_KIND_HOST_TO_DEVICE));
     if (ret != HCOMM_SUCCESS) {
-        HCCL_ERROR("[AllocChannelNumsArray] hrtMemSyncCopy channelNums failed, ret[%d]", ret);
+        HCCL_ERROR("[AllocChannelNumsArray] hrtMemSyncCopy channelCntAccumulatePerMember failed, ret[%d]", ret);
         (void)hrtFree(devPtr);
         return ret;
     }
     entry->devChannelNums = devPtr;
-    entry->hostTeam.channelNumPerMember = static_cast<uint32_t*>(devPtr);
+    entry->hostTeam.channelCntAccumulatePerMember = static_cast<uint32_t*>(devPtr);
     return HCOMM_SUCCESS;
 }
 
@@ -231,21 +241,42 @@ HcommResult HcommTeamMgr::AllocAndCopyChannels(TeamEntry* entry)
         return HCOMM_E_PARA;
     }
 
-    FreeDeviceChannels(entry);
+    /* 两阶段提交：先摘下旧 device 资源，新的分配+拷贝全部成功后统一替换并释放旧资源；
+     * 任一步失败只回收本次新分配的部分，entry 的 device 字段保持旧值，避免半途失败
+     * 释放旧数组导致 channelsBaseAddr 悬空（UAF）。 */
+    void* oldDevChannels = entry->devChannels;
+    void* oldDevChannelNums = entry->devChannelNums;
+    entry->devChannels = nullptr;
+    entry->devChannelNums = nullptr;
 
     HcommResult ret = AllocChannelEntities(entry);
     if (ret != HCOMM_SUCCESS) {
         HCCL_ERROR("[AllocAndCopyChannels] AllocChannelEntities failed, ret[%d]", ret);
+        entry->devChannels = oldDevChannels;
+        entry->devChannelNums = oldDevChannelNums;
         return ret;
     }
 
     ret = AllocChannelNumsArray(entry);
     if (ret != HCOMM_SUCCESS) {
         HCCL_ERROR("[AllocAndCopyChannels] AllocChannelNumsArray failed, ret[%d]", ret);
-        FreeDeviceChannels(entry);
+        /* 只回收本次新分配的 channels 数组；nums 数组失败时内部已自清 */
+        if (entry->devChannels != nullptr) {
+            (void)hrtFree(entry->devChannels);
+            entry->devChannels = nullptr;
+            entry->hostTeam.channelsBaseAddr = reinterpret_cast<uint64_t>(oldDevChannels);
+        }
+        entry->devChannelNums = oldDevChannelNums;
         return ret;
     }
 
+    /* 提交：释放旧 device 资源（新资源已写入 entry） */
+    if (oldDevChannels != nullptr) {
+        (void)hrtFree(oldDevChannels);
+    }
+    if (oldDevChannelNums != nullptr) {
+        (void)hrtFree(oldDevChannelNums);
+    }
     return HCOMM_SUCCESS;
 }
 
@@ -313,20 +344,6 @@ HcommResult HcommTeamMgr::UpdateRemoteMems(TeamEntry* entry, const CommMem* src,
     return HCOMM_SUCCESS;
 }
 
-void HcommTeamMgr::FreeDeviceChannels(TeamEntry* entry)
-{
-    if (entry->devChannels != nullptr) {
-        (void)hrtFree(entry->devChannels);
-        entry->devChannels = nullptr;
-    }
-    if (entry->devChannelNums != nullptr) {
-        (void)hrtFree(entry->devChannelNums);
-        entry->devChannelNums = nullptr;
-    }
-    entry->hostTeam.channelsBaseAddr = 0;
-    entry->hostTeam.channelNumPerMember = nullptr;
-}
-
 void HcommTeamMgr::FreeTeamResources(TeamEntry* entry)
 {
     if (entry->devRemoteMems != nullptr) {
@@ -338,7 +355,16 @@ void HcommTeamMgr::FreeTeamResources(TeamEntry* entry)
         entry->hostRemoteMems = nullptr;
     }
 
-    FreeDeviceChannels(entry);
+    if (entry->devChannels != nullptr) {
+        (void)hrtFree(entry->devChannels);
+        entry->devChannels = nullptr;
+    }
+    if (entry->devChannelNums != nullptr) {
+        (void)hrtFree(entry->devChannelNums);
+        entry->devChannelNums = nullptr;
+    }
+    entry->hostTeam.channelsBaseAddr = 0;
+    entry->hostTeam.channelCntAccumulatePerMember = nullptr;
 
     if (entry->devWorldTeamIds != nullptr) {
         (void)hrtFree(entry->devWorldTeamIds);
@@ -366,14 +392,26 @@ void HcommTeamMgr::FreeTeamResources(TeamEntry* entry)
 
 void HcommTeamMgr::FreeWindowResources(WindowEntry* entry)
 {
-    if (entry->devMems != nullptr) {
-        (void)hrtFree(entry->devMems);
-        entry->devMems = nullptr;
+    if (entry->devRemoteAddrs != nullptr) {
+        (void)hrtFree(entry->devRemoteAddrs);
+        entry->devRemoteAddrs = nullptr;
     }
-    if (entry->hostMems != nullptr) {
-        free(entry->hostMems);
-        entry->hostMems = nullptr;
+    if (entry->hostRemoteAddrs != nullptr) {
+        free(entry->hostRemoteAddrs);
+        entry->hostRemoteAddrs = nullptr;
     }
+    if (entry->devWorldTeamAccumulateId != nullptr) {
+        (void)hrtFree(entry->devWorldTeamAccumulateId);
+        entry->devWorldTeamAccumulateId = nullptr;
+    }
+    if (entry->hostWindow.netWin.worldTeamAccumulateId != nullptr) {
+        free(entry->hostWindow.netWin.worldTeamAccumulateId);
+        entry->hostWindow.netWin.worldTeamAccumulateId = nullptr;
+    }
+    entry->hostWindow.netWin.netLayerNum = 0;
+    entry->hostWindow.netWin.baseRemoteMemAddr = 0;
+    entry->hostWindow.netWin.windowSize = 0;
+
     if (entry->devWindow != nullptr) {
         (void)hrtFree(entry->devWindow);
         entry->devWindow = nullptr;
@@ -413,7 +451,7 @@ void HcommTeamMgr::InitTeamEntry(TeamEntry* entry, const HcommTeamCreateDesc* de
     entry->hostTeam.memberNum = desc->memberNum;
     entry->hostTeam.selfMemberId = desc->selfMemberId;
     entry->hostTeam.netLayer = desc->netLayer;
-    entry->hostTeam.engine = COMM_ENGINE_RESERVED;
+    entry->hostTeam.engine = desc->engine;
     entry->syncMemReq = desc->requirement;
     entry->syncMemSize
         = static_cast<uint64_t>(
@@ -512,181 +550,284 @@ HcommResult HcommTeamMgr::TeamDestroy(HcommTeamHandle team)
     return HCOMM_SUCCESS;
 }
 
-HcommResult HcommTeamMgr::WindowRegister(HcommTeamHandle team, HcommWindowHandle* handle)
+HcommResult HcommTeamMgr::WindowRegister(void* devLegacySymWin, HcclCommSymWindow* handle)
 {
-    // 校验 team 存在且为 worldTeam：shared_lock 仅覆盖查找/校验，不可延伸到 unique_lock 区间，否则自死锁。
-    {
-        std::shared_lock<std::shared_mutex> lock(teamsRwMutex_);
-        TeamEntry* entry = FindTeamByHandleLocked(team);
-        CHK_PRT_RET(
-            entry == nullptr, HCCL_ERROR("[WindowRegister] team handle[%p] not found", team), HCOMM_E_NOT_FOUND);
-        CHK_PRT_RET(
-            entry->isSubTeam, HCCL_ERROR("[WindowRegister] subteam cannot register window, use worldTeam"),
-            HCOMM_E_PARA);
-    }
-
     auto winEntry = std::make_unique<WindowEntry>();
-    winEntry->teamHandle = team;
     winEntry->hostWindow.header.version = HCOMM_WINDOW_VERSION;
     winEntry->hostWindow.header.magicWord = HCOMM_WINDOW_MAGIC_WORD;
     winEntry->hostWindow.header.size = sizeof(HcommWindow);
     winEntry->hostWindow.header.reserved = 0;
-    winEntry->hostWindow.worldTeam = team;
+    winEntry->hostWindow.netWin.baseRemoteMemAddr = 0;
+    winEntry->hostWindow.netWin.windowSize = 0;
+    winEntry->hostWindow.netWin.worldTeamAccumulateId = nullptr;
+    winEntry->hostWindow.netWin.netLayerNum = 0;
+    winEntry->hostWindow.lsaWin.baseVa = 0;
+    winEntry->hostWindow.lsaWin.stride = 0;
+    winEntry->hostWindow.lsaWin.userSize = 0;
+    winEntry->hostWindow.legacySymWindow = reinterpret_cast<uint64_t>(devLegacySymWin);
 
-    void* devWindowPtr = nullptr;
-    HcommResult ret = static_cast<HcommResult>(hrtMalloc(&devWindowPtr, static_cast<uint64_t>(sizeof(HcommWindow))));
-    CHK_PRT_RET(ret != HCOMM_SUCCESS, HCCL_ERROR("[WindowRegister] hrtMalloc devWindow failed, ret[%d]", ret), ret);
-    winEntry->devWindow = static_cast<HcommWindowHandle>(devWindowPtr);
-
-    ret = SyncWindowToDevice(winEntry.get());
+    void* devWin = nullptr;
+    HcclResult mallocRet = hrtMalloc(&devWin, sizeof(HcommWindow));
+    CHK_PRT_RET(
+        mallocRet != HCCL_SUCCESS, HCCL_ERROR("[%s] hrtMalloc failed, ret[%d]", __func__, mallocRet), HCOMM_E_MEMORY);
+    winEntry->devWindow = devWin;
+    HcommResult ret = SyncWindowToDevice(winEntry.get());
     if (ret != HCOMM_SUCCESS) {
-        HCCL_ERROR("[WindowRegister] SyncWindowToDevice failed, ret[%d]", ret);
+        HCCL_ERROR("[%s] SyncWindowToDevice failed, ret[%d]", __func__, ret);
         FreeWindowResources(winEntry.get());
         return ret;
     }
-
-    *handle = winEntry->devWindow;
-
+    *handle = devWin;
+    // hostWindow.netWin 字段首次 UpdateWindowRemoteMemByRank 回填时填充
+    // （baseRemoteMemAddr/windowSize/worldTeamAccumulateId/netLayerNum）
     {
-        // 同时持有 windows_ 与 windowToTeamMap_ 写锁，保证 window 登记原子性（锁顺序：windows→windowToTeam）
-        std::unique_lock<std::shared_mutex> winLock(windowsRwMutex_);
-        std::unique_lock<std::shared_mutex> mapLock(windowToTeamRwMutex_);
-        windowToTeamMap_[*handle] = team;
+        std::unique_lock<std::shared_mutex> lock(windowsRwMutex_);
+        CHK_PRT_RET(
+            windows_.find(*handle) != windows_.end(),
+            HCCL_ERROR("[%s] window[%p] already registered", __func__, *handle), HCOMM_E_PARA);
         windows_[*handle] = std::move(winEntry);
     }
-
-    HCCL_INFO("[WindowRegister] window created, team[%p], devWindow[%p]", team, devWindowPtr);
+    HCCL_INFO("[%s] window registered, devWindow[%p]", __func__, *handle);
     return HCOMM_SUCCESS;
 }
 
-HcommResult HcommTeamMgr::AllocAndCopyWindowMems(WindowEntry* winEntry, uint64_t memberNum, const CommMem* src)
+HcommResult HcommTeamMgr::WindowDeregister(HcclCommSymWindow handle)
 {
-    winEntry->hostMems = static_cast<CommMem*>(calloc(memberNum, sizeof(CommMem)));
-    if (winEntry->hostMems == nullptr) {
-        HCCL_ERROR("[AllocAndCopyWindowMems] calloc hostMems failed");
-        return HCOMM_E_PTR;
-    }
-    errno_t memRet = memcpy_s(winEntry->hostMems, memberNum * sizeof(CommMem), src, memberNum * sizeof(CommMem));
-    if (memRet != EOK) {
-        HCCL_ERROR("[AllocAndCopyWindowMems] memcpy_s hostMems failed, ret[%d]", memRet);
-        free(winEntry->hostMems);
-        winEntry->hostMems = nullptr;
-        return HCOMM_E_MEMORY;
-    }
-
-    void* devMemsPtr = nullptr;
-    HcommResult ret
-        = static_cast<HcommResult>(hrtMalloc(&devMemsPtr, static_cast<uint64_t>(memberNum * sizeof(CommMem))));
-    if (ret != HCOMM_SUCCESS) {
-        HCCL_ERROR("[AllocAndCopyWindowMems] hrtMalloc devMems failed, ret[%d]", ret);
-        free(winEntry->hostMems);
-        winEntry->hostMems = nullptr;
-        return ret;
-    }
-
-    ret = static_cast<HcommResult>(hrtMemSyncCopy(
-        devMemsPtr, static_cast<uint64_t>(memberNum * sizeof(CommMem)), src,
-        static_cast<uint64_t>(memberNum * sizeof(CommMem)), HcclRtMemcpyKind::HCCL_RT_MEMCPY_KIND_HOST_TO_DEVICE));
-    if (ret != HCOMM_SUCCESS) {
-        HCCL_ERROR("[AllocAndCopyWindowMems] hrtMemSyncCopy devMems failed, ret[%d]", ret);
-        (void)hrtFree(devMemsPtr);
-        free(winEntry->hostMems);
-        winEntry->hostMems = nullptr;
-        return ret;
-    }
-    winEntry->devMems = devMemsPtr;
-    winEntry->hostWindow.mems = static_cast<CommMem*>(devMemsPtr);
-    winEntry->hostWindow.memsNum = memberNum;
-    return HCOMM_SUCCESS;
-}
-
-HcommResult HcommTeamMgr::MergeWindowMems(WindowEntry* winEntry, uint64_t memberNum, const CommMem* src)
-{
-    CHK_PRT_RET(
-        winEntry->hostMems == nullptr || winEntry->devMems == nullptr,
-        HCCL_ERROR("[MergeWindowMems] hostMems or devMems is null, not allocated yet"), HCOMM_E_PTR);
-    CHK_PRT_RET(
-        memberNum != winEntry->hostWindow.memsNum,
-        HCCL_ERROR(
-            "[MergeWindowMems] memberNum[%llu] != memsNum[%llu], dimension mismatch", memberNum,
-            winEntry->hostWindow.memsNum),
-        HCOMM_E_PARA);
-
-    for (uint64_t i = 0; i < memberNum; i++) {
-        if (src[i].addr != nullptr) {
-            CHK_PRT_RET(
-                winEntry->hostMems[i].addr != nullptr,
-                HCCL_ERROR("[MergeWindowMems] member[%llu] already bound, register a new window to rebind", i),
-                HCOMM_E_PARA);
-            winEntry->hostMems[i] = src[i];
-        }
-    }
-
-    // 重新把 hostMems 整块 sync 到 devMems
-    HcclResult hrtRet = hrtMemSyncCopy(
-        winEntry->devMems, static_cast<uint64_t>(memberNum * sizeof(CommMem)), winEntry->hostMems,
-        static_cast<uint64_t>(memberNum * sizeof(CommMem)), HcclRtMemcpyKind::HCCL_RT_MEMCPY_KIND_HOST_TO_DEVICE);
-    HcommResult ret = static_cast<HcommResult>(hrtRet);
-    CHK_PRT_RET(ret != HCOMM_SUCCESS, HCCL_ERROR("[MergeWindowMems] hrtMemSyncCopy devMems failed, ret[%d]", ret), ret);
-    return HCOMM_SUCCESS;
-}
-
-HcommResult HcommTeamMgr::BindWindow(HcommTeamHandle team, HcommWindowHandle handle, const HcommTeamWindowDesc* desc)
-{
-    // 同时读 windows_ 与 teams_ 校验存在性（锁顺序：teams→windows）
-    std::shared_lock<std::shared_mutex> teamLock(teamsRwMutex_);
-    std::shared_lock<std::shared_mutex> winLock(windowsRwMutex_);
-    WindowEntry* winEntry = FindWindowByHandleLocked(handle);
-    CHK_PRT_RET(winEntry == nullptr, HCCL_ERROR("[BindWindow] window handle[%p] not found", handle), HCOMM_E_NOT_FOUND);
-    TeamEntry* teamEntry = FindTeamByHandleLocked(team);
-    CHK_PRT_RET(teamEntry == nullptr, HCCL_ERROR("[BindWindow] team handle[%p] not found", team), HCOMM_E_NOT_FOUND);
-
-    (void)teamEntry;
-    HcommResult ret;
-    if (winEntry->hostMems == nullptr) {
-        ret = AllocAndCopyWindowMems(winEntry, desc->memberNum, desc->mems);
-        CHK_PRT_RET(ret != HCOMM_SUCCESS, HCCL_ERROR("[BindWindow] AllocAndCopyWindowMems failed"), ret);
-    } else {
-        ret = MergeWindowMems(winEntry, desc->memberNum, desc->mems);
-        CHK_PRT_RET(ret != HCOMM_SUCCESS, HCCL_ERROR("[BindWindow] MergeWindowMems failed"), ret);
-    }
-
-    ret = SyncWindowToDevice(winEntry);
-    if (ret != HCOMM_SUCCESS) {
-        HCCL_ERROR("[BindWindow] SyncWindowToDevice failed, ret[%d]", ret);
-        return ret;
-    }
-
-    HCCL_INFO(
-        "[BindWindow] window bound, team[%p], handle[%p], devWindow[%p], mems[%p], memberNum[%u], devMems[%p]", team,
-        handle, winEntry->devWindow, desc->mems, desc->memberNum, winEntry->devMems);
-    return HCOMM_SUCCESS;
-}
-
-HcommResult HcommTeamMgr::WindowDeregister(HcommTeamHandle team, HcommWindowHandle handle)
-{
-    {
-        std::shared_lock<std::shared_mutex> lock(teamsRwMutex_);
-        TeamEntry* entry = FindTeamByHandleLocked(team);
-        CHK_PRT_RET(
-            entry == nullptr, HCCL_ERROR("[WindowDeregister] team handle[%p] not found", team), HCOMM_E_NOT_FOUND);
-        CHK_PRT_RET(
-            entry->isSubTeam, HCCL_ERROR("[WindowDeregister] subteam cannot deregister window, use worldTeam"),
-            HCOMM_E_PARA);
-    }
-    // 同时持有 windows_ 与 windowToTeamMap_ 写锁，保证销毁原子性（锁顺序：windows→windowToTeam）
-    std::unique_lock<std::shared_mutex> winLock(windowsRwMutex_);
-    std::unique_lock<std::shared_mutex> mapLock(windowToTeamRwMutex_);
+    std::unique_lock<std::shared_mutex> lock(windowsRwMutex_);
     auto it = windows_.find(handle);
     CHK_PRT_RET(
-        it == windows_.end(),
-        HCCL_WARNING("[WindowDeregister] window handle[%p] not found, maybe already destroyed", handle), HCOMM_SUCCESS);
-
+        it == windows_.end(), HCCL_WARNING("[%s] window[%p] not found, maybe already unregistered", __func__, handle),
+        HCOMM_SUCCESS);
     FreeWindowResources(it->second.get());
-    windowToTeamMap_.erase(handle);
     windows_.erase(it);
+    HCCL_INFO("[%s] window unregistered, devWindow[%p]", __func__, handle);
+    return HCOMM_SUCCESS;
+}
 
-    HCCL_INFO("[WindowDeregister] window[%p] destroyed, team[%p]", handle, team);
+/* 清空 window 的 netWin 层分段表资源（失败回滚/重置共用）：释放 host/dev 内存并清零相关字段。 */
+void HcommTeamMgr::ClearWindowNetWin(WindowEntry* winEntry)
+{
+    if (winEntry->devRemoteAddrs != nullptr) {
+        (void)hrtFree(winEntry->devRemoteAddrs);
+        winEntry->devRemoteAddrs = nullptr;
+    }
+    if (winEntry->hostRemoteAddrs != nullptr) {
+        free(winEntry->hostRemoteAddrs);
+        winEntry->hostRemoteAddrs = nullptr;
+    }
+    if (winEntry->devWorldTeamAccumulateId != nullptr) {
+        (void)hrtFree(winEntry->devWorldTeamAccumulateId);
+        winEntry->devWorldTeamAccumulateId = nullptr;
+    }
+    if (winEntry->hostWindow.netWin.worldTeamAccumulateId != nullptr) {
+        free(winEntry->hostWindow.netWin.worldTeamAccumulateId);
+        winEntry->hostWindow.netWin.worldTeamAccumulateId = nullptr;
+    }
+    winEntry->hostWindow.netWin.netLayerNum = 0;
+    winEntry->hostWindow.netWin.baseRemoteMemAddr = 0;
+    winEntry->hostWindow.netWin.windowSize = 0;
+    winEntry->remoteMemsTotal = 0;
+}
+
+/* 分配 addr 扁平数组（total 个 uint64_t）：calloc host + hrtMalloc dev + 填 baseRemoteMemAddr。
+ * 失败时自清。 */
+HcommResult HcommTeamMgr::AllocWindowAddrTable(WindowEntry* winEntry, uint32_t total)
+{
+    winEntry->remoteMemsTotal = total;
+    winEntry->hostRemoteAddrs = static_cast<uint64_t*>(calloc(total, sizeof(uint64_t)));
+    CHK_PRT_RET(
+        winEntry->hostRemoteAddrs == nullptr, HCCL_ERROR("[AllocWindowAddrTable] calloc hostRemoteAddrs failed"),
+        HCOMM_E_MEMORY);
+    void* devAddrsPtr = nullptr;
+    HcommResult ret
+        = static_cast<HcommResult>(hrtMalloc(&devAddrsPtr, static_cast<uint64_t>(total * sizeof(uint64_t))));
+    if (ret != HCOMM_SUCCESS) {
+        HCCL_ERROR("[AllocWindowAddrTable] hrtMalloc devRemoteAddrs failed, ret[%d]", ret);
+        ClearWindowNetWin(winEntry);
+        return ret;
+    }
+    winEntry->devRemoteAddrs = devAddrsPtr;
+    winEntry->hostWindow.netWin.baseRemoteMemAddr = reinterpret_cast<uint64_t>(winEntry->devRemoteAddrs);
+    return HCOMM_SUCCESS;
+}
+
+/* 分配 worldTeamAccumulateId（长度 sizeNum）：calloc host + 填前缀和 + hrtMalloc dev 副本 + H2D 同步。
+ * 失败时自清（连同已分配的 addr/size 表一并释放，由 ClearWindowNetWin 统一处理）。 */
+HcommResult HcommTeamMgr::AllocWindowAccumulateIdArray(WindowEntry* winEntry, const uint32_t* sizes, uint32_t sizeNum)
+{
+    winEntry->hostWindow.netWin.worldTeamAccumulateId = static_cast<uint32_t*>(calloc(sizeNum, sizeof(uint32_t)));
+    if (winEntry->hostWindow.netWin.worldTeamAccumulateId == nullptr) {
+        HCCL_ERROR("[AllocWindowAccumulateIdArray] calloc worldTeamAccumulateId failed");
+        ClearWindowNetWin(winEntry);
+        return HCOMM_E_PTR;
+    }
+    // 填前缀和（起始下标）：accumulateId[i] = sum(sizes[0..i-1])
+    uint32_t acc = 0;
+    for (uint32_t i = 0; i < sizeNum; i++) {
+        winEntry->hostWindow.netWin.worldTeamAccumulateId[i] = acc;
+        acc += sizes[i];
+    }
+    winEntry->hostWindow.netWin.netLayerNum = sizeNum;
+    void* devAccumIdPtr = nullptr;
+    HcommResult ret
+        = static_cast<HcommResult>(hrtMalloc(&devAccumIdPtr, static_cast<uint64_t>(sizeNum * sizeof(uint32_t))));
+    if (ret != HCOMM_SUCCESS) {
+        HCCL_ERROR("[AllocWindowAccumulateIdArray] hrtMalloc devWorldTeamAccumulateId failed, ret[%d]", ret);
+        ClearWindowNetWin(winEntry);
+        return ret;
+    }
+    winEntry->devWorldTeamAccumulateId = static_cast<uint32_t*>(devAccumIdPtr);
+    ret = static_cast<HcommResult>(hrtMemSyncCopy(
+        winEntry->devWorldTeamAccumulateId, static_cast<uint64_t>(sizeNum * sizeof(uint32_t)),
+        winEntry->hostWindow.netWin.worldTeamAccumulateId, static_cast<uint64_t>(sizeNum * sizeof(uint32_t)),
+        HcclRtMemcpyKind::HCCL_RT_MEMCPY_KIND_HOST_TO_DEVICE));
+    CHK_PRT_RET(
+        ret != HCOMM_SUCCESS,
+        HCCL_ERROR("[AllocWindowAccumulateIdArray] hrtMemSyncCopy devWorldTeamAccumulateId failed, ret[%d]", ret), ret);
+    return HCOMM_SUCCESS;
+}
+
+/* 首次回填时分配 netWin 层分段表：addr 扁平数组 + worldTeamAccumulateId 副本 + 整体 SyncWindowToDevice。
+ * 任一步失败时全部已分配资源清零。 */
+HcommResult HcommTeamMgr::AllocWindowNetWin(WindowEntry* winEntry, const uint32_t* sizes, uint32_t sizeNum)
+{
+    uint32_t total = 0;
+    for (uint32_t i = 0; i < sizeNum; i++) {
+        total += sizes[i];
+    }
+    CHK_PRT_RET(total == 0, HCCL_ERROR("[AllocWindowNetWin] no prebuilt worldTeam sizes available"), HCOMM_E_PARA);
+
+    HcommResult ret = AllocWindowAddrTable(winEntry, total);
+    CHK_PRT_RET(ret != HCOMM_SUCCESS, HCCL_ERROR("[AllocWindowNetWin] AllocWindowAddrTable failed"), ret);
+    ret = AllocWindowAccumulateIdArray(winEntry, sizes, sizeNum);
+    if (ret != HCOMM_SUCCESS) {
+        HCCL_ERROR("[AllocWindowNetWin] AllocWindowAccumulateIdArray failed, ret[%d]", ret);
+        ClearWindowNetWin(winEntry);
+        return ret;
+    }
+
+    // 首次分配后整体同步，device 侧才能看到 netWin.baseRemoteMemAddr/windowSize/worldTeamAccumulateId
+    ret = SyncWindowToDevice(winEntry);
+    CHK_PRT_RET(ret != HCOMM_SUCCESS, HCCL_ERROR("[AllocWindowNetWin] SyncWindowToDevice failed, ret[%d]", ret), ret);
+    return HCOMM_SUCCESS;
+}
+
+/* 合并语义：selfVa/selfSize 与 selfSlots 各自可选（传空表示保持原值不变）——
+ * RegisterWindow 先登记 VA/size（槽位未知），UpdateHcommWindowRemoteMem 首次调用时补齐槽位。
+ * 幂等：重复登记相同值无害。 */
+HcommResult HcommTeamMgr::SetWindowSelfInfo(
+    HcclCommSymWindow handle, void* selfVa, uint64_t selfSize, const uint32_t* selfSlots, uint32_t selfSlotNum)
+{
+    CHK_PRT_RET(handle == nullptr, HCCL_ERROR("[SetWindowSelfInfo] window handle is nullptr"), HCOMM_E_PTR);
+    CHK_PRT_RET(
+        (selfVa == nullptr || selfSize == 0) && (selfSlots == nullptr || selfSlotNum == 0),
+        HCCL_ERROR(
+            "[SetWindowSelfInfo] nothing to set, handle[%p] selfVa[%p] selfSize[%llu] selfSlotNum[%u]", handle, selfVa,
+            selfSize, selfSlotNum),
+        HCOMM_E_PARA);
+    std::unique_lock<std::shared_mutex> lock(windowsRwMutex_);
+    WindowEntry* winEntry = FindWindowByHandleLocked(handle);
+    CHK_PRT_RET(
+        winEntry == nullptr, HCCL_ERROR("[SetWindowSelfInfo] window handle[%p] not found", handle), HCOMM_E_NOT_FOUND);
+    if (selfVa != nullptr && selfSize != 0) {
+        winEntry->selfVa = selfVa;
+        winEntry->selfSize = selfSize;
+    }
+    if (selfSlots != nullptr && selfSlotNum != 0) {
+        winEntry->selfSlots.assign(selfSlots, selfSlots + selfSlotNum);
+    }
+    HCCL_INFO(
+        "[SetWindowSelfInfo] handle[%p] selfVa[%p] selfSize[%llu] selfSlotNum[%u]", handle, selfVa, selfSize,
+        selfSlotNum);
+    return HCOMM_SUCCESS;
+}
+
+/* 用窗口自身注册信息回填本端（self rank）层槽位（幂等：重复写相同值无害，无分配）。
+ * 未登记本端注册信息（selfVa 为空）时跳过并告警，不影响远端槽位回填。 */
+HcommResult HcommTeamMgr::UpdateWindowSelfSlots(WindowEntry* winEntry)
+{
+    if (winEntry->selfVa == nullptr || winEntry->selfSize == 0) {
+        HCCL_WARNING("[UpdateWindowSelfSlots] handle[%p] no self register info, skip self slots", winEntry->devWindow);
+        return HCOMM_SUCCESS;
+    }
+    const std::vector<uint32_t>& selfSlots = winEntry->selfSlots;
+    if (selfSlots.empty()) {
+        HCCL_WARNING("[UpdateWindowSelfSlots] handle[%p] has no layer slots, skip self slots", winEntry->devWindow);
+        return HCOMM_SUCCESS;
+    }
+    uint64_t selfAddr = reinterpret_cast<uint64_t>(winEntry->selfVa);
+    uint64_t selfSize = winEntry->selfSize;
+    // windowSize 为标量（所有 remoteMem size 相同），首次回填时写入
+    winEntry->hostWindow.netWin.windowSize = selfSize;
+    for (uint32_t slot : selfSlots) {
+        CHK_PRT_RET(
+            slot >= winEntry->remoteMemsTotal,
+            HCCL_ERROR("[UpdateWindowSelfSlots] slot[%u] >= total[%u]", slot, winEntry->remoteMemsTotal), HCOMM_E_PARA);
+        winEntry->hostRemoteAddrs[slot] = selfAddr;
+        HcommResult ret = static_cast<HcommResult>(hrtMemSyncCopy(
+            static_cast<void*>(reinterpret_cast<uint8_t*>(winEntry->devRemoteAddrs) + slot * sizeof(uint64_t)),
+            sizeof(uint64_t), &winEntry->hostRemoteAddrs[slot], sizeof(uint64_t),
+            HcclRtMemcpyKind::HCCL_RT_MEMCPY_KIND_HOST_TO_DEVICE));
+        CHK_PRT_RET(
+            ret != HCOMM_SUCCESS,
+            HCCL_ERROR("[UpdateWindowSelfSlots] hrtMemSyncCopy addr failed, slot[%u] ret[%d]", slot, ret), ret);
+        HCCL_INFO(
+            "[UpdateWindowSelfSlots] slot[%u] filled with self mem, addr[%llu] size[%llu]", slot, selfAddr, selfSize);
+    }
+    return HCOMM_SUCCESS;
+}
+
+HcommResult HcommTeamMgr::UpdateWindowRemoteMemByRank(
+    HcclCommSymWindow handle, const uint32_t* sizes, uint32_t sizeNum, const uint32_t* slots, uint32_t slotNum,
+    const CommMem& remoteMem)
+{
+    std::unique_lock<std::shared_mutex> lock(windowsRwMutex_);
+    WindowEntry* winEntry = FindWindowByHandleLocked(handle);
+    CHK_PRT_RET(
+        winEntry == nullptr, HCCL_ERROR("[UpdateWindowRemoteMemByRank] window handle[%p] not found", handle),
+        HCOMM_E_NOT_FOUND);
+
+    // 首次调用：分配层分段表（不含 UB_MEM）
+    if (winEntry->hostRemoteAddrs == nullptr || winEntry->devRemoteAddrs == nullptr) {
+        HcommResult allocRet = AllocWindowNetWin(winEntry, sizes, sizeNum);
+        CHK_PRT_RET(
+            allocRet != HCOMM_SUCCESS,
+            HCCL_ERROR("[UpdateWindowRemoteMemByRank] AllocWindowNetWin failed, ret[%d]", allocRet),
+            static_cast<HcclResult>(allocRet));
+    }
+
+    // 回填本端（self rank）槽位（幂等：重复调用重复写相同值无害，无额外分配）
+    HcommResult selfRet = UpdateWindowSelfSlots(winEntry);
+    CHK_PRT_RET(
+        selfRet != HCOMM_SUCCESS,
+        HCCL_ERROR("[UpdateWindowRemoteMemByRank] UpdateWindowSelfSlots failed, ret[%d]", selfRet), selfRet);
+
+    // 对每个层槽位回填（slots 已由调用方算好：sum(sizes[0..L-1]) + worldTeamId）
+    uint64_t remoteAddr = reinterpret_cast<uint64_t>(remoteMem.addr);
+    // windowSize 为标量（所有 remoteMem size 相同），首次回填时写入
+    if (winEntry->hostWindow.netWin.windowSize == 0) {
+        winEntry->hostWindow.netWin.windowSize = remoteMem.size;
+        HcommResult syncRet = SyncWindowToDevice(winEntry);
+        CHK_PRT_RET(
+            syncRet != HCOMM_SUCCESS,
+            HCCL_ERROR("[UpdateWindowRemoteMemByRank] SyncWindowToDevice for windowSize failed, ret[%d]", syncRet),
+            syncRet);
+    }
+    for (uint32_t s = 0; s < slotNum; s++) {
+        uint32_t slot = slots[s];
+        CHK_PRT_RET(
+            slot >= winEntry->remoteMemsTotal,
+            HCCL_ERROR("[UpdateWindowRemoteMemByRank] slot[%u] >= total[%u]", slot, winEntry->remoteMemsTotal),
+            HCOMM_E_PARA);
+        winEntry->hostRemoteAddrs[slot] = remoteAddr;
+        HcommResult ret = static_cast<HcommResult>(hrtMemSyncCopy(
+            static_cast<void*>(reinterpret_cast<uint8_t*>(winEntry->devRemoteAddrs) + slot * sizeof(uint64_t)),
+            sizeof(uint64_t), &winEntry->hostRemoteAddrs[slot], sizeof(uint64_t),
+            HcclRtMemcpyKind::HCCL_RT_MEMCPY_KIND_HOST_TO_DEVICE));
+        CHK_PRT_RET(
+            ret != HCOMM_SUCCESS,
+            HCCL_ERROR("[UpdateWindowRemoteMemByRank] hrtMemSyncCopy addr failed, slot[%u] ret[%d]", slot, ret), ret);
+    }
     return HCOMM_SUCCESS;
 }
 
@@ -799,6 +940,16 @@ HcommResult HcommTeamMgr::GetNetLayer(HcommTeamHandle team, uint32_t* netLayer)
     CHK_PRT_RET(entry == nullptr, HCCL_ERROR("[GetNetLayer] team handle[%p] not found", team), HCOMM_E_NOT_FOUND);
 
     *netLayer = entry->hostTeam.netLayer;
+    return HCOMM_SUCCESS;
+}
+
+HcommResult HcommTeamMgr::GetEngine(HcommTeamHandle team, CommEngine* engine)
+{
+    std::shared_lock<std::shared_mutex> lock(teamsRwMutex_);
+    TeamEntry* entry = FindTeamByHandleLocked(team);
+    CHK_PRT_RET(entry == nullptr, HCCL_ERROR("[GetEngine] team handle[%p] not found", team), HCOMM_E_NOT_FOUND);
+
+    *engine = entry->hostTeam.engine;
     return HCOMM_SUCCESS;
 }
 

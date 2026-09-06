@@ -19,11 +19,31 @@
 extern "C" {
 #endif // __cplusplus
 
+/* HcommTeam / HcommWindow 结构体的 ABI 头部常量 */
+static const uint32_t HCOMM_TEAM_MAGIC_WORD = 0x0f0f0f20U;
+static const uint32_t HCOMM_TEAM_VERSION = 1U;
+static const uint32_t HCOMM_WINDOW_MAGIC_WORD = 0x0f0f0f21U;
+static const uint32_t HCOMM_WINDOW_VERSION = 2U;
+
 typedef struct {
     CommAbiHeader header;
-    uint32_t memsNum;
-    CommMem* mems;             // 长度是memsNum
-    HcommTeamHandle worldTeam; // 该window所属的worldTeam，给数据面做校验
+    struct {
+        uint64_t baseRemoteMemAddr; /* 远端内存addr数组基地址，按(worldTeamAccumulateId[netLayer] + worldTeamId) *
+                                       sizeof(uint64_t)偏移访问 */
+        uint64_t windowSize;        /* window大小 */
+        uint32_t* worldTeamAccumulateId; /* 数组，表示sum(worldTeamSizePerNetLayer[0..netLayerNum-1]) */
+        uint32_t netLayerNum;            /* netLayer的数量 */
+        uint32_t reserved[8];
+    } netWin;
+
+    struct {
+        uint64_t baseVa;
+        uint64_t stride;
+        uint64_t userSize;
+        uint32_t reserved[8];
+    } lsaWin;
+
+    uint64_t legacySymWindow; // SymmetricWindow结构体device侧指针
     uint32_t reserved[8];
 } HcommWindow;
 
@@ -44,10 +64,10 @@ typedef struct {
     CommEngine engine; /* COMM_ENGINE_AICPU_TS / CCU 等 */
     uint32_t memberNum;
     uint32_t selfMemberId;
-    uint64_t channelsBaseAddr; /* 连续ChannelEntity数组的基地址，按(sum(channelNumPerMember[0..peer-1]) + channelIdx) *
+    uint64_t channelsBaseAddr; /* 连续ChannelEntity数组的基地址，按(channelCntAccumulatePerMember[peer] + channelIdx) *
                                   sizeof(ChannelEntity)偏移访问 */
-    uint32_t* channelNumPerMember; /* 长度为memberNum，表示每个成员的channel数量 */
-    uint32_t netLayer;             /* 用户希望使用的网络层，0表示默认选择 */
+    uint32_t* channelCntAccumulatePerMember; /* 长度为memberNum，表示sum(channelNumPerMember[0..peer-1]) */
+    uint32_t netLayer;                       /* 用户希望使用的网络层，0表示默认选择 */
     uint32_t* worldTeamIds;
     HcommTeamSyncMem syncMem;
     uint32_t reserved[8];

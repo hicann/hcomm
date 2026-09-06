@@ -23,6 +23,7 @@ extern "C" {
  * @note 职责：集合通信的通信域HcommTeam管理的C接口声明（暂未对外的接口）
  */
 HcommResult HcommTeamGetNetLayer(HcommTeamHandle team, uint32_t* netLayer);
+HcommResult HcommTeamGetEngine(HcommTeamHandle team, CommEngine* engine);
 
 #ifdef __cplusplus
 }

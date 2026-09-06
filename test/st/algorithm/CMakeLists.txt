@@ -64,6 +64,7 @@ set(HCOMM_PUBLIC_INCLUDE_LIST
     ${HCOMM_CODE_ROOT}/pub_inc/hccl
     ${HCOMM_CODE_ROOT}/pkg_inc
     ${HCOMM_CODE_ROOT}/pkg_inc/hccl
+    ${HCOMM_CODE_ROOT}/pkg_inc/hcomm
     ${HCOMM_CODE_ROOT}/pkg_inc/legacy
     ${HCOMM_CODE_ROOT}/pkg_inc/legacy/hccl
     ${HCOMM_DIR}/src/legacy/ascend910/common/error_manager

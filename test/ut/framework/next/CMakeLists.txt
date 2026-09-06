@@ -78,6 +78,7 @@ set(src_to_test_list
     coll_comms/api_c_adpt/ut_coll_comm_ccu_c_adpt.cc
     coll_comms/api_c_adpt/ut_hccl_channel_config_test.cc
     coll_comms/team/hccl/ut_hccl_team_c_adpt.cc
+    coll_comms/team/hccl/ut_hccl_team_mgr.cc
     comms/endpoints/reged_mems/ut_aicpu_ts_roce_mem.cc
     # Ns recovery相关测试用例
     comms/endpoint_pairs/channels/aicpu/ut_aicpu_ts_urma_channel.cc
@@ -142,7 +143,8 @@ set(src_to_test_list
     coll_comms/rank_info_detect/ut_whitelist.cc
     coll_comms/rank_info_detect/whitelist_test.cc
     ${HCCL_CODE_ROOT}/test/legacy/ut/framework/env_config/env_config_stub.cc
-    coll_comms/team/hcomm/ut_hcomm_team_test.cc
+    coll_comms/team/hcomm/ut_hcomm_team_c_adpt.cc
+    coll_comms/team/hcomm/ut_hcomm_team_mgr.cc
 )
 
 add_executable(hccl_utest_test_next_resource ${src_to_test_list})

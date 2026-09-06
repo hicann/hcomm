@@ -31,8 +31,8 @@ HcclTeamMgr& HcclTeamMgr::GetInstance()
     return *instance;
 }
 
-HcclResult HcclTeamMgr::RegisterWorldTeam(
-    HcommTeamHandle worldTeam, CollComm* collComm, void* syncMemPtr, uint64_t syncMemSize, const uint32_t* rankIds,
+HcclResult HcclTeamMgr::RegisterPrebuiltWorldTeam(
+    HcommTeamHandle worldTeam, CollComm* collComm, CommProtocol protocol, uint32_t netLayer, const uint32_t* rankIds,
     uint32_t rankNum)
 {
     if (worldTeam == nullptr || collComm == nullptr || rankIds == nullptr) {
@@ -47,16 +47,95 @@ HcclResult HcclTeamMgr::RegisterWorldTeam(
         HCCL_ERROR("[HcclTeamMgr][%s] worldTeam[%p] already registered", __func__, worldTeam);
         return HCCL_E_PARA;
     }
+    uint64_t key = MakeProtoLayerKey(protocol, netLayer);
+    auto& commIndex = worldTeamIndex_[collComm];
+    auto idxIt = commIndex.find(key);
+    if (idxIt != commIndex.end()) {
+        HCCL_ERROR(
+            "[HcclTeamMgr][%s] prebuilt worldTeam for protocol[%d] netLayer[%u] already exists", __func__,
+            static_cast<int32_t>(protocol), netLayer);
+        return HCCL_E_PARA;
+    }
     TeamEntry& entry = teamMap_[worldTeam];
     entry.collComm = collComm;
     entry.worldTeam = nullptr;
-    entry.syncMemPtr = syncMemPtr;
-    entry.syncMemSize = syncMemSize;
+    entry.protocol = protocol;
+    entry.syncMemPtr = nullptr; // worldTeam 不通信，不创建 syncMem
+    entry.syncMemSize = 0;
     entry.syncMemHandle = nullptr;
     entry.syncMemTag.clear();
-    entry.windows.clear();
     entry.rankIds.assign(rankIds, rankIds + rankNum);
+    commIndex[key] = worldTeam;
+    // 同通信域内同层各协议 worldTeam 的 rankIds 相同，只记一份（供 UpdateWindowRemoteMemByRank 计算层槽位）
+    auto& commLayers = layerRanksMap_[collComm];
+    if (commLayers.find(netLayer) == commLayers.end()) {
+        commLayers[netLayer] = entry.rankIds;
+    }
+    HCCL_INFO(
+        "[HcclTeamMgr][%s] prebuilt worldTeam registered, handle[%p], protocol[%d], netLayer[%u], rankNum[%u]",
+        __func__, worldTeam, static_cast<int32_t>(protocol), netLayer, rankNum);
     return HCCL_SUCCESS;
+}
+
+HcommTeamHandle HcclTeamMgr::FindWorldTeamByProtoLayer(CollComm* collComm, CommProtocol protocol, uint32_t netLayer)
+{
+    std::shared_lock<std::shared_mutex> lock(mutex_);
+    if (collComm == nullptr) {
+        return nullptr;
+    }
+    auto commIt = worldTeamIndex_.find(collComm);
+    if (commIt == worldTeamIndex_.end()) {
+        return nullptr;
+    }
+    auto it = commIt->second.find(MakeProtoLayerKey(protocol, netLayer));
+    if (it == commIt->second.end()) {
+        return nullptr;
+    }
+    return it->second;
+}
+
+void HcclTeamMgr::GetWorldTeamSizesPerNetLayer(CollComm* collComm, std::vector<uint32_t>& sizes)
+{
+    sizes.clear();
+    if (collComm == nullptr) {
+        return;
+    }
+    std::shared_lock<std::shared_mutex> lock(mutex_);
+    auto commIt = layerRanksMap_.find(collComm);
+    if (commIt == layerRanksMap_.end()) {
+        return;
+    }
+    // 先确定最大 netLayer，按层填 0 再覆盖实际大小（无该层填 0，保证下标=netLayer）
+    uint32_t maxLayer = 0;
+    for (const auto& pair : commIt->second) {
+        maxLayer = std::max(maxLayer, pair.first);
+    }
+    sizes.assign(static_cast<size_t>(maxLayer) + 1, 0);
+    for (const auto& pair : commIt->second) {
+        sizes[pair.first] = static_cast<uint32_t>(pair.second.size());
+    }
+}
+
+void HcclTeamMgr::GetRankLayerSlots(
+    CollComm* collComm, uint32_t rankId, std::vector<std::pair<uint32_t, uint32_t>>& slots)
+{
+    slots.clear();
+    if (collComm == nullptr) {
+        return;
+    }
+    std::shared_lock<std::shared_mutex> lock(mutex_);
+    auto commIt = layerRanksMap_.find(collComm);
+    if (commIt == layerRanksMap_.end()) {
+        return;
+    }
+    for (const auto& pair : commIt->second) {
+        for (uint32_t memberId = 0; memberId < pair.second.size(); memberId++) {
+            if (pair.second[memberId] == rankId) {
+                slots.emplace_back(pair.first, memberId);
+                break;
+            }
+        }
+    }
 }
 
 HcclResult HcclTeamMgr::RegisterSubTeam(
@@ -83,11 +162,11 @@ HcclResult HcclTeamMgr::RegisterSubTeam(
     TeamEntry& entry = teamMap_[subTeam];
     entry.collComm = collComm;
     entry.worldTeam = worldTeam;
+    entry.protocol = worldIt->second.protocol; // subTeam 继承 worldTeam 的 protocol
     entry.syncMemPtr = syncMemPtr;
     entry.syncMemSize = syncMemSize;
     entry.syncMemHandle = nullptr;
     entry.syncMemTag.clear();
-    entry.windows.clear();
     entry.rankIds.assign(rankIds, rankIds + rankNum);
     return HCCL_SUCCESS;
 }
@@ -105,6 +184,22 @@ void HcclTeamMgr::UnregisterTeam(HcommTeamHandle team)
             return;
         }
         syncMemPtr = it->second.syncMemPtr;
+        // 若为 worldTeam 且带 protocol，清理预制索引（限定其所属通信域的内层 map）
+        if (it->second.worldTeam == nullptr && it->second.protocol != COMM_PROTOCOL_RESERVED) {
+            CollComm* collComm = it->second.collComm;
+            auto commIt = worldTeamIndex_.find(collComm);
+            if (commIt != worldTeamIndex_.end()) {
+                for (auto idxIt = commIt->second.begin(); idxIt != commIt->second.end(); ++idxIt) {
+                    if (idxIt->second == team) {
+                        commIt->second.erase(idxIt);
+                        break;
+                    }
+                }
+                if (commIt->second.empty()) {
+                    worldTeamIndex_.erase(commIt);
+                }
+            }
+        }
         teamMap_.erase(it);
     }
     if (syncMemPtr != nullptr) {
@@ -216,98 +311,6 @@ std::string HcclTeamMgr::GetTeamSyncMemTag(HcommTeamHandle team)
     return it->second.syncMemTag;
 }
 
-bool HcclTeamMgr::FindReusableWindow(HcommTeamHandle worldTeam, const CommMem& localMem, HcommWindowHandle& window)
-{
-    if (worldTeam == nullptr) {
-        return false;
-    }
-    std::unique_lock<std::shared_mutex> lock(mutex_);
-    auto it = teamMap_.find(worldTeam);
-    if (it == teamMap_.end()) {
-        return false;
-    }
-    // windows 按 registeredLocalMem.addr 升序
-    // upper_bound 找第一个 start > requestStart 的，反向遍历找包含请求区间的 window（请求是已注册 window 的子集）。
-    const uintptr_t requestStart = reinterpret_cast<uintptr_t>(localMem.addr);
-    const uintptr_t requestEnd = requestStart + localMem.size;
-    auto& windows = it->second.windows;
-    auto upper
-        = std::upper_bound(windows.begin(), windows.end(), requestStart, [](uintptr_t addr, const WindowInfo& win) {
-              return addr < reinterpret_cast<uintptr_t>(win.registeredLocalMem.addr);
-          });
-    for (auto wIt = upper; wIt != windows.begin();) {
-        --wIt;
-        if (wIt->handle == nullptr) {
-            continue;
-        }
-        const uintptr_t winStart = reinterpret_cast<uintptr_t>(wIt->registeredLocalMem.addr);
-        const uintptr_t winEnd = winStart + wIt->registeredLocalMem.size;
-        // 请求区间是已注册 window 的子集（含精确匹配）→ 复用
-        if (requestStart >= winStart && requestEnd <= winEnd) {
-            window = wIt->handle;
-            // 精确匹配（addr+size 完全相同）→ 已有记录，无需新增
-            if (requestStart == winStart && requestEnd == winEnd) {
-                return true;
-            }
-            // 子集包含但非精确匹配 → 复用 parent handle，为请求的 localMem 新增一条 WindowInfo，
-            // 使后续 BindWindowsAndSyncMem 的 self 槽填入请求的实际地址（而非 parent 的地址范围）。
-            WindowInfo info;
-            info.handle = window;
-            info.registeredLocalMem = localMem;
-            auto insertIt = std::upper_bound(
-                windows.begin(), windows.end(), requestStart, [](uintptr_t addr, const WindowInfo& win) {
-                    return addr < reinterpret_cast<uintptr_t>(win.registeredLocalMem.addr);
-                });
-            windows.insert(insertIt, std::move(info));
-            return true;
-        }
-    }
-    return false;
-}
-
-void HcclTeamMgr::AddWorldTeamWindow(
-    HcommTeamHandle worldTeam, HcommWindowHandle window, const CommMem& localMem, HcclMemHandle localMemHandle,
-    const std::string& localMemTag)
-{
-    if (worldTeam == nullptr || window == nullptr) {
-        HCCL_ERROR("[HcclTeamMgr][%s] worldTeam[%p] or window[%p] is invalid", __func__, worldTeam, window);
-        return;
-    }
-    std::unique_lock<std::shared_mutex> lock(mutex_);
-    auto it = teamMap_.find(worldTeam);
-    if (it == teamMap_.end()) {
-        HCCL_ERROR("[HcclTeamMgr][%s] worldTeam[%p] not registered", __func__, worldTeam);
-        return;
-    }
-    WindowInfo info;
-    info.handle = window;
-    info.registeredLocalMem = localMem;
-    info.localMemHandle = localMemHandle;
-    info.localMemTag = localMemTag;
-    // 按 registeredLocalMem.addr 升序插入，维护 windows 有序性，供 FindReusableWindow 二分查找
-    const uintptr_t newStart = reinterpret_cast<uintptr_t>(localMem.addr);
-    auto insertIt = std::upper_bound(
-        it->second.windows.begin(), it->second.windows.end(), newStart, [](uintptr_t addr, const WindowInfo& win) {
-            return addr < reinterpret_cast<uintptr_t>(win.registeredLocalMem.addr);
-        });
-    it->second.windows.insert(insertIt, std::move(info));
-}
-
-std::vector<WindowInfo> HcclTeamMgr::GetWorldTeamWindows(HcommTeamHandle worldTeam)
-{
-    std::vector<WindowInfo> result;
-    if (worldTeam == nullptr) {
-        return result;
-    }
-    std::shared_lock<std::shared_mutex> lock(mutex_);
-    auto it = teamMap_.find(worldTeam);
-    if (it == teamMap_.end()) {
-        return result;
-    }
-    result = it->second.windows;
-    return result;
-}
-
 std::vector<HcclMemHandle> HcclTeamMgr::CollectPendingMemHandles(HcommTeamHandle worldTeam, HcommTeamHandle team)
 {
     std::vector<HcclMemHandle> result;
@@ -319,42 +322,15 @@ std::vector<HcclMemHandle> HcclTeamMgr::CollectPendingMemHandles(HcommTeamHandle
     if (itTeam == teamMap_.end()) {
         return result;
     }
-    auto itWorldTeam = teamMap_.find(worldTeam);
-    if (itWorldTeam == teamMap_.end()) {
-        return result;
-    }
     // syncMemHandle：首次注册且未交换时收集
     if (!itTeam->second.syncMemExchanged && itTeam->second.syncMemHandle != nullptr) {
         result.push_back(itTeam->second.syncMemHandle);
         itTeam->second.syncMemExchanged = true;
     }
-    // window localMemHandle：未交换的收集并标记
-    for (auto& win : itWorldTeam->second.windows) {
-        if (!win.exchanged && win.localMemHandle != nullptr) {
-            result.push_back(win.localMemHandle);
-            win.exchanged = true;
-        }
-    }
+    // window localMemHandle 不再收集：window 远端内存交换统一由 HcclChannelAcquire 内部
+    // AppendSymmetricMemHandles 用 __hccl_sym_win__ tag 处理，AIN 侧无需重复注册。
+    (void)worldTeam; // worldTeam 保留用于未来扩展，当前不再收集 window memHandle
     return result;
-}
-
-void HcclTeamMgr::RemoveWorldTeamWindow(HcommTeamHandle worldTeam, HcommWindowHandle window)
-{
-    if (worldTeam == nullptr || window == nullptr) {
-        return;
-    }
-    std::unique_lock<std::shared_mutex> lock(mutex_);
-    auto it = teamMap_.find(worldTeam);
-    if (it == teamMap_.end()) {
-        return;
-    }
-    auto& wins = it->second.windows;
-    for (auto wIt = wins.begin(); wIt != wins.end(); ++wIt) {
-        if (wIt->handle == window) {
-            wins.erase(wIt);
-            return;
-        }
-    }
 }
 
 std::vector<HcommTeamHandle> HcclTeamMgr::GetSubTeams(HcommTeamHandle worldTeam)
@@ -367,6 +343,22 @@ std::vector<HcommTeamHandle> HcclTeamMgr::GetSubTeams(HcommTeamHandle worldTeam)
     // subTeam 的 worldTeam 字段指向其父 worldTeam；worldTeam 自身该字段为 nullptr。
     for (const auto& pair : teamMap_) {
         if (pair.second.worldTeam == worldTeam) {
+            result.push_back(pair.first);
+        }
+    }
+    return result;
+}
+
+std::vector<HcommTeamHandle> HcclTeamMgr::GetLinkedSubTeams(CollComm* collComm)
+{
+    std::vector<HcommTeamHandle> result;
+    if (collComm == nullptr) {
+        return result;
+    }
+    std::shared_lock<std::shared_mutex> lock(mutex_);
+    // subTeam（worldTeam != nullptr）建链即成功、存活即已建链；预制 worldTeam 不通信，排除
+    for (const auto& pair : teamMap_) {
+        if (pair.second.collComm == collComm && pair.second.worldTeam != nullptr) {
             result.push_back(pair.first);
         }
     }
@@ -395,27 +387,19 @@ std::vector<HcclTeamMgr::TeamCleanupInfo> HcclTeamMgr::CollectTeamCleanupInfo(Co
         TeamCleanupInfo info;
         info.handle = it->first;
         info.syncMemPtr = it->second.syncMemPtr;
-        // window 归 worldTeam 所有（entry.worldTeam==nullptr 表示自身是 worldTeam）
-        if (it->second.worldTeam == nullptr) {
-            for (const auto& win : it->second.windows) {
-                if (win.handle != nullptr) {
-                    info.windows.push_back(win.handle);
-                }
-            }
-        }
         cleanupInfos.push_back(std::move(info));
         it = teamMap_.erase(it);
     }
+    // 该通信域登记的两个索引一并按外层 key 清理（worldTeamIndex_ 内层条目随通信域整体失效）
+    worldTeamIndex_.erase(collComm);
+    layerRanksMap_.erase(collComm);
     return cleanupInfos;
 }
 
 void HcclTeamMgr::ExecuteTeamCleanup(const std::vector<TeamCleanupInfo>& cleanupInfos)
 {
-    // 锁外依次销毁：window（L3 devWindow/devMems）→ team（L3 device 资源）→ syncMem（L2 本地内存）
+    // 锁外依次销毁：team（L3 device 资源）→ syncMem（L2 本地内存）
     for (const auto& info : cleanupInfos) {
-        for (HcommWindowHandle win : info.windows) {
-            (void)HcommTeamWindowDeregister(info.handle, win);
-        }
         (void)HcommTeamDestroy(info.handle);
         if (info.syncMemPtr != nullptr) {
             (void)hrtFree(info.syncMemPtr);

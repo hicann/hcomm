@@ -10,6 +10,7 @@
 
 #include "aicpu_symmetric_memory.h"
 #include "symmetric_memory/symmetric_memory.h"
+#include "hcomm_team_entity_defs.h"
 
 #ifdef CCL_KERNEL_AICPU
 namespace hccl {
@@ -62,7 +63,9 @@ HcclResult HcclSymWinGetRemoteAddr(HcclCommSymWindow winHandle, size_t offset, u
 {
     CHK_PTR_NULL(winHandle);
     CHK_PTR_NULL(ptr);
-    SymmetricWindow* symWin = static_cast<SymmetricWindow*>(winHandle);
+    HcommWindow* hcommWin = static_cast<HcommWindow*>(winHandle);
+    SymmetricWindow* symWin = reinterpret_cast<SymmetricWindow*>(hcommWin->legacySymWindow);
+    CHK_PTR_NULL(symWin);
     if (symWin->mode != SymmetricMemoryMode::URMA) {
         HCCL_ERROR("[HcclSymWinGetRemoteAddr] only support URMA mode, winHandle[%p] is not URMA mode.", winHandle);
         *ptr = nullptr;

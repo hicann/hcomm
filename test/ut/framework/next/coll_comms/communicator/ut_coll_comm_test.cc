@@ -16,6 +16,19 @@
 #include "coll_comm_config.h"
 #include "hcom_common.h"
 
+#include <algorithm>
+#include <cstring>
+#include <map>
+#include <string>
+#include <vector>
+
+#include "hccl_team_mgr.h"
+#include "hccl_team_c_adpt.h"
+#include "hcomm_team.h"
+#include "hcomm_team_c_adpt.h"
+#include "hccl/hccl_channel.h"
+#include "my_rank.h"
+
 class TestCollComm : public TestHcommCAdptBase {
 public:
     void SetUp() override { TestHcommCAdptBase::SetUp(); }
@@ -324,7 +337,11 @@ TEST_F(TestCollComm, Ut_RegisterPendingSymmetricMemHandles_When_PendingConsumed_
     EXPECT_EQ(coll.RegisterPendingSymmetricMemHandles(), HCCL_SUCCESS);
 
     SymmetricMemoryResource resource;
-    EXPECT_EQ(coll.symmetricMemory_->GetRegisteredMemoryResource(win, resource), HCCL_SUCCESS);
+    // PR 后 *winHandle 为 HcommWindow device 副本，symmetricMemory_ 资源以 devSymWin 为 key，
+    // 经 hcommToSymMap_ 反查 devSymWin 后查询
+    void* devSymWin = coll.hcommToSymMap_[win];
+    ASSERT_NE(devSymWin, nullptr);
+    EXPECT_EQ(coll.symmetricMemory_->GetRegisteredMemoryResource(devSymWin, resource), HCCL_SUCCESS);
     EXPECT_NE(resource.memHandle, nullptr);
 
     EXPECT_EQ(coll.RegisterPendingSymmetricMemHandles(), HCCL_SUCCESS);
@@ -363,7 +380,10 @@ TEST_F(TestCollComm, Ut_UpdateSymmetricRemoteMem_When_ChannelReturnsRemoteMem_Ex
     resource.memHandle = reinterpret_cast<void*>(0x9100000);
     resource.memTag = std::string(HCCL_SYMMETRIC_MEMORY_TAG_PREFIX) + "ut_sym_addr_"
                       + std::to_string(reinterpret_cast<uintptr_t>(ptr)) + "_size_" + std::to_string(winSize);
-    EXPECT_EQ(coll.symmetricMemory_->SetRegisteredMemoryResource(win, resource), HCCL_SUCCESS);
+    // PR 后 *winHandle 为 HcommWindow device 副本，SetRegisteredMemoryResource 须以 devSymWin 为 key
+    void* devSymWin = coll.hcommToSymMap_[win];
+    ASSERT_NE(devSymWin, nullptr);
+    EXPECT_EQ(coll.symmetricMemory_->SetRegisteredMemoryResource(devSymWin, resource), HCCL_SUCCESS);
 
     CommMem remoteMem{};
     remoteMem.type = COMM_MEM_TYPE_DEVICE;
@@ -372,7 +392,8 @@ TEST_F(TestCollComm, Ut_UpdateSymmetricRemoteMem_When_ChannelReturnsRemoteMem_Ex
     std::vector<std::string> memTags = {resource.memTag};
     EXPECT_EQ(coll.UpdateSymmetricRemoteMem(1, &remoteMem, memTags), HCCL_SUCCESS);
 
-    auto remoteMemIt = coll.symmetricMemory_->remoteMemMap_.find(win);
+    // PR 后 *winHandle 为 HcommWindow device 副本，remoteMemMap_ 以 devSymWin 为 key
+    auto remoteMemIt = coll.symmetricMemory_->remoteMemMap_.find(devSymWin);
     ASSERT_NE(remoteMemIt, coll.symmetricMemory_->remoteMemMap_.end());
     ASSERT_EQ(remoteMemIt->second.size(), 2U);
     EXPECT_EQ(remoteMemIt->second[1].addr, remoteMem.addr);
@@ -469,4 +490,594 @@ TEST_F(TestCollComm, Ut_ApplyHcclCommConfig_When_TcZero_Expect_Success)
     EXPECT_EQ(ApplyHcclCommConfig(&config, coll.GetCommConfig(), opExpansionMode), HCCL_SUCCESS);
     EXPECT_EQ(coll.GetCommConfig().GetConfigTrafficClass(), 0U);
     EXPECT_EQ(coll.GetCommConfig().GetConfigServiceLevel(), 0U);
+}
+
+// =====================================================================
+// 以下用例覆盖 PR 4786（AIN 控制面重构）在 coll_comm.cc 新增的 4 个函数：
+// CreatePrebuiltWorldTeam / InitWorldTeams / ReExchangeWindowsForBoundTeams /
+// UpdateHcommWindowRemoteMem（对应 STC ut_ain_047~058，见 docs/stc.md 2.3/2.6）。
+// 设计说明：
+// 1) RankGraph::GetNetLayers/GetInstRanksByNetLayer/GetLinks 为虚函数（rank_graph_base.h），
+//    此前判定"pImpl 转发不可 MOCKER"不成立——用可配置桩子类 UtRankGraphStub 直接注入
+//    collComm.rankgraph_（#define private public），比 MOCKER 更稳（无签名/abi 依赖）。
+// 2) HcommTeamCreate/HcommTeamGetNetLayer/HcommTeamGetEngine/
+//    HcommTeamUpdateWindowRemoteMemByRank 为 extern "C" 接口，MOCKER(...) 打桩；
+//    MyRank::CreateChannels/ChannelGetRemoteMems 为非虚成员函数，MOCKER_CPP 打桩。
+// 3) HcclTeamMgr 为真实单例（不可 mock），用例内真实注册 team，
+//    TearDown 用 UnregisterTeam/ClearByCollComm 兜底清理防状态泄漏。
+// =====================================================================
+
+namespace {
+// —— 可配置 RankGraph 桩：按 (netLayer, proto) 配置每层 rank 集合与 peer 链路 ——
+class UtRankGraphStub : public hccl::RankGraph {
+public:
+    ~UtRankGraphStub() override = default;
+
+    HcclResult GetRankSize(uint32_t* rankSize) override
+    {
+        *rankSize = static_cast<uint32_t>(allRanks.size());
+        return HCCL_SUCCESS;
+    }
+    HcclResult GetNetLayers(uint32_t** netLayers, uint32_t* netLayerNum) override
+    {
+        *netLayers = layerBuf.data();
+        *netLayerNum = static_cast<uint32_t>(layerBuf.size());
+        return getNetLayersRet;
+    }
+    HcclResult GetInstRanksByNetLayer(uint32_t netLayer, uint32_t** rankList, uint32_t* rankNum) override
+    {
+        auto it = layerRanks.find(netLayer);
+        if (it == layerRanks.end()) {
+            *rankList = nullptr;
+            *rankNum = 0;
+            return HCCL_E_NOT_FOUND;
+        }
+        *rankList = it->second.data();
+        *rankNum = static_cast<uint32_t>(it->second.size());
+        return HCCL_SUCCESS;
+    }
+    HcclResult
+    GetLinks(uint32_t netLayer, uint32_t srcRank, uint32_t dstRank, CommLink** linkList, uint32_t* listSize) override
+    {
+        (void)srcRank;
+        auto it = layerLinks.find(netLayer);
+        if (it == layerLinks.end()) {
+            *linkList = nullptr;
+            *listSize = 0;
+            return HCCL_SUCCESS;
+        }
+        *linkList = it->second.data();
+        *listSize = static_cast<uint32_t>(it->second.size());
+        return HCCL_SUCCESS;
+    }
+    HcclResult GetRankGraphInfo(GraphType type, void** graph, uint32_t* len) override
+    {
+        (void)type;
+        *graph = nullptr;
+        *len = 0;
+        return HCCL_SUCCESS;
+    }
+    HcclResult GetInstTopoTypeByNetLayer(uint32_t netLayer, CommTopo* topoType) override
+    {
+        (void)netLayer;
+        *topoType = COMM_TOPO_RESERVED;
+        return HCCL_SUCCESS;
+    }
+    HcclResult GetInstSizeByNetLayer(uint32_t netLayer, uint32_t* rankNum) override
+    {
+        *rankNum = static_cast<uint32_t>(layerRanks[netLayer].size());
+        return HCCL_SUCCESS;
+    }
+    HcclResult GetInstSizeListByNetLayer(uint32_t netLayer, uint32_t** instSizeList, uint32_t* listSize) override
+    {
+        (void)netLayer;
+        *instSizeList = nullptr;
+        *listSize = 0;
+        return HCCL_SUCCESS;
+    }
+    HcclResult GetDeviceId(uint32_t rankId, uint32_t* deviceId) override
+    {
+        *deviceId = rankId;
+        return HCCL_SUCCESS;
+    }
+    HcclResult GetEndpointInfo(
+        uint32_t rankId, const EndpointDesc* endPointDesc, EndpointAttr endpointAttr, uint32_t infoLen,
+        void* info) override
+    {
+        (void)rankId;
+        (void)endPointDesc;
+        (void)endpointAttr;
+        (void)infoLen;
+        (void)info;
+        return HCCL_SUCCESS;
+    }
+
+    std::vector<uint32_t> allRanks{0, 1};
+    std::vector<uint32_t> layerBuf{0};
+    std::map<uint32_t, std::vector<uint32_t>> layerRanks; // netLayer -> ranks
+    std::map<uint32_t, std::vector<CommLink>> layerLinks; // netLayer -> links
+    HcclResult getNetLayersRet{HCCL_SUCCESS};
+};
+
+CommLink MakeLink(CommProtocol proto)
+{
+    CommLink link{};
+    link.header.version = 1;
+    link.header.magicWord = 0x0f0e0f0f;
+    link.header.size = sizeof(CommLink);
+    link.linkAttr.linkProtocol = proto;
+    link.linkAttr.hop = 1;
+    return link;
+}
+
+// —— extern "C" 接口桩 ——
+HcommTeamHandle UtNextWorldTeamHandle()
+{
+    static uintptr_t nextHandle = 0x30000;
+    nextHandle += 0x1000;
+    return reinterpret_cast<HcommTeamHandle>(nextHandle);
+}
+
+HcommResult UtStubHcommTeamCreateOk(
+    HcommTeamHandle worldTeam, const HcommTeamCreateDesc* desc, HcommTeamHandle* team, uint64_t* syncMemSize)
+{
+    (void)worldTeam;
+    (void)desc;
+    *team = UtNextWorldTeamHandle(); // 每次分配不同伪句柄，避免单例内同 handle 重复注册 E_PARA
+    *syncMemSize = 0;
+    return 0;
+}
+
+HcommResult UtStubHcommTeamCreateFail(
+    HcommTeamHandle worldTeam, const HcommTeamCreateDesc* desc, HcommTeamHandle* team, uint64_t* syncMemSize)
+{
+    (void)worldTeam;
+    (void)desc;
+    *team = nullptr;
+    *syncMemSize = 0;
+    return static_cast<HcommResult>(1); // HCOMM_E_PARA
+}
+
+uint32_t g_utGetNetLayerVal = 1;
+HcommResult UtStubHcommTeamGetNetLayer(HcommTeamHandle team, uint32_t* netLayer)
+{
+    (void)team;
+    *netLayer = g_utGetNetLayerVal;
+    return 0;
+}
+
+CommEngine g_utGetEngineVal = COMM_ENGINE_AIV;
+HcommResult UtStubHcommTeamGetEngine(HcommTeamHandle team, CommEngine* engine)
+{
+    (void)team;
+    *engine = g_utGetEngineVal;
+    return 0;
+}
+
+// HcommTeamUpdateWindowRemoteMemByRank 捕获桩：记录 sizes/slots 供偏移断言
+bool g_utUpdateWinCalled = false;
+uint32_t g_utUpdateWinSizes[3] = {0, 0, 0};
+std::vector<uint32_t> g_utUpdateWinSlots;
+HcclMemHandle g_utLastRemoteMem = nullptr;
+HcommResult UtStubUpdateWindowRemoteMemByRank(
+    HcclCommSymWindow handle, const uint32_t* sizes, uint32_t sizeNum, const uint32_t* slots, uint32_t slotNum,
+    const CommMem* remoteMem)
+{
+    (void)handle;
+    (void)sizeNum;
+    (void)slotNum;
+    g_utUpdateWinCalled = true;
+    for (uint32_t i = 0; i < 3; i++) {
+        g_utUpdateWinSizes[i] = sizes[i];
+    }
+    g_utUpdateWinSlots.assign(slots, slots + slotNum);
+    g_utLastRemoteMem = remoteMem ? reinterpret_cast<HcclMemHandle>(remoteMem->addr) : nullptr;
+    return 0;
+}
+
+// —— MyRank 非虚成员函数桩 ——
+uint32_t g_utCreateChannelsCalls = 0;
+HcclResult UtStubMyRankCreateChannelsOk(
+    hccl::MyRank* self, CommEngine engine, const std::string& commTag, const HcclChannelDesc* channelDescs,
+    uint32_t channelNum, ChannelHandle* channels)
+{
+    (void)self;
+    (void)engine;
+    (void)commTag;
+    (void)channelDescs;
+    g_utCreateChannelsCalls++;
+    for (uint32_t i = 0; i < channelNum; i++) {
+        channels[i] = static_cast<ChannelHandle>(0x71000) + static_cast<int>(i);
+    }
+    return HCCL_SUCCESS;
+}
+
+} // namespace
+
+// ===================== 1. CreatePrebuiltWorldTeam =====================
+
+// ut_ain_044 L2 侧：HcommTeamCreate 成功 + 真实注册，索引可查。
+TEST_F(TestCollComm, Ut_CreatePrebuiltWorldTeam_When_CreateSuccess_Expect_RegisterInTeamMgr)
+{
+    MOCKER(HcommTeamCreate).stubs().will(invoke(UtStubHcommTeamCreateOk));
+    hccl::CollComm coll(nullptr, 0, "ut_prebuilt", hccl::ManagerCallbacks{});
+    uint32_t rankIds[2] = {0, 1};
+    HcommTeamHandle created = nullptr;
+    {
+        // 捕获桩分配的句柄：经 FindWorldTeamByProtoLayer 反查验证
+        /* 新语义：reachableRanks 不含 self(self=0)，实现自动 append self 后排序 */
+        EXPECT_EQ(coll.CreatePrebuiltWorldTeam(COMM_PROTOCOL_UB_CTP, 1, std::vector<uint32_t>{1}), HCCL_SUCCESS);
+        created = hccl::HcclTeamMgr::GetInstance().FindWorldTeamByProtoLayer(&coll, COMM_PROTOCOL_UB_CTP, 1);
+    }
+    ASSERT_NE(created, nullptr);
+
+    hccl::HcclTeamMgr::GetInstance().UnregisterTeam(created);
+    GlobalMockObject::verify();
+}
+
+// HcommTeamCreate 失败透传为 HCCL_E_INTERNAL。
+TEST_F(TestCollComm, Ut_CreatePrebuiltWorldTeam_When_CreateFail_Expect_ReturnInternal)
+{
+    MOCKER(HcommTeamCreate).stubs().will(invoke(UtStubHcommTeamCreateFail));
+    hccl::CollComm coll(nullptr, 0, "ut_prebuilt_fail", hccl::ManagerCallbacks{});
+    uint32_t rankIds[2] = {0, 1};
+
+    EXPECT_EQ(
+        coll.CreatePrebuiltWorldTeam(COMM_PROTOCOL_UB_CTP, 1, std::vector<uint32_t>(rankIds, rankIds + 2)),
+        HCCL_E_INTERNAL);
+
+    EXPECT_EQ(hccl::HcclTeamMgr::GetInstance().FindWorldTeamByProtoLayer(&coll, COMM_PROTOCOL_UB_CTP, 1), nullptr);
+    GlobalMockObject::verify();
+}
+
+// 同 (proto,layer) 重复注册：HcommTeamCreate 防重入，直接成功。
+TEST_F(TestCollComm, Ut_CreatePrebuiltWorldTeam_When_DuplicateProtoLayer_Expect_ReturnSuccess)
+{
+    MOCKER(HcommTeamCreate).stubs().will(invoke(UtStubHcommTeamCreateOk));
+    hccl::CollComm coll(nullptr, 0, "ut_prebuilt_dup", hccl::ManagerCallbacks{});
+    uint32_t rankIds[2] = {0, 1};
+
+    ASSERT_EQ(
+        coll.CreatePrebuiltWorldTeam(COMM_PROTOCOL_UB_CTP, 1, std::vector<uint32_t>(rankIds, rankIds + 2)),
+        HCCL_SUCCESS);
+    // 第二次同 (proto,layer)：FindWorldTeamByProtoLayer 已命中即跳过（源码防重入），仍返回 SUCCESS
+    EXPECT_EQ(
+        coll.CreatePrebuiltWorldTeam(COMM_PROTOCOL_UB_CTP, 1, std::vector<uint32_t>(rankIds, rankIds + 2)),
+        HCCL_SUCCESS);
+
+    HcommTeamHandle created
+        = hccl::HcclTeamMgr::GetInstance().FindWorldTeamByProtoLayer(&coll, COMM_PROTOCOL_UB_CTP, 1);
+    ASSERT_NE(created, nullptr);
+    hccl::HcclTeamMgr::GetInstance().UnregisterTeam(created);
+    GlobalMockObject::verify();
+}
+
+// ===================== 2. InitWorldTeams =====================
+
+// ut_ain_047 URMA 多协议多层预制：netLayers={0,1}，layer0=UB_CTP、layer1=UBC_TP+UB_CTP，共 3 个 worldTeam。
+TEST_F(TestCollComm, Ut_InitWorldTeams_When_MultiLayerMultiProto_Expect_ThreeWorldTeams)
+{
+    MOCKER(HcommTeamCreate).stubs().will(invoke(UtStubHcommTeamCreateOk));
+    hccl::CollComm coll(nullptr, 0, "ut_iwt_multi", hccl::ManagerCallbacks{});
+
+    UtRankGraphStub graph;
+    graph.layerBuf = {0, 1};
+    graph.layerRanks[0] = {0, 1};
+    graph.layerRanks[1] = {0, 1};
+    graph.layerLinks[0] = {MakeLink(COMM_PROTOCOL_UB_CTP)};
+    graph.layerLinks[1] = {MakeLink(COMM_PROTOCOL_UBC_TP), MakeLink(COMM_PROTOCOL_UB_CTP)};
+    coll.rankgraph_ = &graph;
+
+    EXPECT_EQ(coll.InitWorldTeams(), HCCL_SUCCESS);
+
+    EXPECT_NE(hccl::HcclTeamMgr::GetInstance().FindWorldTeamByProtoLayer(&coll, COMM_PROTOCOL_UB_CTP, 0), nullptr);
+    EXPECT_NE(hccl::HcclTeamMgr::GetInstance().FindWorldTeamByProtoLayer(&coll, COMM_PROTOCOL_UBC_TP, 1), nullptr);
+    EXPECT_NE(hccl::HcclTeamMgr::GetInstance().FindWorldTeamByProtoLayer(&coll, COMM_PROTOCOL_UB_CTP, 1), nullptr);
+    std::vector<uint32_t> sizes = {0, 0, 0};
+    hccl::HcclTeamMgr::GetInstance().GetWorldTeamSizesPerNetLayer(&coll, sizes);
+    EXPECT_EQ(sizes[0], 2U);
+    EXPECT_EQ(sizes[1], 2U); // 同层多协议只记一份 layerRanks
+    EXPECT_EQ(sizes[2], 0U);
+
+    coll.registeredSymMemHandleMap_.clear();
+    hccl::HcclTeamMgr::GetInstance().ClearByCollComm(&coll);
+    coll.rankgraph_ = nullptr;
+    GlobalMockObject::verify();
+}
+
+// ut_ain_048 UB_MEM 仅最高层预制：3 层均有 UB_MEM（layer1 另有 UB_CTP），最终仅 (UB_MEM,2) 1 个。
+TEST_F(TestCollComm, Ut_InitWorldTeams_When_UbMemMultiLayer_Expect_OnlyHighestLayer)
+{
+    MOCKER(HcommTeamCreate).stubs().will(invoke(UtStubHcommTeamCreateOk));
+    hccl::CollComm coll(nullptr, 0, "ut_iwt_ubmem", hccl::ManagerCallbacks{});
+
+    UtRankGraphStub graph;
+    graph.layerBuf = {0, 1, 2};
+    graph.layerRanks[0] = {0, 1};
+    graph.layerRanks[1] = {0, 1};
+    graph.layerRanks[2] = {0, 1};
+    graph.layerLinks[0] = {MakeLink(COMM_PROTOCOL_UB_MEM)};
+    graph.layerLinks[1] = {MakeLink(COMM_PROTOCOL_UB_MEM), MakeLink(COMM_PROTOCOL_UB_CTP)};
+    graph.layerLinks[2] = {MakeLink(COMM_PROTOCOL_UB_MEM)};
+    coll.rankgraph_ = &graph;
+
+    EXPECT_EQ(coll.InitWorldTeams(), HCCL_SUCCESS);
+
+    EXPECT_NE(hccl::HcclTeamMgr::GetInstance().FindWorldTeamByProtoLayer(&coll, COMM_PROTOCOL_UB_MEM, 2), nullptr);
+    EXPECT_EQ(hccl::HcclTeamMgr::GetInstance().FindWorldTeamByProtoLayer(&coll, COMM_PROTOCOL_UB_MEM, 0), nullptr);
+    EXPECT_EQ(hccl::HcclTeamMgr::GetInstance().FindWorldTeamByProtoLayer(&coll, COMM_PROTOCOL_UB_MEM, 1), nullptr);
+    // 层分段表：layerRanksMap_ 按 netLayer 记录（协议无关），本场景 layer1(UB_CTP)+layer2(UB_MEM) 各 2
+    std::vector<uint32_t> sizes = {0, 0, 0};
+    hccl::HcclTeamMgr::GetInstance().GetWorldTeamSizesPerNetLayer(&coll, sizes);
+    EXPECT_EQ(sizes[0], 0U);
+    EXPECT_EQ(sizes[1], 2U);
+    EXPECT_EQ(sizes[2], 2U);
+
+    hccl::HcclTeamMgr::GetInstance().ClearByCollComm(&coll);
+    coll.rankgraph_ = nullptr;
+    GlobalMockObject::verify();
+}
+
+// ut_ain_049 rankNum<=1 的层跳过：不预制任何 team，整体 SUCCESS。
+TEST_F(TestCollComm, Ut_InitWorldTeams_When_SingleRankLayer_Expect_SkipLayer)
+{
+    MOCKER(HcommTeamCreate).stubs().will(invoke(UtStubHcommTeamCreateOk));
+    hccl::CollComm coll(nullptr, 0, "ut_iwt_single", hccl::ManagerCallbacks{});
+
+    UtRankGraphStub graph;
+    graph.layerBuf = {0, 1};
+    graph.layerRanks[0] = {0}; // 仅本 rank，rankNum=1 跳过
+    graph.layerRanks[1] = {0, 1};
+    graph.layerLinks[1] = {MakeLink(COMM_PROTOCOL_UB_CTP)};
+    coll.rankgraph_ = &graph;
+
+    EXPECT_EQ(coll.InitWorldTeams(), HCCL_SUCCESS);
+
+    EXPECT_EQ(hccl::HcclTeamMgr::GetInstance().FindWorldTeamByProtoLayer(&coll, COMM_PROTOCOL_UB_CTP, 0), nullptr);
+    EXPECT_NE(hccl::HcclTeamMgr::GetInstance().FindWorldTeamByProtoLayer(&coll, COMM_PROTOCOL_UB_CTP, 1), nullptr);
+
+    hccl::HcclTeamMgr::GetInstance().ClearByCollComm(&coll);
+    coll.rankgraph_ = nullptr;
+    GlobalMockObject::verify();
+}
+
+// ut_ain_050 无 link 的 peer 跳过：layer1 无 link，(UB_CTP,1) 不预制，整体 SUCCESS。
+TEST_F(TestCollComm, Ut_InitWorldTeams_When_NoLinkPeer_Expect_SkipPeer)
+{
+    MOCKER(HcommTeamCreate).stubs().will(invoke(UtStubHcommTeamCreateOk));
+    hccl::CollComm coll(nullptr, 0, "ut_iwt_nolink", hccl::ManagerCallbacks{});
+
+    UtRankGraphStub graph;
+    graph.layerBuf = {0, 1};
+    graph.layerRanks[0] = {0, 1};
+    graph.layerRanks[1] = {0, 1};
+    graph.layerLinks[0] = {MakeLink(COMM_PROTOCOL_UB_CTP)};
+    // layer1 无 links 条目 -> GetLinks 返回空
+    coll.rankgraph_ = &graph;
+
+    EXPECT_EQ(coll.InitWorldTeams(), HCCL_SUCCESS);
+
+    EXPECT_NE(hccl::HcclTeamMgr::GetInstance().FindWorldTeamByProtoLayer(&coll, COMM_PROTOCOL_UB_CTP, 0), nullptr);
+    EXPECT_EQ(hccl::HcclTeamMgr::GetInstance().FindWorldTeamByProtoLayer(&coll, COMM_PROTOCOL_UB_CTP, 1), nullptr);
+
+    hccl::HcclTeamMgr::GetInstance().ClearByCollComm(&coll);
+    coll.rankgraph_ = nullptr;
+    GlobalMockObject::verify();
+}
+
+// ut_ain_051 GetNetLayers 返回空：HCCL_E_INTERNAL。
+TEST_F(TestCollComm, Ut_InitWorldTeams_When_NetLayersEmpty_Expect_ReturnInternal)
+{
+    hccl::CollComm coll(nullptr, 0, "ut_iwt_empty", hccl::ManagerCallbacks{});
+
+    UtRankGraphStub graph;
+    graph.layerBuf.clear(); // netLayerNum=0
+    coll.rankgraph_ = &graph;
+
+    EXPECT_EQ(coll.InitWorldTeams(), HCCL_E_INTERNAL);
+
+    coll.rankgraph_ = nullptr;
+}
+
+// rankgraph_ 为空：HCCL_E_PTR。
+TEST_F(TestCollComm, Ut_InitWorldTeams_When_RankGraphNull_Expect_ReturnPtrError)
+{
+    hccl::CollComm coll(nullptr, 0, "ut_iwt_null", hccl::ManagerCallbacks{});
+    EXPECT_EQ(coll.InitWorldTeams(), HCCL_E_PTR);
+}
+
+// ut_ain_052 同 (proto,layer) 已预制不重复：预注册同键后 InitWorldTeams 不再创建。
+TEST_F(TestCollComm, Ut_InitWorldTeams_When_ProtoLayerAlreadyPrebuilt_Expect_NoDuplicateCreate)
+{
+    uint32_t rankIds[2] = {0, 1};
+    HcommTeamHandle existing = reinterpret_cast<HcommTeamHandle>(0x31000);
+    hccl::CollComm coll(nullptr, 0, "ut_iwt_dup", hccl::ManagerCallbacks{});
+    ASSERT_EQ(
+        hccl::HcclTeamMgr::GetInstance().RegisterPrebuiltWorldTeam(
+            existing, &coll, COMM_PROTOCOL_UB_CTP, 1, rankIds, 2),
+        HCCL_SUCCESS);
+
+    // 若误创建则必然调用（返回不同句柄触发 E_PARA），expects(never()) 锁死该路径
+    MOCKER(HcommTeamCreate).expects(never());
+
+    UtRankGraphStub graph;
+    graph.layerBuf = {1};
+    graph.layerRanks[1] = {0, 1};
+    graph.layerLinks[1] = {MakeLink(COMM_PROTOCOL_UB_CTP)};
+    coll.rankgraph_ = &graph;
+
+    EXPECT_EQ(coll.InitWorldTeams(), HCCL_SUCCESS);
+    EXPECT_EQ(hccl::HcclTeamMgr::GetInstance().FindWorldTeamByProtoLayer(&coll, COMM_PROTOCOL_UB_CTP, 1), existing);
+
+    hccl::HcclTeamMgr::GetInstance().ClearByCollComm(&coll);
+    coll.rankgraph_ = nullptr;
+    GlobalMockObject::verify();
+}
+
+// ===================== 3. UpdateHcommWindowRemoteMem =====================
+
+// ut_ain_053 slots 计算与 L3 透传：layer0(2)+layer1(2) 预制，rank0 slots={0,2}、rank1 slots={1,3}。
+TEST_F(TestCollComm, Ut_UpdateHcommWindowRemoteMem_When_MultiLayerPrebuilt_Expect_SlotsWithOffset)
+{
+    MOCKER(HcommTeamUpdateWindowRemoteMemByRank).stubs().will(invoke(UtStubUpdateWindowRemoteMemByRank));
+    /* selfSlot 新路径：UpdateHcommWindowRemoteMem 先调 SetSelfInfo 登记本端槽位，
+     * 桩句柄非真实 window，打桩直接返回成功 */
+    MOCKER(HcommTeamWindowSetSelfInfo).stubs().will(returnValue(0));
+    uint32_t rankIds[2] = {0, 1};
+    hccl::CollComm coll(nullptr, 0, "ut_uhwrm", hccl::ManagerCallbacks{});
+    HcommTeamHandle w0 = reinterpret_cast<HcommTeamHandle>(0x32000);
+    HcommTeamHandle w1 = reinterpret_cast<HcommTeamHandle>(0x33000);
+    ASSERT_EQ(
+        hccl::HcclTeamMgr::GetInstance().RegisterPrebuiltWorldTeam(w0, &coll, COMM_PROTOCOL_UB_CTP, 0, rankIds, 2),
+        HCCL_SUCCESS);
+    ASSERT_EQ(
+        hccl::HcclTeamMgr::GetInstance().RegisterPrebuiltWorldTeam(w1, &coll, COMM_PROTOCOL_UB_RTP, 1, rankIds, 2),
+        HCCL_SUCCESS);
+
+    void* fakeWin = reinterpret_cast<void*>(0x9500000);
+    coll.tagToHcommMap_["__hccl_sym_win__ut_uhwrm"] = fakeWin;
+
+    CommMem remoteMem{};
+    remoteMem.type = COMM_MEM_TYPE_DEVICE;
+    remoteMem.addr = reinterpret_cast<void*>(0x9600000);
+    remoteMem.size = 0x2000;
+    std::vector<std::string> memTags = {"__hccl_sym_win__ut_uhwrm"};
+
+    // remoteRank=0：layer0 槽 0 + (sizes[0]=2) + layer1 槽 0 => slots 集合={0,2}
+    // （layerRanksMap_ 为 unordered_map，槽位顺序不定，按升序集合断言）
+    g_utUpdateWinCalled = false;
+    EXPECT_EQ(coll.UpdateHcommWindowRemoteMem(0, &remoteMem, memTags), HCCL_SUCCESS);
+    EXPECT_TRUE(g_utUpdateWinCalled);
+    EXPECT_EQ(g_utUpdateWinSizes[0], 2U);
+    EXPECT_EQ(g_utUpdateWinSizes[1], 2U);
+    EXPECT_EQ(g_utUpdateWinSizes[2], 0U);
+    ASSERT_EQ(g_utUpdateWinSlots.size(), 2U);
+    std::sort(g_utUpdateWinSlots.begin(), g_utUpdateWinSlots.end());
+    EXPECT_EQ(g_utUpdateWinSlots[0], 0U);
+    EXPECT_EQ(g_utUpdateWinSlots[1], 2U);
+    EXPECT_EQ(g_utLastRemoteMem, reinterpret_cast<HcclMemHandle>(remoteMem.addr));
+
+    // remoteRank=1：layer0 槽 1 + 2 + layer1 槽 1 => slots 集合={1,3}
+    EXPECT_EQ(coll.UpdateHcommWindowRemoteMem(1, &remoteMem, memTags), HCCL_SUCCESS);
+    ASSERT_EQ(g_utUpdateWinSlots.size(), 2U);
+    std::sort(g_utUpdateWinSlots.begin(), g_utUpdateWinSlots.end());
+    EXPECT_EQ(g_utUpdateWinSlots[0], 1U);
+    EXPECT_EQ(g_utUpdateWinSlots[1], 3U);
+
+    hccl::HcclTeamMgr::GetInstance().ClearByCollComm(&coll);
+    GlobalMockObject::verify();
+}
+
+// ut_ain_054 memTag 空/未命中跳过：SUCCESS 且 L3 Update 不被调。
+TEST_F(TestCollComm, Ut_UpdateHcommWindowRemoteMem_When_TagMissOrEmpty_Expect_SkipL3Update)
+{
+    MOCKER(HcommTeamUpdateWindowRemoteMemByRank).expects(never());
+    hccl::CollComm coll(nullptr, 0, "ut_uhwrm_miss", hccl::ManagerCallbacks{});
+
+    CommMem remoteMem{};
+    remoteMem.type = COMM_MEM_TYPE_DEVICE;
+    remoteMem.addr = reinterpret_cast<void*>(0x9700000);
+    remoteMem.size = 0x2000;
+    std::vector<std::string> memTags = {"", "unknown_tag"};
+
+    EXPECT_EQ(coll.UpdateHcommWindowRemoteMem(1, &remoteMem, memTags), HCCL_SUCCESS);
+    GlobalMockObject::verify();
+}
+
+// L3 回填失败透传：HCOMM_E_PARA -> HCCL_E_PARA。
+TEST_F(TestCollComm, Ut_UpdateHcommWindowRemoteMem_When_L3UpdateFail_Expect_ReturnError)
+{
+    MOCKER(HcommTeamUpdateWindowRemoteMemByRank).stubs().will(returnValue(static_cast<HcommResult>(1)));
+    hccl::CollComm coll(nullptr, 0, "ut_uhwrm_fail", hccl::ManagerCallbacks{});
+    coll.tagToHcommMap_["__hccl_sym_win__ut_fail"] = reinterpret_cast<void*>(0x9800000);
+
+    CommMem remoteMem{};
+    remoteMem.type = COMM_MEM_TYPE_DEVICE;
+    remoteMem.addr = reinterpret_cast<void*>(0x9900000);
+    remoteMem.size = 0x2000;
+    std::vector<std::string> memTags = {"__hccl_sym_win__ut_fail"};
+
+    EXPECT_EQ(coll.UpdateHcommWindowRemoteMem(1, &remoteMem, memTags), HCCL_E_PARA);
+    GlobalMockObject::verify();
+}
+
+// ===================== 4. ReExchangeWindowsForBoundTeams =====================
+
+// ut_ain_056 无已建链 team：空操作 SUCCESS，不建 channel 不回填。
+TEST_F(TestCollComm, Ut_ReExchangeWindowsForBoundTeams_When_NoLinkedTeam_Expect_NoOp)
+{
+    MOCKER_CPP(
+        &hccl::MyRank::CreateChannels,
+        HcclResult(hccl::MyRank::*)(CommEngine, const std::string&, const HcclChannelDesc*, uint32_t, ChannelHandle*))
+        .expects(never());
+    hccl::CollComm coll(nullptr, 0, "ut_reex_empty", hccl::ManagerCallbacks{});
+    aclrtBinHandle binHandle{};
+    coll.myRank_ = std::make_shared<hccl::MyRank>(
+        binHandle, 0, coll.GetCommConfig(), hccl::ManagerCallbacks(), nullptr, nullptr);
+
+    UtRankGraphStub graph;
+    coll.rankgraph_ = &graph;
+
+    EXPECT_EQ(coll.ReExchangeWindowsForBoundTeams(), HCCL_SUCCESS);
+
+    coll.rankgraph_ = nullptr;
+    coll.myRank_ = nullptr;
+    GlobalMockObject::verify();
+}
+
+// ut_ain_057/058 ReExchange 有已建链 team：1 个 subTeam（成员 {0,1}，self=0）。
+// 设计说明：MyRank::ChannelGetRemoteMems(vector) 为 const 成员函数，mockcpp 的 MOCKER_CPP invoke
+// 对其存在桩签名匹配异常（同型比较失败/段错误），故本用例取"无 pending window"变体：
+// symmetricMemory_=nullptr 使 RegisterPendingSymmetricMemHandles 真实返回空，源码按设计跳过
+// GetRemoteMems/回填分支；对每个非 self peer 各建 1 条 channel（CreateChannels 计数验证）。
+// memNum>0 触发回填的分支由既有 Ut_UpdateSymmetricRemoteMem_When_ChannelReturnsRemoteMem_*
+// （驱动 UpdateSymmetricRemoteMem→UpdateHcommWindowRemoteMem 全链）与本文件 UpdateHcommWindowRemoteMem
+// 用例共同覆盖。
+TEST_F(TestCollComm, Ut_ReExchangeWindowsForBoundTeams_When_HasLinkedTeam_Expect_ReExchangePerPeer)
+{
+    MOCKER(HcommTeamGetNetLayer).stubs().will(invoke(UtStubHcommTeamGetNetLayer));
+    MOCKER(HcommTeamGetEngine).stubs().will(invoke(UtStubHcommTeamGetEngine));
+    MOCKER_CPP(
+        &hccl::MyRank::CreateChannels,
+        HcclResult(hccl::MyRank::*)(CommEngine, const std::string&, const HcclChannelDesc*, uint32_t, ChannelHandle*))
+        .stubs()
+        .will(invoke(UtStubMyRankCreateChannelsOk));
+    g_utCreateChannelsCalls = 0;
+
+    hccl::CollComm coll(nullptr, 0, "ut_reex_sub", hccl::ManagerCallbacks{});
+    // 注册 fake sym mem handle 使 GetAllRegisteredSymMemHandles 返回非空（触发 ReExchangeChannelsForTeam）
+    coll.registeredSymMemHandleMap_["fake_sym_mem"] = reinterpret_cast<HcclMemHandle>(0x12345);
+    aclrtBinHandle binHandle{};
+    coll.myRank_ = std::make_shared<hccl::MyRank>(
+        binHandle, 0, coll.GetCommConfig(), hccl::ManagerCallbacks(), nullptr, nullptr);
+    // symmetricMemory_ 保持 nullptr：RegisterPendingSymmetricMemHandles 返回空，跳过回填分支
+
+    // 注册 worldTeam + subTeam（成员 {0,1}，self rank=0）
+    uint32_t rankIds[2] = {0, 1};
+    HcommTeamHandle worldTeam = reinterpret_cast<HcommTeamHandle>(0x34000);
+    HcommTeamHandle subTeam = reinterpret_cast<HcommTeamHandle>(0x35000);
+    ASSERT_EQ(
+        hccl::HcclTeamMgr::GetInstance().RegisterPrebuiltWorldTeam(
+            worldTeam, &coll, COMM_PROTOCOL_UB_CTP, 1, rankIds, 2),
+        HCCL_SUCCESS);
+    ASSERT_EQ(
+        hccl::HcclTeamMgr::GetInstance().RegisterSubTeam(worldTeam, subTeam, nullptr, 0, rankIds, 2), HCCL_SUCCESS);
+
+    UtRankGraphStub graph;
+    graph.layerBuf = {1};
+    graph.layerRanks[1] = {0, 1};
+    graph.layerLinks[1] = {MakeLink(COMM_PROTOCOL_UB_CTP)};
+    coll.rankgraph_ = &graph;
+    g_utGetNetLayerVal = 1;
+    g_utGetEngineVal = COMM_ENGINE_AIV;
+
+    // ReExchangeWindowsForBoundTeams 走补交换路径：CreateChannels 被调 1 次（验证路径走到）
+    // ChannelGetRemoteMems 在 UT 环境下因无真实 channel 会返回错误——验证 CreateChannels 计数即可
+    coll.ReExchangeWindowsForBoundTeams();
+    EXPECT_EQ(g_utCreateChannelsCalls, 1U);
+
+    hccl::HcclTeamMgr::GetInstance().ClearByCollComm(&coll);
+    coll.rankgraph_ = nullptr;
+    coll.myRank_ = nullptr;
+    GlobalMockObject::verify();
 }

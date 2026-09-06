@@ -47,11 +47,6 @@ HcclResult HcclCommMemReg(HcclComm comm, const char* memTag, const CommMem* mem,
         HCCL_ERROR(
             "[HcclCommMemReg]memTag[%s] uses reserved team syncmem prefix[%s]", memTag, HCCL_TEAM_SYNCMEM_TAG_PREFIX),
         HCCL_E_PARA);
-    CHK_PRT_RET(
-        memTagStr.compare(0, strlen(HCCL_TEAM_USERMEM_TAG_PREFIX), HCCL_TEAM_USERMEM_TAG_PREFIX) == 0,
-        HCCL_ERROR(
-            "[HcclCommMemReg]memTag[%s] uses reserved team usermem prefix[%s]", memTag, HCCL_TEAM_USERMEM_TAG_PREFIX),
-        HCCL_E_PARA);
     CHK_PRT_RET(mem == nullptr, HCCL_ERROR("[HcclCommMemReg]mem is null"), HCCL_E_PTR);
     CHK_PRT_RET(memHandle == nullptr, HCCL_ERROR("[HcclCommMemReg]memHandle is null"), HCCL_E_PTR);
     CHK_PRT_RET(

@@ -31,6 +31,8 @@ public:
     void SetQueueIndexDeviceMem(void* sqPiMem, void* sqCiMem, void* cqPiMem, void* cqCiMem, size_t memSize);
     void GetHostChannelEntity(ChannelEntity* channelEntitiesHost);
     HcclResult GetRemoteMems(uint32_t* memNum, CommMem** remoteMem, char*** memInfos);
+    HcclResult CheckSocketStatus(std::string socketOperator) const;
+    HcclResult UpdateMemInfo(HcommMemHandle* memHandles, uint32_t memHandleNum);
 
 private:
     MAKE_ENUM(UrmaStatus, INIT, SOCKET_OK, SEND_DATA, RECV_DATA, SEND_FIN, RECV_FIN, PROCESS_DATA, CONN_OK)

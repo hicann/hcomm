@@ -16,15 +16,11 @@
 #include "hcomm_res_defs.h"
 #include "hcomm_team_defs.h"
 #include "hcomm_result_defs.h"
+#include "hccl_types.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif // __cplusplus
-
-typedef enum {
-    HCOMM_TEAM_WINDOW_FLAG_INVALID = -1,
-    HCOMM_TEAM_WINDOW_FLAG_SYMMETRIC = 0, // 当前仅支持配置为0
-} HcommTeamWindowFlag;
 
 typedef struct {
     CommAbiHeader header;
@@ -34,8 +30,9 @@ typedef struct {
         worldMemberIds; /*worldMemberIds在创建worldteam的时候是nullptr，创建subteam的时候是subteam的成员在worldteam中的memberId数组，长度是memberNum*/
     uint32_t netLayer;  /* 用户希望使用的网络层，0表示默认选择 */
     CommProtocol protocol; /* 用户希望使用的通信协议，-1表示保留协议类型, 1个team仅支持一个协议 */
+    CommEngine engine; /* 通信引擎类型，建链时使用并持久化到 HcommTeam.engine */
     HcommTeamSyncMemRequirement requirement;
-    uint32_t reserved[6];
+    uint32_t reserved[5];
 } HcommTeamCreateDesc;
 
 typedef struct {
@@ -45,13 +42,6 @@ typedef struct {
     uint32_t memberNum;
     uint32_t reserved[8];
 } HcommTeamBindChannelsDesc;
-
-typedef struct {
-    CommAbiHeader header;
-    CommMem* mems; // 下标是成员id，长度是memberNum，如果是selfMemberId，则是本地内存，否则是远端内存
-    uint32_t memberNum;
-    uint32_t reserved[5];
-} HcommTeamWindowDesc;
 
 typedef struct {
     CommAbiHeader header;
@@ -65,9 +55,6 @@ static const uint32_t HCOMM_TEAM_CREATE_DESC_VERSION = 1U;
 
 static const uint32_t HCOMM_TEAM_BIND_CHANNELS_DESC_MAGIC_WORD = 0x0f0f0f11U;
 static const uint32_t HCOMM_TEAM_BIND_CHANNELS_DESC_VERSION = 1U;
-
-static const uint32_t HCOMM_TEAM_WINDOW_DESC_MAGIC_WORD = 0x0f0f0f12U;
-static const uint32_t HCOMM_TEAM_WINDOW_DESC_VERSION = 1U;
 
 static const uint32_t HCOMM_TEAM_BIND_SYNCMEM_DESC_MAGIC_WORD = 0x0f0f0f13U;
 static const uint32_t HCOMM_TEAM_BIND_SYNCMEM_DESC_VERSION = 1U;
@@ -90,6 +77,7 @@ static inline HcommResult HcommTeamCreateDescInit(HcommTeamCreateDesc* desc)
     desc->worldMemberIds = nullptr;
     desc->netLayer = 0;
     desc->protocol = COMM_PROTOCOL_RESERVED;
+    desc->engine = COMM_ENGINE_RESERVED;
     desc->requirement.signalCount = 0;
     desc->requirement.counterCount = 0;
     desc->requirement.barrierCount = 0;
@@ -129,29 +117,6 @@ static inline HcommResult HcommTeamBindChannelsDescInit(HcommTeamBindChannelsDes
     return 0;
 }
 
-static inline HcommResult HcommTeamWindowDescInit(HcommTeamWindowDesc* desc)
-{
-    const HcommResult hcommEPointer = HCOMM_E_PTR;
-
-    if (desc == nullptr) {
-        return hcommEPointer;
-    }
-
-    (void)memset_s(desc, sizeof(HcommTeamWindowDesc), 0xFF, sizeof(HcommTeamWindowDesc));
-    desc->header.version = HCOMM_TEAM_WINDOW_DESC_VERSION;
-    desc->header.magicWord = HCOMM_TEAM_WINDOW_DESC_MAGIC_WORD;
-    desc->header.size = sizeof(HcommTeamWindowDesc);
-    desc->header.reserved = 0;
-    desc->mems = nullptr;
-    desc->memberNum = 0;
-    const uint32_t reservedCount = sizeof(desc->reserved) / sizeof(desc->reserved[0]);
-    for (uint32_t i = 0; i < reservedCount; ++i) {
-        desc->reserved[i] = 0;
-    }
-
-    return 0;
-}
-
 static inline HcommResult HcommTeamBindSyncMemDescInit(HcommTeamBindSyncMemDesc* desc)
 {
     const HcommResult hcommEPointer = HCOMM_E_PTR;
@@ -181,15 +146,18 @@ HcommResult HcommTeamCreate(
 HcommResult HcommTeamDestroy(HcommTeamHandle team);
 
 /* ===== team 窗口操作 ===== */
-HcommResult HcommTeamWindowRegister(
-    HcommTeamHandle worldTeam, const HcommTeamWindowDesc* desc, HcommWindowHandle* handle, HcommTeamWindowFlag flag);
-HcommResult HcommTeamWindowDeregister(HcommTeamHandle worldTeam, HcommWindowHandle handle);
+HcommResult HcommTeamWindowRegister(void* devLegacySymWin, HcclCommSymWindow* handle);
+HcommResult HcommTeamWindowDeregister(HcclCommSymWindow handle);
+/* 登记本端窗口注册信息（用户 VA/size + 本端层槽位），UpdateWindowRemoteMemByRank 据此回填本端槽位 */
+HcommResult HcommTeamWindowSetSelfInfo(
+    HcclCommSymWindow handle, void* selfVa, uint64_t selfSize, const uint32_t* selfSlots, uint32_t selfSlotNum);
 
 /* ===== team 资源绑定 ===== */
 HcommResult HcommTeamBindChannels(HcommTeamHandle team, const HcommTeamBindChannelsDesc* desc);
 HcommResult HcommTeamBindRemoteSyncMem(HcommTeamHandle team, const HcommTeamBindSyncMemDesc* remoteDesc);
-HcommResult
-HcommTeamWindowBindRemoteMems(HcommTeamHandle team, HcommWindowHandle handle, const HcommTeamWindowDesc* remoteDesc);
+HcommResult HcommTeamUpdateWindowRemoteMemByRank(
+    HcclCommSymWindow handle, const uint32_t* sizes, uint32_t sizeNum, const uint32_t* slots, uint32_t slotNum,
+    const CommMem* remoteMem);
 
 #ifdef __cplusplus
 }

@@ -35,6 +35,8 @@
 #include "group_schedule_mgr.h"
 #include "include/hccl_communicator.h"
 #include "hccl/hccl_res.h"
+#include "symmetric_memory/symmetric_memory.h"
+#include "hcomm_team_entity_defs.h"
 namespace Hccl {
 class DevBuffer;
 } // namespace Hccl
@@ -132,6 +134,8 @@ public:
         const std::vector<std::string>& remoteMemTags, std::vector<HcclMemHandle>& memHandles) const;
     HcclResult
     UpdateSymmetricRemoteMem(uint32_t remoteRank, const CommMem* remoteMems, const std::vector<std::string>& memTags);
+    HcclResult
+    UpdateHcommWindowRemoteMem(uint32_t remoteRank, const CommMem* remoteMems, const std::vector<std::string>& memTags);
     HcclResult GetHcclBinHandle(aclrtBinHandle& binHcclHandle);
     std::shared_ptr<class GroupScheduleMgr> groupScheduleMgr{nullptr}; // for group
 
@@ -144,6 +148,22 @@ private:
     HcclResult InitSymmetricMemory();
     HcclResult RegisterSymmetricMemoryResource(void* ptr, size_t size, SymmetricMemoryResource& resource);
     void UnregisterSymmetricMemoryResource(const SymmetricMemoryResource& resource);
+
+    // 通信域初始化时按protocol+netLayer创建预制worldTeam（仅 A5 fullMode + URMA 场景）
+    HcclResult InitWorldTeams();
+    // 单层可达rank收集：遍历本rank到该层所有rank的全部link，按协议分别记录（同协议多条link只记一次）
+    void CollectLayerReachableRanks(
+        uint32_t netLayer, const uint32_t* ranks, uint32_t rankNum,
+        std::unordered_map<CommProtocol, std::vector<uint32_t>>& protoReachableRanks);
+    // 创建并注册预制worldTeam（worldTeam不通信，不创建syncMem）
+    HcclResult
+    CreatePrebuiltWorldTeam(CommProtocol protocol, uint32_t netLayer, const std::vector<uint32_t>& reachableRanks);
+    // window后注册补交换：对该通信域下所有已建链Team重新调HcclChannelAcquire，把新window的memHandle
+    // 带入交换并回填（syncMem已交换不重复）。无已建链Team（常规时序window先于Team）为空操作。
+    HcclResult ReExchangeWindowsForBoundTeams();
+    // 单team补交换：组装channelDesc建链并回填（symm memHandle挂desc参与交换）
+    HcclResult ReExchangeChannelsForTeam(
+        HcommTeamHandle team, CommEngine engine, uint32_t netLayer, std::vector<HcclMemHandle>& symMemHandles);
 
     /*
      * CollComm初始化方式：
@@ -196,6 +216,14 @@ private:
     aclrtBinHandle binHcclHandle_{nullptr};
     std::mutex binHcclmutex_;
     mutable std::mutex commMutex_;
+
+    // HcommWindow 管理：winHandle→SymmetricWindow device 指针（HcommWindow.symWindow 字段值）
+    std::unordered_map<void*, void*> hcommToSymMap_; // key=HcommWindow device, value=SymmetricWindow device
+    // SymmetricWindow device→HcommWindow device 反向映射（RegisterWindow 双向登记，GetCommSymWin 反查）
+    std::unordered_map<void*, void*> symToHcommMap_;
+    // memTag→HcommWindow device（RegisterPendingSymmetricMemHandles 时登记，UpdateHcommWindowRemoteMem 直接查）
+    std::unordered_map<std::string, void*> tagToHcommMap_;
+    std::shared_mutex hcommWindowMutex_; // 读写锁：查询类（GetCommSymWin/UpdateHcommWindowRemoteMem）多读
 };
 } // namespace hccl
 

@@ -9,6 +9,10 @@
  */
 
 #include "aiv_urma_transport.h"
+
+#include <chrono>
+#include <thread>
+
 #include "serializable.h"
 #include "exchange_ub_buffer_dto.h"
 #include "exchange_ub_conn_dto.h"
@@ -17,6 +21,7 @@
 #include "hcomm_adapter_rts.h"
 #include "coll_operator_check.h"
 #include "user_remote_mem_getter.h"
+#include "env_config/env_config_v2.h"
 
 namespace Hccl {
 constexpr uint32_t FINISH_MSG_SIZE = 128;
@@ -439,6 +444,7 @@ bool AivUrmaTransport::IsResReady()
 
 void AivUrmaTransport::RecvExchangeData()
 {
+    recvData_.clear();
     recvData_.resize(exchangeDataSize_);
     socket_->RecvAsync(reinterpret_cast<u8*>(recvData_.data()), recvData_.size());
 
@@ -568,6 +574,90 @@ HcclResult AivUrmaTransport::GetRemoteMems(uint32_t* memNum, CommMem** remoteMem
     Hccl::RemoteMemCtx<std::unique_ptr<RemoteUbRmaBuffer>> remoteMemCtx{
         cacheValid_, rmtBufferVec_, remoteUserMems_, memInfoCopies_, memInfoPointers_, remoteMem, memInfos, memNum};
     CHK_RET(GetRemoteUserMems(remoteMemCtx));
+    return HCCL_SUCCESS;
+}
+
+HcclResult AivUrmaTransport::CheckSocketStatus(std::string socketOperator) const
+{
+    CHK_PTR_NULL(socket_);
+    auto timeout = std::chrono::seconds(EnvConfig::GetInstance().GetSocketConfig().GetLinkTimeOut());
+    auto startTime = std::chrono::steady_clock::now();
+    uint32_t retryCount = 0;
+    while (true) {
+        SocketStatus socketStatus = socket_->GetAsyncStatus();
+        if (socketStatus == SocketStatus::OK) {
+            auto elapsed
+                = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - startTime)
+                      .count();
+            HCCL_INFO(
+                "[AivUrmaTransport][%s] socket transport operation[%s] success, elapsed[%lld]ms, retryCount[%u]",
+                __func__, socketOperator.c_str(), elapsed, retryCount);
+            return HCCL_SUCCESS;
+        }
+        if ((std::chrono::steady_clock::now() - startTime) >= timeout || socketStatus == SocketStatus::TIMEOUT) {
+            auto elapsed
+                = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - startTime)
+                      .count();
+            HCCL_ERROR(
+                "[AivUrmaTransport][%s] socket transport operation[%s] timeout after %lld sec, elapsed[%lld]ms, "
+                "retryCount[%u]",
+                __func__, socketOperator.c_str(), timeout, elapsed, retryCount);
+            return HCCL_E_TIMEOUT;
+        }
+        std::this_thread::yield();
+        retryCount++;
+    }
+    return HCCL_SUCCESS;
+}
+
+HcclResult AivUrmaTransport::UpdateMemInfo(HcommMemHandle* memHandles, uint32_t memHandleNum)
+{
+    if (memHandles == nullptr || memHandleNum == 0) {
+        HCCL_WARNING("[AivUrmaTransport][UpdateMemInfo] bufferNum is 0.");
+        return HCCL_SUCCESS;
+    }
+    CHK_PTR_NULL(socket_);
+    std::lock_guard<std::mutex> lock(remoteMemsMutex_);
+
+    // 1. 新增 buffer 转换并追加到本端 bufferVec
+    std::vector<Hccl::LocalRmaBuffer*> newBufs;
+    for (uint32_t i = 0; i < memHandleNum; ++i) {
+        auto localRmaBuffer = reinterpret_cast<Hccl::LocalRmaBuffer*>(memHandles[i]);
+        CHK_PTR_NULL(localRmaBuffer);
+        auto buf = localRmaBuffer->GetBuf();
+        CHK_PTR_NULL(buf);
+        newBufs.push_back(localRmaBuffer);
+    }
+    size_t origBufNum = commonLocRes_.bufferVec.size();
+    commonLocRes_.bufferVec.insert(commonLocRes_.bufferVec.end(), newBufs.begin(), newBufs.end());
+    HCCL_INFO("[AivUrmaTransport][UpdateMemInfo] bufferNum after append[%zu]", commonLocRes_.bufferVec.size());
+
+    // 2. 双向交换：仅含全量 bufferVec（connVec 已建链不重做）
+    BinaryStream binaryStream;
+    BufferVecPack(binaryStream);
+    sendData_.clear();
+    binaryStream.Dump(sendData_);
+    exchangeDataSize_ = sendData_.size();
+    socket_->SendAsync(sendData_.data(), sendData_.size());
+    CHK_RET(CheckSocketStatus("SendData"));
+
+    recvData_.clear();
+    recvData_.resize(exchangeDataSize_);
+    socket_->RecvAsync(reinterpret_cast<u8*>(recvData_.data()), recvData_.size());
+    CHK_RET(CheckSocketStatus("RecvData"));
+
+    // 3. 解析对端全量 buffer 数据（RmtBufferVecUnpackProc 对已存在的 pos 幂等跳过）
+    BinaryStream recvStream(recvData_);
+    RmtBufferVecUnpackProc(commonLocRes_.bufferVec.size(), recvStream, rmtBufferVec_);
+    if (rmtBufferVec_.size() != commonLocRes_.bufferVec.size()) {
+        HCCL_ERROR(
+            "[AivUrmaTransport][UpdateMemInfo] buffer num mismatch after update, loc[%zu] rmt[%zu]",
+            commonLocRes_.bufferVec.size(), rmtBufferVec_.size());
+        commonLocRes_.bufferVec.resize(origBufNum);
+        return HCCL_E_INTERNAL;
+    }
+
+    cacheValid_ = false;
     return HCCL_SUCCESS;
 }
 

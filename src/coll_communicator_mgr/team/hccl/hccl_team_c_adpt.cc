@@ -25,12 +25,40 @@
 #include "hcomm_team.h"
 #include "hcomm_team_c_adpt.h"
 #include "hcomm_team_mgr.h"
+#include "symmetric_memory.h"
 
 using namespace hccl;
 
 /**
  * @note 职责：集合通信的通信域HcclTeam管理的C接口的C到C++适配
  */
+
+/* HcclTeamCreate入参校验 */
+static HcclResult CheckTeamCreateParam(HcclComm comm, const HcclTeamCreateDesc* desc, HcommTeamHandle* team)
+{
+    CHK_PTR_NULL(comm);
+    CHK_PTR_NULL(desc);
+    CHK_PTR_NULL(team);
+    CHK_PRT_RET(
+        (desc->rankNum == 0 || desc->rankNum == 1), HCCL_ERROR("[%s] team can not be empty or single rank", __func__),
+        HCCL_E_PARA);
+    CHK_PRT_RET(desc->rankIds == nullptr, HCCL_ERROR("[%s] rankIds is null", __func__), HCCL_E_PTR);
+    CHK_PRT_RET(
+        (desc->requirement.signalCount != 0 || desc->requirement.counterCount != 0),
+        HCCL_ERROR(
+            "[%s] signalCount[%u] and counterCount[%u] must be 0", __func__, desc->requirement.signalCount,
+            desc->requirement.counterCount),
+        HCCL_E_PARA);
+    CHK_PRT_RET(
+        desc->requirement.barrierCount == 0, HCCL_ERROR("[%s] barrierCount must be >= 1", __func__), HCCL_E_PARA);
+    CHK_PRT_RET(desc->channelCnt == 0, HCCL_ERROR("[%s] channelCnt is 0", __func__), HCCL_E_PARA);
+    CHK_PRT_RET(desc->engine != COMM_ENGINE_AIV, HCCL_ERROR("[%s] only support AIV engine", __func__), HCCL_E_PARA);
+    CHK_PRT_RET(
+        desc->protocol != COMM_PROTOCOL_UB_CTP && desc->protocol != COMM_PROTOCOL_UBC_TP
+            && desc->protocol != COMM_PROTOCOL_UBOE && desc->protocol != COMM_PROTOCOL_UB_RTP,
+        HCCL_ERROR("[%s] only support URMA protocol", __func__), HCCL_E_PARA);
+    return HCCL_SUCCESS;
+}
 
 /* 在 rankIds 中查找 selfRankId 的下标作为 memberId。
  * 例如 rankIds=[1,3,5,7]，selfRankId=3，则 selfMemberId=1。未找到返回 HCCL_E_NOT_FOUND。 */
@@ -62,6 +90,7 @@ static void FillHcommTeamCreateDesc(
     hcommDesc.requirement.barrierCount = desc->requirement.barrierCount;
     hcommDesc.netLayer = desc->netLayer;
     hcommDesc.protocol = desc->protocol;
+    hcommDesc.engine = desc->engine;
 }
 
 /* 反查 subTeam.rankIds 在 worldTeam.rankIds 中的下标作为 worldMemberIds（worldTeam 的 memberId）。
@@ -89,127 +118,11 @@ static HcclResult BuildSubTeamWorldMemberIds(
     return HCCL_SUCCESS;
 }
 
-/* 申请 syncMem 本地内存。失败时回滚已创建的 team（HcommTeamDestroy）。 */
-static HcclResult AllocTeamSyncMem(HcommTeamHandle* team, uint64_t syncMemSize, void*& syncMemPtr)
+/* 创建 subTeam 并申请 syncMem 内存。 */
+static HcclResult CreateSubTeamWithSyncMem(
+    HcommTeamHandle worldTeam, const HcclTeamCreateDesc* desc, const HcommTeamCreateDesc& hcommDesc,
+    HcommTeamHandle* team)
 {
-    syncMemPtr = nullptr;
-    HcclResult mallocRet = hrtMalloc(&syncMemPtr, syncMemSize);
-    if (mallocRet != HCCL_SUCCESS || syncMemPtr == nullptr) {
-        HCCL_ERROR("[AllocTeamSyncMem] hrtMalloc failed, ret[%d] size[%llu]", mallocRet, syncMemSize);
-        (void)HcommTeamDestroy(*team);
-        *team = nullptr;
-        return HCCL_E_MEMORY;
-    }
-    return HCCL_SUCCESS;
-}
-
-HcclResult HcclWorldTeamCreate(HcclComm comm, const HcclTeamCreateDesc* desc, HcommTeamHandle* worldTeam)
-{
-    CHK_PTR_NULL(comm);
-    CHK_PTR_NULL(desc);
-    CHK_PTR_NULL(worldTeam);
-    CHK_PRT_RET(
-        (desc->rankNum == 0 || desc->rankNum == 1),
-        HCCL_ERROR("[%s] world team can not be empty or single rank", __func__), HCCL_E_PARA);
-    CHK_PRT_RET(desc->rankIds == nullptr, HCCL_ERROR("[%s] rankIds is null", __func__), HCCL_E_PTR);
-    CHK_PRT_RET(
-        (desc->requirement.signalCount != 0 || desc->requirement.counterCount != 0),
-        HCCL_ERROR(
-            "[%s] signalCount[%u] and counterCount[%u] must be 0", __func__, desc->requirement.signalCount,
-            desc->requirement.counterCount),
-        HCCL_E_PARA);
-    CHK_PRT_RET(
-        desc->requirement.barrierCount == 0, HCCL_ERROR("[%s] barrierCount must be >= 1", __func__), HCCL_E_PARA);
-
-    auto* hcclComm = static_cast<hccl::hcclComm*>(comm);
-    CollComm* collComm = hcclComm->GetCollComm();
-    CHK_PTR_NULL(collComm);
-    const std::string commId = collComm->GetCommId();
-
-    /* 0. 校验 desc 与通信域匹配（worldTeam 可为子集）。 */
-    uint32_t commRankSize = collComm->GetRankSize();
-    CHK_PRT_RET(
-        desc->rankNum > commRankSize,
-        HCCL_ERROR(
-            "[%s] rankNum[%u] > commRankSize[%u], comm[%s]", __func__, desc->rankNum, commRankSize, commId.c_str()),
-        HCCL_E_PARA);
-
-    /* 1. selfRankId 是本 rank 的实际 rankId，需在 rankIds 中查找其下标作为 memberId。 */
-    uint32_t selfMemberId = 0;
-    CHK_RET(FindSelfMemberId(desc, selfMemberId));
-
-    /* 2. 填充 HcommTeamCreateDesc，world team 无父 team，worldMemberIds 传 nullptr（L3 生成 [0,memberNum)）。 */
-    HcommTeamCreateDesc hcommDesc = {};
-    FillHcommTeamCreateDesc(desc, selfMemberId, nullptr, hcommDesc);
-
-    /* 3. 调用 Hcomm 层创建 world team，outSyncMemSize 为需要本地申请的 syncMem 字节数。 */
-    uint64_t syncMemSize = 0;
-    HcommResult ret = HcommTeamCreate(nullptr, &hcommDesc, worldTeam, &syncMemSize);
-    CHK_PRT_RET(
-        ret != 0 || *worldTeam == nullptr,
-        HCCL_ERROR(
-            "[%s] HcommTeamCreate failed, comm[%s] ret[%d] rankNum[%u] selfRankId[%u]", __func__, commId.c_str(), ret,
-            desc->rankNum, desc->selfRankId),
-        (ret != 0) ? static_cast<HcclResult>(ret) : HCCL_E_INTERNAL);
-    CHK_PRT_RET(syncMemSize == 0, HCCL_ERROR("[%s] syncMemSize is 0", __func__), HCCL_E_PARA);
-
-    /* 4. 申请 syncMem 本地内存，后续基于 channel 交换。失败时回滚已创建的 team。 */
-    void* syncMemPtr = nullptr;
-    CHK_RET(AllocTeamSyncMem(worldTeam, syncMemSize, syncMemPtr));
-
-    /* 5. 注册 worldTeam 到 HcclTeamMgr（存 syncMem + collComm 反查 + rankIds），供 HcclSubTeamCreate/HcclTeamDestroy
-     * 反查。 */
-    HcclResult regRet = HcclTeamMgr::GetInstance().RegisterWorldTeam(
-        *worldTeam, collComm, syncMemPtr, syncMemSize, desc->rankIds, desc->rankNum);
-    if (regRet != HCCL_SUCCESS) {
-        HCCL_ERROR("[%s] RegisterWorldTeam failed, comm[%s] ret[%d]", __func__, commId.c_str(), regRet);
-        (void)hrtFree(syncMemPtr);
-        (void)HcommTeamDestroy(*worldTeam);
-        *worldTeam = nullptr;
-        return regRet;
-    }
-
-    HCCL_INFO(
-        "[%s] success, team[%p] comm[%s] rankNum[%u] selfRankId[%u] selfMemberId[%u] syncMemSize[%llu]", __func__,
-        *worldTeam, commId.c_str(), desc->rankNum, desc->selfRankId, selfMemberId, syncMemSize);
-    return HCCL_SUCCESS;
-}
-
-HcclResult HcclSubTeamCreate(HcommTeamHandle worldTeam, const HcclTeamCreateDesc* desc, HcommTeamHandle* team)
-{
-    CHK_PTR_NULL(worldTeam);
-    CHK_PTR_NULL(desc);
-    CHK_PTR_NULL(team);
-
-    CHK_PRT_RET(
-        (desc->rankNum == 0 || desc->rankNum == 1),
-        HCCL_ERROR("[%s] sub team can not be empty or single rank", __func__), HCCL_E_PARA);
-    CHK_PRT_RET(desc->rankIds == nullptr, HCCL_ERROR("[%s] rankIds is null", __func__), HCCL_E_PTR);
-    CHK_PRT_RET(
-        (desc->requirement.signalCount != 0 || desc->requirement.counterCount != 0),
-        HCCL_ERROR(
-            "[%s] signalCount[%u] and counterCount[%u] must be 0", __func__, desc->requirement.signalCount,
-            desc->requirement.counterCount),
-        HCCL_E_PARA);
-    CHK_PRT_RET(
-        desc->requirement.barrierCount == 0, HCCL_ERROR("[%s] barrierCount must be >= 1", __func__), HCCL_E_PARA);
-    CHK_PRT_RET(
-        HcclTeamMgr::GetInstance().FindWorldTeam(worldTeam) != worldTeam,
-        HCCL_ERROR("[%s] team[%p] is not world team", __func__, worldTeam), HCCL_E_PARA);
-
-    /* selfRankId 是本 rank 的实际 rankId，需在 rankIds 中查找其下标作为 memberId。 */
-    uint32_t selfMemberId = 0;
-    CHK_RET(FindSelfMemberId(desc, selfMemberId));
-
-    /* 1. 反查 subTeam 的 rankIds 在 worldTeam.rankIds 中的下标作为 worldMemberIds（worldTeam 的 memberId）。 */
-    std::vector<uint32_t> worldMemberIds;
-    CHK_RET(BuildSubTeamWorldMemberIds(worldTeam, desc->rankIds, desc->rankNum, worldMemberIds));
-
-    /* 2. 填充 HcommTeamCreateDesc：成员为 desc 的子集，父 team 为 worldTeam，worldMemberIds 用反查结果。 */
-    HcommTeamCreateDesc hcommDesc = {};
-    FillHcommTeamCreateDesc(desc, selfMemberId, worldMemberIds.data(), hcommDesc);
-
-    /* 3. 调用 Hcomm 层创建 sub team，outSyncMemSize 为需要本地申请的 syncMem 字节数。 */
     uint64_t syncMemSize = 0;
     HcommResult ret = HcommTeamCreate(worldTeam, &hcommDesc, team, &syncMemSize);
     CHK_PRT_RET(
@@ -217,14 +130,25 @@ HcclResult HcclSubTeamCreate(HcommTeamHandle worldTeam, const HcclTeamCreateDesc
         HCCL_ERROR(
             "[%s] HcommTeamCreate failed, ret[%d] rankNum[%u] selfRankId[%u]", __func__, ret, desc->rankNum,
             desc->selfRankId),
-        (ret != 0) ? static_cast<HcclResult>(ret) : HCCL_E_INTERNAL);
-    CHK_PRT_RET(syncMemSize == 0, HCCL_ERROR("[%s] syncMemSize is 0", __func__), HCCL_E_PARA);
+        HCCL_E_INTERNAL);
+    if (syncMemSize == 0) {
+        HCCL_ERROR("[%s] syncMemSize is 0", __func__);
+        (void)HcommTeamDestroy(*team);
+        *team = nullptr;
+        return HCCL_E_PARA;
+    }
 
-    /* 4. 申请 syncMem 本地内存。失败时回滚已创建的 sub team。 */
+    /* 申请 syncMem 本地内存。失败时回滚已创建的 sub team。 */
     void* syncMemPtr = nullptr;
-    CHK_RET(AllocTeamSyncMem(team, syncMemSize, syncMemPtr));
+    HcclResult mallocRet = hrtMalloc(&syncMemPtr, syncMemSize);
+    if (mallocRet != HCCL_SUCCESS || syncMemPtr == nullptr) {
+        HCCL_ERROR("[%s] hrtMalloc failed, ret[%d] size[%llu]", __func__, mallocRet, syncMemSize);
+        (void)HcommTeamDestroy(*team);
+        *team = nullptr;
+        return HCCL_E_MEMORY;
+    }
 
-    /* 5. 注册 sub team 到 HcclTeamMgr（建父子关系 + 存 syncMem + rankIds，collComm 取自 worldTeam 条目）。 */
+    /* 注册 sub team 到 HcclTeamMgr。 */
     HcclResult regRet = HcclTeamMgr::GetInstance().RegisterSubTeam(
         worldTeam, *team, syncMemPtr, syncMemSize, desc->rankIds, desc->rankNum);
     if (regRet != HCCL_SUCCESS) {
@@ -234,50 +158,15 @@ HcclResult HcclSubTeamCreate(HcommTeamHandle worldTeam, const HcclTeamCreateDesc
         *team = nullptr;
         return regRet;
     }
-
-    HCCL_INFO(
-        "[%s] success, team[%p] worldTeam[%p] rankNum[%u] selfRankId[%u] selfMemberId[%u] syncMemSize[%llu]", __func__,
-        *team, worldTeam, desc->rankNum, desc->selfRankId, selfMemberId, syncMemSize);
-    return HCCL_SUCCESS;
-}
-
-HcclResult HcclTeamDestroy(HcommTeamHandle team)
-{
-    CHK_PTR_NULL(team);
-
-    /* worldTeam 销毁时连带销毁其所有 subTeam 与 window（1:N），避免泄漏。subTeam 无子 team、无 window。 */
-    if (HcclTeamMgr::GetInstance().FindWorldTeam(team) == team) {
-        // 先销毁所有 subTeam（递归调 HcclTeamDestroy，subTeam 不会重复进入此分支）
-        std::vector<HcommTeamHandle> subTeams = HcclTeamMgr::GetInstance().GetSubTeams(team);
-        for (HcommTeamHandle sub : subTeams) {
-            (void)HcclTeamDestroy(sub);
-        }
-        // 再销毁 worldTeam 拥有的 window
-        std::vector<WindowInfo> windows = HcclTeamMgr::GetInstance().GetWorldTeamWindows(team);
-        for (const auto& win : windows) {
-            if (win.handle != nullptr) {
-                (void)HcommTeamWindowDeregister(team, win.handle);
-            }
-        }
-    }
-
-    /* 释放该 team 的 syncMem（hrtFree）+ erase 条目。 */
-    HcclTeamMgr::GetInstance().UnregisterTeam(team);
-
-    HcommResult ret = HcommTeamDestroy(team);
-    CHK_PRT_RET(
-        ret != 0, HCCL_ERROR("[%s] HcommTeamDestroy failed, ret[%d]", __func__, ret), static_cast<HcclResult>(ret));
-
-    HCCL_INFO("[%s] success", __func__);
     return HCCL_SUCCESS;
 }
 
 /* 注册 team 的 syncMem 内存（team 粒度，仅首次注册一次）。
  * syncMemHandle 已存在则跳过注册；syncMemHandle 出参返回当前句柄（首次或已存在），供调用方日志使用。 */
-static HcclResult
-RegisterTeamSyncMem(HcommTeamHandle team, const std::string& commId, CommMems* commMem, HcclMemHandle& syncMemHandle)
+static HcclResult RegisterTeamSyncMem(HcommTeamHandle team, CollComm* collComm)
 {
-    syncMemHandle = HcclTeamMgr::GetInstance().GetTeamSyncMemHandle(team);
+    HcclMemHandle syncMemHandle = HcclTeamMgr::GetInstance().GetTeamSyncMemHandle(team);
+    const std::string commId = collComm->GetCommId();
     if (syncMemHandle != nullptr) {
         HCCL_INFO(
             "[RegisterTeamSyncMem] syncMemHandle[%p] already registered, comm[%s] team[%p]", syncMemHandle,
@@ -300,6 +189,10 @@ RegisterTeamSyncMem(HcommTeamHandle team, const std::string& commId, CommMems* c
     syncMemTagStream << HCCL_TEAM_SYNCMEM_TAG_PREFIX << commId << "_team_" << team << "_addr_" << syncMemPtr << "_size_"
                      << syncMemSize;
     const std::string syncMemTagStr = syncMemTagStream.str();
+    auto myRank = collComm->GetMyRank();
+    CHK_PTR_NULL(myRank);
+    CommMems* commMem = myRank->GetCommMems();
+    CHK_PTR_NULL(commMem);
     HcclResult ret = commMem->CommRegMem(syncMemTagStr, syncMemVar, &syncMemHandle);
     CHK_PRT_RET(
         ret != HCCL_SUCCESS,
@@ -311,130 +204,13 @@ RegisterTeamSyncMem(HcommTeamHandle team, const std::string& commId, CommMems* c
     return HCCL_SUCCESS;
 }
 
-/* 重复注册检测：worldTeam 已注册过 window 且本次 localMem 是某 window 的 registeredLocalMem 的子集，则复用。
- * 命中复用时设 *window 并返回 true；否则返回 false。 */
-static bool TryReuseWindow(
-    HcommTeamHandle worldTeam, const CommMem& localMem, const std::string& commId, HcommTeamHandle team,
-    HcommWindowHandle* window)
-{
-    HcommWindowHandle reusableWindow = nullptr;
-    if (!HcclTeamMgr::GetInstance().FindReusableWindow(worldTeam, localMem, reusableWindow)) {
-        return false;
-    }
-    *window = reusableWindow;
-    HCCL_INFO(
-        "[TryReuseWindow] reuse registered window, comm[%s] team[%p] worldTeam[%p] window[%p]", commId.c_str(), team,
-        worldTeam, *window);
-    return true;
-}
-
-/* 非复用路径：在 worldTeam 上创建业务 window，注册 localMem（失败回滚 window），记录到 worldTeam 的 window 列表。 */
-static HcclResult CreateNewWindow(
-    HcommTeamHandle worldTeam, const CommMem& localMem, const std::string& commId, CommMems* commMem,
-    HcommWindowHandle* window)
-{
-    HcommResult hRet = HcommTeamWindowRegister(worldTeam, nullptr, window, HCOMM_TEAM_WINDOW_FLAG_SYMMETRIC);
-    if (hRet != 0 || *window == nullptr) {
-        HCCL_ERROR(
-            "[CreateNewWindow] HcommTeamWindowRegister failed, comm[%s] worldTeam[%p] ret[%d]", commId.c_str(),
-            worldTeam, hRet);
-        *window = nullptr;
-        return (hRet != 0) ? static_cast<HcclResult>(hRet) : HCCL_E_INTERNAL;
-    }
-    std::ostringstream userTagStream;
-    userTagStream << HCCL_TEAM_USERMEM_TAG_PREFIX << commId << "_addr_" << localMem.addr << "_size_" << localMem.size;
-    const std::string userTag = userTagStream.str();
-    HcclMemHandle userHandle = nullptr;
-    HcclResult ret = commMem->CommRegMem(userTag, localMem, &userHandle);
-    if (ret != HCCL_SUCCESS) {
-        HCCL_ERROR("[CreateNewWindow] register localMem failed, comm[%s] ret[%d]", commId.c_str(), ret);
-        (void)HcommTeamWindowDeregister(worldTeam, *window);
-        *window = nullptr;
-        return ret;
-    }
-    HcclTeamMgr::GetInstance().AddWorldTeamWindow(worldTeam, *window, localMem, userHandle, userTag);
-    return HCCL_SUCCESS;
-}
-
-HcclResult HcclTeamWindowRegister(
-    HcclComm comm, HcommTeamHandle worldTeam, const CommMem* localMem, HcommWindowHandle* window, uint32_t flag)
-{
-    CHK_PTR_NULL(comm);
-    CHK_PTR_NULL(worldTeam);
-    CHK_PTR_NULL(localMem);
-    CHK_PTR_NULL(window);
-    CHK_PRT_RET(flag != 0, HCCL_ERROR("[%s] flag[%u] is not supported, only support 0", __func__, flag), HCCL_E_PARA);
-    CHK_PRT_RET(
-        (localMem->type != COMM_MEM_TYPE_DEVICE),
-        HCCL_ERROR("[%s] localMem type[%d] must be device", __func__, localMem->type), HCCL_E_PARA);
-    CHK_PRT_RET(localMem->addr == nullptr, HCCL_ERROR("[%s] localMem addr is null", __func__), HCCL_E_PTR);
-    CHK_PRT_RET(localMem->size == 0, HCCL_ERROR("[%s] localMem size is 0", __func__), HCCL_E_PARA);
-
-    auto* hcclComm = static_cast<hccl::hcclComm*>(comm);
-    CollComm* collComm = hcclComm->GetCollComm();
-    CHK_PTR_NULL(collComm);
-    const std::string commId = collComm->GetCommId();
-
-    /* 入参 worldTeam 必须是 worldTeam（syncMem 注册已移至 ChannelsCreate，window 归 worldTeam 所有）。 */
-    CHK_PRT_RET(
-        HcclTeamMgr::GetInstance().FindWorldTeam(worldTeam) != worldTeam,
-        HCCL_ERROR("[%s] worldTeam[%p] is not worldTeam", __func__, worldTeam), HCCL_E_PARA);
-    CollComm* worldCollComm = HcclTeamMgr::GetInstance().FindCollComm(worldTeam);
-    CHK_PTR_NULL(worldCollComm);
-    CHK_PRT_RET(
-        worldCollComm->GetCommId() != commId,
-        HCCL_ERROR("[%s] worldTeam[%p] does not belong to comm[%s]", __func__, worldTeam, commId.c_str()), HCCL_E_PARA);
-
-    auto myRank = collComm->GetMyRank();
-    CHK_PTR_NULL(myRank);
-    CommMems* commMem = myRank->GetCommMems();
-    CHK_PTR_NULL(commMem);
-
-    if (TryReuseWindow(worldTeam, *localMem, commId, worldTeam, window)) {
-        return HCCL_SUCCESS;
-    }
-
-    CHK_RET(CreateNewWindow(worldTeam, *localMem, commId, commMem, window));
-
-    HCCL_INFO("[%s] success, comm[%s] worldTeam[%p] window[%p]", __func__, commId.c_str(), worldTeam, *window);
-    return HCCL_SUCCESS;
-}
-
-HcclResult HcclTeamWindowDeregister(HcommTeamHandle team, HcommWindowHandle window)
-{
-    CHK_PTR_NULL(team);
-    CHK_PTR_NULL(window);
-
-    /* 1. 取入参 team 对应的 worldTeam。 */
-    HcommTeamHandle worldTeam = HcclTeamMgr::GetInstance().FindWorldTeam(team);
-    CHK_PRT_RET(
-        worldTeam == nullptr,
-        HCCL_WARNING("[%s] FindWorldTeam failed, team[%p] not registered, maybe already destroyed", __func__, team),
-        HCCL_SUCCESS);
-
-    /* 2. 从 worldTeam 的 window 列表移除该 window 的记录（WindowInfo）。
-     *    注：不注销 localMem 的 MemReg（由通信域析构兜底清理）；不处理 syncMem（team 粒度，team 销毁时释放）。 */
-    HcclTeamMgr::GetInstance().RemoveWorldTeamWindow(worldTeam, window);
-
-    /* 3. 销毁 Hcomm 层 window。 */
-    HcommResult ret = HcommTeamWindowDeregister(worldTeam, window);
-    CHK_PRT_RET(
-        ret != 0, HCCL_ERROR("[%s] HcommTeamWindowDeregister failed, ret[%d]", __func__, ret),
-        static_cast<HcclResult>(ret));
-
-    HCCL_INFO("[%s] success, team[%p] worldTeam[%p] window[%p]", __func__, team, worldTeam, window);
-    return HCCL_SUCCESS;
-}
-
 /* 查询本rank到peerRank的link，填充 HcclChannelDesc 的 endpoint/protocol 字段。*/
 static HcclResult
 FillChannelDescForPeer(HcclComm comm, HcommTeamHandle team, uint32_t selfRank, uint32_t peerRank, HcclChannelDesc& desc)
 {
     uint32_t netLayer = 0;
     HcommResult hRet = HcommTeamGetNetLayer(team, &netLayer);
-    CHK_PRT_RET(
-        hRet != 0, HCCL_ERROR("[%s] HcommTeamGetNetLayer failed, ret[%d]", __func__, hRet),
-        (hRet != 0) ? static_cast<HcclResult>(hRet) : HCCL_E_INTERNAL);
+    CHK_PRT_RET(hRet != 0, HCCL_ERROR("[%s] HcommTeamGetNetLayer failed, ret[%d]", __func__, hRet), HCCL_E_INTERNAL);
 
     CommLink* links = nullptr;
     uint32_t linkNum = 0;
@@ -451,8 +227,9 @@ FillChannelDescForPeer(HcclComm comm, HcommTeamHandle team, uint32_t selfRank, u
     return HCCL_SUCCESS;
 }
 
+namespace hccl {
 /* 从 HcclTeamMgr 取 team 的 rankIds（memberId→rankId），推算 memberNum 与 selfMemberId。 */
-static HcclResult GetTeamMemberInfo(HcommTeamHandle team, uint32_t selfRank, ChannelsCreateCtx& ctx)
+HcclResult GetTeamMemberInfo(HcommTeamHandle team, uint32_t selfRank, ChannelsCreateCtx& ctx)
 {
     ctx.rankIds = HcclTeamMgr::GetInstance().GetRankIds(team);
     CHK_PRT_RET(
@@ -471,14 +248,13 @@ static HcclResult GetTeamMemberInfo(HcommTeamHandle team, uint32_t selfRank, Cha
     return HCCL_SUCCESS;
 }
 
-/* 取 worldTeam 及其所有 window、memHandles；取 worldTeam 维度信息并计算 curToWorld 映射。 */
-static HcclResult GetWorldTeamContext(HcommTeamHandle team, uint32_t selfRank, ChannelsCreateCtx& ctx)
+/* 取 worldTeam 的 syncMem/memHandles、worldTeam 维度信息并计算 curToWorld 映射。 */
+HcclResult GetWorldTeamContext(HcommTeamHandle team, uint32_t selfRank, ChannelsCreateCtx& ctx)
 {
     ctx.worldTeam = HcclTeamMgr::GetInstance().FindWorldTeam(team);
     CHK_PTR_NULL(ctx.worldTeam);
-    ctx.windows = HcclTeamMgr::GetInstance().GetWorldTeamWindows(ctx.worldTeam); // 移动赋值，避免深拷贝
     ctx.syncMemTag = HcclTeamMgr::GetInstance().GetTeamSyncMemTag(team);
-    // 只收集未交换的 memHandles（syncMemHandle + window localMemHandle），避免重复建链交换
+    // 只收集 syncMemHandle（window memHandle 由 AppendSymmetricMemHandles 统一处理）
     ctx.memHandles = HcclTeamMgr::GetInstance().CollectPendingMemHandles(ctx.worldTeam, team);
 
     ctx.worldRankIds = HcclTeamMgr::GetInstance().GetRankIds(ctx.worldTeam);
@@ -509,11 +285,11 @@ static HcclResult GetWorldTeamContext(HcommTeamHandle team, uint32_t selfRank, C
     }
     return HCCL_SUCCESS;
 }
+} // namespace hccl
 
 /* 对每个 peer member 创建 channelCnt 个 channel，结果存 ctx.channelsByMember（self 为空）。 */
 static HcclResult AcquireChannels(
-    HcclComm comm, HcommTeamHandle team, const HcclTeamCreateChannelsDesc* desc, uint32_t selfRank,
-    ChannelsCreateCtx& ctx)
+    HcclComm comm, HcommTeamHandle team, const HcclTeamCreateDesc* desc, uint32_t selfRank, ChannelsCreateCtx& ctx)
 {
     uint32_t channelCnt = desc->channelCnt;
     ctx.channelsByMember.assign(ctx.memberNum, {});
@@ -537,7 +313,18 @@ static HcclResult AcquireChannels(
             }
         }
         ctx.channelsByMember[m].assign(channelCnt, 0);
-        ret = HcclChannelAcquire(comm, desc->engine, channelDescs.data(), channelCnt, ctx.channelsByMember[m].data());
+
+        // 创建并配置ChannelConfig
+        HcclChannelConfig config = nullptr;
+        CHK_RET(HcclChannelConfigCreate(&config));
+        CHK_RET(HcclChannelConfigSetInt(config, HCCL_CHANNEL_CONFIG_TYPE_IS_SHARED_QUEUE, desc->isSharedQueue));
+        if (desc->isSharedQueue != 0 && desc->sharedQueueTag[0] != '\0') {
+            CHK_RET(HcclChannelConfigSetStr(config, HCCL_CHANNEL_CONFIG_TYPE_SHARED_QUEUE_TAG, desc->sharedQueueTag));
+        }
+
+        ret = HcclChannelAcquireWithConfig(
+            comm, desc->engine, channelDescs.data(), channelCnt, config, ctx.channelsByMember[m].data());
+        (void)HcclChannelConfigDestroy(config);
         CHK_PRT_RET(
             ret != HCCL_SUCCESS,
             HCCL_ERROR(
@@ -557,7 +344,7 @@ static HcclResult BindTeamChannels(HcommTeamHandle team, const std::string& comm
         channelNumPerMember[m] = static_cast<uint32_t>(ctx.channelsByMember[m].size());
         channelsByMemberIdPtrs[m] = ctx.channelsByMember[m].data();
     }
-    HcommTeamBindChannelsDesc bindDesc = {};
+    HcommTeamBindChannelsDesc bindDesc{};
     (void)HcommTeamBindChannelsDescInit(&bindDesc);
     bindDesc.memberNum = ctx.memberNum;
     bindDesc.channelNumPerMember = channelNumPerMember.data();
@@ -568,13 +355,13 @@ static HcclResult BindTeamChannels(HcommTeamHandle team, const std::string& comm
         HCCL_ERROR(
             "[%s] HcommTeamBindChannels failed, comm[%s] ret[%d] memberNum[%u]", __func__, commId.c_str(), hRet,
             ctx.memberNum),
-        static_cast<HcclResult>(hRet));
+        HCCL_E_INTERNAL);
     return HCCL_SUCCESS;
 }
 
-/* 收集所有 peer channel 的远端内存+tag。selfMemberId 槽填本地 syncMem，peer 槽按 memberId 填远端 syncMem；
- * 各 window 的 localMem 远端按 (windowIndex, worldMemberId) 存 remoteMemsByWindow。 */
-static HcclResult CollectRemoteMems(HcclComm comm, HcommTeamHandle team, ChannelsCreateCtx& ctx)
+/* 收集所有 peer channel 的远端 syncMem。selfMemberId 槽填本地 syncMem，peer 槽按 memberId 填远端 syncMem。
+ * window 远端内存已由 CollComm::UpdateHcommWindowRemoteMem 统一回填，此处不再处理。 */
+static HcclResult CollectSyncMem(HcclComm comm, HcommTeamHandle team, ChannelsCreateCtx& ctx)
 {
     ctx.syncMemRemoteMems.assign(ctx.memberNum, CommMem{});
     // selfMemberId 槽填本地 syncMem 内存
@@ -585,13 +372,10 @@ static HcclResult CollectRemoteMems(HcclComm comm, HcommTeamHandle team, Channel
         ctx.syncMemRemoteMems[ctx.selfMemberId].addr = localSyncMemPtr;
         ctx.syncMemRemoteMems[ctx.selfMemberId].size = localSyncMemSize;
     }
-    // window.mems 维度为 worldTeam memberNum，peer 槽按 worldMemberId 索引
-    ctx.remoteMemsByWindow.assign(ctx.windows.size(), std::vector<CommMem>(ctx.worldMemberNum));
     for (uint32_t m = 0; m < ctx.memberNum; m++) {
         if (m == ctx.selfMemberId || ctx.channelsByMember[m].empty()) {
             continue;
         }
-        uint32_t peerWorldMemberId = ctx.curToWorld[m];
         for (ChannelHandle channel : ctx.channelsByMember[m]) {
             if (channel == 0) {
                 continue;
@@ -603,19 +387,13 @@ static HcclResult CollectRemoteMems(HcclComm comm, HcommTeamHandle team, Channel
             CHK_PRT_RET(
                 gRet != HCCL_SUCCESS,
                 HCCL_ERROR("[%s] HcclChannelGetRemoteMems failed, member[%u] ret[%d]", __func__, m, gRet), gRet);
-            uint32_t userMemFilled = 0;
             for (uint32_t r = 0; r < memNum; r++) {
                 std::string tag
                     = (memTags != nullptr && memTags[r] != nullptr) ? std::string(memTags[r]) : std::string();
                 if (!ctx.syncMemTag.empty()
                     && tag.compare(0, strlen(HCCL_TEAM_SYNCMEM_TAG_PREFIX), HCCL_TEAM_SYNCMEM_TAG_PREFIX) == 0) {
-                    ctx.syncMemRemoteMems[m] = remoteMems[r]; // 按下标 memberId 存
-                    continue;
-                }
-                if (userMemFilled < ctx.windows.size()
-                    && tag.compare(0, strlen(HCCL_TEAM_USERMEM_TAG_PREFIX), HCCL_TEAM_USERMEM_TAG_PREFIX) == 0) {
-                    ctx.remoteMemsByWindow[userMemFilled][peerWorldMemberId] = remoteMems[r];
-                    userMemFilled++;
+                    ctx.syncMemRemoteMems[m] = remoteMems[r];
+                    break; // 每个 channel 只有一个 syncMem
                 }
             }
         }
@@ -623,34 +401,10 @@ static HcclResult CollectRemoteMems(HcclComm comm, HcommTeamHandle team, Channel
     return HCCL_SUCCESS;
 }
 
-/* per window 调 HcommTeamWindowBindRemoteMems（worldMemberId 维 mems）；调 HcommTeamBindRemoteSyncMem 绑定 syncMem。 */
-static HcclResult BindWindowsAndSyncMem(HcommTeamHandle team, const std::string& commId, ChannelsCreateCtx& ctx)
+/* 调 HcommTeamBindRemoteSyncMem 绑定 syncMem。window 绑定已由 CollComm::UpdateHcommWindowRemoteMem 统一完成。 */
+static HcclResult BindSyncMem(HcommTeamHandle team, const std::string& commId, ChannelsCreateCtx& ctx)
 {
-    // 对每个 window 调 HcommTeamWindowBindRemoteMems
-    for (size_t w = 0; w < ctx.windows.size(); w++) {
-        std::vector<CommMem> windowMems(ctx.worldMemberNum);
-        for (uint32_t m = 0; m < ctx.worldMemberNum; m++) {
-            if (m == ctx.worldSelfMemberId) {
-                continue;
-            }
-            windowMems[m] = ctx.remoteMemsByWindow[w][m];
-        }
-        // self 槽填调用者在 WindowRegister 时传入的本地内存（registeredLocalMem），与 peer 槽的远端 CommMem 对称
-        windowMems[ctx.worldSelfMemberId] = ctx.windows[w].registeredLocalMem;
-        HcommTeamWindowDesc winDesc = {};
-        (void)HcommTeamWindowDescInit(&winDesc);
-        winDesc.mems = windowMems.data();
-        winDesc.memberNum = ctx.worldMemberNum;
-        HcommResult bindWinRet = HcommTeamWindowBindRemoteMems(team, ctx.windows[w].handle, &winDesc);
-        CHK_PRT_RET(
-            bindWinRet != 0,
-            HCCL_ERROR(
-                "[%s] HcommTeamWindowBindRemoteMems failed, comm[%s] team[%p] window[%p] ret[%d]", __func__,
-                commId.c_str(), team, ctx.windows[w].handle, bindWinRet),
-            static_cast<HcclResult>(bindWinRet));
-    }
-    // 调 HcommTeamBindRemoteSyncMem
-    HcommTeamBindSyncMemDesc syncDesc = {};
+    HcommTeamBindSyncMemDesc syncDesc{};
     (void)HcommTeamBindSyncMemDescInit(&syncDesc);
     syncDesc.remoteMems = ctx.syncMemRemoteMems.data();
     syncDesc.remoteMemNum = static_cast<uint32_t>(ctx.syncMemRemoteMems.size());
@@ -660,49 +414,107 @@ static HcclResult BindWindowsAndSyncMem(HcommTeamHandle team, const std::string&
         HCCL_ERROR(
             "[%s] HcommTeamBindRemoteSyncMem failed, comm[%s] team[%p] ret[%d] remoteMemNum[%zu]", __func__,
             commId.c_str(), team, bindSyncRet, ctx.syncMemRemoteMems.size()),
-        static_cast<HcclResult>(bindSyncRet));
+        HCCL_E_INTERNAL);
     return HCCL_SUCCESS;
 }
 
-HcclResult HcclTeamChannelsCreate(HcclComm comm, HcommTeamHandle team, const HcclTeamCreateChannelsDesc* desc)
+/* 建链管道：注册 syncMem → 取成员信息 → 建链 → 绑定 channel → 取远端 syncMem → 绑定 syncMem。
+ * 失败由调用方统一调 HcclTeamDestroy 回滚（team 已注册到 HcclTeamMgr，Destroy 即完整逆操作）。 */
+static HcclResult
+SetupTeamChannels(HcclComm comm, HcommTeamHandle team, const HcclTeamCreateDesc* desc, CollComm* collComm)
 {
-    CHK_PTR_NULL(comm);
-    CHK_PTR_NULL(team);
-    CHK_PTR_NULL(desc);
-    CHK_PRT_RET(desc->channelCnt == 0, HCCL_ERROR("[%s] channelCnt is 0", __func__), HCCL_E_PARA);
+    const std::string commId = collComm->GetCommId();
+    uint32_t selfRank = collComm->GetMyRankId();
+    /* window 此时已由 HcclCommSymWinRegister 注册到 HcclTeamMgr（属于通信域），GetWorldTeamContext 取之。 */
+    CHK_RET(RegisterTeamSyncMem(team, collComm));
+    ChannelsCreateCtx ctx{};
+    CHK_RET(GetTeamMemberInfo(team, selfRank, ctx));
+    CHK_RET(GetWorldTeamContext(team, selfRank, ctx));
+    CHK_RET(AcquireChannels(comm, team, desc, selfRank, ctx));
+    CHK_RET(BindTeamChannels(team, commId, ctx));
+    CHK_RET(CollectSyncMem(comm, team, ctx));
+    CHK_RET(BindSyncMem(team, commId, ctx));
+    return HCCL_SUCCESS;
+}
+
+HcclResult HcclTeamCreate(HcclComm comm, const HcclTeamCreateDesc* desc, HcommTeamHandle* team)
+{
+    CHK_RET(CheckTeamCreateParam(comm, desc, team));
 
     auto* hcclComm = static_cast<hccl::hcclComm*>(comm);
     CollComm* collComm = hcclComm->GetCollComm();
     CHK_PTR_NULL(collComm);
     const std::string commId = collComm->GetCommId();
-    uint32_t selfRank = collComm->GetMyRankId();
 
-    CollComm* worldCollComm = HcclTeamMgr::GetInstance().FindCollComm(team);
-    CHK_PTR_NULL(worldCollComm);
+    /* 1. 在本通信域内按 protocol+netLayer 查找初始化时预制的 worldTeam（不存在则报错，不再内部创建）。 */
+    HcommTeamHandle worldTeam
+        = HcclTeamMgr::GetInstance().FindWorldTeamByProtoLayer(collComm, desc->protocol, desc->netLayer);
     CHK_PRT_RET(
-        worldCollComm->GetCommId() != commId,
-        HCCL_ERROR("[%s] team[%p] does not belong to comm[%s]", __func__, team, commId.c_str()), HCCL_E_PARA);
+        worldTeam == nullptr,
+        HCCL_ERROR(
+            "[%s] no worldTeam for protocol[%d] netLayer[%u], comm[%s]", __func__, desc->protocol, desc->netLayer,
+            commId.c_str()),
+        HCCL_E_NOT_FOUND);
 
-    ChannelsCreateCtx ctx{};
-    CHK_RET(GetTeamMemberInfo(team, selfRank, ctx));
+    /* 2. 反查 subTeam.rankIds 在 worldTeam.rankIds 中的下标作为 worldMemberIds。 */
+    uint32_t selfMemberId = 0;
+    CHK_RET(FindSelfMemberId(desc, selfMemberId));
+    std::vector<uint32_t> worldMemberIds;
+    CHK_RET(BuildSubTeamWorldMemberIds(worldTeam, desc->rankIds, desc->rankNum, worldMemberIds));
 
-    /* 注册 team 的 syncMem 内存（team 粒度，仅首次注册一次），供 channel 交换与 GetWorldTeamContext 取用。 */
-    auto myRank = collComm->GetMyRank();
-    CHK_PTR_NULL(myRank);
-    CommMems* commMem = myRank->GetCommMems();
-    CHK_PTR_NULL(commMem);
-    HcclMemHandle syncMemHandle = nullptr;
-    CHK_RET(RegisterTeamSyncMem(team, commId, commMem, syncMemHandle));
+    /* 3. 填充 HcommTeamCreateDesc 并创建 subTeam。 */
+    HcommTeamCreateDesc hcommDesc{};
+    FillHcommTeamCreateDesc(desc, selfMemberId, worldMemberIds.data(), hcommDesc);
 
-    CHK_RET(GetWorldTeamContext(team, selfRank, ctx));
-    CHK_RET(AcquireChannels(comm, team, desc, selfRank, ctx));
-    CHK_RET(BindTeamChannels(team, commId, ctx));
-    CHK_RET(CollectRemoteMems(comm, team, ctx));
-    CHK_RET(BindWindowsAndSyncMem(team, commId, ctx));
+    /* 4. 创建 subTeam 并申请 syncMem 内存，失败时内部清理 */
+    CHK_RET(CreateSubTeamWithSyncMem(worldTeam, desc, hcommDesc, team));
+
+    /* 5. 建链管道。失败统一回滚：HcclTeamDestroy = CommUnregMem(syncMem) + hrtFree(syncMem) + L2 条目 erase
+     *    + L3 team 释放，即成功创建的完整逆操作。 */
+    HcclResult ret = SetupTeamChannels(comm, *team, desc, collComm);
+    if (ret != HCCL_SUCCESS) {
+        HCCL_ERROR("[%s] SetupTeamChannels failed, team[%p] ret[%d], rollback", __func__, *team, ret);
+        (void)HcclTeamDestroy(*team);
+        *team = nullptr;
+        return ret;
+    }
 
     HCCL_INFO(
-        "[%s] success, comm[%s] team[%p] memberNum[%u] channelCnt[%u] windowNum[%zu] syncMemRemoteMemNum[%zu]",
-        __func__, commId.c_str(), team, ctx.memberNum, desc->channelCnt, ctx.windows.size(),
-        ctx.syncMemRemoteMems.size());
+        "[%s] success, comm[%s] team[%p] worldTeam[%p] protocol[%d] netLayer[%u] channelCnt[%u] memberNum[%u]",
+        __func__, commId.c_str(), *team, worldTeam, desc->protocol, desc->netLayer, desc->channelCnt, desc->rankNum);
+    return HCCL_SUCCESS;
+}
+
+HcclResult HcclTeamDestroy(HcommTeamHandle team)
+{
+    CHK_PTR_NULL(team);
+    if (HcclTeamMgr::GetInstance().FindWorldTeam(team) == team) {
+        HCCL_ERROR("[%s] prebuilt worldTeam can not be destroyed", __func__);
+        return HCCL_E_PARA;
+    }
+
+    /* 先查出 syncMem 解注册信息（UnregisterTeam 后 TeamEntry 已 erase，无法再查）。 */
+    HcclMemHandle syncMemHandle = HcclTeamMgr::GetInstance().GetTeamSyncMemHandle(team);
+    std::string syncMemTag = HcclTeamMgr::GetInstance().GetTeamSyncMemTag(team);
+    CollComm* collComm = HcclTeamMgr::GetInstance().FindCollComm(team);
+    /* 解注册 syncMem 的 CommRegMem（CommUnregMem），释放 memHandle 资源。 */
+    if (syncMemHandle != nullptr && !syncMemTag.empty() && collComm != nullptr) {
+        auto myRank = collComm->GetMyRank();
+        CHK_PTR_NULL(myRank);
+        CommMems* commMem = myRank->GetCommMems();
+        CHK_PTR_NULL(commMem);
+        HcclResult unregRet = commMem->CommUnregMem(syncMemTag, syncMemHandle);
+        if (unregRet != HCCL_SUCCESS && unregRet != HCCL_E_NOT_FOUND) {
+            HCCL_WARNING("[%s] CommUnregMem syncMem failed, tag[%s] ret[%d]", __func__, syncMemTag.c_str(), unregRet);
+        }
+    }
+
+    /* 释放该 team 的 syncMem（hrtFree）+ erase 条目。 */
+    HcclTeamMgr::GetInstance().UnregisterTeam(team);
+
+    HcommResult ret = HcommTeamDestroy(team);
+    CHK_PRT_RET(ret != 0, HCCL_ERROR("[%s] HcommTeamDestroy failed, ret[%d]", __func__, ret), HCCL_E_INTERNAL);
+
+    HCCL_INFO("[%s] success", __func__);
     return HCCL_SUCCESS;
 }

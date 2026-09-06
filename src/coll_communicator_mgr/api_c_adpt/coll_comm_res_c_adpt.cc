@@ -790,7 +790,7 @@ HcclResult HcclChannelAcquire(
         hccl::MyRank* myRank = collComm->GetMyRank();
         CHK_PTR_NULL(myRank);
         std::vector<bool> channelSymMemAppended;
-        if (IsAicpuEngine(engine)) {
+        if (IsAicpuEngine(engine) || engine == COMM_ENGINE_AIV) {
             CHK_RET(PrepareChannelSymMemHandles(
                 collComm, myRank, engine, channelDescFinals, mergedMemHandles, channelSymMemAppended));
         }
@@ -1450,7 +1450,7 @@ HcclResult HcclChannelAcquireWithConfig(
 
     std::vector<std::vector<HcclMemHandle>> mergedMemHandles;
     std::vector<bool> channelSymMemAppended;
-    if (IsAicpuEngine(engine)) {
+    if (IsAicpuEngine(engine) || engine == COMM_ENGINE_AIV) {
         hccl::CollComm* collComm = hcclComm->GetCollComm();
         CHK_PTR_NULL(collComm);
         hccl::MyRank* myRank = collComm->GetMyRank();
