@@ -40,7 +40,7 @@ HcclResult HcclTeamCreateDescInit(HcclTeamCreateDesc *desc)
 
 ## 约束说明
 
-调用[HcclWorldTeamCreate](HcclWorldTeamCreate.md)或[HcclSubTeamCreate](HcclSubTeamCreate.md)前必须通过本接口初始化HcclTeamCreateDesc结构体。初始化后，用户需自行填充rankIds、rankNum、selfRankId、netLayer、protocol、requirement等业务字段。
+调用[HcclTeamCreate](HcclTeamCreate.md)前必须通过本接口初始化HcclTeamCreateDesc结构体。初始化后，用户需自行填充rankIds、rankNum、selfRankId、netLayer、protocol、requirement、engine、notifyNum、channelCnt等业务字段。若需使用共享队列，还需填充isSharedQueue和sharedQueueTag字段。
 
 ## 调用示例
 
@@ -56,8 +56,11 @@ desc.rankIds = rankIds;
 desc.rankNum = 2;
 desc.selfRankId = 1;
 desc.netLayer = 0;
-desc.protocol = COMM_PROTOCOL_RESERVED;
+desc.protocol = COMM_PROTOCOL_UB_CTP;
 desc.requirement.signalCount = 0;
 desc.requirement.counterCount = 0;
 desc.requirement.barrierCount = 1;
+desc.engine = COMM_ENGINE_AIV;
+desc.notifyNum = 8;
+desc.channelCnt = 1;
 ```

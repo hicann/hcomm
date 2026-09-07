@@ -20,7 +20,7 @@
 
 ## 功能说明
 
-销毁一个team（world team或sub team），释放其资源。销毁world team时会连带销毁其所有sub team与已注册的window，避免资源泄漏。
+销毁一个team，释放其资源。销毁时会释放该team的syncMem本地内存并注销syncMem的内存句柄。
 
 ## 函数原型
 
@@ -32,7 +32,7 @@ HcclResult HcclTeamDestroy(HcommTeamHandle team)
 
 | 参数名 | 输入/输出 | 描述 |
 | --- | --- | --- |
-| team | 输入 | 待销毁的team句柄，不可为NULL。可通过[HcclWorldTeamCreate](HcclWorldTeamCreate.md)或[HcclSubTeamCreate](HcclSubTeamCreate.md)创建。 |
+| team | 输入 | 待销毁的team句柄，不可为NULL。可通过[HcclTeamCreate](HcclTeamCreate.md)创建。 |
 
 ## 返回值
 
@@ -40,17 +40,14 @@ HcclResult HcclTeamDestroy(HcommTeamHandle team)
 
 ## 约束说明
 
-1. 销毁world team时会递归销毁其所有sub team，并销毁world team拥有的所有window（1:N），其中，sub team无子team、无window，因此无额外级联对象。
+1. 销毁时会释放该team的syncMem本地内存，注销syncMem的CommRegMem内存句柄并清理注册条目。
 
-2. 接口会释放该team的syncMem本地内存并清理注册条目，但不注销window对应localMem的内存注册（由通信域析构兜底清理）。
-
-3. team句柄销毁后不可再使用。
+2. team句柄销毁后不可再使用。
 
 ## 调用示例
 
 ```c
-// 销毁world team（会连带销毁其所有sub team与window）
-HcclResult ret = HcclTeamDestroy(worldTeam);
+HcclResult ret = HcclTeamDestroy(team);
 if (ret != HCCL_SUCCESS) {
     printf("HcclTeamDestroy failed, ret = %d\n", ret);
 }
