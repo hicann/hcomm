@@ -63,6 +63,7 @@ void RunPostStageCallback(HcclTaskAbortHandler& handler, bool ccuInited, HcclRes
     MOCKER(CcuIsInited).stubs().will(returnValue(ccuInited));
     MOCKER(CcuSetTaskKill).stubs().will(returnValue(HCCL_SUCCESS));
     MOCKER(CcuSetTaskKillDone).stubs().will(returnValue(HCCL_SUCCESS));
+    MOCKER(CcuCleanDieCkes).stubs().will(returnValue(HCCL_SUCCESS));
     MOCKER_CPP(&CollComm::Clean, HcclResult(CollComm::*)()).stubs().with(mockcpp::any()).will(returnValue(cleanResult));
 
     auto ret = ProcessTaskAbortHandleCallback(deviceLogicId, stage, timeout, args);
@@ -155,6 +156,7 @@ TEST_F(HcclTaskAbortHandlerTest, test_task_abort_handle_call_back_stage_post_sus
     MOCKER(CcuIsInited).stubs().will(returnValue(true));
     MOCKER(CcuSetTaskKill).stubs().will(returnValue(HCCL_SUCCESS));
     MOCKER(CcuSetTaskKillDone).stubs().will(returnValue(HCCL_SUCCESS));
+    MOCKER(CcuCleanDieCkes).stubs().will(returnValue(HCCL_SUCCESS));
 
     MOCKER_CPP(&CollComm::Clean, HcclResult(CollComm::*)()).stubs().will(returnValue(HCCL_E_SUSPENDING));
 
@@ -246,4 +248,49 @@ TEST_F(HcclTaskAbortHandlerTest, test_task_abort_post_skip_taskkill_when_ccu_not
 TEST_F(HcclTaskAbortHandlerTest, test_task_abort_handle_call_back_stage_post_fail)
 {
     RunPostStageCallback(handler, true, HCCL_E_INTERNAL, TaskAbortResult::TASK_ABORT_FAIL);
+}
+
+TEST_F(HcclTaskAbortHandlerTest, test_task_abort_post_clean_die_ckes_called_per_die)
+{
+    int32_t deviceLogicId = 0;
+    aclrtDeviceTaskAbortStage stage = aclrtDeviceTaskAbortStage::ACL_RT_DEVICE_TASK_ABORT_POST;
+    uint32_t timeout = 0U;
+
+    CollComm* comm = nullptr;
+    void* args = PrepareAndRegisterComm(handler, &comm);
+
+    MOCKER(CcuIsInited).stubs().will(returnValue(true));
+    MOCKER(CcuSetTaskKill).stubs().will(returnValue(HCCL_SUCCESS));
+    MOCKER(CcuSetTaskKillDone).stubs().will(returnValue(HCCL_SUCCESS));
+    MOCKER(CcuCleanDieCkes)
+        .expects(exactly(static_cast<int>(CCU_MAX_IODIE_NUM)))
+        .with(eq(deviceLogicId), mockcpp::any())
+        .will(returnValue(HCCL_SUCCESS));
+    MOCKER_CPP(&CollComm::Clean, HcclResult(CollComm::*)()).stubs().will(returnValue(HCCL_SUCCESS));
+
+    auto ret = ProcessTaskAbortHandleCallback(deviceLogicId, stage, timeout, args);
+    EXPECT_EQ(ret, static_cast<int>(TaskAbortResult::TASK_ABORT_SUCCESS));
+
+    handler.UnRegister(comm);
+}
+
+TEST_F(HcclTaskAbortHandlerTest, test_task_abort_post_clean_die_ckes_fail)
+{
+    int32_t deviceLogicId = 0;
+    aclrtDeviceTaskAbortStage stage = aclrtDeviceTaskAbortStage::ACL_RT_DEVICE_TASK_ABORT_POST;
+    uint32_t timeout = 0U;
+
+    CollComm* comm = nullptr;
+    void* args = PrepareAndRegisterComm(handler, &comm);
+
+    MOCKER(CcuIsInited).stubs().will(returnValue(true));
+    MOCKER(CcuSetTaskKill).stubs().will(returnValue(HCCL_SUCCESS));
+    MOCKER(CcuSetTaskKillDone).stubs().will(returnValue(HCCL_SUCCESS));
+    MOCKER(CcuCleanDieCkes).stubs().will(returnValue(HCCL_E_INTERNAL));
+    MOCKER_CPP(&CollComm::Clean, HcclResult(CollComm::*)()).stubs().will(returnValue(HCCL_SUCCESS));
+
+    auto ret = ProcessTaskAbortHandleCallback(deviceLogicId, stage, timeout, args);
+    EXPECT_NE(ret, static_cast<int>(TaskAbortResult::TASK_ABORT_SUCCESS));
+
+    handler.UnRegister(comm);
 }

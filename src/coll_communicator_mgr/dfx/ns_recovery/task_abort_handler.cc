@@ -77,8 +77,14 @@ int32_t ProcessTaskAbortPost(
     }
     if (hcomm::CcuIsInited(deviceLogicId)) {
         CHK_RET(hcomm::CcuSetTaskKillDone(deviceLogicId));
+        // Align with TaskException: clear residual CCU CKE after TaskKillDone (device-level, all IO dies).
+        for (uint8_t dieId = 0; dieId < hcomm::CCU_MAX_IODIE_NUM; ++dieId) {
+            CHK_RET(hcomm::CcuCleanDieCkes(deviceLogicId, dieId));
+        }
     } else {
-        HCCL_INFO("[NsRecovery][Callback] CCU not inited, skip CcuSetTaskKillDone, deviceLogicId[%d]", deviceLogicId);
+        HCCL_INFO(
+            "[NsRecovery][Callback] CCU not inited, skip CcuSetTaskKillDone/CcuCleanDieCkes, deviceLogicId[%d]",
+            deviceLogicId);
     }
     return static_cast<int>(TaskAbortResult::TASK_ABORT_SUCCESS);
 }
