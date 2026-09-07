@@ -19,7 +19,6 @@
 
 #include "channel.h"
 #include "aicpu_ts_channel_helper.h"
-#include "socket_mgr.h"
 
 // Orion
 #include "../../../../../../src/legacy/ascend950/unified_platform/resource/socket/socket.h"
@@ -37,15 +36,15 @@ constexpr char_t FINISH_MSG[FINISH_MSG_SIZE] = "Uboe Comm Pipe ready!";
 class AicpuTsUboeUbRtpChannelHelper : public Channel {
 public:
     AicpuTsUboeUbRtpChannelHelper(EndpointHandle endpointHandle, const HcommChannelDesc& channelDesc);
-    virtual ~AicpuTsUboeUbRtpChannelHelper() override;
+    ~AicpuTsUboeUbRtpChannelHelper() override;
 
     HcclResult GetNotifyNum(uint32_t* notifyNum) const override;
     HcclResult GetRemoteMems(uint32_t* memNum, CommMem** remoteMem, char*** memInfos) override;
 
     HcclResult H2DResPack(std::vector<char>& buffer);
     const HcommChannelDesc& GetChannelDesc() const override { return channelDesc_; }
-    virtual HcclResult Clean() override;
-    virtual HcclResult Resume() override;
+    HcclResult Clean() override;
+    HcclResult Resume() override;
 
     // 数据面接口
     HcclResult NotifyRecord(const uint32_t remoteNotifyIdx) override;
@@ -84,7 +83,7 @@ protected:
     void RecvExchangeData();
 
     void NotifyVecPack(Hccl::BinaryStream& binaryStream);
-    void BufferVecPack(Hccl::BinaryStream& binaryStream, std::vector<Hccl::LocalRmaBuffer*>& bufferVec);
+    void BufferVecPack(Hccl::BinaryStream& binaryStream, std::vector<Hccl::LocalRmaBuffer*>& bufferVec) const;
     void DrainBufferPack(Hccl::BinaryStream& binaryStream);
     void ConnVecPack(Hccl::BinaryStream& binaryStream);
     void RmtBufferVecUnpackProc(

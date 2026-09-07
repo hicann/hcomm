@@ -21,7 +21,6 @@
 #include "buffer_key.h"
 #include "resource/notify/ub_local_notify.h"
 #include "resource/socket/socket.h"
-#include "socket_mgr.h"
 #include "hcomm_adapter_hccp.h"
 
 namespace hcomm {

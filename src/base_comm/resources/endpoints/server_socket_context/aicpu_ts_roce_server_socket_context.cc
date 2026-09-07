@@ -125,8 +125,8 @@ void AicpuTsRoceServerSocketContext::ReleaseListenSocketRefs()
     }
 }
 
-HcclResult
-AicpuTsRoceServerSocketContext::AddListenSocketWhiteList(uint32_t port, const std::vector<SocketWlistInfo>& wlistInfos)
+HcclResult AicpuTsRoceServerSocketContext::AddListenSocketWhiteList(
+    uint32_t port, const std::vector<SocketWlistInfo>& wlistInfos) const
 {
     if (wlistInfos.empty()) {
         HCCL_ERROR("[AicpuTsRoceServerSocketContext][%s] empty whitelist", __func__);
@@ -148,7 +148,7 @@ AicpuTsRoceServerSocketContext::AddListenSocketWhiteList(uint32_t port, const st
 }
 
 HcclResult AicpuTsRoceServerSocketContext::GetSocket(
-    [[maybe_unused]] uint32_t port, const std::string& tag, std::shared_ptr<hccl::HcclSocket>& outConnected)
+    [[maybe_unused]] uint32_t port, const std::string& tag, std::shared_ptr<hccl::HcclSocket>& outConnected) const
 {
     EXCEPTION_CATCH(
         (outConnected = std::make_shared<hccl::HcclSocket>(
@@ -162,7 +162,8 @@ HcclResult AicpuTsRoceServerSocketContext::GetSocket(
 }
 
 HcclResult AicpuTsRoceServerSocketContext::AcceptDataSocket(
-    uint32_t port, const std::string& tag, std::shared_ptr<hccl::HcclSocket>& outConnected, uint32_t acceptTimeoutMs)
+    uint32_t port, const std::string& tag, std::shared_ptr<hccl::HcclSocket>& outConnected,
+    uint32_t acceptTimeoutMs) const
 {
     std::lock_guard<std::mutex> lk(ListenSocketMapMutex());
     auto& map = GetServerSocketMap();

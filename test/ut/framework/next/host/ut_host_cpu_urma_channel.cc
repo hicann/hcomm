@@ -18,6 +18,7 @@
 
 #include "cpu_urma_endpoint.h"
 #include "host_cpu_urma_channel.h"
+#include "sockets/socket_mgr.h"
 #include "buffer/local_ub_rma_buffer.h"
 #include "host_ub_connection.h"
 #include "ip_address.h"

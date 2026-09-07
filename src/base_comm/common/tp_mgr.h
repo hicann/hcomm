@@ -205,7 +205,7 @@ private:
         InfoCtxMap::iterator& lit, InfoRmtMap::iterator& rit, InfoQosMap::iterator& qosIt) const;
     HcclResult
     PollGetTpInfoReqCtx(std::unique_lock<std::mutex>& reqCtxLock, const GetTpInfoParam& param, TpInfo& tpInfo);
-    HcclResult BeginGetTpInfoListRequest(const GetTpInfoParam& param, ReqQosMap& qosMap, const QosKey qosKey);
+    HcclResult BeginGetTpInfoListRequest(const GetTpInfoParam& param, ReqQosMap& qosMap, const QosKey qosKey) const;
     HcclResult AdvanceGetTpInfoWaitList(
         const GetTpInfoParam& param, RequestCtx& reqCtx, ReqQosMap& qosMap, const ReqQosMap::iterator it,
         std::unique_lock<std::mutex>& reqCtxLock, TpInfo& tpInfo);
@@ -215,7 +215,7 @@ private:
     HcclResult StartGetTpAttrRequest(const GetTpAttrParam& param, TpAttrRequestCtx& reqCtx, CtxHandle ctxHandle) const;
     HcclResult BuildTpInfoAndCommitQosAttr(
         const GetTpInfoParam& param, const RequestCtx& reqCtx, const struct HccpTpInfo* baseInfoPtr,
-        const uint32_t tpListIndex, const uint32_t mappedSl, TpInfo& tpInfo);
+        const uint32_t tpListIndex, const uint32_t mappedSl, TpInfo& tpInfo) const;
     HcclResult CommitTpInfoToCache(const GetTpInfoParam& param, TpInfo& tpInfo);
     HcclResult HandleCompletedRequest(RequestCtx reqCtx, const GetTpInfoParam& param, TpInfo& tpInfo);
     HcclResult

@@ -24,7 +24,7 @@ namespace CcuRep {
         ~FuncBlock();
 
         template <typename... Arguments>
-        FuncBlock& operator()(const Arguments&... args)
+        const FuncBlock& operator()(const Arguments&... args) const
         {
             DefineInArgHelper(args...);
             return *this;
@@ -44,13 +44,13 @@ namespace CcuRep {
 
     private:
         template <typename First>
-        void DefineInArgHelper(const First& first)
+        void DefineInArgHelper(const First& first) const
         {
             repFuncBlock->DefineInArg(first);
         }
 
         template <typename First, typename... Rest>
-        void DefineInArgHelper(const First& first, const Rest&... rest)
+        void DefineInArgHelper(const First& first, const Rest&... rest) const
         {
             repFuncBlock->DefineInArg(first);
             DefineInArgHelper(rest...);

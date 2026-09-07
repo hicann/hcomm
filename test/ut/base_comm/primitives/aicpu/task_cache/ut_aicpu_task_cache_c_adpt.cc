@@ -36,6 +36,8 @@
 #undef protected
 
 using namespace hcomm;
+using Hccl::Rt91095StarsSqeHeader;
+using Hccl::Rt91095StarsSqeType;
 
 namespace {
 DevType g_testDeviceType = DevType::DEV_TYPE_950;

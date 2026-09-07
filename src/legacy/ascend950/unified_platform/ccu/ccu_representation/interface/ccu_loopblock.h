@@ -24,7 +24,7 @@ namespace CcuRep {
         ~LoopBlock();
 
         template <typename... Arguments>
-        LoopBlock& operator()(const Arguments&... args)
+        const LoopBlock& operator()(const Arguments&... args) const
         {
             DefineInArgHelper(args...);
             return *this;
@@ -32,13 +32,13 @@ namespace CcuRep {
 
     private:
         template <typename First>
-        void DefineInArgHelper(const First& first)
+        void DefineInArgHelper(const First& first) const
         {
             repLoopBlock->DefineArg(first);
         }
 
         template <typename First, typename... Rest>
-        void DefineInArgHelper(const First& first, const Rest&... rest)
+        void DefineInArgHelper(const First& first, const Rest&... rest) const
         {
             repLoopBlock->DefineArg(first);
             DefineInArgHelper(rest...);

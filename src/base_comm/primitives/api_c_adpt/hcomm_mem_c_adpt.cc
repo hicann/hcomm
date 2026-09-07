@@ -12,7 +12,6 @@
 #include "hcomm_c_adpt.h"
 #include "hcomm_c_adpt_common.h"
 #include "hcomm_res_mgr.h"
-#include "hcomm_result_defs.h"
 #include "log.h"
 #include "endpoint.h"
 #include "param_check_pub.h"

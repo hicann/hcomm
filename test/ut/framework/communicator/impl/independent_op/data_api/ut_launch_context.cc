@@ -30,7 +30,7 @@
 #include "adapter_rts_common.h"
 
 extern HcclResult CommTaskLaunch(ThreadHandle* threads, uint32_t threadNum); // host ffts+或aicpu stars使用
-extern HcclResult DispatchAllStreams(ThreadHandle* threads, uint32_t threadNum);
+extern HcclResult DispatchAllStreams(const ThreadHandle* threads, uint32_t threadNum);
 
 /**
  * @class UtAicpuTsHcommBatchModeStart

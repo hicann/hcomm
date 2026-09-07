@@ -18,10 +18,8 @@
 
 #include "../channel.h"
 #include "aicpu_ts_channel_helper.h"
-#include "../../sockets/socket_mgr.h"
 
 #include "../../../../../../legacy/ascend950/unified_platform/resource/socket/socket.h"
-#include "../../../../../../src/legacy/ascend950/unified_platform/resource/buffer/local_ipc_rma_buffer_v2.h"
 #include "p2p_transport.h"
 #include "p2p_connection.h"
 #include "ipc_local_notify.h"

@@ -68,7 +68,7 @@ public:
     };
 
     JettyContext() = default;
-    ~JettyContext();
+    ~JettyContext() override;
 
     JettyContext(const JettyContext&) = delete;
     JettyContext& operator=(const JettyContext&) = delete;
@@ -124,9 +124,9 @@ private:
         std::vector<SharedRemoteJettyCtx> remoteJettys{};
     };
 
-    void UnimportSharedRemoteJettys(Inner& inner);
-    void DestroyJettyResources(Inner& inner);
-    HcclResult InnerToCtx(const Inner& inner, Ctx& outCtx);
+    void UnimportSharedRemoteJettys(Inner& inner) const;
+    void DestroyJettyResources(Inner& inner) const;
+    HcclResult InnerToCtx(const Inner& inner, Ctx& outCtx) const;
 
     mutable std::mutex mtx_;
     std::condition_variable cv_;

@@ -173,7 +173,7 @@ HcclResult ServerSocketManager::HostSocketStopListen(const Hccl::PortData& local
 }
 
 HcclResult ServerSocketManager::ListenSocketIfNeeded(
-    Hccl::Socket* serverSocket, bool isListen, uint32_t& actualPort, uint32_t* outPort)
+    Hccl::Socket* serverSocket, bool isListen, uint32_t& actualPort, uint32_t* outPort) const
 {
     // port=0 表示自动分配端口，必须调 Listen(actualPort) 获取实际端口，不受 isListen 影响
     if (actualPort == 0) {

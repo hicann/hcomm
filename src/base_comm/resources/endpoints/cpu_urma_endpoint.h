@@ -14,8 +14,6 @@
 #include <cstdint>
 #include <memory>
 #include <mutex>
-#include <string>
-#include <unordered_map>
 
 #include "endpoint.h"
 #include "comm_queue_context/jetty_context.h"

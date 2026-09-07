@@ -13,7 +13,6 @@
 
 #include <memory>
 #include <vector>
-#include <string>
 #include "endpoint.h"
 #include "ub_mem_reged_mem_mgr.h"
 

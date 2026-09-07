@@ -55,7 +55,7 @@ public:
 
     // useAllocMemBase：见类注（D2N=UB 时 DEVICE 按 alloc 去重；当前由 lbMax>0 代理注入）
     RoceRegedMemMgr(RdmaHandle rdmaHandle, bool useAllocMemBase = false);
-    ~RoceRegedMemMgr();
+    ~RoceRegedMemMgr() override;
 
     HcclResult RegisterMemory(const HcommMem* mem, const char* memTag, void** memHandle) override;
     HcclResult UnregisterMemory(void* memHandle) override;
@@ -64,7 +64,7 @@ public:
     HcclResult MemoryImport(const void* memDesc, uint32_t descLen, HcommMem* outMem) override;
     HcclResult MemoryUnimport(const void* memDesc, uint32_t descLen) override;
     HcclResult GetAllMemHandles(void** memHandles, uint32_t* memHandleNum) override;
-    HcclResult GetMemDesc(const EndpointDesc endpointDesc, Hccl::LocalRdmaRmaBuffer* localRdmaRmaBuffer);
+    HcclResult GetMemDesc(const EndpointDesc endpointDesc, Hccl::LocalRdmaRmaBuffer* localRdmaRmaBuffer) const;
     HcclResult GetParamsFromMemDesc(
         const void* memDesc, uint32_t descLen, EndpointDesc& endpointDesc, Hccl::ExchangeRdmaBufferDto& dto) const;
 

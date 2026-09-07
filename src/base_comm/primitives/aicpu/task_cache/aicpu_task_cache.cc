@@ -168,7 +168,6 @@ HcclResult AicpuTaskCache::ClearEntry(const char* cacheTag)
 
         // 计算clear bytes
         const uint64_t clearBytes = entryBytes + strlen(cacheTag) + sizeof(AicpuTaskCacheEntry*);
-
         // 更新cache bytes
         if (cacheBytes_ > clearBytes) {
             cacheBytes_ -= clearBytes;

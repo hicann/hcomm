@@ -34,6 +34,7 @@
 #undef protected
 
 using namespace hcomm;
+using namespace Hccl;
 
 namespace {
 constexpr uint32_t TEST_SQ_DEPTH = 128;

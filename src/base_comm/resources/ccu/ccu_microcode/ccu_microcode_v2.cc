@@ -592,38 +592,38 @@ namespace CcuRep {
 
         void ReduceAdd(
             CcuInstr* instr, const uint16_t* ms, uint16_t count, uint16_t castEn, uint16_t dataType, uint16_t setCKEId,
-            uint16_t setCKEMask, uint16_t xnIdLength)
+            uint16_t setCKEMask, uint16_t XnIdLength)
         {
             if (instr == nullptr) {
                 HCCL_ERROR("[CcuV2::ReduceAdd] instr is nullptr!");
                 return;
             }
             instr->header = InstrHeader(REDUCE_TYPE, REDUCE_ADD_CODE);
-            Reduce(instr, ms, count, castEn, dataType, setCKEId, setCKEMask, xnIdLength);
+            Reduce(instr, ms, count, castEn, dataType, setCKEId, setCKEMask, XnIdLength);
         }
 
         void ReduceMax(
             CcuInstr* instr, const uint16_t* ms, uint16_t count, uint16_t dataType, uint16_t setCKEId,
-            uint16_t setCKEMask, uint16_t xnIdLength)
+            uint16_t setCKEMask, uint16_t XnIdLength)
         {
             if (instr == nullptr) {
                 HCCL_ERROR("[CcuV2::ReduceMax] instr is nullptr!");
                 return;
             }
             instr->header = InstrHeader(REDUCE_TYPE, REDUCE_MAX_CODE);
-            Reduce(instr, ms, count, 0, dataType, setCKEId, setCKEMask, xnIdLength);
+            Reduce(instr, ms, count, 0, dataType, setCKEId, setCKEMask, XnIdLength);
         }
 
         void ReduceMin(
             CcuInstr* instr, const uint16_t* ms, uint16_t count, uint16_t dataType, uint16_t setCKEId,
-            uint16_t setCKEMask, uint16_t xnIdLength)
+            uint16_t setCKEMask, uint16_t XnIdLength)
         {
             if (instr == nullptr) {
                 HCCL_ERROR("[CcuV2::ReduceMin] instr is nullptr!");
                 return;
             }
             instr->header = InstrHeader(REDUCE_TYPE, REDUCE_MIN_CODE);
-            Reduce(instr, ms, count, 0, dataType, setCKEId, setCKEMask, xnIdLength);
+            Reduce(instr, ms, count, 0, dataType, setCKEId, setCKEMask, XnIdLength);
         }
 
         std::string ParseLoadSqeArgsToX(const CcuInstr* instr)

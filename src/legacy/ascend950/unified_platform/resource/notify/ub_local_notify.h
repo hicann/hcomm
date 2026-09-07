@@ -11,8 +11,6 @@
 #ifndef HCCLV2_UB_LOCAL_NOTIFY_H
 #define HCCLV2_UB_LOCAL_NOTIFY_H
 
-#include <vector>
-
 #include "enum_factory.h"
 #include "orion_adapter_hccp.h"
 #include "buffer_key.h"

@@ -158,7 +158,7 @@ constexpr uint8_t RNR_RETRY = 7;
 constexpr uint32_t RQ_DEPTH = 256;
 
 HcclResult
-HccpUbCreateJetty(const CtxHandle ctxHandle, const HrtRaUbCreateJettyParam& in, HrtRaUbJettyCreatedOutParam& out)
+HccpUbCreateJetty(const CtxHandle ctxhandle, const HrtRaUbCreateJettyParam& in, HrtRaUbJettyCreatedOutParam& out)
 {
     struct QpCreateAttr attr {};
     attr.scqHandle = reinterpret_cast<void*>(in.sjfcHandle);
@@ -221,12 +221,12 @@ HccpUbCreateJetty(const CtxHandle ctxHandle, const HrtRaUbCreateJettyParam& in, 
 
     struct QpCreateInfo info {};
     void* qpHandle = nullptr;
-    int32_t ret = RaCtxQpCreate(ctxHandle, &attr, &info, &qpHandle);
+    int32_t ret = RaCtxQpCreate(ctxhandle, &attr, &info, &qpHandle);
     if (ret != 0) {
         HCCL_ERROR(
             "[%s] failed, ctxHandle[%p] jetty_id[%u] JettyMode[%s] "
             "sqDepth[%u] sq.buffVa[%llx] sq.buffSize[%u].",
-            __func__, ctxHandle, attr.ub.jettyId, in.jettyMode.Describe().c_str(), attr.sqDepth,
+            __func__, ctxhandle, attr.ub.jettyId, in.jettyMode.Describe().c_str(), attr.sqDepth,
             attr.ub.extMode.sq.buffVa, attr.ub.extMode.sq.buffSize);
         return HcclResult::HCCL_E_NETWORK;
     }

@@ -45,7 +45,7 @@ public:
         const bool devUsed = false, const HrtUbJfcMode jfcMode = HrtUbJfcMode::STARS_POLL,
         const IpAddress& locIpv4Addr = IpAddress(), const IpAddress& rmtIpv4Addr = IpAddress(),
         u8 qos = static_cast<u8>(UB_QOS_DEFAULT), u8 taTimeOut = TpManager::TA_TIMEOUT_NOT_SET,
-        CommEngine engine = COMM_ENGINE_RESERVED, u32 sqDepth = UB_SQ_DEPTH_NOT_SET,
+        CommEngine engine = COMM_ENGINE_RESERVED, u32 inSqDepth = UB_SQ_DEPTH_NOT_SET,
         JettyMode jettyMode = JettyMode::SELF_CREATE);
     void Connect() override;
     RmaConnStatus GetStatus() override;

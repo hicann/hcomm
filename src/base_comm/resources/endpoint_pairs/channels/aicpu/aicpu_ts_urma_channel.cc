@@ -10,6 +10,7 @@
 
 #include "aicpu_ts_urma_channel.h"
 #include "endpoint.h"
+#include "../../sockets/socket_mgr.h"
 #include "orion_adpt_utils.h"
 #include "hcomm_c_adpt.h"
 #include "config_log.h"

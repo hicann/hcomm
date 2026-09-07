@@ -34,6 +34,7 @@
 #undef protected
 
 using namespace hcomm;
+using namespace Hccl;
 
 TEST(AicpuTaskCacheEntryDebugConfigTest, TaskDebugFlagFollowsPlfTaskConfig)
 {

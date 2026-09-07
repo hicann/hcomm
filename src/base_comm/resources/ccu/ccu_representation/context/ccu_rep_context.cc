@@ -66,7 +66,7 @@ namespace CcuRep {
         CurrentBlock()->Append(rep);
     }
 
-    const std::vector<std::shared_ptr<CcuRep::CcuRepBase>>& CcuRepContext::GetRepSequence()
+    const std::vector<std::shared_ptr<CcuRep::CcuRepBase>>& CcuRepContext::GetRepSequence() const
     {
         return mainBlock->GetReps();
     }

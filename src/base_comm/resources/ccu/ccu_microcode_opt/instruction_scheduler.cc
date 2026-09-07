@@ -24,7 +24,8 @@ namespace CcuOpt {
 
         inline uint32_t RegKey(const RegOperand& operand)
         {
-            return (static_cast<uint32_t>(operand.type) << 16) | static_cast<uint32_t>(operand.regId);
+            constexpr uint32_t REG_TYPE_SHIFT = 16;
+            return (static_cast<uint32_t>(operand.type) << REG_TYPE_SHIFT) | static_cast<uint32_t>(operand.regId);
         }
 
         inline CcuRep::CcuInstr MakeNop()
@@ -158,7 +159,8 @@ namespace CcuOpt {
             }
 
             match.matched = true;
-            match.p0 = innerJmpIdx - 2;
+            constexpr int REL_JMP_P0_OFFSET = 2; // P0 = innerJmp - 2 (P+2 为换算 Jump)
+            match.p0 = innerJmpIdx - REL_JMP_P0_OFFSET;
             match.innerJmp = innerJmpIdx;
             match.p3 = innerJmpIdx + 1;
             match.xn0 = regs.xn0;
@@ -280,7 +282,6 @@ namespace CcuOpt {
         constexpr uint64_t kInstrIdSpace = 0x10000ULL;
 
         // 普通相对跳转 offset 修正.
-        //
         // 背景: v2 的 jmp 目标不是直接写在 jmp 指令里的绝对 instrId, 而是"相对距离":
         // 生成端在紧邻 jmp 之前用一条 LoadImdToXn 把 offset = target - jmpPC 加载进 relTarInstrXnId,
         // 硬件按 nextInsIdx = jmpPC + offset (mod 0x10000) 跳转 (见 jump_executor.cc 相对跳转分支).
@@ -501,7 +502,7 @@ namespace CcuOpt {
             const size_t instrCount = origVec.size();
             const uint16_t startId = input.startInstrId;
 
-            auto remapGlobal = [&](uint16_t globalId) -> uint16_t {
+            auto remapGlobal = [&startId, &origToOut](uint16_t globalId) -> uint16_t {
                 // globalId 是"startId + localId" 编码的全局 id, 越界或未映射则原样返回.
                 if (globalId < startId)
                     return globalId;

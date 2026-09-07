@@ -10,6 +10,7 @@
 
 #include "aicpu_ts_p2p_channel.h"
 #include "endpoint.h"
+#include "../../sockets/socket_mgr.h"
 #include "orion_adpt_utils.h"
 #include "hcomm_c_adpt.h"
 #include "adapter_rts_common.h"
@@ -17,6 +18,7 @@
 #include "virtual_topo.h"
 #include "p2p_connection.h"
 #include "makebufs_helper.h"
+#include "../../../../../../src/legacy/ascend950/unified_platform/resource/buffer/local_ipc_rma_buffer_v2.h"
 
 namespace hcomm {
 

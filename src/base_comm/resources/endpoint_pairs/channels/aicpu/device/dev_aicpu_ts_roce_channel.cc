@@ -102,7 +102,7 @@ HcclResult FillIbverbsDataFromRes(const HcommRoceChannelRes* res, TransportDevic
 }
 
 HcclResult OpenDispatcherForTsRoce(
-    const HcommDeviceInfo& deviceInfo, char* commId, [[maybe_unused]] size_t commIdLen, u32& outDevId,
+    const HcommDeviceInfo& deviceInfo, const std::string& commId, [[maybe_unused]] size_t commIdLen, u32& outDevId,
     DispatcherCtxPtr& outDctx, HcclDispatcher& outDispatcher)
 {
     outDevId = INVALID_UINT;
@@ -113,12 +113,12 @@ HcclResult OpenDispatcherForTsRoce(
         HCCL_E_PARA);
 
     DispatcherCtxPtr dctxPtr = nullptr;
-    CHK_RET(CreateDispatcherCtx(&dctxPtr, outDevId, commId));
+    CHK_RET(CreateDispatcherCtx(&dctxPtr, outDevId, commId.c_str()));
     CHK_PTR_NULL(dctxPtr);
     auto* dctx = static_cast<DispatcherCtx*>(dctxPtr);
     const HcclDispatcher dispatcher = dctx->GetDispatcher();
     if (dispatcher == nullptr) {
-        (void)DestroyDispatcherCtx(dctxPtr, commId);
+        (void)DestroyDispatcherCtx(dctxPtr, commId.c_str());
         HCCL_ERROR("[DevAicpuTsRoceChannel][Create] null dispatcher");
         return HCCL_E_PTR;
     }

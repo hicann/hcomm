@@ -502,7 +502,7 @@ ChannelProcess::CombineHostMemory(const std::vector<std::vector<char>>& hostPack
 }
 
 HcclResult ChannelProcess::FillChannelD2HMap(
-    const ChannelHandle* deviceChannelHandles, ChannelHandle* hostChannelHandles, uint32_t listNum)
+    const ChannelHandle* deviceChannelHandles, const ChannelHandle* hostChannelHandles, uint32_t listNum)
 {
     CHK_PTR_NULL(deviceChannelHandles);
     CHK_PTR_NULL(hostChannelHandles);

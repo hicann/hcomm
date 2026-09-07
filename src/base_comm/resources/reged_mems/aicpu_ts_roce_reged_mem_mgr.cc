@@ -178,7 +178,7 @@ HcclResult AicpuTsRoceRegedMemMgr::UnregisterMemory(void* memHandle)
         HCCL_INFO("[AicpuTsRoceRegedMemMgr][UnregisterMemory] ref count > 0");
     }
 
-    CleanupBufferRecords(memHandle, buffer, ownKey, tempKey);
+    CleanupBufferRecords(memHandle, buffer, ownKey);
     HCCL_INFO(
         "[AicpuTsRoceRegedMemMgr][UnregisterMemory] success, memHandle[%p] key {%p, %llu}", memHandle,
         buffer->GetAddr(), static_cast<unsigned long long>(buffer->GetSize()));
@@ -186,8 +186,7 @@ HcclResult AicpuTsRoceRegedMemMgr::UnregisterMemory(void* memHandle)
 }
 
 void AicpuTsRoceRegedMemMgr::CleanupBufferRecords(
-    void* memHandle, hccl::LocalRdmaRmaBuffer* buffer, const hccl::BufferKey<uintptr_t, u64>& ownKey,
-    const hccl::BufferKey<uintptr_t, u64>& tempKey)
+    const void* memHandle, hccl::LocalRdmaRmaBuffer* buffer, const hccl::BufferKey<uintptr_t, u64>& ownKey)
 {
     exportDescByBuffer_.erase(buffer);
 

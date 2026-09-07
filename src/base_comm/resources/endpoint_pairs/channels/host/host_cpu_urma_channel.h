@@ -20,7 +20,6 @@
 
 // Orion
 #include "../../../../../../src/legacy/ascend950/unified_platform/resource/socket/socket.h"
-#include "../../sockets/socket_mgr.h"
 #include "ub_mem_transport.h"
 #include "host_ub_connection.h"
 #include "ub_local_notify.h"

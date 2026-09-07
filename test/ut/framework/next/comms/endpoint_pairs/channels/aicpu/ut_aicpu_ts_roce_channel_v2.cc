@@ -15,6 +15,7 @@
 #include <iostream>
 #include <cstring>
 #include "aicpu_ts_roce_channel_v2.h"
+#include "../sockets/socket_mgr.h"
 #include "aicpu/dev_rdma_connection_v2.h"
 #include "socket.h"
 #include "orion_adapter_hccp.h"

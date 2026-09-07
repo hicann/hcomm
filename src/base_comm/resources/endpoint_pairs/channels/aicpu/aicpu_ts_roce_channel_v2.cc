@@ -1207,7 +1207,7 @@ HcclResult AicpuTsRoceChannelV2::PackOpData(std::vector<char>& data) const
     return HCCL_SUCCESS;
 }
 
-HcclResult AicpuTsRoceChannelV2::H2DResPack(std::vector<char>& buffer)
+HcclResult AicpuTsRoceChannelV2::H2DResPack(std::vector<char>& buffer) const
 {
     CHK_RET(PackOpData(buffer));
     HCCL_INFO(

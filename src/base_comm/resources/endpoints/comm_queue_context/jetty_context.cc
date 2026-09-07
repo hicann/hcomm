@@ -15,6 +15,7 @@
 namespace hcomm {
 namespace {
 
+    constexpr uint32_t JETTY_CREATE_TIMEOUT_SECONDS = 32; // 覆盖 provideCtx 内部 16s jetty 创建 + 余量
     bool IsSameRemoteJetty(const JettyContext::SharedRemoteJettyCtx& ctx, const uint8_t* remoteQpKey, uint32_t keySize)
     {
         return ctx.remoteQpKey.size() == keySize && std::memcmp(ctx.remoteQpKey.data(), remoteQpKey, keySize) == 0;
@@ -59,7 +60,7 @@ HcclResult JettyContext::Acquire(const std::function<HcclResult(Ctx&)>& provideC
     // 超时上限 32s（覆盖 provideCtx 内部 16s jetty 创建 + 余量），避免创建线程异常崩溃后其他线程永久阻塞。
     {
         std::unique_lock<std::mutex> lk(mtx_);
-        if (!cv_.wait_for(lk, std::chrono::seconds(32), [this] {
+        if (!cv_.wait_for(lk, std::chrono::seconds(JETTY_CREATE_TIMEOUT_SECONDS), [this] {
                 return inner_.valid || !inner_.creating;
             })) {
             HCCL_ERROR("[JettyContext][Acquire] wait for shared jetty creation timeout[32s].");
@@ -232,7 +233,7 @@ HcclResult JettyContext::PublishSharedRemoteJetty(
     return HCCL_E_NOT_FOUND;
 }
 
-void JettyContext::UnimportSharedRemoteJettys(Inner& inner)
+void JettyContext::UnimportSharedRemoteJettys(Inner& inner) const
 {
     if (inner.rdmaHandle == nullptr) {
         return;
@@ -252,7 +253,7 @@ void JettyContext::UnimportSharedRemoteJettys(Inner& inner)
     }
 }
 
-void JettyContext::DestroyJettyResources(Inner& inner)
+void JettyContext::DestroyJettyResources(Inner& inner) const
 {
     if (inner.handle != 0) {
         Hccl::HrtRaUbDestroyJetty(inner.handle);
@@ -289,7 +290,7 @@ void JettyContext::DestroyJettyResources(Inner& inner)
     inner.rdmaHandle = nullptr;
 }
 
-HcclResult JettyContext::InnerToCtx(const Inner& inner, Ctx& outCtx)
+HcclResult JettyContext::InnerToCtx(const Inner& inner, Ctx& outCtx) const
 {
     Ctx ctx{};
     ctx.handle = inner.handle;

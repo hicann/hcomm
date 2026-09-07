@@ -92,11 +92,11 @@ private:
     // ========== Profiling接口 ==========
     void ReportDmaTask(
         const void* src, const void* dst, u64 size, const StreamLite& stream, u32 taskId, TaskParamType taskType,
-        DmaOp dmaOp, u64 notifyId, u32 notifyValue, const char* funcName);
+        DmaOp dmaOp, u64 notifyId, u32 notifyValue, const char* funcName) const;
     void ReportReduceTask(
         const void* src, const void* dst, u64 size, const ReduceIn& reduceIn, const StreamLite& stream, u32 taskId,
-        TaskParamType taskType, u64 notifyId, u32 notifyValue, const char* funcName);
-    void ReportNotifyWaitTask(u64 notifyId, const StreamLite& stream, u32 taskId);
+        TaskParamType taskType, u64 notifyId, u32 notifyValue, const char* funcName) const;
+    void ReportNotifyWaitTask(u64 notifyId, const StreamLite& stream, u32 taskId) const;
     bool IsReportTask() const;
 };
 

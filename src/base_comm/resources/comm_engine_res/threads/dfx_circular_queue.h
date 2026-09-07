@@ -59,13 +59,10 @@ public:
 
     bool IsFull() const { return count_ == CAPACITY; }
 
-    T* GetSlot(u16 index) const
-    {
-        return reinterpret_cast<T*>(const_cast<u8*>(buffer_) + static_cast<size_t>(index) * ITEM_SIZE);
-    }
+    T* GetSlot(u16 index) const { return reinterpret_cast<T*>(buffer_ + static_cast<size_t>(index) * ITEM_SIZE); }
 
 private:
-    u8 buffer_[CAPACITY * ITEM_SIZE];
+    mutable u8 buffer_[CAPACITY * ITEM_SIZE];
     u16 begin_;
     u16 end_;
     u16 count_;

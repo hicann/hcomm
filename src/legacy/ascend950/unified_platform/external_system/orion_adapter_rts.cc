@@ -162,28 +162,28 @@ s32 HrtGetDevice()
     return userDevId;
 }
 
-void HrtSetDevice(s32 userDevId)
+void HrtSetDevice(s32 deviceLogicId)
 {
-    aclError ret = aclrtSetDevice(userDevId);
-    HCCL_INFO("Call rtSetDevice, return value[%d], para: device_id[%d].", ret, userDevId);
+    aclError ret = aclrtSetDevice(deviceLogicId);
+    HCCL_INFO("Call rtSetDevice, return value[%d], para: device_id[%d].", ret, deviceLogicId);
     if (ret != ACL_SUCCESS) {
         string msg = StringFormat(
             "[Set][Device]errNo[0x%016llx] rtSet device fail. "
             "return[%d], para:userDevId[%d].",
-            HCCL_ERROR_CODE(HcclResult::HCCL_E_RUNTIME), ret, userDevId);
+            HCCL_ERROR_CODE(HcclResult::HCCL_E_RUNTIME), ret, deviceLogicId);
         MACRO_THROW(RuntimeApiException, msg);
     }
 }
 
-void HrtResetDevice(s32 userDevId)
+void HrtResetDevice(s32 deviceLogicId)
 {
-    aclError ret = aclrtResetDevice(userDevId);
-    HCCL_INFO("Call aclrtResetDevice, return value[%d], para: device_id[%d].", ret, userDevId);
+    aclError ret = aclrtResetDevice(deviceLogicId);
+    HCCL_INFO("Call aclrtResetDevice, return value[%d], para: device_id[%d].", ret, deviceLogicId);
     if (ret != ACL_SUCCESS) {
         string msg = StringFormat(
             "[Reset][Device]errNo[0x%016llx] rtReset device fail. "
             "return[%d], para: userDevId[%d].",
-            HCCL_ERROR_CODE(HcclResult::HCCL_E_RUNTIME), ret, userDevId);
+            HCCL_ERROR_CODE(HcclResult::HCCL_E_RUNTIME), ret, deviceLogicId);
         MACRO_THROW(RuntimeApiException, msg);
     }
 }

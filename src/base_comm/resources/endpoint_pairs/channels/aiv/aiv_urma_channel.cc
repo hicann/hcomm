@@ -10,6 +10,7 @@
 
 #include "aiv_urma_channel.h"
 #include "endpoint.h"
+#include "../sockets/socket_mgr.h"
 #include "comm_queue_context/jetty_context.h"
 #include "orion_adpt_utils.h"
 #include "acl_device_slab_guard.h"

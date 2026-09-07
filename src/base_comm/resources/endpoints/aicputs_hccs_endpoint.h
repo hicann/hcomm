@@ -15,7 +15,6 @@
 #include <memory>
 #include <optional>
 #include <string>
-#include <vector>
 #include "endpoint.h"
 #include "server_socket_context/aicpu_ts_hccs_server_socket_context.h"
 #include "hccs_reged_mem_mgr.h"

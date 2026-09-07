@@ -17,6 +17,7 @@
 #define private public
 #define protected public
 #include "aiv_urma_channel.h"
+#include "../sockets/socket_mgr.h"
 #include "aiv_urma_transport.h"
 #undef protected
 #undef private
@@ -34,7 +35,7 @@ uint32_t g_listenPort = 0;
 constexpr u32 STUB_TOKEN_VALUE = 0x12345678U;
 constexpr u32 STUB_TOKEN_ID = 0x87654321U;
 
-HcommResult StubEndpointStartListen(EndpointHandle, uint32_t port, HcommEndpointListenConfig*)
+HcommResult StubEndpointStartListen(EndpointHandle, uint32_t port, const HcommEndpointListenConfig*)
 {
     g_listenPort = port;
     return static_cast<HcommResult>(HCCL_SUCCESS);

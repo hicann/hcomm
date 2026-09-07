@@ -35,7 +35,7 @@ public:
         unsigned char gid[HCCP_GID_RAW_LEN];
         char feature[HYPER_FEATURE_LEN];
 
-        bool IsValid()
+        bool IsValid() const
         {
             if (qpn == UINT32_MAX || psn == UINT32_MAX) {
                 return false;

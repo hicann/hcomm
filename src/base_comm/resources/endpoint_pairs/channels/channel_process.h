@@ -94,8 +94,8 @@ public:
         const std::string& commTag, aclrtBinHandle binHandle);
     static HcclResult
     RegisterChannelD2HMap(ChannelHandle* deviceChannelHandles, ChannelHandle* hostChannelHandles, uint32_t listNum);
-    static HcclResult
-    FillChannelD2HMap(const ChannelHandle* deviceChannelHandles, ChannelHandle* hostChannelHandles, uint32_t listNum);
+    static HcclResult FillChannelD2HMap(
+        const ChannelHandle* deviceChannelHandles, const ChannelHandle* hostChannelHandles, uint32_t listNum);
     static HcclResult LaunchChannelKernel(
         ChannelHandle* channelHandles, ChannelHandle* hostChannelHandles, HcommChannelDesc* hcommDesc, uint32_t listNum,
         aclrtBinHandle binHandle);

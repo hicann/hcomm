@@ -73,8 +73,8 @@ bool EndpointCtxMgr::FindValidCachedLocked(
 }
 
 // 按 key.locType 分发底层句柄查询，调用方须持有 mtx_
-HcclResult
-EndpointCtxMgr::AcquireHandleLocked(Hccl::RdmaHandleManager& rdmaHandleMgr, const EndpointCtxKey& key, void*& ctxHandle)
+HcclResult EndpointCtxMgr::AcquireHandleLocked(
+    Hccl::RdmaHandleManager& rdmaHandleMgr, const EndpointCtxKey& key, void*& ctxHandle) const
 {
     // key.protocol 为业务协议（CommProtocol），底层 GetByAddr 需要 LinkProtoType：按业务协议映射
     // （ROCE→RDMA；UB 系协议→UB。迁移前 5 子类直调时的映射与此一致）

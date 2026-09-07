@@ -42,8 +42,6 @@ namespace CcuRep {
 
         std::vector<CcuRepArg>& GetOutArgs() { return outArgs; }
 
-        uint16_t GetCallLayer() { return callLayer; }
-
     private:
         CcuRepReferenceManager* funcManager{nullptr};
 

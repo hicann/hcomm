@@ -92,21 +92,23 @@ HcommResult HcommThreadAllocWithConfig(
     CHK_PTR_NULL(config);
     CHK_PRT_RET(
         type == THREAD_TYPE_INVALID,
-        HCCL_ERROR("[%s] thread type[%d] is invalid", __func__, static_cast<int32_t>(type)), (HcommResult)HCCL_E_PARA);
+        HCCL_ERROR("[%s] thread type[%d] is invalid", __func__, static_cast<int32_t>(type)),
+        static_cast<HcommResult>(HCCL_E_PARA));
     CHK_PRT_RET(
         engine == COMM_ENGINE_AICPU_TS || engine == COMM_ENGINE_CPU_TS,
         HCCL_ERROR(
             "[%s] commEngine[%d] CPU_TS/AICPU_TS not supported, use engine with ThreadType instead", __func__,
             static_cast<int32_t>(engine)),
-        (HcommResult)HCCL_E_PARA);
+        static_cast<HcommResult>(HCCL_E_PARA));
     CHK_PRT_RET(
         engine == COMM_ENGINE_AIV || engine == COMM_ENGINE_CCU,
         HCCL_ERROR(
             "[%s] commEngine[%d] AIV/CCU not supported, supported engines: CPU/AICPU", __func__,
             static_cast<int32_t>(engine)),
-        (HcommResult)HCCL_E_PARA);
+        static_cast<HcommResult>(HCCL_E_PARA));
     CHK_PRT_RET(
-        threadNum == 0, HCCL_ERROR("[%s] threadNum[%u] is invalid", __func__, threadNum), (HcommResult)HCCL_E_PARA);
+        threadNum == 0, HCCL_ERROR("[%s] threadNum[%u] is invalid", __func__, threadNum),
+        static_cast<HcommResult>(HCCL_E_PARA));
     HcommResult hcommRet = HcommResMgrInit();
     CHK_PRT_RET(
         hcommRet != HCCL_SUCCESS,
@@ -137,7 +139,7 @@ HcommResult HcommThreadAllocWithConfig(
             = hccl::CreateThread(engine, streamType, config[i].notifyNumPerThread, notifyLoadType, threadPtr);
         CHK_PRT_RET(
             ret != HCCL_SUCCESS, HCCL_ERROR("[%s] Failed to create thread at index[%u], ret[%d]", __func__, i, ret),
-            (HcommResult)ret);
+            static_cast<HcommResult>(ret));
         ret = threadPtr->Init();
         CHK_PRT_RET(
             ret != HCCL_SUCCESS, HCCL_ERROR("[%s] Failed to init thread at index[%u], ret[%d]", __func__, i, ret),
@@ -225,7 +227,8 @@ HcommResult HcommThreadSupplementNotify(
 
     std::vector<std::shared_ptr<hccl::Thread>> needSupplementThread;
     std::unique_ptr<ThreadHandle[]> threadHandle;
-    EXCEPTION_CATCH(threadHandle = std::make_unique<ThreadHandle[]>(threadNum), return (HcommResult)HCCL_E_PTR);
+    EXCEPTION_CATCH(
+        threadHandle = std::make_unique<ThreadHandle[]>(threadNum), return static_cast<HcommResult>(HCCL_E_PTR));
 
     for (uint32_t i = 0; i < threadNum; ++i) {
         std::shared_ptr<hccl::Thread> threadPtr;
@@ -242,7 +245,7 @@ HcommResult HcommThreadSupplementNotify(
             needSupplementThread, std::string(""), threadHandle, HcommResMgr::GetBinHandle());
         CHK_PRT_RET(
             ret != HCCL_SUCCESS, HCCL_ERROR("[%s] SupplementNotifyKernelLaunch failed, ret[%d]", __func__, ret),
-            (HcommResult)ret);
+            static_cast<HcommResult>(ret));
     }
     return HCCL_SUCCESS;
 }
@@ -280,12 +283,13 @@ HcommResult HcommThreadExportToCommEngineAiCpu(
         CHK_RET(HcommResMgr::EnsureKernelBinLoaded(dstEngine));
         std::unique_ptr<ThreadHandle[]> aicpuHandle;
         EXCEPTION_CATCH(
-            aicpuHandle = std::make_unique<ThreadHandle[]>(hostThreads.size()), return (HcommResult)HCCL_E_PTR);
+            aicpuHandle = std::make_unique<ThreadHandle[]>(hostThreads.size()),
+            return static_cast<HcommResult>(HCCL_E_PTR));
         HcclResult ret = hccl::AicpuLaunchMgr::ThreadKernelLaunchForComm(
             hostThreads, commIdStr, aicpuHandle, HcommResMgr::GetBinHandle());
         CHK_PRT_RET(
             ret != HCCL_SUCCESS, HCCL_ERROR("[%s] ThreadKernelLaunchForComm failed, ret[%d]", __func__, ret),
-            (HcommResult)ret);
+            static_cast<HcommResult>(ret));
         for (size_t i = 0; i < hostThreads.size(); ++i) {
             outHandles[missIdx[i]] = aicpuHandle[i];
             CHK_RET(hostThreads[i]->AddThreadHandleToMap(dstEngine, aicpuHandle[i]));
@@ -299,10 +303,11 @@ HcommResult HcommThreadExportToCommEngineAiCpu(
 }
 
 HcommResult HcommThreadExportToCommEngine(
-    ThreadHandle* handles, const char* commId, uint32_t threadNum, CommEngine dstEngine, ThreadHandle* outHandles)
+    ThreadHandle* hostHandles, const char* commId, uint32_t threadNum, CommEngine dstEngine,
+    ThreadHandle* outDeviceHandles)
 {
-    CHK_PTR_NULL(handles);
-    CHK_PTR_NULL(outHandles);
+    CHK_PTR_NULL(hostHandles);
+    CHK_PTR_NULL(outDeviceHandles);
     HcommResult hcommRet = HcommResMgrInit();
     CHK_PRT_RET(
         hcommRet != HCCL_SUCCESS,
@@ -315,19 +320,19 @@ HcommResult HcommThreadExportToCommEngine(
         case COMM_ENGINE_CCU: {
             // CPU 方向：反向查询 g_ThreadD2HMap（device 到 host 映射）
             for (uint32_t i = 0; i < threadNum; ++i) {
-                CHK_RET(hccl::LookupD2HHandle(handles[i], outHandles[i]));
+                CHK_RET(hccl::LookupD2HHandle(hostHandles[i], outDeviceHandles[i]));
             }
             return HCCL_SUCCESS;
         }
         case COMM_ENGINE_AICPU:
         case COMM_ENGINE_AICPU_TS: {
-            CHK_RET(
-                (HcclResult)HcommThreadExportToCommEngineAiCpu(handles, commIdStr, threadNum, dstEngine, outHandles));
+            CHK_RET(static_cast<HcclResult>(
+                HcommThreadExportToCommEngineAiCpu(hostHandles, commIdStr, threadNum, dstEngine, outDeviceHandles)));
             break;
         }
         default:
             HCCL_ERROR("[%s] unsupported dstEngine[%d]", __func__, static_cast<int32_t>(dstEngine));
-            return (HcommResult)HCCL_E_PARA;
+            return static_cast<HcommResult>(HCCL_E_PARA);
     }
     return HCCL_SUCCESS;
 }

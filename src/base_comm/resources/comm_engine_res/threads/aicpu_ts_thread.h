@@ -89,6 +89,7 @@ private:
     HcclResult HostInit();
     HcclResult DeviceInit();
     std::string& UpdateUniqueId();
+    HcclResult DeInitImpl();
 #ifdef CCL_KERNEL_AICPU
     HcclResult BuildComStreamInfo(const HcclStreamInfo& streamInfo, HcclComStreamInfo& comStreamInfo) const;
 #endif

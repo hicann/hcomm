@@ -299,7 +299,7 @@ HcclResult TpMgr::FindAndGetTpInfo(const GetTpInfoParam& param, TpInfo& tpInfo)
     return HcclResult::HCCL_SUCCESS;
 }
 
-HcclResult TpMgr::BeginGetTpInfoListRequest(const GetTpInfoParam& param, ReqQosMap& qosMap, const QosKey qosKey)
+HcclResult TpMgr::BeginGetTpInfoListRequest(const GetTpInfoParam& param, ReqQosMap& qosMap, const QosKey qosKey) const
 {
     RequestCtx& reqCtx = qosMap[qosKey];
     CHK_RET(StartGetTpInfoListRequest(param, reqCtx));
@@ -717,7 +717,7 @@ uint8_t TpMgr::CalcTaTimeout(TpProtocol tpProtocol, uint8_t taTimeOut, uint32_t 
 
 HcclResult TpMgr::BuildTpInfoAndCommitQosAttr(
     const GetTpInfoParam& param, const RequestCtx& reqCtx, const struct HccpTpInfo* baseInfoPtr,
-    const uint32_t tpListIndex, const uint32_t mappedSl, TpInfo& tpInfo)
+    const uint32_t tpListIndex, const uint32_t mappedSl, TpInfo& tpInfo) const
 {
     tpInfo = TpInfo{};
     tpInfo.tpHandle = baseInfoPtr[tpListIndex].tpHandle;

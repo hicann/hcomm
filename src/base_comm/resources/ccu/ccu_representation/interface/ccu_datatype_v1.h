@@ -157,8 +157,8 @@ namespace CcuRep {
         CcuArithmeticOperator<Address, uint16_t> operator+(const uint16_t offset) const;
         CcuArithmeticOperator<Variable, Address> operator+(const Variable& varB) const;
         CcuArithmeticOperator<Address, Address> operator+(const Address& addrB) const;
-        CcuArithmeticOperator<Address, Address> operator*(const Address& varB) const;
-        CcuArithmeticOperator<Variable, Address> operator*(const Variable& addrB) const;
+        CcuArithmeticOperator<Address, Address> operator*(const Address& addrB) const;
+        CcuArithmeticOperator<Variable, Address> operator*(const Variable& varB) const;
         CcuArithmeticOperator<Address, uint16_t> operator*(const uint16_t offset) const;
 
         CcuArithmeticOperator<Variable, Address> operator-(const Variable& varB) const;

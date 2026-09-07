@@ -13,7 +13,6 @@
 
 #include <cstdint>
 #include <memory>
-#include <vector>
 #include "../channel.h"
 
 // Orion

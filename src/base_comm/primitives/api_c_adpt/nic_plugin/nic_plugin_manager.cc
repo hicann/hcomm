@@ -20,6 +20,7 @@
 #include <cstring>
 #include <memory>
 #include <mutex>
+#include <new>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -145,9 +146,10 @@ namespace {
             return;
         }
 
-        std::unique_ptr<NicPluginEntry> plugin(new (std::nothrow)
-                                                   NicPluginEntry{soHandle, info, createEndpoint, createChannel});
-        if (plugin == nullptr) {
+        std::unique_ptr<NicPluginEntry> plugin;
+        try {
+            plugin = std::make_unique<NicPluginEntry>(NicPluginEntry{soHandle, info, createEndpoint, createChannel});
+        } catch (const std::bad_alloc&) {
             HCCL_RUN_WARNING("[NicPlugin] allocate plugin entry for %s failed.", path.c_str());
             dlclose(soHandle);
             return;

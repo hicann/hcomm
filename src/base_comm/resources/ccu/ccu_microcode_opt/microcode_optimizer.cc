@@ -80,22 +80,20 @@ namespace CcuOpt {
             const uint16_t inStart = input.startInstrId;
             const uint16_t outStart = output.startInstrId;
             for (size_t i = 0; i < output.instrVec.size(); ++i) {
-                const char* srcTag = "NEW  (inserted NOP)";
-                std::string srcBuf;
+                std::string srcTag = "NEW  (inserted NOP)";
                 if (mapConsistent) {
                     int32_t src = originIndex[i];
                     if (src >= 0) {
                         std::ostringstream oss;
                         oss << "src[" << src << "] gid=" << (inStart + static_cast<uint32_t>(src));
-                        srcBuf = oss.str();
-                        srcTag = srcBuf.c_str();
+                        srcTag = oss.str();
                     }
                 } else {
                     srcTag = "N/A (mapping omitted)";
                 }
                 HCCL_INFO(
                     "[CcuMicrocodeOpt][optlog] output  [%3zu] gid=%u <- %s : %s", i,
-                    static_cast<unsigned>(outStart + i), srcTag,
+                    static_cast<unsigned>(outStart + i), srcTag.c_str(),
                     CcuRep::CcuV2::ParseInstrV2(output.instrVec.data() + i).c_str());
             }
         }

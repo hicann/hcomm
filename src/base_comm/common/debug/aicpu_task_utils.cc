@@ -33,7 +33,8 @@ HcclResult AicpuTaskUtils::DumpSqeContent(const uint8_t* sqePtr)
 {
     if ((UNLIKELY(GetPlfDebugConfigValue() & PLF_TASK)) || UNLIKELY(HcclCheckLogLevel(HCCL_LOG_INFO))) {
         CHK_PTR_NULL(sqePtr);
-        Rt91095StarsSqeHeader* sqeHeaderPtr = (Rt91095StarsSqeHeader*)sqePtr;
+        const Rt91095StarsSqeHeader* sqeHeaderPtr
+            = static_cast<const Rt91095StarsSqeHeader*>(static_cast<const void*>(sqePtr));
         const Rt91095StarsSqeType sqeType = static_cast<Rt91095StarsSqeType>(sqeHeaderPtr->type);
         switch (sqeType) {
             case Rt91095StarsSqeType::RT_91095_SQE_TYPE_UBDMA:
@@ -56,7 +57,8 @@ HcclResult AicpuTaskUtils::DumpSqeContent(const uint8_t* sqePtr)
 
 inline HcclResult AicpuTaskUtils::DumpUbdmaSqe_(const uint8_t* sqePtr)
 {
-    Rt91095StarsUbdmaDBmodeSqe* ubDmaSqe = (Rt91095StarsUbdmaDBmodeSqe*)sqePtr;
+    const Rt91095StarsUbdmaDBmodeSqe* ubDmaSqe
+        = static_cast<const Rt91095StarsUbdmaDBmodeSqe*>(static_cast<const void*>(sqePtr));
     PLF_CONFIG_INFO(
         PLF_TASK,
         "[AicpuTaskUtils][DumpSqeContent] type[%u] "
@@ -70,7 +72,8 @@ inline HcclResult AicpuTaskUtils::DumpUbdmaSqe_(const uint8_t* sqePtr)
 
 inline HcclResult AicpuTaskUtils::DumpNotifySqe_(const uint8_t* sqePtr)
 {
-    Rt91095StarsNotifySqe* notifySqe = (Rt91095StarsNotifySqe*)sqePtr;
+    const Rt91095StarsNotifySqe* notifySqe
+        = static_cast<const Rt91095StarsNotifySqe*>(static_cast<const void*>(sqePtr));
     PLF_CONFIG_INFO(
         PLF_TASK,
         "[AicpuTaskUtils][DumpSqeContent] type[%u] rtStreamId[%u] taskId[%u] wrCqe[%u] "
@@ -84,7 +87,7 @@ inline HcclResult AicpuTaskUtils::DumpNotifySqe_(const uint8_t* sqePtr)
 
 inline HcclResult AicpuTaskUtils::DumpSdmaSqe_(const uint8_t* sqePtr)
 {
-    Rt91095StarsMemcpySqe* sdmaSqe = (Rt91095StarsMemcpySqe*)sqePtr;
+    const Rt91095StarsMemcpySqe* sdmaSqe = static_cast<const Rt91095StarsMemcpySqe*>(static_cast<const void*>(sqePtr));
     constexpr uint64_t UINT32_BIT_WIDTH = 32;
     const uint64_t srcAddr = (static_cast<uint64_t>(sdmaSqe->u.strideMode0.srcAddrHigh) << UINT32_BIT_WIDTH)
                              | sdmaSqe->u.strideMode0.srcAddrLow;
@@ -129,8 +132,8 @@ HcclResult AicpuTaskUtils::DumpWqeContent(const uint8_t* wqePtr)
 
 inline HcclResult AicpuTaskUtils::DumpReadWriteWqe_(const uint8_t* wqePtr)
 {
-    UdmaSqeCommon* wqeCommonPtr = (UdmaSqeCommon*)wqePtr;
-    UdmaSqeWrite* udmaSqeWrite = (UdmaSqeWrite*)wqePtr;
+    const UdmaSqeCommon* wqeCommonPtr = static_cast<const UdmaSqeCommon*>(static_cast<const void*>(wqePtr));
+    const UdmaSqeWrite* udmaSqeWrite = static_cast<const UdmaSqeWrite*>(static_cast<const void*>(wqePtr));
     constexpr uint64_t UINT32_BIT_WIDTH = 32;
     const uint64_t rmtAddr
         = (static_cast<uint64_t>(wqeCommonPtr->rmtAddrHigh) << UINT32_BIT_WIDTH) | wqeCommonPtr->rmtAddrLow;
@@ -170,7 +173,8 @@ inline HcclResult AicpuTaskUtils::DumpReadWriteWqe_(const uint8_t* wqePtr)
 inline HcclResult AicpuTaskUtils::DumpWriteWithNotifyWqe_(const uint8_t* wqePtr)
 {
     const UdmaSqeCommon* wqeCommonPtr = static_cast<const UdmaSqeCommon*>(static_cast<const void*>(wqePtr));
-    UdmaSqeWriteWithNotify* udmaSqeWriteWithNotify = (UdmaSqeWriteWithNotify*)wqePtr;
+    const UdmaSqeWriteWithNotify* udmaSqeWriteWithNotify
+        = static_cast<const UdmaSqeWriteWithNotify*>(static_cast<const void*>(wqePtr));
     constexpr uint64_t UINT32_BIT_WIDTH = 32;
     const uint64_t rmtAddr
         = (static_cast<uint64_t>(wqeCommonPtr->rmtAddrHigh) << UINT32_BIT_WIDTH) | wqeCommonPtr->rmtAddrLow;

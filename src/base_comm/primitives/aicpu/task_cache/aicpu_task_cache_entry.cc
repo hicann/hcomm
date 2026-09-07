@@ -23,12 +23,34 @@
 #include "sqe_v82.h"
 
 using Hccl::GetPlfDebugConfigValue;
+
+namespace {
+constexpr uint8_t SDMA_OPCODE_MEMCPY = 0;
+}
 using Hccl::PLF_TASK;
 #ifdef HCCL_V2 // hccl_v2
 using Hccl::HCCL_LOG_DEBUG;
 using Hccl::HCCL_LOG_INFO;
 using Hccl::HcclCheckLogLevel;
 #endif
+
+using Hccl::AC_SQE_SIZE;
+using hccl::AicpuTsThread;
+using Hccl::DbSqeProfInfo;
+using Hccl::Rt91095StarsMemcpySqe;
+using Hccl::Rt91095StarsSqeHeader;
+using Hccl::Rt91095StarsSqeType;
+using Hccl::Rt91095StarsUbdmaDBmodeSqe;
+using Hccl::Rt91095StarsWriteValueSqe;
+using Hccl::RtsqA5;
+using Hccl::StreamLite;
+using Hccl::TaskParamTypeVal;
+using Hccl::UbConnLite;
+using Hccl::UbTransportLiteImpl;
+using Hccl::UdmaSqeCommon;
+using Hccl::UdmaSqOpcode;
+using Hccl::WqeTask;
+using std::vector;
 
 namespace hcomm {
 
@@ -56,7 +78,7 @@ const AddrRefreshInfo& AddrRefreshInfo::operator=(const AddrRefreshInfo& other)
 
 AicpuTaskCacheEntry::AicpuTaskCacheEntry()
 {
-    if ((UNLIKELY(GetPlfDebugConfigValue() & PLF_TASK)) || UNLIKELY(HcclCheckLogLevel(HCCL_LOG_INFO))) {
+    if ((UNLIKELY((GetPlfDebugConfigValue() & PLF_TASK) != 0)) || UNLIKELY(HcclCheckLogLevel(HCCL_LOG_INFO))) {
         isTaskConfigDebug_ = true;
     }
 }
@@ -628,7 +650,8 @@ HcclResult AicpuTaskCacheEntry::UpdateSqeAddrRefreshInfo_(
     // 参考sqe_build_a5.h, 提取给定SQE的AddrRefreshInfo
 
     // 提取sqeType，频繁调用私有函数，上层保证指针不为空
-    Rt91095StarsSqeHeader* sqeHeaderPtr = (Rt91095StarsSqeHeader*)sqePtr;
+    const Rt91095StarsSqeHeader* sqeHeaderPtr
+        = static_cast<const Rt91095StarsSqeHeader*>(static_cast<const void*>(sqePtr));
     const Rt91095StarsSqeType sqeType = static_cast<Rt91095StarsSqeType>(sqeHeaderPtr->type);
 
     // 根据sqeType提取AddrRefreshInfo
@@ -639,7 +662,8 @@ HcclResult AicpuTaskCacheEntry::UpdateSqeAddrRefreshInfo_(
             // 无地址字段, 直接跳过
             break;
         case Rt91095StarsSqeType::RT_91095_SQE_TYPE_SDMA: {
-            Rt91095StarsMemcpySqe* memcpySqePtr = (Rt91095StarsMemcpySqe*)sqePtr;
+            const Rt91095StarsMemcpySqe* memcpySqePtr
+                = static_cast<const Rt91095StarsMemcpySqe*>(static_cast<const void*>(sqePtr));
             CHK_RET(UpdateAddrRefreshInfo_(
                 memcpySqePtr->u.strideMode0.srcAddrLow, memcpySqePtr->u.strideMode0.srcAddrHigh, srcAddrRefreshInfo,
                 AddrType::kAddrTypeUnknown));
@@ -649,7 +673,8 @@ HcclResult AicpuTaskCacheEntry::UpdateSqeAddrRefreshInfo_(
             break;
         }
         case Rt91095StarsSqeType::RT_91095_SQE_TYPE_WRITE_VALUE: {
-            Rt91095StarsWriteValueSqe* writeValueSqePtr = (Rt91095StarsWriteValueSqe*)sqePtr;
+            const Rt91095StarsWriteValueSqe* writeValueSqePtr
+                = static_cast<const Rt91095StarsWriteValueSqe*>(static_cast<const void*>(sqePtr));
             CHK_RET(UpdateAddrRefreshInfo_(
                 writeValueSqePtr->writeAddrLow, writeValueSqePtr->writeAddrHigh, dstAddrRefreshInfo,
                 AddrType::kAddrTypeUnknown));
@@ -672,7 +697,7 @@ HcclResult AicpuTaskCacheEntry::UpdateWqeAddrRefreshInfoAndTokenInfo_(
 
     // 提取wqeCode
     // 注意: BatchOneSidedRead/Write只是对multi-slice封装的接口, 最终还是规约到normal read/write
-    UdmaSqeCommon* wqeCommonPtr = (UdmaSqeCommon*)(&wqeTask);
+    const UdmaSqeCommon* wqeCommonPtr = static_cast<const UdmaSqeCommon*>(static_cast<const void*>(&wqeTask));
     const uint8_t wqeCode = static_cast<uint8_t>(wqeCommonPtr->opcode); // opcode来自于UdmaSqOpcode, 一定在uint8范围内
     switch (wqeCode) {
         case UdmaSqOpcode::UDMA_OPC_READ: // UdmaSqeWrite
@@ -686,7 +711,7 @@ HcclResult AicpuTaskCacheEntry::UpdateWqeAddrRefreshInfoAndTokenInfo_(
             break;
         case UdmaSqOpcode::UDMA_OPC_WRITE: { // UdmaSqeWrite
             const uint32_t inlineEn = wqeTask.wqeWrite.comm.inlineEn;
-            if (inlineEn) { // inline write
+            if (inlineEn != 0) { // inline write
                 CHK_RET(UpdateAddrRefreshInfo_(
                     wqeTask.wqeWrite.comm.rmtAddrLow, wqeTask.wqeWrite.comm.rmtAddrHigh, rmtAddrRefreshInfo,
                     AddrType::kAddrTypeRemote));
@@ -722,7 +747,7 @@ HcclResult AicpuTaskCacheEntry::UpdateWqeAddrRefreshInfoAndTokenInfo_(
 }
 
 inline HcclResult AicpuTaskCacheEntry::UpdateTokenFlagsByAddrRefreshInfo_(
-    const AddrRefreshInfo& addrRefreshInfo, vector<TokenInfo>& tokenInfos, bool isLoc)
+    const AddrRefreshInfo& addrRefreshInfo, vector<TokenInfo>& tokenInfos, bool isLoc) const
 {
     if (!addrRefreshInfo.needRefresh) {
         return HCCL_SUCCESS;
@@ -802,7 +827,7 @@ inline HcclResult AicpuTaskCacheEntry::RefreshSqeTasks_(const SqeArrayInfo& sqeA
     }
     for (size_t sqeIdx = 0; sqeIdx < sqeCount; ++sqeIdx) {
         // 获取当前SQE的信息
-        Rt91095StarsSqeHeader* sqeHeaderPtr = (Rt91095StarsSqeHeader*)sqeArrayPtr;
+        Rt91095StarsSqeHeader* sqeHeaderPtr = static_cast<Rt91095StarsSqeHeader*>(static_cast<void*>(sqeArrayPtr));
         CHK_RET(RefreshOneSqe_(
             sqeArrayPtr, sqeSrcAddrRefreshInfoArray[sqeIdx], sqeDstAddrRefreshInfoArray[sqeIdx], baseAddrs));
 
@@ -833,9 +858,9 @@ inline HcclResult AicpuTaskCacheEntry::RefreshSqeTasks_(const SqeArrayInfo& sqeA
 
 inline HcclResult AicpuTaskCacheEntry::RefreshOneSqe_(
     uint8_t* sqeArrayPtr, const AddrRefreshInfo& srcAddrRefreshInfo, const AddrRefreshInfo& dstAddrRefreshInfo,
-    const uint64_t* baseAddrs)
+    const uint64_t* baseAddrs) const
 {
-    Rt91095StarsSqeHeader* sqeHeaderPtr = (Rt91095StarsSqeHeader*)sqeArrayPtr;
+    Rt91095StarsSqeHeader* sqeHeaderPtr = static_cast<Rt91095StarsSqeHeader*>(static_cast<void*>(sqeArrayPtr));
     const Rt91095StarsSqeType sqeType = static_cast<Rt91095StarsSqeType>(sqeHeaderPtr->type);
     // 根据SQE type进行对应刷新 (task id始终要刷新; addr相关字段有条件刷新)
     switch (sqeType) {
@@ -845,7 +870,7 @@ inline HcclResult AicpuTaskCacheEntry::RefreshOneSqe_(
             // 无地址字段, 直接跳过
             break;
         case Rt91095StarsSqeType::RT_91095_SQE_TYPE_SDMA: {
-            Rt91095StarsMemcpySqe* memcpySqePtr = (Rt91095StarsMemcpySqe*)sqeArrayPtr;
+            Rt91095StarsMemcpySqe* memcpySqePtr = static_cast<Rt91095StarsMemcpySqe*>(static_cast<void*>(sqeArrayPtr));
             // 刷新地址
             if (srcAddrRefreshInfo.needRefresh) {
                 RefreshTaskAddr_(
@@ -860,7 +885,8 @@ inline HcclResult AicpuTaskCacheEntry::RefreshOneSqe_(
             break;
         }
         case Rt91095StarsSqeType::RT_91095_SQE_TYPE_WRITE_VALUE: {
-            Rt91095StarsWriteValueSqe* writeValueSqePtr = (Rt91095StarsWriteValueSqe*)sqeArrayPtr;
+            Rt91095StarsWriteValueSqe* writeValueSqePtr
+                = static_cast<Rt91095StarsWriteValueSqe*>(static_cast<void*>(sqeArrayPtr));
             // 刷新地址
             if (dstAddrRefreshInfo.needRefresh) {
                 // 注意: writeAddrHigh是位域, 无法直接作为u32&传入
@@ -878,11 +904,11 @@ inline HcclResult AicpuTaskCacheEntry::RefreshOneSqe_(
     return HCCL_SUCCESS;
 }
 
-inline HcclResult AicpuTaskCacheEntry::LaunchSqeTasks_(const SqeArrayInfo& sqeArrayInfo)
+inline HcclResult AicpuTaskCacheEntry::LaunchSqeTasks_(const SqeArrayInfo& sqeArrayInfo) const
 {
     // 注意: rtsqPtr和sqeArray在AddSqeArray时已校验, 这里无需再校验
     RtsqA5* rtsqA5Ptr = sqeArrayInfo.rtsqPtr;
-    rtsqA5Ptr->LaunchNewTask(sqeArrayInfo.sqeArray, (u32)sqeArrayInfo.sqeCount);
+    rtsqA5Ptr->LaunchNewTask(sqeArrayInfo.sqeArray, static_cast<u32>(sqeArrayInfo.sqeCount));
     return HCCL_SUCCESS;
 }
 
@@ -962,7 +988,7 @@ inline HcclResult AicpuTaskCacheEntry::RefreshWqeTasks_(
         const AddrRefreshInfo& rmtAddrRefreshInfo = wqeRmtAddrRefreshInfoArray[wqeIdx];
 
         // 根据WQE类型刷新对应地址字段及token id/value
-        UdmaSqeCommon* wqeCommonPtr = (UdmaSqeCommon*)(&wqeTask);
+        UdmaSqeCommon* wqeCommonPtr = static_cast<UdmaSqeCommon*>(static_cast<void*>(&wqeTask));
         const uint8_t wqeCode
             = static_cast<uint8_t>(wqeCommonPtr->opcode); // opcode来自于UdmaSqOpcode, 一定在uint8范围内
         switch (wqeCode) {
@@ -993,7 +1019,7 @@ inline HcclResult AicpuTaskCacheEntry::RefreshWqeTasks_(
 
 inline HcclResult AicpuTaskCacheEntry::RefreshWqeRead_(
     WqeTask& wqeTask, const AddrRefreshInfo& locAddrRefreshInfo, const AddrRefreshInfo& rmtAddrRefreshInfo,
-    const uint64_t* baseAddrs, const vector<TokenInfo>& tokenInfos)
+    const uint64_t* baseAddrs, const vector<TokenInfo>& tokenInfos) const
 {
     // 如果需要刷新loc地址信息
     if (locAddrRefreshInfo.needRefresh) {
@@ -1023,7 +1049,7 @@ inline HcclResult AicpuTaskCacheEntry::RefreshWqeWrite_(
     const uint64_t* baseAddrs, const vector<TokenInfo>& tokenInfos)
 {
     const uint32_t inlineEn = wqeTask.wqeWrite.comm.inlineEn;
-    if (inlineEn) { // inline write
+    if (inlineEn != 0) { // inline write
         // 注意: inline write使用WriteWqe实现notify功能 (类似A3使用WriteValue实现notify功能)
         // 因为notify token id/value以及notify addr不会改变, 因此inline write无需刷新WQE
         if (UNLIKELY(rmtAddrRefreshInfo.needRefresh)) {
@@ -1055,7 +1081,7 @@ inline HcclResult AicpuTaskCacheEntry::RefreshWqeWrite_(
 
 inline HcclResult AicpuTaskCacheEntry::RefreshWqeWriteWithNotify_(
     WqeTask& wqeTask, const AddrRefreshInfo& locAddrRefreshInfo, const AddrRefreshInfo& rmtAddrRefreshInfo,
-    const uint64_t* baseAddrs, const vector<TokenInfo>& tokenInfos)
+    const uint64_t* baseAddrs, const vector<TokenInfo>& tokenInfos) const
 {
     // 如果需要刷新loc地址信息
     if (locAddrRefreshInfo.needRefresh) {
@@ -1122,7 +1148,7 @@ inline HcclResult AicpuTaskCacheEntry::RefreshWqeRmtTokenIdAndValue_(
     return HCCL_SUCCESS;
 }
 
-inline HcclResult AicpuTaskCacheEntry::LaunchWqeTasks_(WqeTaskArrayInfo& wqeTaskArrayInfo)
+inline HcclResult AicpuTaskCacheEntry::LaunchWqeTasks_(WqeTaskArrayInfo& wqeTaskArrayInfo) const
 {
     // 逐个下发WQE
     vector<WqeTask>& wqeTasks = wqeTaskArrayInfo.wqeTaskArray;
@@ -1132,7 +1158,7 @@ inline HcclResult AicpuTaskCacheEntry::LaunchWqeTasks_(WqeTaskArrayInfo& wqeTask
         WqeTask& wqeTask = wqeTasks[wqeIdx];
 
         // 根据WQE类型下发 (下发过程中会更新ubConnLitePtr中的pi)
-        UdmaSqeCommon* wqeCommonPtr = (UdmaSqeCommon*)(&wqeTask);
+        UdmaSqeCommon* wqeCommonPtr = static_cast<UdmaSqeCommon*>(static_cast<void*>(&wqeTask));
         const uint8_t wqeCode
             = static_cast<uint8_t>(wqeCommonPtr->opcode); // opcode来自于UdmaSqOpcode, 一定在uint8范围内
         switch (wqeCode) {
@@ -1171,7 +1197,7 @@ inline HcclResult AicpuTaskCacheEntry::RefreshDbSqe_(WqeTaskArrayInfo& wqeTaskAr
     uint8_t* sqePtr = sqeArrayInfos_[dbSqeLocation.sqeArrayIdx].sqeArray + dbSqeLocation.dbSqeIdx * AC_SQE_SIZE;
 
     // 更新SQE pi value
-    Rt91095StarsUbdmaDBmodeSqe* dbSqePtr = (Rt91095StarsUbdmaDBmodeSqe*)sqePtr;
+    Rt91095StarsUbdmaDBmodeSqe* dbSqePtr = static_cast<Rt91095StarsUbdmaDBmodeSqe*>(static_cast<void*>(sqePtr));
     dbSqePtr->piValue1 = pi;
 
     // 注意: UbTransportLiteImpl只针对WQE按需填充DfxTaskInfo上报profiling, DB SQE无需上报profiling
@@ -1188,7 +1214,6 @@ HcclResult AicpuTaskCacheEntry::ReportDbSqeProfiling_(
     const uint32_t count, StreamLite* streamLite, const u32 sqId, const u32 taskId)
 {
     // 注意: 参考ub_transport_lite_impl.cc填充DfxTaskInfo并经NextTaskSlot上报
-
     DbSqeLocation dbSqeLocation;
     dbSqeLocation.sqeArrayIdx = arrayIdx;
     dbSqeLocation.dbSqeIdx = dbSqeIdx;
@@ -1210,7 +1235,8 @@ HcclResult AicpuTaskCacheEntry::ReportDbSqeProfiling_(
         HCCL_E_INTERNAL);
 
     // 校验SQE type
-    Rt91095StarsSqeHeader* sqeHeaderPtr = (Rt91095StarsSqeHeader*)dbSqePtr; // 已在AddSqeArray校验, 无需再校验
+    Rt91095StarsSqeHeader* sqeHeaderPtr
+        = static_cast<Rt91095StarsSqeHeader*>(static_cast<void*>(dbSqePtr)); // 已在AddSqeArray校验, 无需再校验
     CHK_PRT_RET(
         static_cast<Rt91095StarsSqeType>(sqeHeaderPtr->type) != Rt91095StarsSqeType::RT_91095_SQE_TYPE_UBDMA,
         HCCL_ERROR(
@@ -1254,7 +1280,7 @@ HcclResult AicpuTaskCacheEntry::ReportDbSqeProfiling_(
 
 inline HcclResult AicpuTaskCacheEntry::RefreshDbSqeProfAddrs_(
     DbSqeProfAndRefreshInfo& profAndRefreshInfo, const uint64_t* baseAddrs, [[maybe_unused]] const uint64_t* memSizes,
-    [[maybe_unused]] const uint32_t count)
+    [[maybe_unused]] const uint32_t count) const
 {
     // 注意: dbSqeProfInfo中的src/dstAddr, 需要根据DbSqeProfAndRefreshInfo中的src/dstAddrRefreshInfo进行刷新,
     // 才能填充DfxTaskInfo
@@ -1268,7 +1294,8 @@ inline HcclResult AicpuTaskCacheEntry::RefreshDbSqeProfAddrs_(
 }
 
 inline void AicpuTaskCacheEntry::FillSlotCommonFields_(
-    Hccl::DfxTaskInfo* slot, StreamLite* streamLite, u32 taskId, u8 linkType, u8 transportType, u64 channelHandle) const
+    Hccl::DfxTaskInfo* slot, const StreamLite* streamLite, u32 taskId, u8 linkType, u8 transportType,
+    u64 channelHandle) const
 {
     slot->sqId = streamLite->GetSqId();
     slot->taskId = taskId;
@@ -1350,7 +1377,8 @@ HcclResult AicpuTaskCacheEntry::ReportSqeProfiling_(
     // 注意: 参考aicpu_ts_thread.cc填充DfxTaskInfo并经NextTaskSlot上报
 
     // 获取SQE对应的sqeType和taskId
-    Rt91095StarsSqeHeader* sqeHeaderPtr = (Rt91095StarsSqeHeader*)sqePtr; // 已在AddSqeArray校验, 无需再校验
+    Rt91095StarsSqeHeader* sqeHeaderPtr
+        = static_cast<Rt91095StarsSqeHeader*>(static_cast<void*>(sqePtr)); // 已在AddSqeArray校验, 无需再校验
     const Rt91095StarsSqeType sqeType = static_cast<Rt91095StarsSqeType>(sqeHeaderPtr->type);
     const u32 taskId = (sqeHeaderPtr->taskId << 16) | (sqeHeaderPtr->rtStreamId);
 
@@ -1381,7 +1409,8 @@ HcclResult AicpuTaskCacheEntry::ReportSqeProfiling_(
 inline HcclResult AicpuTaskCacheEntry::FillSlotNotify_(
     Hccl::DfxTaskInfo* slot, const uint8_t* sqePtr, StreamLite* streamLite, u32 taskId) const
 {
-    Rt91095StarsSqeHeader* sqeHeaderPtr = (Rt91095StarsSqeHeader*)sqePtr;
+    const Rt91095StarsSqeHeader* sqeHeaderPtr
+        = static_cast<const Rt91095StarsSqeHeader*>(static_cast<const void*>(sqePtr));
     const Rt91095StarsSqeType sqeType = static_cast<Rt91095StarsSqeType>(sqeHeaderPtr->type);
     slot->taskType = static_cast<u8>(
         (sqeType == Rt91095StarsSqeType::RT_91095_SQE_TYPE_NOTIFY_RECORD) ? Hccl::TaskParamTypeVal::TASK_NOTIFY_RECORD :
@@ -1397,20 +1426,22 @@ inline HcclResult AicpuTaskCacheEntry::FillSlotNotify_(
 inline HcclResult AicpuTaskCacheEntry::FillSlotSdma_(
     Hccl::DfxTaskInfo* slot, const uint8_t* sqePtr, StreamLite* streamLite, u32 taskId) const
 {
-    Hccl::Rt91095StarsMemcpySqe* sdmaSqe = (Hccl::Rt91095StarsMemcpySqe*)sqePtr;
+    const Hccl::Rt91095StarsMemcpySqe* sdmaSqe
+        = static_cast<const Hccl::Rt91095StarsMemcpySqe*>(static_cast<const void*>(sqePtr));
     FillSlotCommonFields_(
         slot, streamLite, taskId, Hccl::DfxLinkTypeVal::LINK_ONCHIP,
         static_cast<u8>(Hccl::DfxTransportType::DFX_TRANSPORT_TYPE_LOCAL), DFX_INVALID_U64);
-    if (sdmaSqe->opcode == 0) {
+    if (sdmaSqe->opcode == SDMA_OPCODE_MEMCPY) {
         slot->taskType = static_cast<u8>(Hccl::TaskParamTypeVal::TASK_SDMA);
         slot->taskPara.Dma.sqeAddr = reinterpret_cast<u64>(sqePtr);
     } else {
+        constexpr uint32_t UINT32_BIT_WIDTH = 32;
         slot->taskType = static_cast<u8>(Hccl::TaskParamTypeVal::TASK_REDUCE_INLINE);
         slot->taskPara.Reduce.sqeAddr = reinterpret_cast<u64>(sqePtr);
-        slot->taskPara.Reduce.srcAddr
-            = (static_cast<uint64_t>(sdmaSqe->u.strideMode0.srcAddrHigh) << 32) | sdmaSqe->u.strideMode0.srcAddrLow;
-        slot->taskPara.Reduce.dstAddr
-            = (static_cast<uint64_t>(sdmaSqe->u.strideMode0.dstAddrHigh) << 32) | sdmaSqe->u.strideMode0.dstAddrLow;
+        slot->taskPara.Reduce.srcAddr = (static_cast<uint64_t>(sdmaSqe->u.strideMode0.srcAddrHigh) << UINT32_BIT_WIDTH)
+                                        | sdmaSqe->u.strideMode0.srcAddrLow;
+        slot->taskPara.Reduce.dstAddr = (static_cast<uint64_t>(sdmaSqe->u.strideMode0.dstAddrHigh) << UINT32_BIT_WIDTH)
+                                        | sdmaSqe->u.strideMode0.dstAddrLow;
         slot->taskPara.Reduce.size = sdmaSqe->u.strideMode0.lengthMove;
         slot->taskPara.Reduce.notifyId = INVALID_U32;
         slot->taskPara.Reduce.reduceOp = ConvertSdmaOpCodeToReduceOp_(sdmaSqe->opcode);

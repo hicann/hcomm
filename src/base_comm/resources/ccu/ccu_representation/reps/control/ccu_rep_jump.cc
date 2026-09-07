@@ -49,14 +49,14 @@ namespace CcuRep {
         }
     }
 
-    CcuResult CcuRepJumpBase::InitInstr(CcuInstr*& instr, uint16_t& instrId)
+    CcuResult CcuRepJumpBase::InitInstr(CcuInstr*& instr, uint16_t& curInstrId)
     {
         CCU_CHK_PTR_NULL(instr);
         if (this->instr == nullptr) {
-            this->instrId = instrId;
+            this->instrId = curInstrId;
             this->instr = instr;
             instr += instrCount;
-            instrId += instrCount;
+            curInstrId += instrCount;
         }
         return CcuResult::CCU_SUCCESS;
     }
@@ -69,16 +69,17 @@ namespace CcuRep {
         instrCount = insGeneratorPtr_->GetInstrCount(type);
     }
 
-    bool CcuRepJump::Translate(CcuKernel* ccuKernel, CcuInstr*& instr, uint16_t& instrId, const TransDep& dep)
+    bool CcuRepJump::Translate(CcuKernel* ccuKernel, CcuInstr*& instr, uint16_t& curInstrId, const TransDep& dep)
     {
-        if (InitInstr(instr, instrId) != CcuResult::CCU_SUCCESS) {
+        if (InitInstr(instr, curInstrId) != CcuResult::CCU_SUCCESS) {
             Hccl::THROW<Hccl::CcuApiException>("instr is empty!");
         }
 
         if (jumpLabel->Translated()) {
             CHK_PRT_THROW(
-                insGeneratorPtr_->CcuRepJumpTranslate(ccuKernel, instr, instrId, this, dep) != HcclResult::HCCL_SUCCESS,
-                HCCL_ERROR("[CcuRepJump][Translate] failed to translate for instrId[%u]", instrId),
+                insGeneratorPtr_->CcuRepJumpTranslate(ccuKernel, instr, curInstrId, this, dep)
+                    != HcclResult::HCCL_SUCCESS,
+                HCCL_ERROR("[CcuRepJump][Translate] failed to translate for instrId[%u]", curInstrId),
                 Hccl::CcuApiException, "CcuRepJump translate failed");
             translated = true;
         }
@@ -113,19 +114,19 @@ namespace CcuRep {
         supportCcuV1 = false;
     }
 
-    bool CcuRepJumpNE::Translate(CcuKernel* ccuKernel, CcuInstr*& instr, uint16_t& instrId, const TransDep& dep)
+    bool CcuRepJumpNE::Translate(CcuKernel* ccuKernel, CcuInstr*& instr, uint16_t& curInstrId, const TransDep& dep)
     {
         ValidateInsGeneratorForJump();
 
-        if (InitInstr(instr, instrId) != CcuResult::CCU_SUCCESS) {
+        if (InitInstr(instr, curInstrId) != CcuResult::CCU_SUCCESS) {
             Hccl::THROW<Hccl::CcuApiException>("instr is empty!");
         }
 
         if (jumpLabel->Translated()) {
             CHK_PRT_THROW(
-                insGeneratorPtr_->CcuRepJumpNETranslate(ccuKernel, instr, instrId, this, dep)
+                insGeneratorPtr_->CcuRepJumpNETranslate(ccuKernel, instr, curInstrId, this, dep)
                     != HcclResult::HCCL_SUCCESS,
-                HCCL_ERROR("[CcuRepJumpNE][Translate] failed to translate for instrId[%u]", instrId),
+                HCCL_ERROR("[CcuRepJumpNE][Translate] failed to translate for instrId[%u]", curInstrId),
                 Hccl::CcuApiException, "CcuRepJumpNE translate failed");
             translated = true;
         }
@@ -164,18 +165,18 @@ namespace CcuRep {
         supportCcuV1 = false;
     }
 
-    bool CcuRepJumpEQ::Translate(CcuKernel* ccuKernel, CcuInstr*& instr, uint16_t& instrId, const TransDep& dep)
+    bool CcuRepJumpEQ::Translate(CcuKernel* ccuKernel, CcuInstr*& instr, uint16_t& curInstrId, const TransDep& dep)
     {
         ValidateInsGeneratorForJump();
-        if (InitInstr(instr, instrId) != CcuResult::CCU_SUCCESS) {
+        if (InitInstr(instr, curInstrId) != CcuResult::CCU_SUCCESS) {
             Hccl::THROW<Hccl::CcuApiException>("instr is empty!");
         }
 
         if (jumpLabel->Translated()) {
             CHK_PRT_THROW(
-                insGeneratorPtr_->CcuRepJumpEQTranslate(ccuKernel, instr, instrId, this, dep)
+                insGeneratorPtr_->CcuRepJumpEQTranslate(ccuKernel, instr, curInstrId, this, dep)
                     != HcclResult::HCCL_SUCCESS,
-                HCCL_ERROR("[CcuRepJumpEQ][Translate] failed to translate for instrId[%u]", instrId),
+                HCCL_ERROR("[CcuRepJumpEQ][Translate] failed to translate for instrId[%u]", curInstrId),
                 Hccl::CcuApiException, "CcuRepJumpEQ translate failed");
             translated = true;
         }
@@ -213,19 +214,19 @@ namespace CcuRep {
         supportCcuV1 = false;
     }
 
-    bool CcuRepJumpLE::Translate(CcuKernel* ccuKernel, CcuInstr*& curInstr, uint16_t& instrId, const TransDep& dep)
+    bool CcuRepJumpLE::Translate(CcuKernel* ccuKernel, CcuInstr*& curInstr, uint16_t& curInstrId, const TransDep& dep)
     {
         ValidateInsGeneratorForJump();
 
-        if (InitInstr(curInstr, instrId) != CcuResult::CCU_SUCCESS) {
+        if (InitInstr(curInstr, curInstrId) != CcuResult::CCU_SUCCESS) {
             Hccl::THROW<Hccl::CcuApiException>("instr is empty!");
         }
 
         if (jumpLabel->Translated()) {
             CHK_PRT_THROW(
-                insGeneratorPtr_->CcuRepJumpLETranslate(ccuKernel, curInstr, instrId, this, dep)
+                insGeneratorPtr_->CcuRepJumpLETranslate(ccuKernel, curInstr, curInstrId, this, dep)
                     != HcclResult::HCCL_SUCCESS,
-                HCCL_ERROR("[CcuRepJumpLE][Translate] failed to translate for instrId[%u]", instrId),
+                HCCL_ERROR("[CcuRepJumpLE][Translate] failed to translate for instrId[%u]", curInstrId),
                 Hccl::CcuApiException, "CcuRepJumpLE translate failed");
             translated = true;
         }
@@ -263,19 +264,19 @@ namespace CcuRep {
         supportCcuV1 = false;
     }
 
-    bool CcuRepJumpGE::Translate(CcuKernel* ccuKernel, CcuInstr*& curInstr, uint16_t& instrId, const TransDep& dep)
+    bool CcuRepJumpGE::Translate(CcuKernel* ccuKernel, CcuInstr*& curInstr, uint16_t& curInstrId, const TransDep& dep)
     {
         ValidateInsGeneratorForJump();
 
-        if (InitInstr(curInstr, instrId) != CcuResult::CCU_SUCCESS) {
+        if (InitInstr(curInstr, curInstrId) != CcuResult::CCU_SUCCESS) {
             Hccl::THROW<Hccl::CcuApiException>("instr is empty!");
         }
 
         if (jumpLabel->Translated()) {
             CHK_PRT_THROW(
-                insGeneratorPtr_->CcuRepJumpGETranslate(ccuKernel, curInstr, instrId, this, dep)
+                insGeneratorPtr_->CcuRepJumpGETranslate(ccuKernel, curInstr, curInstrId, this, dep)
                     != HcclResult::HCCL_SUCCESS,
-                HCCL_ERROR("[CcuRepJumpGE][Translate] failed to translate for instrId[%u]", instrId),
+                HCCL_ERROR("[CcuRepJumpGE][Translate] failed to translate for instrId[%u]", curInstrId),
                 Hccl::CcuApiException, "CcuRepJumpGE translate failed");
 
             translated = true;
@@ -314,17 +315,17 @@ namespace CcuRep {
         supportCcuV1 = false;
     }
 
-    bool CcuRepJumpGT::Translate(CcuKernel* ccuKernel, CcuInstr*& curInstr, uint16_t& instrId, const TransDep& dep)
+    bool CcuRepJumpGT::Translate(CcuKernel* ccuKernel, CcuInstr*& curInstr, uint16_t& curInstrId, const TransDep& dep)
     {
         ValidateInsGeneratorForJump();
-        if (InitInstr(curInstr, instrId) != CcuResult::CCU_SUCCESS) {
+        if (InitInstr(curInstr, curInstrId) != CcuResult::CCU_SUCCESS) {
             Hccl::THROW<Hccl::CcuApiException>("instr is empty!");
         }
         if (jumpLabel->Translated()) {
             CHK_PRT_THROW(
-                insGeneratorPtr_->CcuRepJumpGTTranslate(ccuKernel, curInstr, instrId, this, dep)
+                insGeneratorPtr_->CcuRepJumpGTTranslate(ccuKernel, curInstr, curInstrId, this, dep)
                     != HcclResult::HCCL_SUCCESS,
-                HCCL_ERROR("[CcuRepJumpGT][Translate] failed to translate for instrId[%u]", instrId),
+                HCCL_ERROR("[CcuRepJumpGT][Translate] failed to translate for instrId[%u]", curInstrId),
                 Hccl::CcuApiException, "CcuRepJumpGT translate failed");
 
             translated = true;
@@ -363,18 +364,18 @@ namespace CcuRep {
         supportCcuV1 = false;
     }
 
-    bool CcuRepJumpLT::Translate(CcuKernel* ccuKernel, CcuInstr*& curInstr, uint16_t& instrId, const TransDep& dep)
+    bool CcuRepJumpLT::Translate(CcuKernel* ccuKernel, CcuInstr*& curInstr, uint16_t& curInstrId, const TransDep& dep)
     {
         ValidateInsGeneratorForJump();
-        if (InitInstr(curInstr, instrId) != CcuResult::CCU_SUCCESS) {
+        if (InitInstr(curInstr, curInstrId) != CcuResult::CCU_SUCCESS) {
             Hccl::THROW<Hccl::CcuApiException>("instr is empty!");
         }
 
         if (jumpLabel->Translated()) {
             CHK_PRT_THROW(
-                insGeneratorPtr_->CcuRepJumpLTTranslate(ccuKernel, curInstr, instrId, this, dep)
+                insGeneratorPtr_->CcuRepJumpLTTranslate(ccuKernel, curInstr, curInstrId, this, dep)
                     != HcclResult::HCCL_SUCCESS,
-                HCCL_ERROR("[CcuRepJumpLT][Translate] failed to translate for instrId[%u]", instrId),
+                HCCL_ERROR("[CcuRepJumpLT][Translate] failed to translate for instrId[%u]", curInstrId),
                 Hccl::CcuApiException, "CcuRepJumpLT translate failed");
 
             translated = true;

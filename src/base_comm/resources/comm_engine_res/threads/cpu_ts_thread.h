@@ -64,6 +64,7 @@ private:
         uint64_t sqCqContextSize = 0; // 记录sqeContext大小
     };
     std::string& UpdateUniqueId();
+    HcclResult DeInitImpl();
     rtStream_t rtStream_ = nullptr;
     bool isDeviceSide_ = false;
     StreamType streamType_ = StreamType::STREAM_TYPE_RESERVED;

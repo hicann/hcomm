@@ -35,7 +35,7 @@ public:
     explicit HcommBaseResMgr(uint32_t devPhyId) : devPhyId_(devPhyId) {}
     ~HcommBaseResMgr() = default;
 
-    void Init();
+    void Init() const;
     void SetDevPhyId(uint32_t devPhyId) { devPhyId_ = devPhyId; }
     uint32_t GetDevPhyId() const { return devPhyId_; }
     // EndpointCtx 去重缓存按 devPhyId 隔离，经 GetDeviceResMgr(devPhyId).GetEndpointCtxMgr() 访问

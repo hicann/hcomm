@@ -10,7 +10,6 @@
 
 #include "hcomm_c_adpt.h"
 #include "hcomm_c_adpt_common.h"
-#include "hcomm_result_defs.h"
 #include "log.h"
 #include "hcomm_res_defs.h"
 #include "hcom_common.h"
@@ -111,7 +110,7 @@ HcommResult HcommDfxKernelLaunch(const std::string& commTag, aclrtBinHandle binH
 
     InitTask customInitTask = {0, ""};
     customInitTask.context = reinterpret_cast<u64>(devicePackBuf.ptr());
-    s32 sRet = strncpy_s(customInitTask.commTag, TAG_MAX_LENGTH, commTag.c_str(), TAG_MAX_LENGTH - 1);
+    s32 sRet = strncpy_s(customInitTask.commTag, sizeof(customInitTask.commTag), commTag.c_str(), TAG_MAX_LENGTH - 1);
     CHK_PRT_RET(sRet != EOK, HCCL_ERROR("[%s] str copy fail. return[%d]", __func__, sRet), HCCL_E_INTERNAL);
 
     CHK_RET(hccl::AicpuAclKernelLaunch(

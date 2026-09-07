@@ -10,6 +10,7 @@
 
 #include "aicpu_ts_uboe_ub_rtp_channel_helper.h"
 #include "endpoint.h"
+#include "../../sockets/socket_mgr.h"
 #include "orion_adpt_utils.h"
 
 // Orion
@@ -257,7 +258,7 @@ void AicpuTsUboeUbRtpChannelHelper::NotifyVecPack(Hccl::BinaryStream& binaryStre
 }
 
 void AicpuTsUboeUbRtpChannelHelper::BufferVecPack(
-    Hccl::BinaryStream& binaryStream, std::vector<Hccl::LocalRmaBuffer*>& bufferVec)
+    Hccl::BinaryStream& binaryStream, std::vector<Hccl::LocalRmaBuffer*>& bufferVec) const
 {
     binaryStream << static_cast<u32>(bufferVec.size());
     u32 pos = 0;

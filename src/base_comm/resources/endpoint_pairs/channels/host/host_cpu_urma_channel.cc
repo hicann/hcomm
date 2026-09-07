@@ -10,6 +10,7 @@
 
 #include "host_cpu_urma_channel.h"
 #include "endpoint.h"
+#include "../../sockets/socket_mgr.h"
 #include "orion_adpt_utils.h"
 #include "hcomm_adapter_urma.h"
 

@@ -37,7 +37,7 @@ CpuTsThread::CpuTsThread(StreamType streamType, uint32_t notifyNum, const Notify
       notifyLoadType_(notifyLoadType)
 {}
 
-CpuTsThread::~CpuTsThread() { DeInit(); }
+CpuTsThread::~CpuTsThread() { DeInitImpl(); }
 
 HcclResult CpuTsThread::Init()
 {
@@ -75,7 +75,9 @@ HcclResult CpuTsThread::Init()
     }
 }
 
-HcclResult CpuTsThread::DeInit()
+HcclResult CpuTsThread::DeInit() { return DeInitImpl(); }
+
+HcclResult CpuTsThread::DeInitImpl()
 {
     streamType_ = StreamType::STREAM_TYPE_RESERVED;
     notifyNum_ = 0;

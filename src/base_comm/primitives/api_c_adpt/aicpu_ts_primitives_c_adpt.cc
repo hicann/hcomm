@@ -355,7 +355,7 @@ HcclResult CommTaskLaunch(ThreadHandle* threads, uint32_t threadNum) // host fft
     return HcclTaskLaunch(streams.data(), threadNum);
 }
 
-HcclResult DispatchAllStreams(ThreadHandle* threads, uint32_t threadNum)
+HcclResult DispatchAllStreams(const ThreadHandle* threads, uint32_t threadNum)
 {
     CHK_PTR_NULL(threads);
     CHK_PRT_RET(threadNum < 1, HCCL_ERROR("[DispatchAllStreams]threadNum is less than 1"), HCCL_E_PARA);

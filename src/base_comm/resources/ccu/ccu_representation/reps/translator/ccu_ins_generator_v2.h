@@ -22,7 +22,7 @@ namespace CcuRep {
         CcuInsGeneratorV2() {}
 
         // 虚析构函数，确保派生类对象正确析构
-        virtual ~CcuInsGeneratorV2() override = default;
+        ~CcuInsGeneratorV2() override = default;
 
         // data
         HcclResult CcuRepBufLocReadTranslate(
@@ -84,7 +84,7 @@ namespace CcuRep {
 
         // control
         HcclResult CcuRepFuncBlockTranslate(
-            CcuKernel* ccuKernel, CcuInstr*& instr, uint16_t& instrId, CcuRepFuncBlock* funcBlockPtr,
+            CcuKernel* ccuKernel, CcuInstr*& instr, uint16_t& curInstrId, CcuRepFuncBlock* funcBlockPtr,
             const TransDep& dep, uint32_t step) override;
         HcclResult CcuRepFuncCallTranslate(
             CcuKernel* ccuKernel, CcuInstr*& instr, uint16_t& curInstrId, CcuRepFuncCall* funcCallPtr,

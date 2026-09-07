@@ -16,7 +16,7 @@ constexpr u32 NOTIFY_WAIT_TIMEOUT_OFFSET = 27;  // AICPU device侧notify等待�
 
 extern HcclResult CommTaskLaunch(ThreadHandle* threads, uint32_t threadNum); // host ffts+或aicpu stars使用"
 extern HcclResult CommTaskPrepare(char* key, uint32_t keyLen);               // host ffts+使用
-extern HcclResult DispatchAllStreams(ThreadHandle* threads, uint32_t threadNum);
+extern HcclResult DispatchAllStreams(const ThreadHandle* threads, uint32_t threadNum);
 
 LaunchContext::LaunchContext() { threadVec_.reserve(THREAD_VECTOR_DEFAULT_SIZE); }
 

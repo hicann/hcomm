@@ -273,7 +273,8 @@ HcclResult RoceRegedMemMgr::UnregisterByMemAllocAddrRange(Hccl::LocalRdmaRmaBuff
     return HCCL_SUCCESS;
 }
 
-HcclResult RoceRegedMemMgr::GetMemDesc(const EndpointDesc endpointDesc, Hccl::LocalRdmaRmaBuffer* localRdmaRmaBuffer)
+HcclResult
+RoceRegedMemMgr::GetMemDesc(const EndpointDesc endpointDesc, Hccl::LocalRdmaRmaBuffer* localRdmaRmaBuffer) const
 {
     auto dto = localRdmaRmaBuffer->GetExchangeDto();
     Hccl::BinaryStream localRdmaRmaBufferStream;

@@ -8,7 +8,6 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
-#include <cstring>
 #include <memory>
 #include <vector>
 
@@ -95,7 +94,7 @@ HcclResult FillEndpointDesc(uint32_t devicePhyId, const DevEidInfo& eidInfo, End
     return HCCL_SUCCESS;
 }
 
-HcclResult ValidateEndpointDesc(const EndpointDesc* endpoint, EndpointHandle* endpointHandle)
+HcclResult ValidateEndpointDesc(const EndpointDesc* endpoint, const EndpointHandle* endpointHandle)
 {
     CHK_PTR_NULL(endpoint);
     CHK_PTR_NULL(endpointHandle);
@@ -410,7 +409,8 @@ HcommResult HcommEndpointDestroy(EndpointHandle endpointHandle)
     return HCCL_SUCCESS;
 }
 
-HcommResult HcommEndpointStartListen(EndpointHandle endpointHandle, uint32_t port, HcommEndpointListenConfig* config)
+HcommResult
+HcommEndpointStartListen(EndpointHandle endpointHandle, uint32_t port, const HcommEndpointListenConfig* config)
 {
     (void)config;
     auto endpoint = HcommResMgr::GetInstance().GetEndpointMgr().Get(endpointHandle);

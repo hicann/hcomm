@@ -170,30 +170,30 @@ namespace CcuRep {
         return HcclResult::HCCL_SUCCESS;
     }
 
-    HcclResult CcuInsGeneratorV2::CcuRepReadTranslate(CcuKernel* ccuKernel, CcuInstr*& instr, CcuRepRead* repRead)
+    HcclResult CcuInsGeneratorV2::CcuRepReadTranslate(CcuKernel* ccuKernel, CcuInstr*& instr, CcuRepRead* repRemMem)
     {
-        CHK_PTR_NULL(repRead);
+        CHK_PTR_NULL(repRemMem);
         CHK_PTR_NULL(ccuKernel);
         CcuUrmaChannel* channelImpl{nullptr};
-        CHK_RET(GetUrmaChannel(repRead->GetChannel(), channelImpl));
+        CHK_RET(GetUrmaChannel(repRemMem->GetChannel(), channelImpl));
 
         CcuV2::TransMemNotifyInfo notify = {};
         CcuV2::TransMemReduceInfo reduce = {};
         CcuV2::TransMemConfig config = {};
         config.dmaOpCode = URMA_DMA_OP_READ; // UB URMA WQEBB opcode: read
 
-        if (repRead->GetReduceFlag() == 1) {
+        if (repRemMem->GetReduceFlag() == 1) {
             config.udfEnable = 1;
             reduce.udfType = 0;
-            reduce.reduceDataType = repRead->GetDataType();
-            reduce.reduceOpCode = repRead->GetOpType();
+            reduce.reduceDataType = repRemMem->GetDataType();
+            reduce.reduceOpCode = repRemMem->GetOpType();
         }
         uint32_t channelId = channelImpl->GetChannelId();
         const auto& constValue2VarMap = ccuKernel->GetConstValue2VarMap();
         TransMem(
-            instr++, repRead->GetLoc().addr.Id(), repRead->GetLoc().token.Id(), repRead->GetRem().addr.Id(),
-            repRead->GetRem().token.Id(), repRead->GetLen().Id(), constValue2VarMap.at(channelId).Id(), notify, reduce,
-            config, repRead->GetSem().Id(), repRead->GetMask());
+            instr++, repRemMem->GetLoc().addr.Id(), repRemMem->GetLoc().token.Id(), repRemMem->GetRem().addr.Id(),
+            repRemMem->GetRem().token.Id(), repRemMem->GetLen().Id(), constValue2VarMap.at(channelId).Id(), notify,
+            reduce, config, repRemMem->GetSem().Id(), repRemMem->GetMask());
 
         return HcclResult::HCCL_SUCCESS;
     }
@@ -223,32 +223,34 @@ namespace CcuRep {
     }
 
     HcclResult CcuInsGeneratorV2::CcuRepLocCpyTranslate(
-        CcuKernel* ccuKernel, CcuInstr*& instr, CcuRepLocCpy* repLocCpy, const TransDep& dep)
+        CcuKernel* ccuKernel, CcuInstr*& instr, CcuRepLocCpy* ccuRepLocCpy, const TransDep& dep)
     {
-        CHK_PTR_NULL(repLocCpy);
-        if (repLocCpy->GetReduceFlag() == 0 && repLocCpy->GetUseCcuBuffer() == true) {
+        CHK_PTR_NULL(ccuRepLocCpy);
+        if (ccuRepLocCpy->GetReduceFlag() == 0 && ccuRepLocCpy->GetUseCcuBuffer() == true) {
             CcuV2::CacheConfig cacheConfig{0x0, 0x0};
             CcuV2::TransLocMemToLocMem(
-                instr++, repLocCpy->GetDstAddrId(), repLocCpy->GetDstTokenId(), repLocCpy->GetSrcAddrId(),
-                repLocCpy->GetSrcTokenId(), repLocCpy->GetLenId(), repLocCpy->GetFirstBufId(),
-                repLocCpy->GetUsedBufNum(), repLocCpy->GetSemId(), repLocCpy->GetMask(), cacheConfig, cacheConfig);
+                instr++, ccuRepLocCpy->GetDstAddrId(), ccuRepLocCpy->GetDstTokenId(), ccuRepLocCpy->GetSrcAddrId(),
+                ccuRepLocCpy->GetSrcTokenId(), ccuRepLocCpy->GetLenId(), ccuRepLocCpy->GetFirstBufId(),
+                ccuRepLocCpy->GetUsedBufNum(), ccuRepLocCpy->GetSemId(), ccuRepLocCpy->GetMask(), cacheConfig,
+                cacheConfig);
         } else {
             // 使用旧接口或带规约场景，都走环回
             CcuV2::TransMemNotifyInfo notify = {};
             CcuV2::TransMemReduceInfo reduce = {};
             CcuV2::TransMemConfig config = {};
             config.dmaOpCode = URMA_DMA_OP_WRITE; // UB URMA WQEBB opcode: write
-            if (repLocCpy->GetReduceFlag() == 1) {
+            if (ccuRepLocCpy->GetReduceFlag() == 1) {
                 config.udfEnable = 1;
                 reduce.udfType = 0;
-                reduce.reduceDataType = repLocCpy->GetDataType();
-                reduce.reduceOpCode = repLocCpy->GetOpType();
+                reduce.reduceDataType = ccuRepLocCpy->GetDataType();
+                reduce.reduceOpCode = ccuRepLocCpy->GetOpType();
             }
             const auto& constValue2VarMap = ccuKernel->GetConstValue2VarMap();
             CcuV2::TransMem(
-                instr++, repLocCpy->GetDstAddrId(), repLocCpy->GetDstTokenId(), repLocCpy->GetSrcAddrId(),
-                repLocCpy->GetSrcTokenId(), repLocCpy->GetLenId(), constValue2VarMap.at(dep.reserveChannalId[0]).Id(),
-                notify, reduce, config, repLocCpy->GetSemId(), repLocCpy->GetMask());
+                instr++, ccuRepLocCpy->GetDstAddrId(), ccuRepLocCpy->GetDstTokenId(), ccuRepLocCpy->GetSrcAddrId(),
+                ccuRepLocCpy->GetSrcTokenId(), ccuRepLocCpy->GetLenId(),
+                constValue2VarMap.at(dep.reserveChannalId[0]).Id(), notify, reduce, config, ccuRepLocCpy->GetSemId(),
+                ccuRepLocCpy->GetMask());
         }
 
         return HcclResult::HCCL_SUCCESS;
@@ -943,10 +945,10 @@ namespace CcuRep {
     }
 
     HcclResult CcuInsGeneratorV2::CcuRepFuncCallTranslate(
-        [[maybe_unused]] CcuKernel* ccuKernel, CcuInstr*& curInstr, uint16_t& curInstrId, CcuRepFuncCall* funcCallPtr,
+        [[maybe_unused]] CcuKernel* ccuKernel, CcuInstr*& instr, uint16_t& curInstrId, CcuRepFuncCall* funcCallPtr,
         const TransDep& dep)
     {
-        (void)curInstr;
+        (void)instr;
         (void)curInstrId;
 
         FuncCallContext ctx;
@@ -957,34 +959,35 @@ namespace CcuRep {
         uint32_t inArgCount = ctx.inArgCount;
         CcuRepReferenceManager* funcManager = ctx.funcManager;
         std::shared_ptr<CcuRepFuncBlock>& funcBlock = ctx.funcBlock;
-        CcuInstr* instr = ctx.instr;
+        CcuInstr* funcInstr = ctx.instr;
         std::vector<Variable>& formalIns = ctx.formalIns;
         Variable funcAddrVar = funcCallPtr->GetFuncAddrVar();
         int32_t callLayer = funcCallPtr->GetCallLayer();
         uint16_t instrId = funcCallPtr->StartInstrId();
-        LoadFuncCallInArgs(instr, inArgs, formalIns, dep.reserveXnId);
+        LoadFuncCallInArgs(funcInstr, inArgs, formalIns, dep.reserveXnId);
 
         uint32_t locId = 0;
         if (funcBlock != nullptr) {
             CcuV2::LoadImdToXn(
-                instr + inArgCount + locId++, funcManager->GetFuncCall().Id(), funcBlock->StartInstrId());
+                funcInstr + inArgCount + locId++, funcManager->GetFuncCall().Id(), funcBlock->StartInstrId());
         } else {
             CcuV2::Add(
-                instr + inArgCount + locId++, funcManager->GetFuncCall().Id(), funcAddrVar.Id(), dep.reserveXnId);
+                funcInstr + inArgCount + locId++, funcManager->GetFuncCall().Id(), funcAddrVar.Id(), dep.reserveXnId);
         }
         CcuV2::LoadImdToXn(
-            instr + inArgCount + locId++, funcManager->GetFuncRet(callLayer).Id(),
+            funcInstr + inArgCount + locId++, funcManager->GetFuncRet(callLayer).Id(),
             instrId + inArgCount + FUNC_CALL_RET_OFFSET); // 需要指向函数返回位置
         CcuV2::RelJmp(
-            instr + inArgCount + locId, funcManager->GetFuncCall().Id(),
+            funcInstr + inArgCount + locId, funcManager->GetFuncCall().Id(),
             instrId + inArgCount + FUNC_CALL_JMP_OFFSET, // Jmp的目标指令为其后11条指令
             dep.commXn[0], dep.commXn[1]);
         locId += REL_JMP_INSTR_NUM; // relJmp需要9条指令
-        CcuV2::Jump(instr + inArgCount + locId++, funcManager->GetFuncCall().Id(), dep.reserveXnId, dep.reserveXnId, 0);
-        CcuV2::Nop(instr + inArgCount + locId++);
+        CcuV2::Jump(
+            funcInstr + inArgCount + locId++, funcManager->GetFuncCall().Id(), dep.reserveXnId, dep.reserveXnId, 0);
+        CcuV2::Nop(funcInstr + inArgCount + locId++);
 
         uint32_t extraInstrNum = GetInstrCount(funcCallPtr->Type());
-        LoadFuncCallOutArgs(instr, inArgCount + extraInstrNum, outArgs, funcManager, dep.reserveXnId);
+        LoadFuncCallOutArgs(funcInstr, inArgCount + extraInstrNum, outArgs, funcManager, dep.reserveXnId);
         return HcclResult::HCCL_SUCCESS;
     }
 

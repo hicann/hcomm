@@ -20,9 +20,9 @@
 #include "enum_factory.h"
 #include "hccl_common.h"
 #include "mem_device_pub.h"
-#include "../host/exchange_rdma_conn_dto.h"
 #include "orion_adapter_hccp.h"
 #include "hcomm/hcomm_res_entity_defs.h"
+#include "../host/exchange_rdma_conn_dto.h"
 
 // Orion
 #include "../../../../../legacy/ascend950/unified_platform/resource/socket/socket.h"
@@ -37,7 +37,7 @@ public:
         uint32_t gid_idx{0};
         unsigned char gid[HCCP_GID_RAW_LEN];
 
-        bool IsValid()
+        bool IsValid() const
         {
             if (qpn == UINT32_MAX || psn == UINT32_MAX) {
                 return false;

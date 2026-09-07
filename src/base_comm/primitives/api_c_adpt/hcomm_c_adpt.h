@@ -81,7 +81,7 @@ HcommResult HcommEndpointGet(EndpointHandle endpointHandle, void** endpoint);
  * @note 启动指定Endpoint在指定端口上的监听服务
  */
 extern HcommResult
-HcommEndpointStartListen(EndpointHandle endpointHandle, uint32_t port, HcommEndpointListenConfig* config);
+HcommEndpointStartListen(EndpointHandle endpointHandle, uint32_t port, const HcommEndpointListenConfig* config);
 
 /**
  * @brief 停止通信设备Endpoint监听

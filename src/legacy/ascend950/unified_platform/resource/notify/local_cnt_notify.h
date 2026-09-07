@@ -11,8 +11,6 @@
 #ifndef HCCLV2_LOCAL_CNT_NOTIFY_H
 #define HCCLV2_LOCAL_CNT_NOTIFY_H
 
-#include <vector>
-
 #include "rts_cnt_notify.h"
 #include "task.h"
 #include "serializable.h"

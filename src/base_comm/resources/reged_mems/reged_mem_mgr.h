@@ -59,7 +59,7 @@ protected:
     template <typename RmaBuffer>
     using RegedBufferEntry = std::pair<std::shared_ptr<RmaBuffer>, bool>;
 
-    static HcclResult ValidateMemParams(HcommMem mem, void** memHandle)
+    static HcclResult ValidateMemParams(HcommMem mem, void* const* memHandle)
     {
         CHK_PTR_NULL(memHandle);
         CHK_PTR_NULL(mem.addr);

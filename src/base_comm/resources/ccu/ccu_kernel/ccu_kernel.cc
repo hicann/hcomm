@@ -52,6 +52,7 @@ constexpr uint32_t TOKEN_VALUE_INDEX = 2;
 constexpr uint16_t INVALID_U16 = 65535;
 constexpr uint32_t MAX_LOOP_ENGINE_POOL_SIZE_V1 = 128;
 constexpr uint32_t MAX_LOOP_ENGINE_POOL_SIZE_V2 = 512;
+constexpr uint32_t MIN_PINNED_REG_GROUP_NUM = 2; // 连续变量数 >= 2 时才需添加 pinned 寄存器组
 
 using CcuRep::CcuInsGeneratorBase;
 using CcuRep::CcuInsGeneratorV1;
@@ -930,7 +931,7 @@ CcuResult CcuKernel::CcuLoadVarFromVarAddr(CcuVariableHandle addrHandle, CcuVari
     CCU_CHK_RET(GetVariableByHandle(varHandle, &var));
     CCU_CHK_RET(CheckContinuousVariables(varHandle, num, *var, "LoadVar dst"));
     Append(std::make_shared<CcuRep::CcuRepLoadVar>(insGenerator, *addrVar, *var, num));
-    if (num >= 2) {
+    if (num >= MIN_PINNED_REG_GROUP_NUM) {
         AddPinnedRegGroup(*var, static_cast<uint16_t>(num));
     }
     return CcuResult::CCU_SUCCESS;
@@ -943,7 +944,7 @@ CcuResult CcuKernel::StoreVar(uint64_t addr, CcuVariableHandle varHandle, uint32
     CCU_CHK_RET(GetVariableByHandle(varHandle, &var));
     CCU_CHK_RET(CheckContinuousVariables(varHandle, num, *var, "StoreVariable"));
     Append(std::make_shared<CcuRep::CcuRepStore>(insGenerator, *var, addr, num));
-    if (num >= 2) {
+    if (num >= MIN_PINNED_REG_GROUP_NUM) {
         AddPinnedRegGroup(*var, static_cast<uint16_t>(num));
     }
     return CcuResult::CCU_SUCCESS;
@@ -962,7 +963,7 @@ CcuResult CcuKernel::CcuStoreVarToVarAddr(CcuVariableHandle addrHandle, CcuVaria
     CCU_CHK_RET(GetVariableByHandle(varHandle, &var));
     CCU_CHK_RET(CheckContinuousVariables(varHandle, num, *var, "StoreVar src"));
     Append(std::make_shared<CcuRep::CcuRepStoreVar>(insGenerator, *var, *addrVar, num));
-    if (num >= 2) {
+    if (num >= MIN_PINNED_REG_GROUP_NUM) {
         AddPinnedRegGroup(*var, static_cast<uint16_t>(num));
     }
     return CcuResult::CCU_SUCCESS;
@@ -2799,8 +2800,7 @@ uint32_t CcuKernel::GetRepNeedToAddLatency() const
         return 0;
     }
     uint32_t count = 0;
-    // GetRepSequence() 语义纯读但尚未标 const, 此处仅遍历不修改, 去 const 调用以保持本方法 const 契约.
-    for (const auto& rep : const_cast<CcuKernel*>(this)->GetRepSequence()) {
+    for (const auto& rep : GetRepSequence()) {
         if (rep == nullptr) {
             continue;
         }

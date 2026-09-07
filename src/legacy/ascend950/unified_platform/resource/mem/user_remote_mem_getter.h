@@ -106,7 +106,7 @@ HcclResult GetRemoteUserMems(RemoteMemCtx<T>& remoteMemCtx)
             remoteMemCtx.remoteUserMems.push_back(mem);
             std::string memInfoCopy = rmtBuffer->GetMemInfo();
             remoteMemCtx.memInfoCopies.push_back(std::move(memInfoCopy));
-            remoteMemCtx.memInfoPointers.push_back(const_cast<char*>(remoteMemCtx.memInfoCopies.back().c_str()));
+            remoteMemCtx.memInfoPointers.push_back(&remoteMemCtx.memInfoCopies.back()[0]);
             HCCL_INFO(
                 "[%s] Found buffer[addr:%p, size:%llu, memInfo:%s]", __func__, mem.addr, mem.size,
                 remoteMemCtx.memInfoCopies.back().c_str());

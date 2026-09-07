@@ -144,8 +144,7 @@ void UbConnLite::ProcessSlices(
         RmaBufSliceLite locSlice(locAddr, sliceSize, 0, loc.GetTokenId());
 
         RmtRmaBufSliceLite rmtSlice(rmtAddr, sliceSize, 0, rmt.GetTokenId(), rmt.GetTokenValue(), UINT32_MAX);
-        SlicePosition slicePos;
-        slicePos = (sliceIdx == 0) ? SlicePosition::FIRST : SlicePosition::MIDDLE;
+        SlicePosition slicePos = (sliceIdx == 0) ? SlicePosition::FIRST : SlicePosition::MIDDLE;
         if ((sliceIdx == sliceNum - 1) && lastSliceSize == 0) {
             // SlicePosition::ONLY表示既是首片又是尾片的情况，只有一片的情况
             slicePos = (sliceIdx == 0) ? SlicePosition::ONLY : SlicePosition::LAST;
@@ -199,8 +198,7 @@ void UbConnLite::ProcessSlicesWithNotify(
 
         RmtRmaBufSliceLite rmtSlice(
             rmt.GetAddr() + sliceIdx * sliceSize, sliceSize, 0, rmt.GetTokenId(), rmt.GetTokenValue(), UINT32_MAX);
-        SlicePosition slicePos;
-        slicePos = (sliceIdx == 0) ? SlicePosition::FIRST : SlicePosition::MIDDLE;
+        SlicePosition slicePos = (sliceIdx == 0) ? SlicePosition::FIRST : SlicePosition::MIDDLE;
         processOneSlice(locSlice, rmtSlice, slicePos);
     }
 

@@ -277,7 +277,8 @@ namespace CcuOpt {
     {
         using namespace InstrCodeV2;
         std::vector<RegOperand> out;
-        out.reserve(8);
+        constexpr size_t MAX_INSTR_OPERAND_NUM = 8;
+        out.reserve(MAX_INSTR_OPERAND_NUM);
         switch (instr.header.type) {
             case LOAD_TYPE:
                 ExtractLoadType(out, instr);

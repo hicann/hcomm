@@ -91,7 +91,8 @@ private:
     bool FindValidCachedLocked(
         Hccl::RdmaHandleManager& rdmaHandleMgr, const EndpointCtxKey& key, std::shared_ptr<EndpointCtx>& endpointCtx);
     // 按 locType 分发底层句柄查询，调用方须持有 mtx_
-    HcclResult AcquireHandleLocked(Hccl::RdmaHandleManager& rdmaHandleMgr, const EndpointCtxKey& key, void*& ctxHandle);
+    HcclResult
+    AcquireHandleLocked(Hccl::RdmaHandleManager& rdmaHandleMgr, const EndpointCtxKey& key, void*& ctxHandle) const;
 
     std::mutex mtx_; // 仅护 endpointCtxMap_；与 EndpointMgr::mtx_ 无嵌套（锁外析构纪律保证无反向持锁）
     std::unordered_map<EndpointCtxKey, std::shared_ptr<EndpointCtx>, EndpointCtxKeyHash> endpointCtxMap_;

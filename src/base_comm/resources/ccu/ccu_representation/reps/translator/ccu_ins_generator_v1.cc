@@ -113,21 +113,22 @@ namespace CcuRep {
         return HcclResult::HCCL_SUCCESS;
     }
 
-    HcclResult CcuInsGeneratorV1::CcuRepReadTranslate(CcuKernel* ccuKernel, CcuInstr*& instr, CcuRepRead* repRead)
+    HcclResult CcuInsGeneratorV1::CcuRepReadTranslate(CcuKernel* ccuKernel, CcuInstr*& instr, CcuRepRead* repRemMem)
     {
         UNUSED(ccuKernel);
-        CHK_PTR_NULL(repRead);
+        CHK_PTR_NULL(repRemMem);
         void* channelPtr{nullptr};
         CHK_PRT_RET(
-            static_cast<HcclResult>(HcommChannelGet(repRead->GetChannel(), &channelPtr)) != HcclResult::HCCL_SUCCESS,
-            HCCL_ERROR("failed to get ccu channel, type[%d]", repRead->Type()), HCCL_E_INTERNAL);
+            static_cast<HcclResult>(HcommChannelGet(repRemMem->GetChannel(), &channelPtr)) != HcclResult::HCCL_SUCCESS,
+            HCCL_ERROR("failed to get ccu channel, type[%d]", repRemMem->Type()), HCCL_E_INTERNAL);
 
         auto* channelImpl = dynamic_cast<CcuUrmaChannel*>(static_cast<Channel*>(channelPtr));
         CHK_PTR_NULL(channelImpl);
         TransRmtMemToLocMemInstr(
-            instr++, repRead->GetLoc().addr.Id(), repRead->GetLoc().token.Id(), repRead->GetRem().addr.Id(),
-            repRead->GetRem().token.Id(), repRead->GetLen().Id(), channelImpl->GetChannelId(), repRead->GetDataType(),
-            repRead->GetOpType(), repRead->GetSem().Id(), repRead->GetMask(), 0, 0, 1, 1, repRead->GetReduceFlag());
+            instr++, repRemMem->GetLoc().addr.Id(), repRemMem->GetLoc().token.Id(), repRemMem->GetRem().addr.Id(),
+            repRemMem->GetRem().token.Id(), repRemMem->GetLen().Id(), channelImpl->GetChannelId(),
+            repRemMem->GetDataType(), repRemMem->GetOpType(), repRemMem->GetSem().Id(), repRemMem->GetMask(), 0, 0, 1,
+            1, repRemMem->GetReduceFlag());
 
         return HcclResult::HCCL_SUCCESS;
     }
@@ -632,7 +633,7 @@ namespace CcuRep {
 
     void CcuInsGeneratorV1::LoadFuncCallOutArgs(
         CcuInstr* instr, uint32_t offset, std::vector<CcuRepArg>& outArgs, CcuRepReferenceManager* funcManager,
-        uint16_t reserveXnId)
+        uint16_t reserveXnId) const
     {
         uint32_t idx = 0;
         for (uint32_t i = 0; i < outArgs.size(); i++) {
@@ -652,12 +653,11 @@ namespace CcuRep {
     }
 
     HcclResult CcuInsGeneratorV1::CcuRepFuncCallTranslate(
-        CcuKernel* ccuKernel, CcuInstr*& curInstr, uint16_t& curInstrId, CcuRepFuncCall* funcCallPtr,
-        const TransDep& dep)
+        CcuKernel* ccuKernel, CcuInstr*& instr, uint16_t& curInstrId, CcuRepFuncCall* funcCallPtr, const TransDep& dep)
     {
         UNUSED(ccuKernel);
         (void)curInstrId;
-        (void)curInstr;
+        (void)instr;
 
         FuncCallContext ctx;
         CHK_RET(PrepareFuncCallContext(funcCallPtr, ctx));
@@ -665,29 +665,30 @@ namespace CcuRep {
         std::vector<CcuRepArg>& outArgs = funcCallPtr->GetOutArgs();
         std::vector<CcuRepArg>& inArgs = funcCallPtr->GetInArgs();
         uint32_t inArgCount = ctx.inArgCount;
-        CcuInstr* instr = ctx.instr;
+        CcuInstr* funcInstr = ctx.instr;
         CcuRepReferenceManager* funcManager = ctx.funcManager;
         std::vector<Variable>& formalIns = ctx.formalIns;
         std::shared_ptr<CcuRepFuncBlock>& funcBlock = ctx.funcBlock;
-        LoadFuncCallInArgs(instr, inArgs, formalIns, dep.reserveXnId);
+        LoadFuncCallInArgs(funcInstr, inArgs, formalIns, dep.reserveXnId);
 
         uint32_t locId = 0;
         if (funcBlock != nullptr) {
-            LoadImdToXnInstr(instr + inArgCount + locId++, funcManager->GetFuncCall().Id(), funcBlock->StartInstrId());
+            LoadImdToXnInstr(
+                funcInstr + inArgCount + locId++, funcManager->GetFuncCall().Id(), funcBlock->StartInstrId());
         } else {
             LoadXXInstr(
-                instr + inArgCount + locId++, funcManager->GetFuncCall().Id(), funcCallPtr->GetFuncAddrVar().Id(),
+                funcInstr + inArgCount + locId++, funcManager->GetFuncCall().Id(), funcCallPtr->GetFuncAddrVar().Id(),
                 dep.reserveXnId);
         }
 
         LoadImdToXnInstr(
-            instr + inArgCount + locId++, funcManager->GetFuncRet(funcCallPtr->GetCallLayer()).Id(),
+            funcInstr + inArgCount + locId++, funcManager->GetFuncRet(funcCallPtr->GetCallLayer()).Id(),
             funcCallPtr->StartInstrId() + inArgCount + 3); // 需要指向函数返回位置，为输入指令Id + 3
-        JumpInstr(instr + inArgCount + locId++, funcManager->GetFuncCall().Id(), dep.reserveXnId, 1);
-        LoadImdToXnInstr(instr + inArgCount + locId++, dep.reserveXnId, 0);
+        JumpInstr(funcInstr + inArgCount + locId++, funcManager->GetFuncCall().Id(), dep.reserveXnId, 1);
+        LoadImdToXnInstr(funcInstr + inArgCount + locId++, dep.reserveXnId, 0);
 
         uint32_t extraInstrNum = GetInstrCount(funcCallPtr->Type());
-        LoadFuncCallOutArgs(instr, inArgCount + extraInstrNum, outArgs, funcManager, dep.reserveXnId);
+        LoadFuncCallOutArgs(funcInstr, inArgCount + extraInstrNum, outArgs, funcManager, dep.reserveXnId);
         return HcclResult::HCCL_SUCCESS;
     }
 

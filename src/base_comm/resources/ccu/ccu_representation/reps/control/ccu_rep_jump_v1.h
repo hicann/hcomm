@@ -48,7 +48,7 @@ namespace CcuRep {
         bool IsComparedWithImmd() const { return comp2Immed; }
 
     protected:
-        CcuResult InitInstr(CcuInstr*& instr, uint16_t& instrId);
+        CcuResult InitInstr(CcuInstr*& instr, uint16_t& curInstrId);
 
         CcuInsGeneratorBase* insGeneratorPtr_;
         std::string label;

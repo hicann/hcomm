@@ -14,7 +14,6 @@
 #include <map>
 #include <string>
 
-#include "socket_manager.h"
 #include "virtual_topo.h"
 #include "rma_connection.h"
 #include "task.h"

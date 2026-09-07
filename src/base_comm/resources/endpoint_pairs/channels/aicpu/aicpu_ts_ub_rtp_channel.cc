@@ -106,7 +106,7 @@ void AicpuTsUbRtpChannel::RecvFinish()
 
 void AicpuTsUbRtpChannel::ProcessUbRtpState()
 {
-    auto SetState = [&](UbRtpStatus next, ChannelStatus ch) {
+    auto SetState = [this](UbRtpStatus next, ChannelStatus ch) {
         ubRtpStatus = next;
         channelStatus = ch;
     };

@@ -17,7 +17,6 @@
 #include <vector>
 #include "../channel.h"
 #include "aicpu_ts_channel_helper.h"
-#include "../../sockets/socket_mgr.h"
 
 // Orion
 #include "../../../../../../src/legacy/ascend950/unified_platform/resource/socket/socket.h"

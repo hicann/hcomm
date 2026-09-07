@@ -39,6 +39,8 @@
 using namespace hcomm;
 
 constexpr uint32_t kDscpToRoceTcShift = 2U; // RoCE TC = DSCP << 2（DiffServ 高 6 位为 DSCP）
+constexpr uint8_t UB_PATH_MODE_DEFAULT = 0xFF;
+constexpr uint8_t UB_PATH_MODE_MAX = 2;
 
 static HcommResult GetNetworkModeByLocType(EndpointLocType localLocType, NetworkMode& networkModeOut)
 {
@@ -107,7 +109,7 @@ static HcommResult ApplyRoceQosCompatToSlTc(HcommChannelDesc& channelDesc, Endpo
 }
 
 namespace {
-void DestroyPluginCtx(HcommNicChannelOps* ops, void* pluginCtx)
+void DestroyPluginCtx(const HcommNicChannelOps* ops, void* pluginCtx)
 {
     if (ops != nullptr && ops->destroy != nullptr) {
         int32_t ret = ops->destroy(pluginCtx);
@@ -228,13 +230,13 @@ HcommResult CheckUbMemAttr(HcommChannelDesc& channelDesc)
         return HCOMM_SUCCESS;
     }
 
-    if (channelDesc.ubMemAttr.pathMode == 0xFF) {
+    if (channelDesc.ubMemAttr.pathMode == UB_PATH_MODE_DEFAULT) {
         HCCL_INFO("[%s] use default ubMemAttr.pathMode, set to 0.", __func__);
         channelDesc.ubMemAttr.pathMode = 0;
         return HCOMM_SUCCESS;
     }
 
-    if (channelDesc.ubMemAttr.pathMode > 2) {
+    if (channelDesc.ubMemAttr.pathMode > UB_PATH_MODE_MAX) {
         HCCL_ERROR("[%s] invalid ubMemAttr.pathMode[%u], should be 0 ~ 2.", __func__, channelDesc.ubMemAttr.pathMode);
         return HCCL_E_PARA;
     }

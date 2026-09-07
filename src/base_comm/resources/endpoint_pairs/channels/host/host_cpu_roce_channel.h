@@ -22,7 +22,6 @@
 #include "../channel.h"
 #include "enum_factory.h"
 #include "hccl_common.h"
-#include "../../sockets/socket_mgr.h"
 #include "infiniband/verbs.h"
 
 // Orion
@@ -90,7 +89,7 @@ private:
     HcclResult CreateNotifyHybird(hccl::MemType notifyType, uint32_t notifyId);
     HcclResult CreateNotifyValueBufferHybird();
     HcclResult CreateNotifyBufferHybird(hccl::MemType notifyType, uint32_t notifyId, u8*& data, u64& size);
-    hccl::MemType NotifyIdToMemtypeHybird(uint32_t remoteNotifyIdx);
+    hccl::MemType NotifyIdToMemtypeHybird(uint32_t remoteNotifyIdx) const;
     HcclResult ConnectSingleQpHybrid(std::function<bool()> needStop);
 
 private:
@@ -105,7 +104,7 @@ private:
     HcclResult CreateQp();
     HcclResult ExchangeData();
     HcclResult ModifyQp();
-    HcclResult SyncAfterModifyQp();
+    HcclResult SyncAfterModifyQp() const;
 
     void NotifyVecPack(Hccl::BinaryStream& binaryStream);
     HcclResult BufferVecPack(Hccl::BinaryStream& binaryStream);

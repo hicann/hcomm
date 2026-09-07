@@ -55,10 +55,9 @@ private:
         const void* memDesc, uint32_t descLen, EndpointDesc& endpointDesc, std::string& rdmaBlob) const;
     void TrackRegisteredBuffer(const std::shared_ptr<hccl::LocalRdmaRmaBuffer>& localBuffer);
     // 注销流程的记录清理：exportDescByBuffer_ 擦除、allRegisteredBuffers_ 按 IsInTree 判定擦除或标记、
-    // hcclBufRecords_ 移除该 handle 的条目。入参为本条注销涉及的两个 key 与 buffer 指针
+    // hcclBufRecords_ 移除该 handle 的条目。入参为本条注销涉及的 key 与 buffer 指针
     void CleanupBufferRecords(
-        void* memHandle, hccl::LocalRdmaRmaBuffer* buffer, const hccl::BufferKey<uintptr_t, u64>& ownKey,
-        const hccl::BufferKey<uintptr_t, u64>& tempKey);
+        const void* memHandle, hccl::LocalRdmaRmaBuffer* buffer, const hccl::BufferKey<uintptr_t, u64>& ownKey);
 
     HcclResult GatherLocalMemDetails(std::vector<RoceMemDetails>& localOut) const;
     HcclResult AppendLocalNotifyMemDetails(std::vector<RoceMemDetails>& localOut) const;

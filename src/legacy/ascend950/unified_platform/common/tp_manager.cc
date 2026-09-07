@@ -884,7 +884,7 @@ void TpManager::StartGetTpAttrForFirstTpDevice(const RaUbGetTpInfoParam& param, 
 }
 
 HcclResult TpManager::MapTpInfoFromTpAttr(
-    const RaUbGetTpInfoParam& param, const RequestCtx& reqCtx, TpInfo& outTpInfo, bool isSync)
+    const RaUbGetTpInfoParam& param, const RequestCtx& reqCtx, TpInfo& outTpInfo, bool isSync) const
 {
     const uint32_t tpInfoNum = reqCtx.tpInfoNum;
     const struct HccpTpInfo* baseInfoPtr

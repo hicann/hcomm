@@ -63,12 +63,12 @@ public:
     // 继承基类默认 HCCL_E_NOT_SUPPORT，保持迁移前对外行为
 
     // ---- 数据面方法（从 AicpuTsRoceEndpoint 原封迁入，调用方改经本 context 访问）----
-    HcclResult GetSocket(uint32_t port, const std::string& tag, std::shared_ptr<hccl::HcclSocket>& outConnected);
+    HcclResult GetSocket(uint32_t port, const std::string& tag, std::shared_ptr<hccl::HcclSocket>& outConnected) const;
     HcclResult AcceptDataSocket(
         uint32_t port, const std::string& tag, std::shared_ptr<hccl::HcclSocket>& outConnected,
-        uint32_t acceptTimeoutMs = 0);
+        uint32_t acceptTimeoutMs = 0) const;
 
-    HcclResult AddListenSocketWhiteList(uint32_t port, const std::vector<SocketWlistInfo>& wlistInfos);
+    HcclResult AddListenSocketWhiteList(uint32_t port, const std::vector<SocketWlistInfo>& wlistInfos) const;
 
     // 监听 socket 复用表（静态 map + 静态锁，从 AicpuTsRoceEndpoint 迁入；数据面方法 Accept/WhiteList 经此访问）
     static std::unordered_map<SocketMapKey, AicpuTsListenSocketSlot, SocketMapKeyHash>& GetServerSocketMap();

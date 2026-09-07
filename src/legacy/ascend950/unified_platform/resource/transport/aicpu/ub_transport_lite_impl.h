@@ -438,7 +438,7 @@ private:
 
         // 校验是否需要打印WQE
         bool needDumpWqe = false;
-        if ((UNLIKELY(GetPlfDebugConfigValue() & PLF_TASK)) || UNLIKELY(HcclCheckLogLevel(HCCL_LOG_INFO))) {
+        if ((UNLIKELY((GetPlfDebugConfigValue() & PLF_TASK) != 0)) || UNLIKELY(HcclCheckLogLevel(HCCL_LOG_INFO))) {
             needDumpWqe = true;
         }
 
@@ -472,7 +472,7 @@ private:
     {
         // 校验是否需要打印WQE
         bool needDumpWqe = false;
-        if ((UNLIKELY(GetPlfDebugConfigValue() & PLF_TASK)) || UNLIKELY(HcclCheckLogLevel(HCCL_LOG_INFO))) {
+        if ((UNLIKELY((GetPlfDebugConfigValue() & PLF_TASK) != 0)) || UNLIKELY(HcclCheckLogLevel(HCCL_LOG_INFO))) {
             needDumpWqe = true;
         }
 

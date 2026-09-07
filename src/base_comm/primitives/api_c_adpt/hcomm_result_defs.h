@@ -15,7 +15,7 @@
 extern "C" {
 #endif
 
-enum {
+enum HcommResultDef {
     HCOMM_SUCCESS = 0,
     HCOMM_E_PARA = 1,
     HCOMM_E_PTR = 2,

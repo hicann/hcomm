@@ -12,20 +12,19 @@
 #define ENDPOINT_H
 
 #include <memory>
-#include <functional>
 #include <vector>
 #include <string>
 #include "reged_mem_mgr.h"
 #include "socket/socket.h"
 #include "socket_handle_manager.h"
 #include "rdma_handle_manager.h"
-#include "../../common/orion_adpt_utils.h"
 #include "hccp_hdc_manager.h"
 #include "proc_reged_mem_mgr_cache.h"
 #include "comm_queue_context/comm_queue_context.h"
 #include "dfx/endpoint_monitor.h"
 #include "server_socket_context/server_socket_context.h"
 #include "mgr/endpoint_ctx_mgr.h"
+#include "../../common/orion_adpt_utils.h"
 
 namespace hcomm {
 

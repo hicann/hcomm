@@ -16,6 +16,7 @@
 #include "exception_handler.h"
 #include "cpu_roce_endpoint.h"
 #include "adapter_error_manager_pub.h"
+#include "../../sockets/socket_mgr.h"
 
 // Orion
 #include "orion_adapter_hccp.h"
@@ -294,7 +295,7 @@ HcclResult HostCpuRoceChannel::ProcessStatus()
     }
 }
 
-HcclResult HostCpuRoceChannel::SyncAfterModifyQp()
+HcclResult HostCpuRoceChannel::SyncAfterModifyQp() const
 {
     EXCEPTION_HANDLE_BEGIN
     // 告知对端ModifyQp完成
@@ -778,7 +779,7 @@ HcclResult HostCpuRoceChannel::PrepareNotifyWrResource(
     return HCCL_SUCCESS;
 }
 
-hccl::MemType HostCpuRoceChannel::NotifyIdToMemtypeHybird(uint32_t remoteNotifyIdx)
+hccl::MemType HostCpuRoceChannel::NotifyIdToMemtypeHybird(uint32_t remoteNotifyIdx) const
 {
     if (remoteNotifyIdx == 0) {
         return hccl::MemType::ACK_NOTIFY_MEM;
@@ -1118,7 +1119,7 @@ void HostCpuRoceChannel::BuildRdmaWr(
     wr.sg_list->lkey = localRmaBuffers_[localIdx]->GetLkey();
 
     wr.opcode = opcode;
-    wr.send_flags = (fenceFlag_ == true ? (IBV_SEND_SIGNALED | IBV_SEND_FENCE) : IBV_SEND_SIGNALED);
+    wr.send_flags = (fenceFlag_ ? (IBV_SEND_SIGNALED | IBV_SEND_FENCE) : IBV_SEND_SIGNALED);
     wr.next = nullptr;
     wr.num_sge = 1;
     wr.wr_id = 0;
@@ -1718,7 +1719,7 @@ HcclResult HostCpuRoceChannel::ParseRecvExchangeDataHybird()
     }
 
     Hccl::ExchangeRdmaBufferDto dto(
-        (u64)remoteMemMsg_[static_cast<u32>(hccl::USER_OUTPUT_MEM)].addr,
+        (u64)(remoteMemMsg_[static_cast<u32>(hccl::USER_OUTPUT_MEM)].addr),
         remoteMemMsg_[static_cast<u32>(hccl::USER_OUTPUT_MEM)].len,
         remoteMemMsg_[static_cast<u32>(hccl::USER_OUTPUT_MEM)].lkey, "HcclBuffer");
     rmtRmaBuffers_.push_back(std::make_unique<Hccl::RemoteRdmaRmaBuffer>(rdmaHandle_, dto));
@@ -1754,7 +1755,7 @@ HcclResult HostCpuRoceChannel::ConnectSingleQpHybrid(std::function<bool()> needS
             return HCCL_E_TIMEOUT;
         }
         raRet = hrtGetRaQpStatus(qpInfo.qpHandle, &qpStatus);
-        if ((!raRet) && (qpStatus == 1)) { // 为1时，qp 建链成功
+        if ((raRet == 0) && (qpStatus == 1)) { // 为1时，qp 建链成功
             HCCL_INFO("In link ibv, QP get status success.");
             break;
         } else {

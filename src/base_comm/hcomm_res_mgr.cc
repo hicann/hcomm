@@ -81,7 +81,7 @@ aclrtBinHandle HcommResMgr::GetBinHandle() { return binHandle_; }
 
 // HcommBaseResMgr
 
-void HcommBaseResMgr::Init()
+void HcommBaseResMgr::Init() const
 {
     // 临时方案：只声明单例对象做生命周期控制，不执行业务动作
     // 未来需要将各种单例转为该数据结构的成员变量
@@ -134,9 +134,8 @@ HcommResMgr& HcommResMgr::GetInstance()
     return instance;
 }
 
-void HcommResMgr::InitDevice(uint32_t devicePhyId)
+void HcommResMgr::InitDevice(uint32_t devPhyId)
 {
-    uint32_t devPhyId = devicePhyId;
     if (devPhyId >= MAX_MODULE_DEVICE_NUM) {
         HCCL_WARNING(
             "[HcommResMgr][%s] use the backup device, devPhyId[%u] should be "

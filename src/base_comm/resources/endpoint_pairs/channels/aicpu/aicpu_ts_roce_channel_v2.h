@@ -20,7 +20,6 @@
 #include "aicpu_ts_channel_helper.h"
 #include "enum_factory.h"
 #include "hccl_common.h"
-#include "../../sockets/socket_mgr.h"
 #include "mem_device_pub.h"
 #include <mutex>
 #include "hcomm/hcomm_res_entity_defs.h"
@@ -39,7 +38,7 @@ namespace hcomm {
  */
 constexpr u32 RDMA_NOTIFY_NUM = 3;
 
-typedef decltype(EndpointLoc::device) EndpointDeviceLoc;
+using EndpointDeviceLoc = decltype(EndpointLoc::device);
 
 class AicpuTsRoceChannelV2 final : public Channel {
 public:
@@ -68,7 +67,7 @@ public:
     HcclResult PreAllocDevChannelEntity(uint64_t* devChannelEntityPtr);
     HcclResult FillDevChannelEntity();
 
-    HcclResult H2DResPack(std::vector<char>& buffer);
+    HcclResult H2DResPack(std::vector<char>& buffer) const;
 
     HcclResult Serialize(std::shared_ptr<hccl::DeviceMem>& out) override;
 

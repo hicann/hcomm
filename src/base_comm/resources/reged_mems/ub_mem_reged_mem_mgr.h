@@ -29,7 +29,7 @@ public:
         = hcomm::RmaBufferMgr<hccl::BufferKey<uintptr_t, u64>, std::shared_ptr<Hccl::LocalIpcRmaBuffer>>;
 
     UbMemRegedMemMgr();
-    ~UbMemRegedMemMgr() = default;
+    ~UbMemRegedMemMgr() override = default;
 
     HcclResult RegisterMemory(const HcommMem* mem, const char* memTag, void** memHandle) override;
     HcclResult UnregisterMemory(void* memHandle) override;

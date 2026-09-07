@@ -23,7 +23,7 @@ AicpuTsThread::AicpuTsThread(StreamType streamType, uint32_t notifyNum, const No
 
 AicpuTsThread::AicpuTsThread(const std::string& uniqueIdStr) : uniqueIdStr_(uniqueIdStr) {}
 
-AicpuTsThread::~AicpuTsThread() { DeInit(); }
+AicpuTsThread::~AicpuTsThread() { DeInitImpl(); }
 
 HcclResult AicpuTsThread::Init()
 {
@@ -39,7 +39,9 @@ HcclResult AicpuTsThread::Init()
     }
 }
 
-HcclResult AicpuTsThread::DeInit()
+HcclResult AicpuTsThread::DeInit() { return DeInitImpl(); }
+
+HcclResult AicpuTsThread::DeInitImpl()
 {
     streamType_ = StreamType::STREAM_TYPE_RESERVED;
     notifyNum_ = 0;

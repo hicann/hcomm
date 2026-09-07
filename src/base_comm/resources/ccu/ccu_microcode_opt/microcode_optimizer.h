@@ -11,8 +11,6 @@
 #ifndef CCU_MICROCODE_OPT_MICROCODE_OPTIMIZER_H
 #define CCU_MICROCODE_OPT_MICROCODE_OPTIMIZER_H
 
-#include <vector>
-
 #include "ccu_instr_info_v1.h"
 #include "instruction_scheduler.h"
 

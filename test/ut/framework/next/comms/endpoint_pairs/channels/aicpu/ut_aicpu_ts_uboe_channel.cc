@@ -19,6 +19,7 @@
 #undef private
 #include "endpoint.h"
 #include "exchange_ub_buffer_dto.h"
+#include "sockets/socket_mgr.h"
 
 #define private public
 #define protected public

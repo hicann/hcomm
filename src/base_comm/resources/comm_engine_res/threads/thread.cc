@@ -245,7 +245,8 @@ HcclResult CreateAndInitThreads(const ThreadCreateParams& params, vector<shared_
     return HCCL_SUCCESS;
 }
 
-HcclResult FillThreadD2HMap(const ThreadHandle* deviceThreadHandles, ThreadHandle* hostThreadHandles, uint32_t listNum)
+HcclResult
+FillThreadD2HMap(const ThreadHandle* deviceThreadHandles, const ThreadHandle* hostThreadHandles, uint32_t listNum)
 {
     int32_t deviceId = 0;
     CHK_RET(hrtGetDevice(&deviceId));
@@ -399,7 +400,6 @@ HcclResult LookupThreadByHandle(ThreadHandle handle, std::shared_ptr<Thread>& ou
 {
     lock_guard<mutex> lock(g_ThreadMapMtx);
     auto it = g_ThreadMap.find(handle);
-
     if (it == g_ThreadMap.end()) {
         // try find device handle
         int32_t deviceId = 0;

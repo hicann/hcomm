@@ -117,7 +117,7 @@ void AicpuTsRoceEndpoint::ReleaseSharedNetDev()
     }
 }
 
-void AicpuTsRoceEndpoint::ReleaseNicSocketHandle(HcclNetDev netDev)
+void AicpuTsRoceEndpoint::ReleaseNicSocketHandle(HcclNetDev netDev) const
 {
     auto* netDevCtx = static_cast<hccl::NetDevContext*>(netDev);
     if (netDevCtx == nullptr) {

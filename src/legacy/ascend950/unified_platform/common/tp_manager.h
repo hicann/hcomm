@@ -212,8 +212,8 @@ private:
     void StartGetTpAttrForFirstTpDevice(const RaUbGetTpInfoParam& param, RequestCtx& reqCtx) const;
     HcclResult
     HandleCompletedRequest(const RequestCtx reqCtx, const RaUbGetTpInfoParam& param, TpInfo& tpInfo, bool withSlPolicy);
-    HcclResult
-    MapTpInfoFromTpAttr(const RaUbGetTpInfoParam& param, const RequestCtx& reqCtx, TpInfo& outTpInfo, bool isSync);
+    HcclResult MapTpInfoFromTpAttr(
+        const RaUbGetTpInfoParam& param, const RequestCtx& reqCtx, TpInfo& outTpInfo, bool isSync) const;
 
     bool CheckRequestResult(RequestHandle& reqHandle) const;
     InfoCtxMap& GetInfoCtxMap(const TpProtocol tpProtocol);

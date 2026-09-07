@@ -60,7 +60,7 @@ HcclResult UbRegedMemMgr::UnregisterMemory(void* memHandle)
         });
 }
 
-HcclResult UbRegedMemMgr::GetMemDesc(const EndpointDesc endpointDesc, Hccl::LocalUbRmaBuffer* localUbRmaBuffer)
+HcclResult UbRegedMemMgr::GetMemDesc(const EndpointDesc endpointDesc, Hccl::LocalUbRmaBuffer* localUbRmaBuffer) const
 {
     auto dto = localUbRmaBuffer->GetExchangeDto();
     Hccl::BinaryStream localUbRmaBufferStream;
@@ -204,7 +204,7 @@ HcclResult UbRegedMemMgr::MemoryUnimport(const void* memDesc, uint32_t descLen)
                   "(used by other RemoteRank).");
         return HCCL_E_AGAIN;
     }
-    if (!remoteUbRmaBufferMgrs_[endpointDesc]->size()) {
+    if (remoteUbRmaBufferMgrs_[endpointDesc]->size() == 0) {
         remoteUbRmaBufferMgrs_.erase(endpointDesc);
     }
     return HCCL_SUCCESS;

@@ -19,8 +19,7 @@ namespace CcuRep {
     public:
         CcuInsGeneratorV1() {}
 
-        // 虚析构函数，确保派生类对象正确析构
-        virtual ~CcuInsGeneratorV1() override = default;
+        ~CcuInsGeneratorV1() override = default;
 
         // data
         HcclResult CcuRepLocCpyTranslate(
@@ -95,7 +94,7 @@ namespace CcuRep {
 
         // control
         HcclResult CcuRepFuncBlockTranslate(
-            CcuKernel* ccuKernel, CcuInstr*& instr, uint16_t& instrId, CcuRepFuncBlock* funcBlockPtr,
+            CcuKernel* ccuKernel, CcuInstr*& instr, uint16_t& curInstrId, CcuRepFuncBlock* funcBlockPtr,
             const TransDep& dep, uint32_t step) override;
         HcclResult CcuRepFuncCallTranslate(
             CcuKernel* ccuKernel, CcuInstr*& instr, uint16_t& curInstrId, CcuRepFuncCall* funcCallPtr,
@@ -150,7 +149,7 @@ namespace CcuRep {
             uint16_t reserveXnId) const;
         void LoadFuncCallOutArgs(
             CcuInstr* instr, uint32_t offset, std::vector<CcuRepArg>& outArgs, CcuRepReferenceManager* funcManager,
-            uint16_t reserveXnId);
+            uint16_t reserveXnId) const;
         HcclResult
         LoadLoopCallArg(CcuInstr*& instr, const CcuRepArg& inArg, const CcuRepArg& blkArg, const TransDep& dep) const;
         void LoadLoopGroupParams(

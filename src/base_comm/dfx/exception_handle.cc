@@ -83,7 +83,6 @@ HcclResult ExceptionHandle::CheckExceptionCqe(hccl::Thread* thread, uint32_t dev
 
     rtLogicCqReport_t cqeException{};
     dfx::CqeStatus cqeStatus = ReceiveCqeReport(devId, streamLite, cqeException);
-
     if (cqeStatus == dfx::CqeStatus::kCqeTimeOut) {
         cqeException.taskId = 0xFFFF;
     }

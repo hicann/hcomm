@@ -35,7 +35,7 @@ public:
         s32 memNum = 0;
     };
     AicpuTsHccsChannel(EndpointHandle endpointHandle, const HcommChannelDesc& channelDesc);
-    virtual ~AicpuTsHccsChannel() override;
+    ~AicpuTsHccsChannel() override;
 
     HcclResult Init() override;
     HcclResult GetNotifyNum(uint32_t* notifyNum) const override;

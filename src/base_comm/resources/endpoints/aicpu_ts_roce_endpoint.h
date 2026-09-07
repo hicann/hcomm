@@ -18,7 +18,6 @@
 #include <optional>
 #include <string>
 #include <unordered_map>
-#include <vector>
 #include "hccl_mem_defs.h"
 #include "endpoint.h"
 #include "server_socket_context/aicpu_ts_roce_server_socket_context.h"
@@ -53,7 +52,7 @@ private:
     static std::mutex& NetDevMapMutex();
     HcclResult AcquireSharedNetDev(uint32_t devicePhyId, const HcclNetDevInfos& info);
     void ReleaseSharedNetDev();
-    void ReleaseNicSocketHandle(HcclNetDev netDev);
+    void ReleaseNicSocketHandle(HcclNetDev netDev) const;
     HcclResult AcquireRdmaContext(uint32_t devPhyId, const EndpointDesc& endpointDesc);
 
     void* ctxHandle_{nullptr};

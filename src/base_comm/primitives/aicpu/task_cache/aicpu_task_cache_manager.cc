@@ -29,8 +29,9 @@ bool AicpuTaskCacheManager::NeedCacheTask()
 }
 
 HcclResult AicpuTaskCacheManager::AddWqeArray(
-    UbConnLite* ubConnLitePtr, UbTransportLiteImpl* ubTransportLiteImplPtr, const std::vector<WqeTask>& wqeTasks,
-    const uint32_t streamId, const uint32_t dbSqeIdx, const bool isReportTask, const DbSqeProfInfo& dbSqeProfInfo)
+    Hccl::UbConnLite* ubConnLitePtr, Hccl::UbTransportLiteImpl* ubTransportLiteImplPtr,
+    const std::vector<Hccl::WqeTask>& wqeTasks, const uint32_t streamId, const uint32_t dbSqeIdx,
+    const bool isReportTask, const Hccl::DbSqeProfInfo& dbSqeProfInfo)
 {
     // 注意: 只有需要cache task时, UbTransportLiteImpl才会调用本函数
     CHK_PRT_RET(
@@ -49,7 +50,7 @@ HcclResult AicpuTaskCacheManager::AddWqeArray(
 }
 
 HcclResult AicpuTaskCacheManager::AddSqeArray(
-    RtsqA5* rtsqPtr, AicpuTsThread* aicpuTsThreadPtr, const uint64_t sqeCount, const uint8_t* sqeArray,
+    Hccl::RtsqA5* rtsqPtr, hccl::AicpuTsThread* aicpuTsThreadPtr, const uint64_t sqeCount, const uint8_t* sqeArray,
     const uint32_t streamId)
 {
     // 注意: 只有需要cache task时, RtsqA5才会调用本函数
