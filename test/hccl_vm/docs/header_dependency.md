@@ -250,8 +250,8 @@ struct AivOpArgs {
 | `"aiv_broadcast_op.h"` | HCOMM | `hcomm/src/legacy/ascend910/algorithm/base/alg_aiv_template/broadcast/` | hccl_op_stub/broadcast/aiv_communication_v2.cc |
 | `"aiv_all_to_all_op.h"` | HCOMM | `hcomm/src/legacy/ascend910/algorithm/base/alg_aiv_template/all_to_all/` | hccl_op_stub/all_to_all_v/aiv_communication_v2.cc |
 | `"aiv_all_to_all_v_op.h"` | HCOMM | `hcomm/src/legacy/ascend910/algorithm/base/alg_aiv_template/all_to_all/` | hccl_op_stub/all_to_all_v/aiv_communication_v2.cc |
-| `"aiv_scatter_op.h"` | HCCL | `hccl/src/ops/scatter/template/aiv/kernel/` | hccl_op_stub/scatter/aiv_communication_v2.cc |
-| `"aiv_reduce_op.h"` | HCCL | `hccl/src/ops/reduce/template/aiv/kernel/` | hccl_op_stub/reduce/aiv_communication_v2.cc |
+| `"aiv_scatter_op.h"` | HCCL | `hccl/src/ops/scatter/algorithm/template/aiv/kernel/` | hccl_op_stub/scatter/aiv_communication_v2.cc |
+| `"aiv_reduce_op.h"` | HCCL | `hccl/src/ops/reduce/algorithm/template/aiv/kernel/` | hccl_op_stub/reduce/aiv_communication_v2.cc |
 
 **依赖风险**：若 HCOMM 或 HCCL 侧算子 op 头文件的接口签名、模板参数或成员函数发生变化，工具的 AIV kernel 编译将失败，或导致运行时行为不一致。
 

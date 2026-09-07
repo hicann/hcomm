@@ -13,7 +13,7 @@ add_library(hccl_aiv_all_reduce_op OBJECT
 )
 
 target_include_directories(hccl_aiv_all_reduce_op PRIVATE
-        ${HCCL_CODE_ROOT}/src/ops/all_reduce/template/aiv/kernel # hccl算子源码
+        ${HCCL_CODE_ROOT}/src/ops/all_reduce/algorithm/template/aiv/kernel # hccl算子源码
 )
 
 target_include_directories(hccl_aiv_all_reduce_op PRIVATE

@@ -33,7 +33,7 @@ set(AIV_KERNEL_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 MESSAGE(STATUS "AIV_KERNEL_DIR: " ${AIV_KERNEL_DIR})
 
 set(HCCL_AIV_DEFINES
-        ${HCCL_CODE_ROOT}/src/ops/op_common/template/aiv/aiv_defines.h)
+        ${HCCL_CODE_ROOT}/src/ops/op_common/algorithm/template/aiv/aiv_defines.h)
 if(NOT EXISTS ${HCCL_AIV_DEFINES})
     message(FATAL_ERROR "HCCL aiv_defines.h not found: ${HCCL_AIV_DEFINES}")
 endif()

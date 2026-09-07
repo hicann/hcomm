@@ -13,7 +13,7 @@ add_library(hccl_aiv_send_op OBJECT
 )
 
 target_include_directories(hccl_aiv_send_op PRIVATE
-        ${HCCL_CODE_ROOT}/src/ops/send/template/aiv/kernel # hccl算子源码
+        ${HCCL_CODE_ROOT}/src/ops/send/algorithm/template/aiv/kernel # hccl算子源码
 )
 
 target_include_directories(hccl_aiv_send_op PRIVATE
