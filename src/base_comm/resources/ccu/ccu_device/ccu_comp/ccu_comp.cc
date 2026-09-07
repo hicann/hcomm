@@ -187,6 +187,7 @@ static HcclResult FindOneUsableEid(
         commAddr = eidInfo.commAddr;
         name = eidInfo.name;
         findFlag = true;
+        break;
     }
     EXCEPTION_HANDLE_END
 
