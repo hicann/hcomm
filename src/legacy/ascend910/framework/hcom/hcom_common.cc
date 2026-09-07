@@ -1094,6 +1094,13 @@ HcclResult HcomDestroy(void)
 #if (!defined(HCCD)) && (!defined(CCL_KERNEL_AICPU))
     HCCLV2_FUNC_RUN([&]() -> HcclResult {
         std::unique_lock<std::mutex> lock(g_destroyDeviceLock);
+        for (u32 i = 0; i <= MAX_MODULE_DEVICE_NUM; i++) {
+            HcomInfo& hcomInfo = HcomGetCtxHomInfoById(i);
+            if (hcomInfo.pComm != nullptr) {
+                (void)HcclCommStateNotify(
+                    static_cast<HcclComm>(hcomInfo.pComm.get()), HcclCommStatePhase::HCCL_COMM_STATE_PHASE_DESTROY_PRE);
+            }
+        }
         CHK_RET(HcomDestroyV2());
         for (u32 i = 0; i <= MAX_MODULE_DEVICE_NUM; i++) {
             HcomInfo& hcomInfo = HcomGetCtxHomInfoById(i);
