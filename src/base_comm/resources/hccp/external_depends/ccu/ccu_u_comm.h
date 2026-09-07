@@ -110,8 +110,8 @@ struct ccu_region {
     unsigned int ccu_region_saddr; /* base offset start addr */
     unsigned int ccu_region_size;  /* region total size */
     unsigned int ccu_entry_size;   /* entry size (per Byte) */
-    void *ccu_va_udie0;            /* vertual address get by mmap func */
-    void *ccu_va_udie1;            /* vertual address get by mmap func */
+    void *ccu_va_udie0;            /* virtual address get by mmap func */
+    void *ccu_va_udie1;            /* virtual address get by mmap func */
 };
 
 struct ccu_data_byte8 {

@@ -535,13 +535,13 @@ typedef struct urma_jfs_opt {
 } urma_jfs_opt_t;
 
 typedef struct urma_jfs_cfg {
-    uint32_t depth;                   /* [Required] the depth of jfs, defaut urma_device_cap_t->jfs_depth */
+    uint32_t depth;                   /* [Required] the depth of jfs, default urma_device_cap_t->jfs_depth */
     urma_jfs_flag_t flag;             /* [Optional] see urma_jfs_flag_t definition */
     urma_transport_mode_t trans_mode; /* [Required] transport mode, must be supported by the device */
     uint8_t priority;                 /* [Optional] set the priority of JFS, ranging from [0, 15]
                                          Services with low delay need to set high priority. */
-    uint8_t max_sge;                  /* [Optional] max sge count in one wr, defaut urma_device_cap_t->max_jfs_sge */
-    uint8_t max_rsge;         /* [Optional] max remote sge count in one wr, defaut urma_device_cap_t->max_jfs_sge */
+    uint8_t max_sge;                  /* [Optional] max sge count in one wr, default urma_device_cap_t->max_jfs_sge */
+    uint8_t max_rsge;         /* [Optional] max remote sge count in one wr, default urma_device_cap_t->max_jfs_sge */
     uint32_t max_inline_data; /* [Optional] the max inline data size of JFS. if the parameter is 0,
                                  the system will assign device's max inline data length. */
     uint8_t rnr_retry;        /* [Optional] number of times that jfs will resend packets before report error,
@@ -549,7 +549,7 @@ typedef struct urma_jfs_cfg {
                                  the value 0 means never retry and,
                                  the value 7 means retry infinite number of times for RDMA devices */
     uint8_t err_timeout;      /* [Optional] the timeout before report error, ranging from [0, 31],
-                                 the actual timeout in usec is caculated by: 4.096*(2^err_timeout) */
+                                 the actual timeout in usec is calculated by: 4.096*(2^err_timeout) */
     urma_jfc_t *jfc;          /* [Required] need to specify jfc */
     uint64_t user_ctx;        /* [Optional] private data of jfs */
 } urma_jfs_cfg_t;
@@ -625,10 +625,10 @@ typedef struct urma_jfr_opt {
 typedef struct urma_jfr_cfg {
     uint32_t id;                      /* [Optional] specify jfr id. If the parameter is 0,
                                          the system will randomly assign a non-0 value. */
-    uint32_t depth;                   /* [Required] total depth, include berth, defaut urma_device_cap_t->jfr_depth. */
+    uint32_t depth;                   /* [Required] total depth, include berth, default urma_device_cap_t->jfr_depth. */
     urma_jfr_flag_t flag;             /* [Optional] whether is in TAG_matching, whether is in DC/IDC mode. */
     urma_transport_mode_t trans_mode; /* [Required] transport mode, must be supported by the device */
-    uint8_t max_sge;                  /* [Optional] max sge count in one wr, defaut urma_device_cap_t->max_jfr_sge. */
+    uint8_t max_sge;                  /* [Optional] max sge count in one wr, default urma_device_cap_t->max_jfr_sge. */
     uint8_t min_rnr_timer;            /* [Optional] the minimum RNR NACK timer, ranging from [0, 31], i.e.
                                          the time before jfr sends NACK to the sender for the reason of "ready to receive" */
     urma_jfc_t *jfc;                  /* [Required] need to specify jfc. */
@@ -985,7 +985,7 @@ typedef union urma_jfs_wr_flag {
                                           1: relax order
                                           2: strong order
                                           3: reserve */ /* see urma_place_order_t */
-        uint32_t comp_order : 1;       /* 0: There is no completion order with othwe WR.
+        uint32_t comp_order : 1;       /* 0: There is no completion order with other WR.
                                           1: Completion order with previous WR. */
         uint32_t fence : 1;            /* 0: There is not fence.
                                           1: Fence with previous read and atomic WR */
@@ -1062,7 +1062,7 @@ typedef struct urma_jfs_wr {
 } urma_jfs_wr_t;
 
 typedef struct urma_jfr_wr {
-    urma_sg_t src;     // includeing buffer length
+    urma_sg_t src;     // including buffer length
     uint64_t user_ctx; // completion data, eg. wr id
     struct urma_jfr_wr *next;
 } urma_jfr_wr_t;
@@ -1139,7 +1139,7 @@ typedef union urma_import_ur_flag {
 #define JFR_NAME_MAX_LEN 256
 #define URMA_MAX_SEGS_PER_UR_OPT 64 // Max number of SEGS per attach/detach ur
 
-// In parametre for create UR
+// In parameter for create UR
 typedef struct urma_ur {
     char name[UR_NAME_MAX_LEN]; // UR url name
     uint64_t size;
@@ -1148,7 +1148,7 @@ typedef struct urma_ur {
     uint64_t user_ctx;
 } urma_ur_t;
 
-// Out parametre for import UR
+// Out parameter for import UR
 typedef struct urma_target_ur {
     char name[UR_NAME_MAX_LEN]; // UR url name
     uint64_t size;
@@ -1162,7 +1162,7 @@ typedef struct urma_seg_info {
     uint32_t idx_in_ur;
 } urma_seg_info_t;
 
-// Out parametre for lookup UR
+// Out parameter for lookup UR
 typedef struct urma_ur_info {
     char name[UR_NAME_MAX_LEN];  // UR url name
     uint64_t size;               // limit size, by byte

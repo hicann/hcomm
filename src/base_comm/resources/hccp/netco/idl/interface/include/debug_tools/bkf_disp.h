@@ -37,7 +37,7 @@
 
           lastKey = getLastCtx(&info); // 获取ctx。ctx分key和info两部分，方便使用
           if (lastKey == NULL) { // 没有获取到ctx，代表首次调用该函数
-              temp = appGetFisrt(); // 获取第一个数据
+              temp = appGetFirst(); // 获取第一个数据
           }
           else {
               temp = appFindNext(lastKey); // 获取下一个数据

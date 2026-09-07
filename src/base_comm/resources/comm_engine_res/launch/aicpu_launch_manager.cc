@@ -155,7 +155,7 @@ HcclResult AicpuLaunchMgr::ThreadKernelLaunchImpl(
     CHK_RET(PrepareThreadMgrParam(newThreads, config, opParam, deviceHandle));
 
     size_t handleLen = sizeof(ThreadHandle) * newThreads.size();
-    // Step 3. 补充notify，将threadHanle拷到device侧
+    // Step 3. 补充notify，将ThreadHandle拷到device侧
     if (config.isSupplementNotify) {
         CHK_RET(hrtMemSyncCopy(
             opParam.deviceHandle, handleLen, aicpuHandle.get(), handleLen,

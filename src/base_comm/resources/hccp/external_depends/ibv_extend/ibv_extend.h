@@ -106,7 +106,7 @@ enum queue_buf_dma_mode {
     QU_BUF_DMA_MODE_INDEP_UB,    /* 采用非Host的独立UB总线做DMA, NIC - UB - NPU */
 };
 
-/* Doorbel的地址映射方式 */
+/* Doorbell的地址映射方式 */
 enum doorbell_map_mode {
     DB_MAP_MODE_HOST_VA = 0, /* 基于host VA映射 */
     DB_MAP_MODE_UB_RES,      /* 基于UB设备的资源描述映射 */

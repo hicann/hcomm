@@ -620,7 +620,7 @@ void AddNewLink(
     shared_ptr<NetInstance::ConnInterface> newTargetIface;
     shared_ptr<NetInstance::Node> newSourceNode;
     shared_ptr<NetInstance::Node> newTargetNode;
-    // oldLink有fabicNode需要先addFabricNode
+    // oldLink有fabricNode需要先addFabricNode
     // SourceNode
     GetNewNodeInfo(layer, srcNewRankId, oldLink, newNetInstance, tmpPeers, newSourceNode, newSourceIface, true);
     // TargetNode

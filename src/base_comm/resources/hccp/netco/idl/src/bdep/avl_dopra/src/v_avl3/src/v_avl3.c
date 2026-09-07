@@ -54,7 +54,7 @@ void *VosAvl3FindOrFindNext(AVL3_TREE *pstTree, const void *pKey, unsigned int b
 
             pstNode = pstNode->pstLeft;
         } else {
-            /* found the requested pstNode for suplied pKey               */
+            /* found the requested pstNode for supplied pKey               */
             if (bFlag) {
                 /* need to find the successor pstNode to this pstNode     */
                 pFoundNode = VosAvl3Next(pstNode, pstTreeInfo);

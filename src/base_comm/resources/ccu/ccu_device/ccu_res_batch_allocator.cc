@@ -532,7 +532,7 @@ CcuResBatchAllocator::AllocDiscreteRes(const CcuResReq& resReq, std::unique_ptr<
             }
             CHK_RET(ret);
 
-            std::get<2>(req) = resInfos; // 2: resRepotPtr to resource
+            std::get<2>(req) = resInfos; // 2: resRepoPtr to resource
         }
     }
 

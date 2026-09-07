@@ -744,7 +744,7 @@ inline HcclResult AicpuTaskCacheEntry::UpdateTokenFlagsByAddrRefreshInfo_(
 HcclResult AicpuTaskCacheEntry::UpdateAddrRefreshInfo_(
     const uint64_t addr, AddrRefreshInfo& addrRefreshInfo, const AddrType addrType) const
 {
-    // 默认不是dynamic memory (e.g., user input/ouput), 认为无需刷新
+    // 默认不是dynamic memory (e.g., user input/output), 认为无需刷新
     addrRefreshInfo.needRefresh = false;
 
     // 注意: 假设地址vector中前两个为local地址, 后续为remote地址

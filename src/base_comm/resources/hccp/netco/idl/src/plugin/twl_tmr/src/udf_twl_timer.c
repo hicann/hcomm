@@ -36,7 +36,7 @@ extern "C" {
 #define UDF_TWL_TIMER_MINUTE_INTERVAL (60 * 1000)
 #define UDF_TWL_TIMER_HOUR_INTERVAL (60 * 60 * 1000)
 
-#define UDF_TWL_TIMERMSEC_SLOT_NUM 10  /* time wheel slot num  millsecond timer */
+#define UDF_TWL_TIMERMSEC_SLOT_NUM 10  /* time wheel slot num  millisecond timer */
 #define UDF_TWL_TIMERSEC_SLOT_NUM 60   /* time wheel slot num for second timer */
 #define UDF_TWL_TIMERMIN_SLOT_NUM 60   /* time wheel slot num  for min timer */
 #define UDF_TWL_TIMERHOUR_SLOT_NUM 200 /* time wheel slot num  for hour timer */

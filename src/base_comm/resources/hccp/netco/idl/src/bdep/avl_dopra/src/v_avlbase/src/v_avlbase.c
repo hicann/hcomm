@@ -224,7 +224,7 @@ void VosAvlRebalance(AVLBASE_NODE_S **ppstSubTree)
 }
 
 /*******************************************************************************
- Description  : AVL_Balance_Tree will Reblance the tree starting at the
+ Description  : AVL_Balance_Tree will Rebalance the tree starting at the
                 supplied node and ending at the root of the tree.
  Input        : pstTree    - pointer to the AVL tree
                 pstNode    - pointer to the node to start from where to
@@ -269,7 +269,7 @@ AVLBASE_NODE_S *VosAVLSearchReplaceNodeInRTree(AVLBASE_TREE_S *pstTree, AVLBASE_
     AVLBASE_NODE_S *pstReplaceNode;
 
     if (pstNode->pstRight->pstLeft == AVL_NULL_PTR) {
-        /* can replace pstNode with right-son(since it has no leftson) */
+        /* can replace pstNode with right-son(since it has no left son) */
         pstReplaceNode = pstNode->pstRight;
         pstReplaceNode->pstLeft = pstNode->pstLeft;
         pstReplaceNode->pstLeft->pstParent = pstReplaceNode;
@@ -288,7 +288,7 @@ AVLBASE_NODE_S *VosAvlSearchReplaceNodeInLTree(AVLBASE_TREE_S *pstTree, AVLBASE_
     AVLBASE_NODE_S *pstReplaceNode;
 
     if (pstNode->pstLeft->pstRight == AVL_NULL_PTR) {
-        /* can replace pstNode with left-son(since it has no rightson) */
+        /* can replace pstNode with left-son(since it has no right son) */
         pstReplaceNode = pstNode->pstLeft;
         pstReplaceNode->pstRight = pstNode->pstRight;
         pstReplaceNode->pstRight->pstParent = pstReplaceNode;

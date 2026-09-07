@@ -269,7 +269,7 @@ HcclResult HostRdmaConnection::ModifyQp()
         HCCL_ERROR("[modify][ra_qp]modify qp failed, ret(%d)", ret);
         return HCCL_E_ROCE_CONNECT;
     }
-    // 调整setlbvalue到RTS状态后
+    // 调整set lbValue到RTS状态后
     if (qpInfo_.lbValue >= 0) {
         HCCL_DEBUG(
             "[HostRdmaConnection::ModifyQp] before RaSetQpLbValue, qp_num[%u], lbValue[%d], qpHandle[%p]",

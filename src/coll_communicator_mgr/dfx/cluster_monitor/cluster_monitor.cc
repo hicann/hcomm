@@ -174,7 +174,7 @@ HcclResult ClusterMonitor::GetSocketDescFromRankInfo(
         socketDesc.listenPort
             = static_cast<uint16_t>(rmtPort); // socketDesc.port中填对端端口号(此场景下对端端口号也就是监听端口号)
     }
-    // socket建链需要心跳专用的tag，用来区分业务的socket以及心跳的sockt
+    // socket建链需要心跳专用的tag，用来区分业务的socket以及心跳的socket
     std::string tag = FormatConnTag(socketDesc.role, std::make_pair(myRankUID_, remoteUID));
     errno_t ret = memcpy_s(socketDesc.tag, sizeof(socketDesc.tag), tag.c_str(), tag.size() + 1);
     CHK_PRT_RET(

@@ -164,7 +164,7 @@ urma_status_t urma_active_jfc(urma_jfc_t *jfc);
 urma_status_t urma_get_jfc_opt(urma_jfc_t *jfc, uint64_t opt, void *buf, uint32_t len);
 
 /**
- * Deactive the created jfc.
+ * Deactivate the created jfc.
  * @param[in] [Required] jfc: the jfc activated before;
  * Return: 0 on success, other value on error
  */
@@ -236,7 +236,7 @@ urma_status_t urma_delete_jfs_batch(urma_jfs_t **jfs_arr, int jfs_num, urma_jfs_
 
 /**
  * Poll the CRs for all the WRs that posted to JFS, but are not completed.
- * Call the API after modify JFS to error, or polled a suspened done CR.
+ * Call the API after modify JFS to error, or polled a suspended done CR.
  * CRs with status of URMA_CR_WR_FLUSH_ERR will be returned on success.
  * @param[in] [Required] jfs: the jfs created before;
  * @param[in] [Required] cr_cnt: Number of CR expected to be received.;
@@ -282,7 +282,7 @@ urma_status_t urma_active_jfs(urma_jfs_t *jfs);
 urma_status_t urma_get_jfs_opt(urma_jfs_t *jfs, uint64_t opt, void *buf, uint32_t len);
 
 /**
- * Deactive the created jfs.
+ * Deactivate the created jfs.
  * @param[in] [Required] jfs: the jfs activated before;
  * Return: 0 on success, other value on error
  */
@@ -383,12 +383,12 @@ urma_status_t urma_advise_jfr(urma_jfs_t *jfs, urma_target_jetty_t *tjfr);
  *  Async API for urma_advise_jfr
  *  Advise jfr: construct the transport channel for jfs and remote jfr.
  * @param[in] [Required] jfs: jfs to use to construct the transport channel;
- * @param[in] [Required] tjfr: target jfr information including full qulified jfr id;
+ * @param[in] [Required] tjfr: target jfr information including full qualified jfr id;
  * @param[in] [Required] cb_func: user defined callback function.
  * @param[in] [Required] cb_arg: user defined arguments for the callback function.
  * Return: 0 on success, URMA_EEXIST if the jfr has been advised, other value on error.
  * Note: User must define callback function to handle result,
- *  as the async respone will call the cb_func and pass the result to it.
+ *  as the async response will call the cb_func and pass the result to it.
  */
 urma_status_t urma_advise_jfr_async(urma_jfs_t *jfs, urma_target_jetty_t *tjfr, urma_advise_async_cb_func cb_fun,
     void *cb_arg);
@@ -438,7 +438,7 @@ urma_status_t urma_active_jfr(urma_jfr_t *jfr);
 urma_status_t urma_get_jfr_opt(urma_jfr_t *jfr, uint64_t opt, void *buf, uint32_t len);
 
 /**
- * Deactive the activated jfr.
+ * Deactivate the activated jfr.
  * @param[in] [Required] jfr: handle of the allocated jfr;
  * Return: 0 on success, other value on error
  */
@@ -475,7 +475,7 @@ urma_status_t urma_modify_jetty(urma_jetty_t *jetty, urma_jetty_attr_t *attr);
 /**
  * Query jetty attributes.
  * @param[in] [Required] jetty: specify jetty;
- * @param[out] [Required] cfg: cconfig to query;
+ * @param[out] [Required] cfg: config to query;
  * @param[out] [Required] attr: attributes to query;
  * Return: 0 on success, other value on error
  */
@@ -536,7 +536,7 @@ urma_status_t urma_unimport_jetty(urma_target_jetty_t *tjetty);
  * @param[in] [Required] jetty: local jetty to construct the transport channel;
  * @param[in] [Required] tjetty: target jetty imported before;
  * Return: 0 on success, URMA_EEXIST if the jetty has been advised, other value on error
- * Note: A local jetty can be advised with several remote jetties. A connectionless jetty is free to call the adivse API
+ * Note: A local jetty can be advised with several remote jetties. A connectionless jetty is free to call the advise API
  */
 /* todo: available after implementing URMA_TM_RM(IB_RC) */
 urma_status_t urma_advise_jetty(urma_jetty_t *jetty, urma_target_jetty_t *tjetty);
@@ -580,7 +580,7 @@ urma_status_t urma_unbind_jetty(urma_jetty_t *jetty);
 
 /**
  * Poll the CRs for all the WRs that posted to Jetty, but are not completed.
- * Call the API after modify Jetty to error, or polled a suspened done CR.
+ * Call the API after modify Jetty to error, or polled a suspended done CR.
  * CRs with status of URMA_CR_WR_FLUSH_ERR will be returned on success.
  * @param[in] [Required] jetty: the jetty created before;
  * @param[in] [Required] cr_cnt: Number of CR expected to be received.;
@@ -680,7 +680,7 @@ urma_status_t urma_active_jetty(urma_jetty_t *jetty);
 urma_status_t urma_get_jetty_opt(urma_jetty_t *jetty, uint64_t opt, void *buf, uint32_t len);
 
 /**
- * Deactive the activated jetty.
+ * Deactivate the activated jetty.
  * @param[in] [Required] jetty: handle of the allocated jetty;
  * Return: 0 on success, other value on error
  */
@@ -789,8 +789,8 @@ urma_status_t urma_free_token_id(urma_token_id_t *token_id);
  * @param[in] [Required] ctx: the created urma context pointer;
  * @param[in] [Required] seg_cfg: Specify cfg of seg to be registered, including address, len, token, and so on;
  * Return: pointer to target segment on success, NULL on error
- * Note: in current IB provider, all segments to be registerred must use a common jfc,
- * And the immedidate data wrote from clients is polled from this common jfc.
+ * Note: in current IB provider, all segments to be registered must use a common jfc,
+ * And the immediate data wrote from clients is polled from this common jfc.
  */
 urma_target_seg_t *urma_register_seg(urma_context_t *ctx, urma_seg_cfg_t *seg_cfg);
 
@@ -865,7 +865,7 @@ urma_status_t urma_post_jetty_recv_wr(urma_jetty_t *jetty, urma_jfr_wr_t *wr, ur
  * @param[in] dst: destination address(mapping va on user node or rva in ubva on home node) to be written into
  * @param[in] src: source address(local process address space) to fetch data
  * @param[in] len: the data len to be written
- * @param[in] flag: flag to control jfs work request attritube
+ * @param[in] flag: flag to control jfs work request attribute
  * @param[in] user_ctx: the user context, such as request id(rid) etc.
  * Return: 0 on success, other value on error
  */
@@ -881,7 +881,7 @@ urma_status_t urma_write(urma_jfs_t *jfs, urma_target_jetty_t *target_jfr, urma_
  * @param[in] dst: destination address(local process address space) to be written into
  * @param[in] src: source address(mapping va or rva in ubva) to fetch data
  * @param[in] len: the data len to be written
- * @param[in] flag: the flag to control jfs work request attritube
+ * @param[in] flag: the flag to control jfs work request attribute
  * @param[in] user_ctx: the user context, such as request id(rid) etc.
  * Return: 0 on success, other value on error
  */
@@ -891,11 +891,11 @@ urma_status_t urma_read(urma_jfs_t *jfs, urma_target_jetty_t *target_jfr, urma_t
 /**
  * Send data to remote node.
  * @param[in] jfs: the jfs created before, which is used to put command;
- * @param[in] target_jfr: destination jetty receiver(with full qualifed jfr id);
+ * @param[in] target_jfr: destination jetty receiver(with full qualified jfr id);
  * @param[in] src_tseg: the seg registered before, can be NULL only when flag.bs.inline_flag == URMA_INLINE_ENABLE
  * @param[in] src: source address for sending;
  * @param[in] len: data length;
- * @param[in] flag: flag to control jfs work request attritube
+ * @param[in] flag: flag to control jfs work request attribute
  * @param[in] user_ctx: the user context, such as request id(rid) etc;
  * Return: 0 on success, other value on error.
  */
@@ -1019,7 +1019,7 @@ int urma_get_tpn(urma_jetty_t *jetty);
 /**
  * Get net address info list, user tp only.
  * @param[in] ctx: the created urma context pointer;
- * @param[out] cnt: numer of net address info;
+ * @param[out] cnt: number of net address info;
  * Return: pointer of net address list; NULL on error
  */
 urma_net_addr_info_t *urma_get_net_addr_list(urma_context_t *ctx, uint32_t *cnt);

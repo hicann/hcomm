@@ -47,7 +47,7 @@ public:
 private:
     ServerSocketManager()
     {
-        // Ensure that (Host)SocketHandleManager destruct after the destructionon of device/host ServerSocketMap_.
+        // Ensure that (Host)SocketHandleManager destruct after the destruction of device/host ServerSocketMap_.
         (void)Hccl::SocketHandleManager::GetInstance();
         (void)Hccl::HostSocketHandleManager::GetInstance();
     };

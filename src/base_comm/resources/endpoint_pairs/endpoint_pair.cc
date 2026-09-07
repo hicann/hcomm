@@ -216,7 +216,7 @@ HcclResult EndpointPair::CreateChannel(
     return HCCL_SUCCESS;
 }
 
-// 找到对应的channelhandle，调用HcommChannelDestroy销毁平台层对象，并删除channelHandles_中的channelHandle元素
+// 找到对应的channel handle，调用HcommChannelDestroy销毁平台层对象，并删除channelHandles_中的channelHandle元素
 HcclResult EndpointPair::DestroyChannel(CommEngine engine, u32 reuseIdx)
 {
     std::lock_guard<std::mutex> lock(channelMtx_);

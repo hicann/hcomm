@@ -24,7 +24,7 @@ extern "C" {
 
 #pragma pack(4)
 enum {
-    /* 下面的顺序，和调度的先后顺序有关, 并需要参考shced和slow shced的宏定义 */
+    /* 下面的顺序，和调度的先后顺序有关, 并需要参考sched和slow sched的宏定义 */
     BKF_PUBER_SESS_STATE_WAIT_SUB,
     BKF_PUBER_SESS_STATE_WAIT_SEND_SUB_ACK,
     BKF_PUBER_SESS_STATE_WAIT_MAY_SEND_BATCH_BEGIN,

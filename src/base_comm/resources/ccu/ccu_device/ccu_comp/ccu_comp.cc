@@ -1148,7 +1148,7 @@ HcclResult CcuComponent::ConfirmCntXns(const uint8_t dieId, const std::string& r
     CHK_RET(SetTotalCntXn(dieId, wishCntXnIdBegin, wishCntXnIdEnd, totalCntXnId, blockIdx));
     HCCL_INFO("Set TotalCntXn success, index[%u]", blockIdx);
 
-    ret = SetSplitUnit(dieId, 0); // 0表示stomic store add value的单位是byte。1表示以包为单位
+    ret = SetSplitUnit(dieId, 0); // 0表示atomic store add value的单位是byte。1表示以包为单位
     if (ret != HcclResult::HCCL_SUCCESS) {
         HCCL_ERROR("[CcuComponent][%s] SetSplitUnit failed, dieId[%u], devLogicId[%d].", __func__, dieId, devLogicId_);
         CHK_RET(ResetTotalCntXn(dieId, blockIdx));

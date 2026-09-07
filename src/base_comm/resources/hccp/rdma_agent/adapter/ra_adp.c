@@ -2125,7 +2125,7 @@ STATIC int HccpSetAffinity(unsigned int chipId)
     /*lint +e574*/
     hccp_run_info("chipId:%u phyDevid:%u ccpuNum:%lld, dcpuNum:%lld, acpuNum:%lld, cpuId:%lld", chipId, phyDevid,
         ccpuNum, dcpuNum, acpuNum, cpuId);
-    ret = sched_setaffinity(getpid(), sizeof(mask), &mask); /* hccp use core0 of each chip to setaffinity */
+    ret = sched_setaffinity(getpid(), sizeof(mask), &mask); /* hccp use core0 of each chip to set affinity */
     CHK_PRT_RETURN(ret == -1,
         hccp_err("sched_setaffinity failed: ret %d, errno %d chipId:%u phyDevid:%u", ret, errno, chipId, phyDevid),
         -ESYSFUNC);

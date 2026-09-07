@@ -211,7 +211,7 @@ char *VOS_StrTrim(char *pscStr)
     for (; *pscTemp != '\0'; pscTemp++, uiCount++) {
     }
 
-    /* delete the space behide the pRetStr */
+    /* delete the space behind the pRetStr */
     while (uiCount > 0 && ' ' == *--pscTemp) {
         uiCount--;
     }

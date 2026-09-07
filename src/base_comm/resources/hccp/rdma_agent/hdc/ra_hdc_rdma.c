@@ -1740,7 +1740,7 @@ STATIC int RaHdcLiteCleanQp(struct RaQpHandle *qpHandle)
     unsigned int interfaceVersion = 0;
     int ret;
 
-    // check opcode versioin, not support to clean qp
+    // check opcode version, not support to clean qp
     ret = RaHdcGetInterfaceVersion(qpHandle->phyId, RA_RS_QP_BATCH_MODIFY, &interfaceVersion);
     if (ret != 0 || interfaceVersion <= RA_RS_OPCODE_BASE_VERSION) {
         hccp_warn("RA_RS_QP_BATCH_MODIFY interface_version:%u <= %u, not support to clean qp, phyId:%u, qpn:%u",

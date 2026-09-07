@@ -227,7 +227,7 @@ struct SocketEventInfoT {
 } EPOLL_PACKED;
 /**
  * @ingroup libinit
- * Configuration of rdma_agent initializatioin
+ * Configuration of rdma_agent initialization
  */
 struct RaInitConfig {
     unsigned int phyId;       /**< physical device id */
@@ -260,7 +260,7 @@ struct IpInfo {
 
 /**
  * @ingroup librdma
- * Flag of RMDA operations
+ * Flag of RDMA operations
  */
 enum RaSendFlags {
     RA_SEND_FENCE = 1 << 0,     /**< RDMA operation with fence */
@@ -395,7 +395,7 @@ struct RecvWrlistData {
  */
 struct SocketWlistInfoT {
     union HccpIpAddr remoteIp;    /**< IP address of remote */
-    unsigned int connLimit;       /**< limit of whilte list */
+    unsigned int connLimit;       /**< limit of white list */
     char tag[SOCK_CONN_TAG_SIZE]; /**< tag used for whitelist must ended by '\0' */
 };
 

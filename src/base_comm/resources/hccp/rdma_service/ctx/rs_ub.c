@@ -2178,7 +2178,7 @@ STATIC int RsUbCtxInitRwWr(struct RsUbDevCb *devCb, urma_jfs_wr_t *ubWr, struct 
     ret = RsUbCtxFillLsge(devCb, lsge, wrData, &totalLen, ubWr->flag.bs.inline_flag);
     CHK_PRT_RETURN(ret != 0, hccp_err("[send][rs_ub_ctx]fill lsge failed, ret:%d", ret), ret);
 
-    /* write with norify have 2 dst sge, sge[0] is data sge, sge[1] is notify sge */
+    /* write with notify have 2 dst sge, sge[0] is data sge, sge[1] is notify sge */
     rsgeNum = (ubWr->opcode == URMA_OPC_WRITE_NOTIFY) ? 2 : 1;
     ret = RsUbCtxFillRsge(devCb, rsge, wrData, totalLen, ubWr->opcode);
     CHK_PRT_RETURN(ret != 0, hccp_err("[send][rs_ub_ctx]fill rsge failed, ret:%d", ret), ret);

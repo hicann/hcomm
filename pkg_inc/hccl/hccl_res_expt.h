@@ -34,7 +34,7 @@ extern HcclResult HcclGetRemoteIpcHcclBuf(HcclComm comm, uint64_t remoteRank, vo
  * @brief 获取mc2场景下AICPU展开的workspace
  * @param[in] comm 通信域句柄
  * @param[in] memTag 全局标签为nullptr, 单算子标签不为空
- * @param[in] size 未申请过对应memTga的资源会根据size自动创建device mem, 否则校验旧的device mem是否一致。
+ * @param[in] size 未申请过对应memTag的资源会根据size自动创建device mem, 否则校验旧的device mem是否一致。
  * @param[out] addr 对应的workspace起始地址
  * @param[out] newCreated 可为nullptr, 不为nullptr时会返回是否新创建的workspace
  * @return HcclResult 执行结果状态码

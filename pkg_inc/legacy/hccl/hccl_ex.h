@@ -20,7 +20,7 @@ extern "C" {
 /**
  * @brief Initialize HCCL.
  *
- * @param rankTabelM A rankTableJson string in the memory.
+ * @param rankTableM A rankTableJson string in the memory.
  * @param rank A integer identifying the identify for the rank.
  * @param comm A pointer identifying the initialized communication resource.
  * @return HcclResult
@@ -38,7 +38,7 @@ extern HcclResult HcclInitComm(const char* rankTableM, uint32_t rank, const Comm
 extern HcclResult HcclFinalizeComm(HcclComm comm);
 
 /**
- * @ingroup mem_manangement
+ * @ingroup mem_management
  * @brief MR registered for the whole process
  * @param [in]  addr memory address of the MR
  * @param [in]  byte number of the MR
@@ -48,7 +48,7 @@ extern HcclResult HcclFinalizeComm(HcclComm comm);
 extern HcclResult HcclRegisterGlobalMemory(void* addr, u64 size);
 
 /**
- * @ingroup mem_manangement
+ * @ingroup mem_management
  * @brief MR unregistered for the whole process
  * @param [in]  addr memory address of the MR
  * @return HCCL_SUCCESS for ok

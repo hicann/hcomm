@@ -950,7 +950,7 @@ STATIC int RaCtxBatchSendWrCheck(struct RaCtxQpHandle *qpHandle, struct SendWrDa
                 return -EINVAL;
             }
 
-            // checkreduce, only write & write with notify & read op supportreduce
+            // check reduce, only write & write with notify & read op support reduce
             if ((wrList[i].ub.opcode != RA_UB_OPC_WRITE && wrList[i].ub.opcode != RA_UB_OPC_WRITE_NOTIFY &&
                     wrList[i].ub.opcode != RA_UB_OPC_READ) &&
                 wrList[i].ub.reduceInfo.reduceEn) {

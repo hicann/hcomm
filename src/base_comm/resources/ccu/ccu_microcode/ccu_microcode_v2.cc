@@ -160,7 +160,7 @@ namespace CcuRep {
         {
             instr->header = InstrHeader(LOAD_TYPE, SUB_CODE);
 
-            // 设置指令模式，Par_Mode = 1’b0时，*Xd = *Xn - {48’b0，Immedata[15:0]}
+            // 设置指令模式，Par_Mode = 1’b0时，*Xd = *Xn - {48’b0，Immediate[15:0]}
             instr->v2.operate.parMode = 0;
             Operator(instr, result, operand, imm, setCKEId, setCKEMask);
         }

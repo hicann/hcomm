@@ -35,4 +35,4 @@ namespace CcuRep {
 
 }; // namespace CcuRep
 }; // namespace hcomm
-#endif // HCOMM_CCU_REPRESENTATION_LOC_RECORD_EVENTH
+#endif // HCOMM_CCU_REPRESENTATION_LOC_RECORD_EVENT_H

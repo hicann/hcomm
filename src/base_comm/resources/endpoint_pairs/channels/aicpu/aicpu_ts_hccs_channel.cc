@@ -110,7 +110,7 @@ HcclResult AicpuTsHccsChannel::GetFirstIpByPhyId(u32 devicePhyId, u32 superDevId
 
 HcclResult AicpuTsHccsChannel::BuildConnection()
 {
-    /* delay start server here, uplayer may not call ServerSocketListen of endpoint,
+    /* delay start server here, upper layer may not call ServerSocketListen of endpoint,
     and here can get the port from channel desc*/
     CHK_RET(hccl::GlobalNetDevMgr::GetInstance(localEp_.loc.device.devPhyId).ServerInit(serverPort_));
     serverInited_ = true;

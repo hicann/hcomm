@@ -23,7 +23,7 @@ typedef enum {
 
 /**
  * @ingroup SendStartUpFinishMsg
- * @brief sub process start finisn and Wait for the TSD process to issue the shutdown command
+ * @brief sub process start finish and Wait for the TSD process to issue the shutdown command
  *
  * @par Function
  * Wait for the TSD process to issue the shutdown command

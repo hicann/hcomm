@@ -254,7 +254,7 @@ private:
     std::map<std::string, std::queue<std::pair<ClusterUIDType, ClusterMonitorSocketCtx>>> clusterLinkContext_{};
     std::mutex clusertMonitorLinkMtx_; // 用来锁住clusterLinkContext_，原clusterLinkContext_
 
-    // 存储UID与监控连接状态的map, NOT_START/BUILDING/COMPILETED，原rankId2LinkStatusMap_
+    // 存储UID与监控连接状态的map, NOT_START/BUILDING/COMPLETED，原rankId2LinkStatusMap_
     std::map<ClusterUIDType, MonitorLinkStatus> monitorLinkStatusMap_;
 
     // 存储UID与连接上下文的计数map，由于多个通信域都有可能使用同一个context去连接远端，需要计数处理，解注册时计数--，原rankId2SocketMap_

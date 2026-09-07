@@ -41,7 +41,7 @@
 #include "rs.h"
 #include "rs_list.h"
 
-/* priority of algos and forbid unsafety algos */
+/* priority of algos and forbid unsafe algos */
 #define CHIPER_LIST                                                                                                    \
     "ECDHE-RSA-AES256-GCM-SHA384:\
     !RC2:!RC4:!MD2:!MD4:!MD5:!DES:!3DES:!SHA1:!BLOWFISH:!CBC:!ECB:!ADH:!LOW:!PSK:!SRP:!DSS:!eNULL:!aNULL:!EXP:@STRENGTH"

@@ -197,7 +197,7 @@ extern void *VosAvl3FindOrFindNext(AVL3_TREE *pstTree, const void *pKey, unsigne
  *
  * @par 描述
  * 本接口返回树中第一个节点的指针。
- * @attentionAVL模块对用户传入的参数并未做空指针校验，需要由用户保证参数的有效性。
+ * @attention AVL模块对用户传入的参数并未做空指针校验，需要由用户保证参数的有效性。
  *
  * @param *pstTree [IN]  表示待查找的树。
  * @param *pstTreeInfo [IN]  包含树的描述信息。

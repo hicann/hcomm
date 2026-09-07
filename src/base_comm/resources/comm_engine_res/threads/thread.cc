@@ -105,7 +105,7 @@ HcclResult CommEngineToStreamType(CommEngine engine, StreamType& type)
         case COMM_ENGINE_CPU:
         case COMM_ENGINE_CPU_TS:
         case COMM_ENGINE_CCU:
-            type = StreamType::STREAM_TYPE_ONLINE; // 单算子使用online，图模式使用offine
+            type = StreamType::STREAM_TYPE_ONLINE; // 单算子使用online，图模式使用offline
             break;
         case COMM_ENGINE_AICPU:
         case COMM_ENGINE_AICPU_TS:

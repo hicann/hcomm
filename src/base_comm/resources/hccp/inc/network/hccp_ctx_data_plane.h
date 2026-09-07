@@ -45,7 +45,7 @@ union JfsWrFlag {
                                           1: Solicited. */
         uint32_t completeEnable : 1;  /* 0: DO not Generate CR for this WR.
                                           1: Generate CR for this WR after the WR is completed. */
-        uint32_t inlineFlag : 1;      /* 0: Nodata.
+        uint32_t inlineFlag : 1;      /* 0: No data.
                                           1: Inline data. */
         uint32_t reserved : 25;
     } bs;

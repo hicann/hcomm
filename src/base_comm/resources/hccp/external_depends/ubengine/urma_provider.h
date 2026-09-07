@@ -276,7 +276,7 @@ typedef struct urma_ops {
 } urma_ops_t;
 
 typedef struct urma_provider_attr {
-    uint32_t version; /* compatible with abi verison of kernel driver */
+    uint32_t version; /* compatible with abi version of kernel driver */
     urma_transport_type_t transport_type;
 } urma_provider_attr_t;
 

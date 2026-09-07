@@ -23,7 +23,7 @@ extern "C" {
 #define HCCL_SOCKET_TAG_LEN 192
 
 /**
- * @brief soket通道描述参数
+ * @brief socket通道描述参数
  */
 typedef struct {
     CommAbiHeader header;

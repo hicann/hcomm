@@ -1196,7 +1196,7 @@ HcclResult ChannelProcess::ChannelUpdateKernelLaunch(
             continue;
         }
         auto aicpuTsUrmaChannel = reinterpret_cast<AicpuTsUrmaChannel*>(hostChannelHandles[index]);
-        CHK_RET(aicpuTsUrmaChannel->H2DResPack(hostPackBuffers[index])); // todo:后续只打包connction
+        CHK_RET(aicpuTsUrmaChannel->H2DResPack(hostPackBuffers[index])); // todo:后续只打包connection
         totalListNum += hostPackBuffers[index].size();
         channelSizeVec.push_back(hostPackBuffers[index].size());
     }

@@ -246,10 +246,10 @@ extern void *VOS_AVL_Prev(AVL_NODE *pstNode);
         (NODE).sRHeight = -1;                                                                                          \
     } while (0)
 
-/* V2 AVL EXPOSED MACRO DEFINATIONS */
+/* V2 AVL EXPOSED MACRO DEFINITIONS */
 /**
  * @ingroup  v_avl
- * 尝试插入一个节点到AVL树中，返回值为[VOS_TURE, VOS_FALSE]，详细说明可以参考接口#VOS_AVL_Insert_Or_Find.
+ * 尝试插入一个节点到AVL树中，返回值为[VOS_TRUE, VOS_FALSE]，详细说明可以参考接口#VOS_AVL_Insert_Or_Find.
  */
 #define VOS_AVL_INSERT(TREE, NODE) (VOS_AVL_Insert_Or_Find(&(TREE), &(NODE)) == AVL_NULL_PTR)
 /**

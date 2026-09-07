@@ -1031,7 +1031,7 @@ STATIC void RsSocketTagSync(struct RsConnInfo *conn)
     return;
 }
 
-/* ssl will connect again and again, HCCL get socke timeout after period time */
+/* ssl will connect again and again, HCCL get socket timeout after period time */
 STATIC int RsSocketSslConnect(struct RsConnInfo *conn, struct rs_cb *rscb)
 {
     int ret, err;
@@ -1118,7 +1118,7 @@ STATIC int RsSocketStateInit(unsigned int chipId, struct RsConnInfo *conn, uint3
 
     conn->state = RS_CONN_STATE_CONNECTED;
     /*
-     * ssl will connect again and again, HCCL get socke timeout after period time,
+     * ssl will connect again and again, HCCL get socket timeout after period time,
      * so there is no log info to prevent over log
      */
     ret = RsSocketStateConnected(conn, sslEnable, rscb);
@@ -1253,7 +1253,7 @@ STATIC int RsSocketStateReset(unsigned int chipId, struct RsConnInfo *conn, uint
     conn->connfd = connFd;
     conn->state = RS_CONN_STATE_INIT;
     /*
-     * ssl will connect again and again, HCCL get socke timeout after period time,
+     * ssl will connect again and again, HCCL get socket timeout after period time,
      * so there is no log info to prevent over log
      */
     ret = RsSocketStateInit(chipId, conn, sslEnable, rscb);
