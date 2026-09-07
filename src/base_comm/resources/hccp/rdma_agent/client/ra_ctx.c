@@ -13,6 +13,7 @@
 #include "hccp_common.h"
 #include "hccp_ctx.h"
 #include "ra.h"
+#include "ra_rs_err.h"
 #include "ra_hdc_ctx.h"
 #include "ra_peer_ctx.h"
 #include "ra_ctx.h"
@@ -43,6 +44,7 @@ struct RaCtxOps gRaHdcCtxOps = {
     .raCtxUpdateCi = RaHdcCtxUpdateCi,
     .raCtxQueryQpBatch = RaHdcCtxQpQueryBatch,
     .raCtxGetAuxInfo = RaHdcCtxGetAuxInfo,
+    .raCtxNotifyEvent = RaHdcCtxNotifyEvent,
     .raCtxGetJettyContext = RaHdcCtxGetJettyContext,
 };
 
@@ -72,6 +74,7 @@ struct RaCtxOps gRaPeerCtxOps = {
     .raCtxUpdateCi = NULL,
     .raCtxQueryQpBatch = NULL,
     .raCtxGetAuxInfo = NULL,
+    .raCtxNotifyEvent = NULL,
     .raCtxGetJettyContext = RaPeerCtxGetJettyContext,
 };
 
@@ -1085,6 +1088,35 @@ HCCP_ATTRI_VISI_DEF int RaCtxGetJettyContext(void *qpHandle, uint8_t context[], 
         hccp_err("[get][jettyContext]raCtxGetJettyContext failed, ret:%d phyId:%u devIndex"
                  ":0x%x",
             ret, qpHandleTmp->phyId, qpHandleTmp->devIndex),
+        ConverReturnCode(RDMA_OP, ret));
+
+    return ConverReturnCode(RDMA_OP, ret);
+}
+
+HCCP_ATTRI_VISI_DEF int RaCtxNotifyEvent(void *ctxHandle, struct CtxNotifyEvent *event)
+{
+    struct RaCtxHandle *ctxHandleTmp = NULL;
+    int ret = 0;
+
+    CHK_PRT_RETURN(ctxHandle == NULL || event == NULL, hccp_err("[notify][event]ctxHandle or event is NULL"),
+        ConverReturnCode(RDMA_OP, -EINVAL));
+
+    ctxHandleTmp = (struct RaCtxHandle *)ctxHandle;
+    CHK_PRT_RETURN(ctxHandleTmp->ctxOps == NULL || ctxHandleTmp->ctxOps->raCtxNotifyEvent == NULL,
+        hccp_err("[notify][event]ctxOps or raCtxNotifyEvent is NULL"), ConverReturnCode(RDMA_OP, -EINVAL));
+
+    if (!RaHdcHasCapability(ctxHandleTmp->attr.phyId, RA_CAP_UDMA_NOTIFY_EVENT)) {
+        hccp_run_warn("[notify][event]capability not support, phyId:%u", ctxHandleTmp->attr.phyId);
+        return ConverReturnCode(RDMA_OP, -ENOTSUPP);
+    }
+
+    hccp_run_info("Input parameters: phyId:%u, devIndex:0x%x serviceType:%u errorType:%u", ctxHandleTmp->attr.phyId,
+        ctxHandleTmp->devIndex, event->serviceType, event->errorType);
+
+    ret = ctxHandleTmp->ctxOps->raCtxNotifyEvent(ctxHandleTmp, event);
+    CHK_PRT_RETURN(ret != 0,
+        hccp_err("[notify][event]raCtxNotifyEvent failed, ret:%d phyId:%u devIndex:0x%x", ret, ctxHandleTmp->attr.phyId,
+            ctxHandleTmp->devIndex),
         ConverReturnCode(RDMA_OP, ret));
 
     return ConverReturnCode(RDMA_OP, ret);

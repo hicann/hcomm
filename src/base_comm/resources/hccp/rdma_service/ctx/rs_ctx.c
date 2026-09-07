@@ -9,11 +9,13 @@
  */
 
 #include "securec.h"
+#include "aubdfx_api.h"
 #include "dl_hal_function.h"
 #include "dl_ibverbs_function.h"
 #include "dl_urma_function.h"
 #include "dl_ccu_function.h"
 #include "dl_net_function.h"
+#include "dl_aubdfx_function.h"
 #include "hccp_ctx.h"
 #include "ra_rs_ctx.h"
 #include "ra_rs_err.h"
@@ -50,6 +52,40 @@ int RsGetChipProtocol(unsigned int chipId, enum NetworkMode hccpMode, enum Proto
     return 0;
 }
 
+STATIC int RsCtxUdmaApiInit(enum ProtocolTypeT protocol)
+{
+    int ret;
+
+    ret = RsUbApiInit();
+    if (ret != 0) {
+        hccp_err("rsUbApiInit failed, protocol[%u], ret[%d]", protocol, ret);
+        return ret;
+    }
+    ret = RsCcuApiInit();
+    if (ret != 0) {
+        hccp_err("rsCcuApiInit failed, protocol[%u], ret[%d]", protocol, ret);
+        goto err_ccu;
+    }
+    ret = RsNetApiInit();
+    if (ret != 0) {
+        hccp_err("rsNetApiInit failed, protocol[%u], ret[%d]", protocol, ret);
+        goto err_net;
+    }
+    ret = RsAubdfxApiInit();
+    if (ret != 0) {
+        // aubdfx is optional, failure does not affect the main flow, re-write ret to 0, and print warning log
+        hccp_warn("rsAubdfxApiInit failed, protocol[%u], ret[%d], notify event will not be supported", protocol, ret);
+        ret = 0;
+    }
+    return ret;
+
+err_net:
+    RsCcuApiDeinit();
+err_ccu:
+    RsUbApiDeinit();
+    return ret;
+}
+
 int RsCtxApiInit(enum NetworkMode hccpMode, enum ProtocolTypeT protocol)
 {
     int ret = 0;
@@ -65,22 +101,7 @@ int RsCtxApiInit(enum NetworkMode hccpMode, enum ProtocolTypeT protocol)
             CHK_PRT_RETURN(ret != 0, hccp_err("RsApiInit failed, protocol[%u], ret[%d]", protocol, ret), ret);
             break;
         case PROTOCOL_UDMA:
-            ret = RsUbApiInit();
-            CHK_PRT_RETURN(ret != 0, hccp_err("rs_ub_api_init failed, protocol[%u], ret[%d]", protocol, ret), ret);
-            ret = RsCcuApiInit();
-            if (ret != 0) {
-                hccp_err("rs_ccu_api_init failed, protocol[%u], ret[%d]", protocol, ret);
-                RsUbApiDeinit();
-                return ret;
-            }
-            ret = RsNetApiInit();
-            if (ret != 0) {
-                hccp_err("rs_net_api_init failed, protocol[%u], ret[%d]", protocol, ret);
-                RsCcuApiDeinit();
-                RsUbApiDeinit();
-                return ret;
-            }
-            break;
+            return RsCtxUdmaApiInit(protocol);
         default:
             hccp_err("unsupported protocol[%u]", protocol);
             return -EINVAL;
@@ -101,6 +122,7 @@ int RsCtxApiDeinit(enum NetworkMode hccpMode, enum ProtocolTypeT protocol)
             RsApiDeinit();
             break;
         case PROTOCOL_UDMA:
+            RsAubdfxApiDeinit();
             RsUbApiDeinit();
             RsCcuApiDeinit();
             RsNetApiDeinit();
@@ -198,7 +220,7 @@ RS_ATTRI_VISI_DEF int RsCtxDeinit(struct RaRsDevInfo *devInfo)
     CHK_PRT_RETURN(ret != 0, hccp_err("get rscb failed, ret:%d", ret), ret);
 
     ret = RsUbGetDevCb(rscb, devInfo->devIndex, &devCb);
-    CHK_PRT_RETURN(ret != 0, hccp_err("get dev_cb fail, ret:%d devIndex:0x%x", ret, devInfo->devIndex), ret);
+    CHK_PRT_RETURN(ret != 0, hccp_err("get devCb fail, ret:%d devIndex:0x%x", ret, devInfo->devIndex), ret);
 
     ret = RsUbCtxDeinit(devCb);
     CHK_PRT_RETURN(ret != 0, hccp_err("rs ub ctx deinit failed, ret:%d devIndex:0x%x", ret, devInfo->devIndex), ret);
@@ -863,4 +885,36 @@ RS_ATTRI_VISI_DEF int RsCtxGetUbContext(struct RaRsDevInfo *devInfo, unsigned in
     }
 
     return ret;
+}
+
+RS_ATTRI_VISI_DEF int RsCtxNotifyEvent(struct RaRsDevInfo *devInfo, struct CtxNotifyEvent *event)
+{
+    struct ub_service_errinfo errInfo = {0};
+    struct RsUbDevCb *devCb = NULL;
+    struct rs_cb *rscb = NULL;
+    int ret;
+
+    RS_CHECK_POINTER_NULL_RETURN_INT(devInfo);
+    RS_CHECK_POINTER_NULL_RETURN_INT(event);
+
+    hccp_info("[notify][event]serviceType:%u errorType:%u", event->serviceType, event->errorType);
+
+    ret = RsGetRsCb(devInfo->phyId, &rscb);
+    CHK_PRT_RETURN(ret != 0, hccp_err("get rscb failed, ret:%d", ret), ret);
+    ret = RsUbGetDevCb(rscb, devInfo->devIndex, &devCb);
+    CHK_PRT_RETURN(ret != 0, hccp_err("get devCb fail, ret:%d devIndex:0x%x", ret, devInfo->devIndex), ret);
+
+    if (devCb->devAttr.ub.dieId > UINT8_MAX || devCb->devAttr.ub.funcId > UINT8_MAX) {
+        hccp_warn("[notify][event]dieId:%u or funcId:%u out of range", devCb->devAttr.ub.dieId,
+            devCb->devAttr.ub.funcId);
+    }
+    errInfo.dieid = (unsigned char)devCb->devAttr.ub.dieId;
+    errInfo.ueid = (unsigned char)devCb->devAttr.ub.funcId;
+    errInfo.servicetype = event->serviceType;
+    errInfo.errortype = event->errorType;
+    (void)memcpy_s(errInfo.srceid, sizeof(errInfo.srceid), event->srcEid.raw, sizeof(event->srcEid.raw));
+    (void)memcpy_s(errInfo.dsteid, sizeof(errInfo.dsteid), event->dstEid.raw, sizeof(event->dstEid.raw));
+    errInfo.value = (event->serviceType == UBMEM_TYPE) ? event->errorInfo.hpa : event->errorInfo.tpn;
+
+    return RsAubdfxNotifyEvent(devCb->devAttr.ub.dieId, 0, &errInfo, sizeof(errInfo));
 }

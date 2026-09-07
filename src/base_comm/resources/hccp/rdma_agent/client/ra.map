@@ -31,6 +31,7 @@ global:
     RaCtxGetTpAttr;
     RaCtxGetTpInfoList;
     RaCtxInit;
+    RaCtxNotifyEvent;
     RaCtxLmemRegister;
     RaCtxLmemRegisterAsync;
     RaCtxLmemUnregister;

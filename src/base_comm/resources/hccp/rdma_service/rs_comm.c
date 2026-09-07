@@ -137,6 +137,7 @@ struct OpcodeInterfaceInfo gInterfaceInfoList[] = {
     {RA_RS_CTX_GET_AUX_INFO, 1},
     {RA_RS_CTX_GET_CR_ERR_INFO_LIST, 1},
     {RA_RS_CTX_GET_UB_CONTEXT, 1},
+    {RA_RS_CTX_NOTIFY_EVENT, 1},
     {RA_RS_GET_NET_API_VERSION, 0},
 
     // inner opcode version

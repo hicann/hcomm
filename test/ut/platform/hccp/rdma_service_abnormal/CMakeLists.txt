@@ -50,6 +50,7 @@ set(rs_ut_abnormal_list
     ${CTX_DIR}/dl_ccu_function.c
     ${CTX_DIR}/dl_urma_function.c
     ${CTX_DIR}/dl_net_function.c
+    ${CTX_DIR}/dl_aubdfx_function.c
     ${CTX_DIR}/rs_ub_dfx.c
     ${CTX_DIR}/rs_ub_tp.c
     ${CTX_DIR}/rs_ub.c
@@ -80,6 +81,7 @@ target_include_directories(rs_ut_abnormal BEFORE PRIVATE
     ${SRC_DIR}/src/base_comm/resources/hccp/inc/network
     ${SRC_DIR}/src/base_comm/resources/hccp/common
     ${SRC_DIR}/src/base_comm/resources/hccp/external_depends/net_adapt
+    ${SRC_DIR}/src/base_comm/resources/hccp/external_depends/aubdfx
     ${SRC_DIR}/src/base_comm/resources/hccp/external_depends/inc
     ${ASCEND_CANN_PACKAGE_PATH}/pkg_inc/driver/
     ${ASCEND_CANN_PACKAGE_PATH}/include/driver/

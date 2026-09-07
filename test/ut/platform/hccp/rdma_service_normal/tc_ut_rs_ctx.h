@@ -54,6 +54,9 @@ void TcRsCtxGetAuxInfo();
 void TcRsGetTpAttr();
 void TcRsSetTpAttr();
 void TcRsCtxGetCrErrInfoList();
+void TcRsCtxNotifyEvent();
+void TcRsCtxNotifyEventAubdfxFail();
+void TcRsAubdfxApiInitRollback();
 #ifdef __cplusplus
 }
 #endif

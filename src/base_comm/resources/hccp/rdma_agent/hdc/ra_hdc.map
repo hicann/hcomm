@@ -25,6 +25,7 @@ global:
     RaHdcCtxGetCrErrInfoList;
     RaHdcCtxGetJettyContext;
     RaHdcCtxInit;
+    RaHdcCtxNotifyEvent;
     RaHdcCtxLmemRegister;
     RaHdcCtxLmemRegisterAsync;
     RaHdcCtxLmemUnregister;

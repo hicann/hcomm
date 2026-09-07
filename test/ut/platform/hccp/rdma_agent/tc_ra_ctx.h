@@ -48,6 +48,8 @@ void TcRaRsCtxGetCrErrInfoList();
 void TcRaCtxGetJettyContext();
 void TcRaHdcCtxGetJettyContext();
 void TcRaPeerCtxGetJettyContext();
+void TcRaCtxNotifyEvent();
+void TcRaHdcCtxNotifyEvent();
 
 void TcRaGetTpInfoListAsync();
 void TcRaHdcGetTpInfoListAsync();

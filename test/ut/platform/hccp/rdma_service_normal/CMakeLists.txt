@@ -57,6 +57,7 @@ set(rs_ut_normal_list
     ${CTX_DIR}/dl_ccu_function.c
     ${CTX_DIR}/dl_urma_function.c
     ${CTX_DIR}/dl_net_function.c
+    ${CTX_DIR}/dl_aubdfx_function.c
     ${CTX_DIR}/rs_ub_dfx.c
     ${CTX_DIR}/rs_ub_tp.c
     ${CTX_DIR}/rs_ub.c
@@ -92,6 +93,7 @@ target_include_directories(rs_ut_normal BEFORE PRIVATE
     ${SRC_DIR}/src/base_comm/resources/hccp/external_depends/inc
     ${SRC_DIR}/src/base_comm/resources/hccp/external_depends/ubengine
     ${SRC_DIR}/src/base_comm/resources/hccp/external_depends/net_adapt
+    ${SRC_DIR}/src/base_comm/resources/hccp/external_depends/aubdfx
     ${SRC_DIR}/src/base_comm/resources/hccp/external_depends/ccu
     ${SRC_DIR}/src/base_comm/resources/hccp/external_depends/ibv_extend
 )

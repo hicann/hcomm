@@ -420,6 +420,20 @@ union OpCtxGetContextData {
     } rxData;
 };
 
+union OpCtxNotifyEventData {
+    struct {
+        unsigned int phyId;
+        unsigned int devIndex;
+        uint32_t resv0;
+        struct CtxNotifyEvent event;
+        uint32_t resv1[RA_RSVD_NUM_512]; /* Reserved extension field for larger payload. */
+    } txData;
+
+    struct {
+        unsigned int rsvd[RA_RSVD_NUM_4];
+    } rxData;
+};
+
 int RaHdcGetDevEidInfoNum(struct RaInfo info, unsigned int *num);
 int RaHdcGetDevEidInfoList(unsigned int phyId, struct HccpDevEidInfo infoList[], unsigned int *num);
 int RaHdcCtxInit(struct RaCtxHandle *ctxHandle, struct CtxInitAttr *attr, unsigned int *devIndex,
@@ -465,5 +479,6 @@ int RaHdcCtxBatchSendWr(struct RaCtxQpHandle *qpHandle, struct SendWrData wrList
 int RaHdcCtxUpdateCi(struct RaCtxQpHandle *qpHandle, uint16_t ci);
 int RaHdcCtxGetAuxInfo(struct RaCtxHandle *ctxHandle, struct HccpAuxInfoIn *in, struct HccpAuxInfoOut *out);
 int RaHdcCtxGetCrErrInfoList(struct RaCtxHandle *ctxHandle, struct CrErrInfo *infoList, unsigned int *num);
+int RaHdcCtxNotifyEvent(struct RaCtxHandle *ctxHandle, struct CtxNotifyEvent *event);
 int RaHdcCtxGetJettyContext(struct RaCtxQpHandle *qpHandle, uint8_t context[], unsigned int *len);
 #endif // RA_HDC_CTX_H

@@ -1103,166 +1103,61 @@ void TcRaRsRemapMr()
     mocker_clean();
 }
 
+#define TC_ADP_CTX_OPS_TEST(stubFn, opcode, dataType) \
+    do {                                              \
+        TcAdpEnvInit();                               \
+        mocker((stub_fn_t)stubFn, 1, 0);              \
+        AddTestMsg(opcode, sizeof(dataType));         \
+        TcCommonTest();                               \
+    } while (0)
+
 void TcRaRsTestCtxOps()
 {
-    TcAdpEnvInit();
-    mocker((stub_fn_t)gRaRsCtxOps.getDevEidInfoNum, 1, 0);
-    AddTestMsg(RA_RS_GET_DEV_EID_INFO_NUM, sizeof(union OpGetDevEidInfoNumData));
-    TcCommonTest();
+    TC_ADP_CTX_OPS_TEST(gRaRsCtxOps.getDevEidInfoNum, RA_RS_GET_DEV_EID_INFO_NUM, union OpGetDevEidInfoNumData);
+    TC_ADP_CTX_OPS_TEST(gRaRsCtxOps.getDevEidInfoList, RA_RS_GET_DEV_EID_INFO_LIST, union OpGetDevEidInfoListData);
+    TC_ADP_CTX_OPS_TEST(gRaRsCtxOps.ctxInit, RA_RS_CTX_INIT, union OpCtxInitData);
+    TC_ADP_CTX_OPS_TEST(gRaRsCtxOps.ctxDeinit, RA_RS_CTX_DEINIT, union OpCtxDeinitData);
+    TC_ADP_CTX_OPS_TEST(gRaRsCtxOps.ctxLmemReg, RA_RS_LMEM_REG, union OpLmemRegInfoData);
+    TC_ADP_CTX_OPS_TEST(gRaRsCtxOps.ctxLmemUnreg, RA_RS_LMEM_UNREG, union OpLmemUnregInfoData);
+    TC_ADP_CTX_OPS_TEST(gRaRsCtxOps.ctxRmemImport, RA_RS_RMEM_IMPORT, union OpRmemImportInfoData);
+    TC_ADP_CTX_OPS_TEST(gRaRsCtxOps.ctxRmemUnimport, RA_RS_RMEM_UNIMPORT, union OpRmemUnimportInfoData);
+    TC_ADP_CTX_OPS_TEST(gRaRsCtxOps.ctxChanCreate, RA_RS_CTX_CHAN_CREATE, union OpCtxChanCreateData);
+    TC_ADP_CTX_OPS_TEST(gRaRsCtxOps.ctxChanDestroy, RA_RS_CTX_CHAN_DESTROY, union OpCtxChanDestroyData);
+    TC_ADP_CTX_OPS_TEST(gRaRsCtxOps.ctxCqCreate, RA_RS_CTX_CQ_CREATE, union OpCtxCqCreateData);
+    TC_ADP_CTX_OPS_TEST(gRaRsCtxOps.ctxCqDestroy, RA_RS_CTX_CQ_DESTROY, union OpCtxCqDestroyData);
+    TC_ADP_CTX_OPS_TEST(gRaRsCtxOps.ctxQpCreate, RA_RS_CTX_QP_CREATE, union OpCtxQpCreateData);
+    TC_ADP_CTX_OPS_TEST(gRaRsCtxOps.ctxQpDestroy, RA_RS_CTX_QP_DESTROY, union OpCtxQpDestroyData);
+    TC_ADP_CTX_OPS_TEST(gRaRsCtxOps.ctxQpImport, RA_RS_CTX_QP_IMPORT, union OpCtxQpImportData);
 
-    TcAdpEnvInit();
-    mocker((stub_fn_t)gRaRsCtxOps.getDevEidInfoList, 1, 0);
-    AddTestMsg(RA_RS_GET_DEV_EID_INFO_LIST, sizeof(union OpGetDevEidInfoListData));
-    TcCommonTest();
-
-    TcAdpEnvInit();
-    mocker((stub_fn_t)gRaRsCtxOps.ctxInit, 1, 0);
-    AddTestMsg(RA_RS_CTX_INIT, sizeof(union OpCtxInitData));
-    TcCommonTest();
-
-    TcAdpEnvInit();
-    mocker((stub_fn_t)gRaRsCtxOps.ctxDeinit, 1, 0);
-    AddTestMsg(RA_RS_CTX_DEINIT, sizeof(union OpCtxDeinitData));
-    TcCommonTest();
-
-    TcAdpEnvInit();
-    mocker((stub_fn_t)gRaRsCtxOps.ctxLmemReg, 1, 0);
-    AddTestMsg(RA_RS_LMEM_REG, sizeof(union OpLmemRegInfoData));
-    TcCommonTest();
-
-    TcAdpEnvInit();
-    mocker((stub_fn_t)gRaRsCtxOps.ctxLmemUnreg, 1, 0);
-    AddTestMsg(RA_RS_LMEM_UNREG, sizeof(union OpLmemUnregInfoData));
-    TcCommonTest();
-
-    TcAdpEnvInit();
-    mocker((stub_fn_t)gRaRsCtxOps.ctxRmemImport, 1, 0);
-    AddTestMsg(RA_RS_RMEM_IMPORT, sizeof(union OpRmemImportInfoData));
-    TcCommonTest();
-
-    TcAdpEnvInit();
-    mocker((stub_fn_t)gRaRsCtxOps.ctxRmemUnimport, 1, 0);
-    AddTestMsg(RA_RS_RMEM_UNIMPORT, sizeof(union OpRmemUnimportInfoData));
-    TcCommonTest();
-
-    TcAdpEnvInit();
-    mocker((stub_fn_t)gRaRsCtxOps.ctxChanCreate, 1, 0);
-    AddTestMsg(RA_RS_CTX_CHAN_CREATE, sizeof(union OpCtxChanCreateData));
-    TcCommonTest();
-
-    TcAdpEnvInit();
-    mocker((stub_fn_t)gRaRsCtxOps.ctxChanDestroy, 1, 0);
-    AddTestMsg(RA_RS_CTX_CHAN_DESTROY, sizeof(union OpCtxChanDestroyData));
-    TcCommonTest();
-
-    TcAdpEnvInit();
-    mocker((stub_fn_t)gRaRsCtxOps.ctxCqCreate, 1, 0);
-    AddTestMsg(RA_RS_CTX_CQ_CREATE, sizeof(union OpCtxCqCreateData));
-    TcCommonTest();
-
-    TcAdpEnvInit();
-    mocker((stub_fn_t)gRaRsCtxOps.ctxCqDestroy, 1, 0);
-    AddTestMsg(RA_RS_CTX_CQ_DESTROY, sizeof(union OpCtxCqDestroyData));
-    TcCommonTest();
-
-    TcAdpEnvInit();
-    mocker((stub_fn_t)gRaRsCtxOps.ctxQpCreate, 1, 0);
-    AddTestMsg(RA_RS_CTX_QP_CREATE, sizeof(union OpCtxQpCreateData));
-    TcCommonTest();
-
-    TcAdpEnvInit();
-    mocker((stub_fn_t)gRaRsCtxOps.ctxQpDestroy, 1, 0);
-    AddTestMsg(RA_RS_CTX_QP_DESTROY, sizeof(union OpCtxQpDestroyData));
-    TcCommonTest();
-
-    TcAdpEnvInit();
-    mocker((stub_fn_t)gRaRsCtxOps.ctxQpImport, 1, 0);
-    AddTestMsg(RA_RS_CTX_QP_IMPORT, sizeof(union OpCtxQpImportData));
-    TcCommonTest();
-
+    // ctxQpUnimport 需要两条消息
     TcAdpEnvInit();
     mocker((stub_fn_t)gRaRsCtxOps.ctxQpUnimport, 2, 0);
     AddTestMsg(RA_RS_CTX_QP_UNIMPORT_DEPRECATED, sizeof(union OpCtxQpUnimportData));
     AddTestMsg(RA_RS_CTX_QP_UNIMPORT, sizeof(union OpCtxQpUnimportData));
     TcCommonTest();
 
-    TcAdpEnvInit();
-    mocker((stub_fn_t)gRaRsCtxOps.ctxQpBind, 1, 0);
-    AddTestMsg(RA_RS_CTX_QP_BIND, sizeof(union OpCtxQpBindData));
-    TcCommonTest();
-
-    TcAdpEnvInit();
-    mocker((stub_fn_t)gRaRsCtxOps.ctxQpUnbind, 1, 0);
-    AddTestMsg(RA_RS_CTX_QP_UNBIND, sizeof(union OpCtxQpUnbindData));
-    TcCommonTest();
-
-    TcAdpEnvInit();
-    mocker((stub_fn_t)gRaRsCtxOps.ctxBatchSendWr, 1, 0);
-    AddTestMsg(RA_RS_CTX_BATCH_SEND_WR, sizeof(union OpCtxBatchSendWrData));
-    TcCommonTest();
-
-    TcAdpEnvInit();
-    mocker((stub_fn_t)gRaRsCtxOps.ctxUpdateCi, 1, 0);
-    AddTestMsg(RA_RS_CTX_UPDATE_CI, sizeof(union OpCtxUpdateCiData));
-    TcCommonTest();
-
-    TcAdpEnvInit();
-    mocker((stub_fn_t)gRaRsCtxOps.ctxTokenIdAlloc, 1, 0);
-    AddTestMsg(RA_RS_CTX_TOKEN_ID_ALLOC, sizeof(union OpTokenIdAllocData));
-    TcCommonTest();
-
-    TcAdpEnvInit();
-    mocker((stub_fn_t)gRaRsCtxOps.ctxTokenIdFree, 1, 0);
-    AddTestMsg(RA_RS_CTX_TOKEN_ID_FREE, sizeof(union OpTokenIdFreeData));
-    TcCommonTest();
-
-    TcAdpEnvInit();
-    mocker((stub_fn_t)gRaRsCtxOps.getTpInfoList, 1, 0);
-    AddTestMsg(RA_RS_GET_TP_INFO_LIST, sizeof(union OpGetTpInfoListData));
-    TcCommonTest();
-
-    TcAdpEnvInit();
-    mocker((stub_fn_t)gRaRsCtxOps.ctxQpDestroyBatch, 1, 0);
-    AddTestMsg(RA_RS_CTX_QP_DESTROY_BATCH, sizeof(union OpCtxQpDestroyBatchData));
-    TcCommonTest();
-
-    TcAdpEnvInit();
-    mocker((stub_fn_t)gRaRsCtxOps.ctxQpQueryBatch, 1, 0);
-    AddTestMsg(RA_RS_CTX_QUERY_QP_BATCH, sizeof(union OpCtxQpQueryBatchData));
-    TcCommonTest();
-
-    TcAdpEnvInit();
-    mocker((stub_fn_t)gRaRsCtxOps.getEidByIp, 1, 0);
-    AddTestMsg(RA_RS_GET_EID_BY_IP, sizeof(union OpGetEidByIpData));
-    TcCommonTest();
-
-    TcAdpEnvInit();
-    mocker((stub_fn_t)gRaRsCtxOps.getIpByEid, 1, 0);
-    AddTestMsg(RA_RS_GET_IP_BY_EID, sizeof(union OpGetIpByEidData));
-    TcCommonTest();
-
-    TcAdpEnvInit();
-    mocker((stub_fn_t)gRaRsCtxOps.ctxGetAuxInfo, 1, 0);
-    AddTestMsg(RA_RS_CTX_GET_AUX_INFO, sizeof(union OpCtxGetAuxInfoData));
-    TcCommonTest();
-
-    TcAdpEnvInit();
-    mocker((stub_fn_t)gRaRsCtxOps.getTpAttr, 1, 0);
-    AddTestMsg(RA_RS_GET_TP_ATTR, sizeof(union OpGetTpAttrData));
-    TcCommonTest();
-
-    TcAdpEnvInit();
-    mocker((stub_fn_t)gRaRsCtxOps.setTpAttr, 1, 0);
-    AddTestMsg(RA_RS_SET_TP_ATTR, sizeof(union OpSetTpAttrData));
-    TcCommonTest();
-
-    TcAdpEnvInit();
-    mocker((stub_fn_t)gRaRsCtxOps.ctxGetCrErrInfoList, 1, 0);
-    AddTestMsg(RA_RS_CTX_GET_CR_ERR_INFO_LIST, sizeof(union OpCtxGetCrErrInfoListData));
-    TcCommonTest();
+    TC_ADP_CTX_OPS_TEST(gRaRsCtxOps.ctxQpBind, RA_RS_CTX_QP_BIND, union OpCtxQpBindData);
+    TC_ADP_CTX_OPS_TEST(gRaRsCtxOps.ctxQpUnbind, RA_RS_CTX_QP_UNBIND, union OpCtxQpUnbindData);
+    TC_ADP_CTX_OPS_TEST(gRaRsCtxOps.ctxBatchSendWr, RA_RS_CTX_BATCH_SEND_WR, union OpCtxBatchSendWrData);
+    TC_ADP_CTX_OPS_TEST(gRaRsCtxOps.ctxUpdateCi, RA_RS_CTX_UPDATE_CI, union OpCtxUpdateCiData);
+    TC_ADP_CTX_OPS_TEST(gRaRsCtxOps.ctxTokenIdAlloc, RA_RS_CTX_TOKEN_ID_ALLOC, union OpTokenIdAllocData);
+    TC_ADP_CTX_OPS_TEST(gRaRsCtxOps.ctxTokenIdFree, RA_RS_CTX_TOKEN_ID_FREE, union OpTokenIdFreeData);
+    TC_ADP_CTX_OPS_TEST(gRaRsCtxOps.getTpInfoList, RA_RS_GET_TP_INFO_LIST, union OpGetTpInfoListData);
+    TC_ADP_CTX_OPS_TEST(gRaRsCtxOps.ctxQpDestroyBatch, RA_RS_CTX_QP_DESTROY_BATCH, union OpCtxQpDestroyBatchData);
+    TC_ADP_CTX_OPS_TEST(gRaRsCtxOps.ctxQpQueryBatch, RA_RS_CTX_QUERY_QP_BATCH, union OpCtxQpQueryBatchData);
+    TC_ADP_CTX_OPS_TEST(gRaRsCtxOps.getEidByIp, RA_RS_GET_EID_BY_IP, union OpGetEidByIpData);
+    TC_ADP_CTX_OPS_TEST(gRaRsCtxOps.getIpByEid, RA_RS_GET_IP_BY_EID, union OpGetIpByEidData);
+    TC_ADP_CTX_OPS_TEST(gRaRsCtxOps.ctxGetAuxInfo, RA_RS_CTX_GET_AUX_INFO, union OpCtxGetAuxInfoData);
+    TC_ADP_CTX_OPS_TEST(gRaRsCtxOps.getTpAttr, RA_RS_GET_TP_ATTR, union OpGetTpAttrData);
+    TC_ADP_CTX_OPS_TEST(gRaRsCtxOps.setTpAttr, RA_RS_SET_TP_ATTR, union OpSetTpAttrData);
+    TC_ADP_CTX_OPS_TEST(
+        gRaRsCtxOps.ctxGetCrErrInfoList, RA_RS_CTX_GET_CR_ERR_INFO_LIST, union OpCtxGetCrErrInfoListData);
+    TC_ADP_CTX_OPS_TEST(gRaRsCtxOps.ctxNotifyEvent, RA_RS_CTX_NOTIFY_EVENT, union OpCtxNotifyEventData);
 
     mocker_clean();
 }
+
+#undef TC_ADP_CTX_OPS_TEST
 
 void TcRaRsGetTlsEnable0()
 {

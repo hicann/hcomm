@@ -1638,6 +1638,7 @@ struct RaOpHandle gRaOpHandle[] = {
     {RA_RS_CTX_UPDATE_CI, RaRsCtxUpdateCi, sizeof(union OpCtxUpdateCiData)},
     {RA_RS_CTX_GET_AUX_INFO, RaRsCtxGetAuxInfo, sizeof(union OpCtxGetAuxInfoData)},
     {RA_RS_CTX_GET_CR_ERR_INFO_LIST, RaRsCtxGetCrErrInfoList, sizeof(union OpCtxGetCrErrInfoListData)},
+    {RA_RS_CTX_NOTIFY_EVENT, RaRsCtxNotifyEvent, sizeof(union OpCtxNotifyEventData)},
     {RA_RS_CTX_GET_UB_CONTEXT, RaRsCtxGetUbContext, sizeof(union OpCtxGetContextData)},
 };
 

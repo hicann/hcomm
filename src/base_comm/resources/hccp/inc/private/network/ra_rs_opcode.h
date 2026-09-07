@@ -137,6 +137,7 @@ enum OpType {
     RA_RS_TLV_REQUEST_V2 = 119,
     RA_RS_CTX_QP_UNIMPORT = 120,
     RA_RS_GET_IP_BY_EID = 121,
+    RA_RS_CTX_NOTIFY_EVENT = 122,
     RA_RS_EXTER_OP_MAX_NUM,
 
     // 上面opcode是对部opcode,下面是内部opcode
@@ -167,6 +168,7 @@ static inline bool RaRsHasCapability(unsigned int capability, unsigned int roceV
         unsigned int netVersion;
     } capInfoList[] = {
         {RA_CAP_DRV_SHAREPOOL_NON_PIN, 0, 1},
+        {RA_CAP_UDMA_NOTIFY_EVENT, 0, 2},
     };
 
     if (capability >= RA_CAP_INVALID) {

@@ -500,6 +500,20 @@ struct JettyAttr {
 #define HCCP_MAX_QP_QUERY_NUM 128U
 #define HCCP_MAX_QP_DESTROY_BATCH_NUM 768U
 
+struct CtxNotifyEvent {
+    uint8_t resv0;
+    uint8_t resv1;
+    uint8_t serviceType;
+    uint8_t errorType;
+    union HccpEid srcEid;
+    union HccpEid dstEid;
+    uint32_t resv2;
+    union {
+        uint32_t tpn; // corresponding serviceType URMA_TYPE:0
+        uint64_t hpa; // corresponding serviceType UBMEM_TYPE:1
+    } errorInfo;
+};
+
 /**
  * @ingroup libudma
  * @brief get total dev eid info num
@@ -862,6 +876,17 @@ HCCP_ATTRI_VISI_DEF int RaCtxGetCrErrInfoList(void *ctxHandle, struct CrErrInfo 
  * @retval #non-zero Failure
  */
 HCCP_ATTRI_VISI_DEF int RaCtxGetJettyContext(void *qpHandle, uint8_t context[], unsigned int *len);
+
+/**
+ * @ingroup libudma
+ * @brief notify event to aubdfx
+ * @param ctx_handle [IN] ctx handle
+ * @param event [IN] event info, see struct CtxNotifyEvent
+ * @see ra_ctx_init
+ * @retval #zero Success
+ * @retval #non-zero Failure
+ */
+HCCP_ATTRI_VISI_DEF int RaCtxNotifyEvent(void *ctxHandle, struct CtxNotifyEvent *event);
 #ifdef __cplusplus
 }
 #endif

@@ -937,6 +937,24 @@ int RaHdcCtxGetCrErrInfoList(struct RaCtxHandle *ctxHandle, struct CrErrInfo *in
     return ret;
 }
 
+int RaHdcCtxNotifyEvent(struct RaCtxHandle *ctxHandle, struct CtxNotifyEvent *event)
+{
+    unsigned int phyId = ctxHandle->attr.phyId;
+    union OpCtxNotifyEventData opData = {0};
+    int ret = 0;
+
+    opData.txData.phyId = phyId;
+    opData.txData.devIndex = ctxHandle->devIndex;
+    (void)memcpy_s(&opData.txData.event, sizeof(struct CtxNotifyEvent), event, sizeof(struct CtxNotifyEvent));
+    ret = RaHdcProcessMsg(RA_RS_CTX_NOTIFY_EVENT, phyId, (char *)&opData, sizeof(union OpCtxNotifyEventData));
+    CHK_PRT_RETURN(ret != 0,
+        hccp_err("[notify][event]hdc message process failed ret[%d], phyId[%u] devIndex[0x%x]", ret, phyId,
+            ctxHandle->devIndex),
+        ret);
+
+    return ret;
+}
+
 int RaHdcCtxGetJettyContext(struct RaCtxQpHandle *qpHandle, uint8_t context[], unsigned int *len)
 {
     union OpCtxGetContextData opData = {0};

@@ -52,6 +52,7 @@ struct RsCtxOps gRaRsCtxOps = {
     .ctxUpdateCi = RsCtxUpdateCi,
     .ctxGetAuxInfo = RsCtxGetAuxInfo,
     .ctxGetCrErrInfoList = RsCtxGetCrErrInfoList,
+    .ctxNotifyEvent = RsCtxNotifyEvent,
     .ctxGetUbContext = RsCtxGetUbContext,
 };
 
@@ -728,6 +729,25 @@ int RaRsCtxGetUbContext(char *inBuf, char *outBuf, int *outLen, int *opResult, i
     if (*opResult != 0) {
         hccp_err("[get][jettyContext]ctxGetJettyContext failed, ret:%d, phyId:%u devIndex:0x%x", *opResult,
             devInfo.phyId, devInfo.devIndex);
+    }
+
+    return 0;
+}
+
+int RaRsCtxNotifyEvent(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcvBufLen)
+{
+    (void)outBuf;
+    (void)outLen;
+    union OpCtxNotifyEventData *opData = (union OpCtxNotifyEventData *)(inBuf + sizeof(struct MsgHead));
+    struct RaRsDevInfo devInfo = {0};
+
+    HCCP_CHECK_PARAM_LEN_RET_HOST(sizeof(union OpCtxNotifyEventData), sizeof(struct MsgHead), rcvBufLen, opResult);
+
+    RaRsSetDevInfo(&devInfo, opData->txData.phyId, opData->txData.devIndex);
+    *opResult = gRaRsCtxOps.ctxNotifyEvent(&devInfo, &opData->txData.event);
+    if (*opResult != 0) {
+        hccp_err("[notify][event]ctxNotifyEvent failed, ret[%d], phyId[%u] devIndex[0x%x]", *opResult, devInfo.phyId,
+            devInfo.devIndex);
     }
 
     return 0;

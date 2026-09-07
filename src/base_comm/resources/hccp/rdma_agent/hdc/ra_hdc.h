@@ -89,7 +89,9 @@ enum RaHdcRecvMode {
 #define RA_RSVD_NUM_62 62
 #define RA_RSVD_NUM_63 63
 #define RA_RSVD_NUM_64 64
+#define RA_RSVD_NUM_512 512
 #define RA_RSVD_NUM_801 801
+
 #define MAX_HDC_MSG_DATA (4096 - 16)
 
 union OpSetPidData {

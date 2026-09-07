@@ -29,9 +29,11 @@ extern "C" {
  * rdma/udma module error code conversion
  */
 #define ROCE_EAGAIN 128101   /* EAGAIN: try again */
+#define ROCE_EINVAL 128103   /* EINVAL: invalid argument */
 #define ROCE_ENOENT 228100   /* ENOENT: means mr async not success right now, revoke the function again */
 #define ROCE_ENOMEM 328100   /* ENOMEM: roce module has ENOMEM error */
 #define ROCE_EOPENSRC 528101 /* EOPENSRC: open source verbs error */
+#define ROCE_ENOTSUPP 528102 /* ENOTSUPP: operation not supported */
 
 /**
  * @ingroup libsocket
@@ -64,6 +66,7 @@ enum HccnCfgKey {
 
 enum {
     RA_CAP_DRV_SHAREPOOL_NON_PIN = 0,
+    RA_CAP_UDMA_NOTIFY_EVENT = 1,
     RA_CAP_INVALID,
 };
 #ifdef __cplusplus

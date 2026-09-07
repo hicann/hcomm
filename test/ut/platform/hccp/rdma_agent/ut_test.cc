@@ -287,6 +287,8 @@ TEST_M(RdmaAgent, TcRaGetEidByIp);
 TEST_M(RdmaAgent, TcRaGetIpByEid);
 TEST_M(RdmaAgent, TcRaCtxGetCrErrInfoList);
 TEST_M(RdmaAgent, TcRaCtxGetJettyContext);
+TEST_M(RdmaAgent, TcRaCtxNotifyEvent);
+TEST_M(RdmaAgent, TcRaHdcCtxNotifyEvent);
 
 TEST_M(RdmaAgent, TcRaRsAsyncHdcSessionConnect);
 TEST_M(RdmaAgent, TcRaHdcAsyncSendPkt);

@@ -29,6 +29,7 @@ set(RS_SOURCE_LIST
     ctx/dl_net_function.c
     ctx/dl_ccu_function.c
     ctx/dl_urma_function.c
+    ctx/dl_aubdfx_function.c
     ctx/rs_ping_urma.c
     ctx/rs_ctx.c
     ctx/rs_esched.c
@@ -112,6 +113,7 @@ target_include_directories(rs PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/../external_depends/net_adapt
     ${URMA_INCLUDE_DIR}
     ${IBV_EXTEND_INCLUDE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/../external_depends/aubdfx
 )
 
 if(NOT BUILD_OPEN_PROJECT)

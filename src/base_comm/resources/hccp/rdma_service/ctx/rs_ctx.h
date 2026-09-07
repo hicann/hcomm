@@ -85,6 +85,7 @@ RS_ATTRI_VISI_DEF int RsCtxGetAuxInfo(struct RaRsDevInfo *devInfo, struct HccpAu
     struct HccpAuxInfoOut *infoOut);
 RS_ATTRI_VISI_DEF int RsCtxGetCrErrInfoList(struct RaRsDevInfo *devInfo, struct CrErrInfo infoList[],
     unsigned int *num);
+RS_ATTRI_VISI_DEF int RsCtxNotifyEvent(struct RaRsDevInfo *devInfo, struct CtxNotifyEvent *event);
 RS_ATTRI_VISI_DEF int RsCtxGetUbContext(struct RaRsDevInfo *devInfo, unsigned int id, unsigned int contextType,
     uint8_t context[], unsigned int *len);
 #endif // RS_CTX_H

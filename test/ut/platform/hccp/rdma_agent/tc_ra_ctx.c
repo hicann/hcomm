@@ -1479,15 +1479,15 @@ void TcRaGetEidByIp()
     int ret = 0;
 
     ret = RaGetEidByIp(NULL, ip, eid, &num);
-    EXPECT_INT_EQ(ret, 128103);
+    EXPECT_INT_EQ(ret, ROCE_EINVAL);
 
     num = 33;
     ret = RaGetEidByIp(&ctxHandle, ip, eid, &num);
-    EXPECT_INT_EQ(ret, 128103);
+    EXPECT_INT_EQ(ret, ROCE_EINVAL);
 
     num = 32;
     ret = RaGetEidByIp(&ctxHandle, ip, eid, &num);
-    EXPECT_INT_EQ(ret, 128103);
+    EXPECT_INT_EQ(ret, ROCE_EINVAL);
 
     ctxHandle.ctxOps = &gRaHdcCtxOps;
     mocker(RaHdcGetEidByIp, 1, 0);
@@ -1581,15 +1581,15 @@ void TcRaGetIpByEid()
     int ret = 0;
 
     ret = RaGetIpByEid(NULL, eid, ip, &num);
-    EXPECT_INT_EQ(ret, 128103);
+    EXPECT_INT_EQ(ret, ROCE_EINVAL);
 
     num = 33;
     ret = RaGetIpByEid(&ctxHandle, eid, ip, &num);
-    EXPECT_INT_EQ(ret, 128103);
+    EXPECT_INT_EQ(ret, ROCE_EINVAL);
 
     num = 32;
     ret = RaGetIpByEid(&ctxHandle, eid, ip, &num);
-    EXPECT_INT_EQ(ret, 128103);
+    EXPECT_INT_EQ(ret, ROCE_EINVAL);
 
     ctxHandle.ctxOps = &gRaHdcCtxOps;
     mocker(RaHdcGetIpByEid, 1, 0);
@@ -1682,15 +1682,15 @@ void TcRaCtxGetAuxInfo()
     int ret = 0;
 
     ret = RaCtxGetAuxInfo(NULL, &in, &out);
-    EXPECT_INT_EQ(ret, 128103);
+    EXPECT_INT_EQ(ret, ROCE_EINVAL);
 
     in.type = AUX_INFO_IN_TYPE_MAX;
     ret = RaCtxGetAuxInfo(&ctxHandle, &in, &out);
-    EXPECT_INT_EQ(ret, 128103);
+    EXPECT_INT_EQ(ret, ROCE_EINVAL);
 
     in.type = AUX_INFO_IN_TYPE_MAX - 1;
     ret = RaCtxGetAuxInfo(&ctxHandle, &in, &out);
-    EXPECT_INT_EQ(ret, 128103);
+    EXPECT_INT_EQ(ret, ROCE_EINVAL);
 
     mocker_clean();
     mocker(RaHdcCtxGetAuxInfo, 1, -1);
@@ -1963,20 +1963,20 @@ void TcRaCtxGetCrErrInfoList()
 
     mocker_clean();
     ret = RaCtxGetCrErrInfoList(NULL, NULL, NULL);
-    EXPECT_INT_EQ(ret, 128103);
+    EXPECT_INT_EQ(ret, ROCE_EINVAL);
 
     ret = RaCtxGetCrErrInfoList(&ctxHandle, NULL, NULL);
-    EXPECT_INT_EQ(ret, 128103);
+    EXPECT_INT_EQ(ret, ROCE_EINVAL);
 
     ret = RaCtxGetCrErrInfoList(&ctxHandle, infoList, NULL);
-    EXPECT_INT_EQ(ret, 128103);
+    EXPECT_INT_EQ(ret, ROCE_EINVAL);
 
     ret = RaCtxGetCrErrInfoList(&ctxHandle, infoList, &num);
-    EXPECT_INT_EQ(ret, 128103);
+    EXPECT_INT_EQ(ret, ROCE_EINVAL);
 
     num = CR_ERR_INFO_MAX_NUM + 1;
     ret = RaCtxGetCrErrInfoList(&ctxHandle, infoList, &num);
-    EXPECT_INT_EQ(ret, 128103);
+    EXPECT_INT_EQ(ret, ROCE_EINVAL);
 
     num = 1;
     mocker(RaHdcCtxGetCrErrInfoList, 1, -1);
@@ -2053,13 +2053,13 @@ void TcRaCtxGetTpInfoList()
     int ret = 0;
 
     ret = RaCtxGetTpInfoList(NULL, &cfg, infoList, &num);
-    EXPECT_INT_EQ(ret, 128103);
+    EXPECT_INT_EQ(ret, ROCE_EINVAL);
 
     ret = RaCtxGetTpInfoList(&ctxHandle, &cfg, NULL, &num);
-    EXPECT_INT_EQ(ret, 128103);
+    EXPECT_INT_EQ(ret, ROCE_EINVAL);
 
     ret = RaCtxGetTpInfoList(&ctxHandle, &cfg, infoList, &num);
-    EXPECT_INT_EQ(ret, 128103);
+    EXPECT_INT_EQ(ret, ROCE_EINVAL);
 
     num = 1;
     ret = RaCtxGetTpInfoList(&ctxHandle, &cfg, infoList, &num);
@@ -2090,7 +2090,7 @@ void TcRaCtxGetTpAttr()
     int ret = 0;
 
     ret = RaCtxGetTpAttr(NULL, tpHandle, &attrBitmap, &attr);
-    EXPECT_INT_EQ(ret, 128103);
+    EXPECT_INT_EQ(ret, ROCE_EINVAL);
 
     ret = RaCtxGetTpAttr(&ctxHandle, tpHandle, &attrBitmap, &attr);
     EXPECT_INT_EQ(ret, 0);
@@ -2126,7 +2126,7 @@ void TcRaCtxSetTpAttr()
     int ret = 0;
 
     ret = RaCtxSetTpAttr(NULL, tpHandle, attrBitmap, &attr);
-    EXPECT_INT_EQ(ret, 128103);
+    EXPECT_INT_EQ(ret, ROCE_EINVAL);
 
     ret = RaCtxSetTpAttr(&ctxHandle, tpHandle, attrBitmap, &attr);
     EXPECT_INT_EQ(ret, 0);
@@ -2164,31 +2164,31 @@ void TcRaCtxGetJettyContext()
 
     mocker_clean();
     ret = RaCtxGetJettyContext(NULL, NULL, NULL);
-    EXPECT_INT_EQ(ret, 128103);
+    EXPECT_INT_EQ(ret, ROCE_EINVAL);
 
     ret = RaCtxGetJettyContext(&qpHandle, NULL, NULL);
-    EXPECT_INT_EQ(ret, 128103);
+    EXPECT_INT_EQ(ret, ROCE_EINVAL);
 
     ret = RaCtxGetJettyContext(&qpHandle, context, NULL);
-    EXPECT_INT_EQ(ret, 128103);
+    EXPECT_INT_EQ(ret, ROCE_EINVAL);
 
     ret = RaCtxGetJettyContext(&qpHandle, context, &len);
-    EXPECT_INT_EQ(ret, 128103);
+    EXPECT_INT_EQ(ret, ROCE_EINVAL);
 
     len = CONTEXT_MAX_LEN;
     ret = RaCtxGetJettyContext(&qpHandle, context, &len);
-    EXPECT_INT_EQ(ret, 128103);
+    EXPECT_INT_EQ(ret, ROCE_EINVAL);
 
     ctxHandle.ctxOps = NULL;
     qpHandle.ctxHandle = &ctxHandle;
     ret = RaCtxGetJettyContext(&qpHandle, context, &len);
-    EXPECT_INT_EQ(ret, 128103);
+    EXPECT_INT_EQ(ret, ROCE_EINVAL);
     mocker_clean();
 
     mocker(RaHdcCtxGetJettyContext, 1, -EINVAL);
     ctxHandle.ctxOps = &gRaHdcCtxOps;
     ret = RaCtxGetJettyContext(&qpHandle, context, &len);
-    EXPECT_INT_EQ(ret, 128103);
+    EXPECT_INT_EQ(ret, ROCE_EINVAL);
     mocker_clean();
 
     mocker(RaHdcCtxGetJettyContext, 1, 0);
@@ -2239,5 +2239,55 @@ void TcRaPeerCtxGetJettyContext()
     mocker(RsCtxGetUbContext, 1, -1);
     ret = RaPeerCtxGetJettyContext(&qpHandle, context, &len);
     EXPECT_INT_EQ(ret, -1);
+    mocker_clean();
+}
+
+void TcRaCtxNotifyEvent()
+{
+    struct RaCtxHandle ctxHandle = {0};
+    struct CtxNotifyEvent event = {0};
+    int ret = 0;
+
+    mocker_clean();
+    ret = RaCtxNotifyEvent(NULL, &event);
+    EXPECT_INT_EQ(ret, ROCE_EINVAL);
+
+    ret = RaCtxNotifyEvent(&ctxHandle, NULL);
+    EXPECT_INT_EQ(ret, ROCE_EINVAL);
+
+    ctxHandle.ctxOps = &gRaHdcCtxOps;
+    mocker(RaHdcHasCapability, 1, 0);
+    ret = RaCtxNotifyEvent(&ctxHandle, &event);
+    EXPECT_INT_EQ(ret, ROCE_ENOTSUPP);
+    mocker_clean();
+
+    mocker(RaHdcHasCapability, 1, 1);
+    mocker(RaHdcCtxNotifyEvent, 1, -1);
+    ret = RaCtxNotifyEvent(&ctxHandle, &event);
+    EXPECT_INT_EQ(ret, 128100);
+    mocker_clean();
+
+    mocker(RaHdcHasCapability, 1, 1);
+    mocker(RaHdcCtxNotifyEvent, 1, 0);
+    ret = RaCtxNotifyEvent(&ctxHandle, &event);
+    EXPECT_INT_EQ(ret, 0);
+    mocker_clean();
+}
+
+void TcRaHdcCtxNotifyEvent()
+{
+    struct RaCtxHandle ctxHandle = {0};
+    struct CtxNotifyEvent event = {0};
+    int ret = 0;
+
+    mocker_clean();
+    mocker(RaHdcProcessMsg, 1, -1);
+    ret = RaHdcCtxNotifyEvent(&ctxHandle, &event);
+    EXPECT_INT_EQ(ret, -1);
+    mocker_clean();
+
+    mocker(RaHdcProcessMsg, 1, 0);
+    ret = RaHdcCtxNotifyEvent(&ctxHandle, &event);
+    EXPECT_INT_EQ(ret, 0);
     mocker_clean();
 }

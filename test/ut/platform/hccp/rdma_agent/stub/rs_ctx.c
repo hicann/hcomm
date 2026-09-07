@@ -112,6 +112,8 @@ int RsCtxGetCrErrInfoList(struct RaRsDevInfo* devInfo, struct CqeErrInfo infoLis
 
 int RsCtxGetAsyncEvents(struct RaRsDevInfo* devInfo, struct AsyncEvent asyncEvents[], unsigned int* num) { return 0; }
 
+int RsCtxNotifyEvent(struct RaRsDevInfo* devInfo, struct CtxNotifyEvent* event) { return 0; }
+
 int RsCtxGetUbContext(
     struct RaRsDevInfo* devInfo, unsigned int id, unsigned int contextType, uint8_t context[], unsigned int* len)
 {
