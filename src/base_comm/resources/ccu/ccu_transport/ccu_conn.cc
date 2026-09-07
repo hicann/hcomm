@@ -478,6 +478,7 @@ HcclResult CcuConnection::UpdateExchangeStatus()
         outParam.handle = reinterpret_cast<TargetJettyHandle>(remoteJettyHandlePtrs_[i]);
         outParam.targetJettyVa = infoPtr->out.ub.tjettyHandle; // 该信息当前未使用
         outParam.tpn = infoPtr->out.ub.tpn;
+        ccuJettys_[i]->SetTpn(outParam.tpn);
     }
     isJettyImported_ = true;
 

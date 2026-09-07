@@ -14,6 +14,7 @@
 #include "coll_comm.h"
 #include "acl/acl_rt.h"
 #include "orion_adapter_hccp.h"
+#include "aubdfx_api.h"
 #include "hcomm_adapter_hccp.h"
 #include <adapter_error_manager_pub.h>
 #include "op_type.h"
@@ -399,6 +400,59 @@ void TaskExceptionHost::GetAicpuCqeErrInfo(
         remoteLocalId, exceptionInfo->deviceid, errorMessage.ubCqeStatus, errorMessage.locEid.Describe(),
         errorMessage.rmtEid.Describe(), netInstanceId); // 上报AICPU CQE错误信息到集群监控
     return;
+}
+
+void TaskExceptionHost::NotifyControlPlaneOnUbError(
+    u32 devPhyId, RdmaHandle rdmaHandle, const Hccl::ErrorMessageReport& errorMessage) const
+{
+    if (errorMessage.ubCqeStatus == 0) {
+        return;
+    }
+    struct RaInfo raInfo = {};
+    raInfo.mode = NETWORK_OFFLINE;
+    raInfo.phyId = devPhyId;
+
+    const bool supported = RaHasCapability(&raInfo, RA_CAP_UDMA_NOTIFY_EVENT);
+    if (!supported) {
+        HCCL_WARNING("[%s]RaHasCapability returned false, skip notify control plane, devPhyId[%u]", __func__, devPhyId);
+        return;
+    }
+
+    if (rdmaHandle == nullptr) {
+        HCCL_ERROR(
+            "[%s]rdmaHandle is nullptr, skip notify control plane, devPhyId[%u], locEid[%s]", __func__, devPhyId,
+            errorMessage.locEid.Describe().c_str());
+        return;
+    }
+
+    struct CtxNotifyEvent event = {};
+    event.serviceType = URMA_TYPE;
+    event.errorType = static_cast<uint8_t>(errorMessage.ubCqeStatus);
+    s32 sRet = memcpy_s(
+        event.srcEid.raw, sizeof(event.srcEid.raw), errorMessage.locEid.raw, sizeof(errorMessage.locEid.raw));
+    if (sRet != EOK) {
+        HCCL_ERROR("[%s]memcpy_s srcEid failed, ret[%d]", __func__, sRet);
+        return;
+    }
+    sRet = memcpy_s(
+        event.dstEid.raw, sizeof(event.dstEid.raw), errorMessage.rmtEid.raw, sizeof(errorMessage.rmtEid.raw));
+    if (sRet != EOK) {
+        HCCL_ERROR("[%s]memcpy_s dstEid failed, ret[%d]", __func__, sRet);
+        return;
+    }
+    event.errorInfo.tpn = errorMessage.tpn;
+
+    int32_t retCode = RaCtxNotifyEvent(rdmaHandle, &event);
+    std::string eventInfo = Hccl::StringFormat(
+        "devPhyId[%u], rdmaHandle[%p], serviceType[%u], errorType[%u], tpn[%u], "
+        "srcEid[%s], dstEid[%s]",
+        devPhyId, static_cast<const void*>(rdmaHandle), event.serviceType, event.errorType, errorMessage.tpn,
+        errorMessage.locEid.Describe().c_str(), errorMessage.rmtEid.Describe().c_str());
+    if (retCode != 0) {
+        HCCL_ERROR("[%s]RaCtxNotifyEvent failed, ret[%d], %s", __func__, retCode, eventInfo.c_str());
+        return;
+    }
+    HCCL_ERROR("[%s]notify control plane finish, %s", __func__, eventInfo.c_str());
 }
 
 void TaskExceptionHost::ProcessException(rtExceptionInfo_t* exceptionInfo, const Hccl::TaskInfo& taskInfo)
@@ -801,6 +855,7 @@ void TaskExceptionHost::PrintUbDfxInfo(
         auto rdmaHandle = Hccl::RdmaHandleManager::GetInstance().GetByIp(devPhyId, addr);
         HrtRaDumpJettyContext(reinterpret_cast<void*>(errorMessage.jettyHandle), errorMessage.jettyId);
         PrintUbRegisters(static_cast<s32>(exceptionInfo->deviceid), rdmaHandle);
+        NotifyControlPlaneOnUbError(devPhyId, rdmaHandle, errorMessage);
     }
 }
 } // namespace hcomm

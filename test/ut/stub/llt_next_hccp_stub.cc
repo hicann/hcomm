@@ -272,3 +272,6 @@ void RaUbFreeTokenIdHandle(RdmaHandle handle, TokenIdHandle tokenIdHandle) {}
 } // namespace Hccl
 
 int RaCtxGetJettyContext(void* qpHandle, uint8_t context[], unsigned int* len) { return 0; } // namespace Hccl
+
+bool RaHasCapability(struct RaInfo* info, unsigned int capability) { return true; }
+int RaCtxNotifyEvent(void* ctxHandle, struct CtxNotifyEvent* event) { return 0; }

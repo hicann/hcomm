@@ -261,13 +261,15 @@ struct DfxTaskParaUbDma {      // UB DMA 任务参数
                                //   write with notify SQE 中无此字段；cnt notify 不支持跨片
     uint64_t jettyHandle{0};   // taskException 用于 dump jetty context
     uint32_t jettyId{0};       // taskException 用于 dump jetty context
+    u32 tpn{0};                // import_jetty返回的tpn，异常时通知管控面用
     std::string Describe() const
     {
         return StringFormat(
             "srcAddr[0x%llx], dstAddr[0x%llx], size[0x%llx], notifyId[0x%x], "
-            "jettyHandle[0x%llx], jettyId[%u]",
+            "jettyHandle[0x%llx], jettyId[%u], tpn[%u]",
             static_cast<unsigned long long>(srcAddr), static_cast<unsigned long long>(dstAddr),
-            static_cast<unsigned long long>(size), notifyId, static_cast<unsigned long long>(jettyHandle), jettyId);
+            static_cast<unsigned long long>(size), notifyId, static_cast<unsigned long long>(jettyHandle), jettyId,
+            tpn);
     }
 };
 
@@ -280,14 +282,15 @@ struct DfxTaskParaReduce {     // UB Reduce 任务参数
     u8 reduceOp; // Reduce 操作类型枚举值（HcclReduceOp 底层 uint8_t，仅 Reduce 类 task 有效）
     uint64_t jettyHandle{0}; // taskException 用于 dump jetty context
     uint32_t jettyId{0};     // taskException 用于 dump jetty context
+    u32 tpn{0};              // import_jetty返回的tpn，异常时通知管控面用
     std::string Describe() const
     {
         return StringFormat(
             "srcAddr[0x%llx], dstAddr[0x%llx], size[0x%llx], notifyId[0x%x], reduceOp[%u], "
-            "jettyHandle[0x%llx], jettyId[%u]",
+            "jettyHandle[0x%llx], jettyId[%u], tpn[%u]",
             static_cast<unsigned long long>(srcAddr), static_cast<unsigned long long>(dstAddr),
             static_cast<unsigned long long>(size), notifyId, reduceOp, static_cast<unsigned long long>(jettyHandle),
-            jettyId);
+            jettyId, tpn);
     }
 };
 

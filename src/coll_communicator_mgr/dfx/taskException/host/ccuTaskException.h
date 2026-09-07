@@ -193,6 +193,9 @@ private:
     static void ClusterMoniterGetCcuCqeErrInfo(
         u32 RemoteDeviceId, u32 locDeviceId, uint16_t status, std::string LocalEid, std::string RemoteEid,
         std::string RemoteInsId);
+    static void NotifyControlPlaneOnUbError(
+        const std::vector<CcuErrorInfo>& errorInfos, const Hccl::TaskInfo& taskInfo, u32 deviceId,
+        uint8_t missionStatus);
 };
 } // namespace hcomm
 

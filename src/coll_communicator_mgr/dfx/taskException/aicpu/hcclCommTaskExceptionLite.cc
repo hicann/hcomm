@@ -411,6 +411,7 @@ HcclResult HcclCommTaskExceptionLite::GenerateErrorMessageReport(
 
     errMsgInfo.jettyHandle = taskInfo.taskPara.ubDma.jettyHandle;
     errMsgInfo.jettyId = taskInfo.taskPara.ubDma.jettyId;
+    errMsgInfo.tpn = taskInfo.taskPara.ubDma.tpn;
 
     CHK_SAFETY_FUNC_RET(memcpy_s(
         errMsgInfo.group, sizeof(errMsgInfo.group), aicpuComm->GetIdentifier().c_str(),

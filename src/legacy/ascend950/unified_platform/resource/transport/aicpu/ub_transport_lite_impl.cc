@@ -574,6 +574,7 @@ void UbTransportLiteImpl::FillSlotUbDmaInfo(
     slot->taskPara.ubDma.notifyId = notifyId;
     slot->taskPara.ubDma.jettyHandle = GetJettyHandle();
     slot->taskPara.ubDma.jettyId = GetJettyId();
+    slot->taskPara.ubDma.tpn = GetTpn();
     PLF_CONFIG_INFO(Hccl::PLF_TASK, "[%s] %s", __func__, slot->Describe().c_str());
 }
 
@@ -598,6 +599,7 @@ void UbTransportLiteImpl::FillSlotReduceInfo(
     slot->taskPara.Reduce.reduceOp = reduceOp;
     slot->taskPara.Reduce.jettyHandle = GetJettyHandle();
     slot->taskPara.Reduce.jettyId = GetJettyId();
+    slot->taskPara.Reduce.tpn = GetTpn();
     PLF_CONFIG_INFO(Hccl::PLF_TASK, "[%s] %s", __func__, slot->Describe().c_str());
 }
 
@@ -1453,6 +1455,8 @@ Eid UbTransportLiteImpl::GetRmtEid() const { return connVec[0]->GetRmtEid(); }
 uint64_t UbTransportLiteImpl::GetJettyHandle() const { return connVec[0]->GetJettyHandle(); }
 
 uint32_t UbTransportLiteImpl::GetJettyId() const { return connVec[0]->GetJettyId(); }
+
+uint32_t UbTransportLiteImpl::GetTpn() const { return connVec[0]->GetTpn(); }
 
 HcclResult UbTransportLiteImpl::Clean()
 {

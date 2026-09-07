@@ -27,6 +27,8 @@
 #include "dfx_profiling_handler_lite.h"
 #include "adapter_error_manager_pub.h"
 #include "task_info.h"
+#include "hccp.h"
+#include "hccp_ctx.h"
 
 using namespace hccl;
 using namespace hcomm;
@@ -604,4 +606,91 @@ TEST_F(hcclCommTaskExceptionLiteTest, Ut_Register_When_CommRegisterMapEmpty_Expe
     EXPECT_EQ(handler->CommRegisterMap_.count(0xABCD), 1u);
 
     handler->CommRegisterMap_.clear();
+}
+
+// ============ NotifyControlPlaneOnUbError 测试 ============
+
+TEST_F(hcclCommTaskExceptionLiteTest, Ut_NotifyControlPlaneOnUbError_When_UbCqeStatusZero_Expect_Return)
+{
+    const s32 testDeviceId = 0;
+    TaskExceptionHost* handler = TaskExceptionHost::GetInstance(testDeviceId);
+    ASSERT_NE(handler, nullptr);
+
+    Hccl::ErrorMessageReport errorMessage{};
+    errorMessage.ubCqeStatus = 0;
+    RdmaHandle rdmaHandle = reinterpret_cast<RdmaHandle>(0x100);
+
+    MOCKER(RaCtxNotifyEvent).expects(never());
+
+    EXPECT_NO_THROW(handler->NotifyControlPlaneOnUbError(0, rdmaHandle, errorMessage));
+    GlobalMockObject::verify();
+}
+
+TEST_F(hcclCommTaskExceptionLiteTest, Ut_NotifyControlPlaneOnUbError_When_CapabilityNotSupported_Expect_Return)
+{
+    const s32 testDeviceId = 0;
+    TaskExceptionHost* handler = TaskExceptionHost::GetInstance(testDeviceId);
+    ASSERT_NE(handler, nullptr);
+
+    Hccl::ErrorMessageReport errorMessage{};
+    errorMessage.ubCqeStatus = 1;
+    RdmaHandle rdmaHandle = reinterpret_cast<RdmaHandle>(0x100);
+
+    MOCKER(RaHasCapability).stubs().with(mockcpp::any(), mockcpp::any()).will(returnValue(false));
+    MOCKER(RaCtxNotifyEvent).expects(never());
+
+    EXPECT_NO_THROW(handler->NotifyControlPlaneOnUbError(0, rdmaHandle, errorMessage));
+    GlobalMockObject::verify();
+}
+
+TEST_F(hcclCommTaskExceptionLiteTest, Ut_NotifyControlPlaneOnUbError_When_RdmaHandleNull_Expect_Return)
+{
+    const s32 testDeviceId = 0;
+    TaskExceptionHost* handler = TaskExceptionHost::GetInstance(testDeviceId);
+    ASSERT_NE(handler, nullptr);
+
+    Hccl::ErrorMessageReport errorMessage{};
+    errorMessage.ubCqeStatus = 1;
+
+    MOCKER(RaHasCapability).stubs().with(mockcpp::any(), mockcpp::any()).will(returnValue(true));
+    MOCKER(RaCtxNotifyEvent).expects(never());
+
+    EXPECT_NO_THROW(handler->NotifyControlPlaneOnUbError(0, nullptr, errorMessage));
+    GlobalMockObject::verify();
+}
+
+TEST_F(hcclCommTaskExceptionLiteTest, Ut_NotifyControlPlaneOnUbError_When_Success_Expect_RaCtxNotifyEventCalled)
+{
+    const s32 testDeviceId = 0;
+    TaskExceptionHost* handler = TaskExceptionHost::GetInstance(testDeviceId);
+    ASSERT_NE(handler, nullptr);
+
+    Hccl::ErrorMessageReport errorMessage{};
+    errorMessage.ubCqeStatus = 1;
+    errorMessage.tpn = 5;
+    RdmaHandle rdmaHandle = reinterpret_cast<RdmaHandle>(0x200);
+
+    MOCKER(RaHasCapability).stubs().with(mockcpp::any(), mockcpp::any()).will(returnValue(true));
+    MOCKER(RaCtxNotifyEvent).expects(once()).with(mockcpp::any(), mockcpp::any()).will(returnValue(0));
+
+    EXPECT_NO_THROW(handler->NotifyControlPlaneOnUbError(0, rdmaHandle, errorMessage));
+    GlobalMockObject::verify();
+}
+
+TEST_F(hcclCommTaskExceptionLiteTest, Ut_NotifyControlPlaneOnUbError_When_RaCtxNotifyEventFails_Expect_NoCrash)
+{
+    const s32 testDeviceId = 0;
+    TaskExceptionHost* handler = TaskExceptionHost::GetInstance(testDeviceId);
+    ASSERT_NE(handler, nullptr);
+
+    Hccl::ErrorMessageReport errorMessage{};
+    errorMessage.ubCqeStatus = 1;
+    errorMessage.tpn = 5;
+    RdmaHandle rdmaHandle = reinterpret_cast<RdmaHandle>(0x300);
+
+    MOCKER(RaHasCapability).stubs().with(mockcpp::any(), mockcpp::any()).will(returnValue(true));
+    MOCKER(RaCtxNotifyEvent).expects(once()).with(mockcpp::any(), mockcpp::any()).will(returnValue(-1));
+
+    EXPECT_NO_THROW(handler->NotifyControlPlaneOnUbError(0, rdmaHandle, errorMessage));
+    GlobalMockObject::verify();
 }

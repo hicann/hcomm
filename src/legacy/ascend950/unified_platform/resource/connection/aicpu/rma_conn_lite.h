@@ -59,8 +59,9 @@ public:
     Eid GetLocEid() const;
 
     u32 GetQpVa() const;
-    uint64_t GetJettyHandle() const;
-    uint32_t GetJettyId() const;
+    u64 GetJettyHandle() const;
+    u32 GetJettyId() const;
+    u32 GetTpn() const;
 
     virtual std::string Describe();
 

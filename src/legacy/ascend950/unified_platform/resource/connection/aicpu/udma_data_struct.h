@@ -208,6 +208,7 @@ struct DbSqeProfInfo {
     uint64_t jettyHandle{0};   // TASK_UB_INLINE_WRITE
     uint32_t jettyId{0};       // TASK_UB_INLINE_WRITE, TASK_UB, TASK_UB_REDUCE_INLINE, TASK_WRITE_WITH_NOTIFY,
                                // TASK_WRITE_REDUCE_WITH_NOTIFY
+    uint32_t tpn{0};           // import_jetty返回的tpn，异常时通知管控面用
 };
 
 } // namespace Hccl

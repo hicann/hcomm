@@ -69,8 +69,10 @@ Eid RmaConnLite::GetLocEid() const { return locEid_; }
 
 u32 RmaConnLite::GetQpVa() const { return qpVa_; }
 
-uint64_t RmaConnLite::GetJettyHandle() const { return jettyHandle_; }
+u64 RmaConnLite::GetJettyHandle() const { return jettyHandle_; }
 
-uint32_t RmaConnLite::GetJettyId() const { return jettyId_; }
+u32 RmaConnLite::GetJettyId() const { return jettyId_; }
+
+u32 RmaConnLite::GetTpn() const { return tpn_; }
 
 } // namespace Hccl

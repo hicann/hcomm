@@ -49,6 +49,7 @@ struct ErrorMessageReport {
     uint8_t opType = 0;
     uint64_t jettyHandle = 0;
     uint32_t jettyId = 0;
+    uint32_t tpn = 0;
 
     std::string Describe() const
     {
@@ -58,14 +59,14 @@ struct ErrorMessageReport {
             "size[%zu], count[%llu], dstAddr[0x%llx], srcAddr[0x%llx], opIndex[%u], reduceType[%u], "
             "dataType[%u], locEid[%s], rmtEid[%s], taskDstAddr[0x%llx], taskSrcAddr[0x%llx], "
             "rtCqErrorType[%u], rtCqErrorCode[%u], ubCqeStatus[%u], opType[%u], jettyHandle[0x%llx], "
-            "jettyId[%u]",
+            "jettyId[%u], tpn[%u]",
             tag, group, remoteUserRank, streamId, taskId, static_cast<unsigned long long>(notifyId), notifyValue, stage,
             rankId, rankSize, taskType.Describe().c_str(), linkType.Describe().c_str(), size,
             static_cast<unsigned long long>(count), static_cast<unsigned long long>(dstAddr),
             static_cast<unsigned long long>(srcAddr), opIndex, reduceType, dataType, locEid.Describe().c_str(),
             rmtEid.Describe().c_str(), static_cast<unsigned long long>(taskDstAddr),
             static_cast<unsigned long long>(taskSrcAddr), rtCqErrorType, rtCqErrorCode, ubCqeStatus, opType,
-            static_cast<unsigned long long>(jettyHandle), jettyId);
+            static_cast<unsigned long long>(jettyHandle), jettyId, tpn);
     }
 };
 

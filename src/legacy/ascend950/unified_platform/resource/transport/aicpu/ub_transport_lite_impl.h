@@ -52,6 +52,7 @@ public:
     Eid GetRmtEid() const;
     uint64_t GetJettyHandle() const;
     uint32_t GetJettyId() const;
+    uint32_t GetTpn() const;
 
     void Post(u32 index, const StreamLite& stream) override;
 
@@ -299,6 +300,7 @@ private:
         dbSqeProfInfo.rmtEid = GetRmtEid();
         dbSqeProfInfo.jettyHandle = GetJettyHandle();
         dbSqeProfInfo.jettyId = GetJettyId();
+        dbSqeProfInfo.tpn = GetTpn();
     }
 
     inline void
@@ -327,6 +329,7 @@ private:
         dbSqeProfInfo.dataType = DataTypeToHcclDataType(reduceIn.dataType);
         dbSqeProfInfo.jettyHandle = GetJettyHandle();
         dbSqeProfInfo.jettyId = GetJettyId();
+        dbSqeProfInfo.tpn = GetTpn();
     }
 
     void ExecProfilingAll(

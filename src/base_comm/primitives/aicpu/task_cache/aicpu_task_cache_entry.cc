@@ -1345,6 +1345,7 @@ inline HcclResult AicpuTaskCacheEntry::FillSlotUbDma_(
     slot->taskPara.ubDma.notifyId = profInfo.notifyId;
     slot->taskPara.ubDma.jettyHandle = profInfo.jettyHandle;
     slot->taskPara.ubDma.jettyId = profInfo.jettyId;
+    slot->taskPara.ubDma.tpn = profInfo.tpn;
     PLF_CONFIG_INFO(PLF_TASK, "[%s] %s", __func__, slot->Describe().c_str());
     return HCCL_SUCCESS;
 }
@@ -1366,6 +1367,7 @@ inline HcclResult AicpuTaskCacheEntry::FillSlotReduce_(
     slot->taskPara.Reduce.notifyId = profInfo.notifyId;
     slot->taskPara.Reduce.jettyHandle = profInfo.jettyHandle;
     slot->taskPara.Reduce.jettyId = profInfo.jettyId;
+    slot->taskPara.Reduce.tpn = profInfo.tpn;
     PLF_CONFIG_INFO(PLF_TASK, "[%s] %s", __func__, slot->Describe().c_str());
     return HCCL_SUCCESS;
 }

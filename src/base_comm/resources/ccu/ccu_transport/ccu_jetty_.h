@@ -36,6 +36,8 @@ public:
     JettyHandle GetJettyHandle() const { return reinterpret_cast<JettyHandle>(jettyHandlePtr_); }
     RdmaHandle GetRdmaHandle() const { return rdmaHandle_; }
     CtxHandle GetCtxHandle() const { return ctxHandle_; }
+    uint32_t GetTpn() const { return tpn_; }
+    void SetTpn(uint32_t tpn) { tpn_ = tpn; }
 
 private:
     CcuJetty(const CcuJetty& that) = delete;
@@ -63,6 +65,7 @@ private:
 
     HcclResult HandleAsyncRequest();
     RdmaHandle rdmaHandle_{nullptr};
+    uint32_t tpn_{0};
 };
 
 HcclResult

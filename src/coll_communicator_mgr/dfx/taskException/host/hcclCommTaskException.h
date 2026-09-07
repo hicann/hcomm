@@ -74,6 +74,8 @@ private:
         const Hccl::TaskInfo& taskInfo) const;
     void GetAicpuCqeErrRemoteLocalIdByRankId(hccl::CollComm* collComm, uint32_t rankid, u32& remoteLocalId) const;
     void GetAicpuCqeErrNetInstanceByRankId(hccl::CollComm* collComm, uint32_t rankid, std::string& netInstanceId) const;
+    void NotifyControlPlaneOnUbError(
+        u32 devPhyId, RdmaHandle rdmaHandle, const Hccl::ErrorMessageReport& errorMessage) const;
     bool ProcessDpuException(const rtExceptionInfo_t* exceptionInfo) const;
 
 private:
