@@ -13,6 +13,8 @@
 // 适配重构：内存方法从 Endpoint 移至 RegedMemMgr；EndpointMgr 收编 HcommEndpointMap；
 //          RoceRegedMemMgr rdmaHandle_ 经构造注入。
 
+#include <cstring>
+#include <string>
 #include "../../ut_hcomm_base.h"
 #include "endpoint.h"
 #include "../../../../../../src/base_comm/resources/endpoints/mgr/endpoint_mgr.h"
@@ -378,4 +380,95 @@ TEST_F(TestHcommMem, MemReg_When_CrossEP_Shared_ParentChild_Expect_BothSuccess)
     EXPECT_NE(hChild, nullptr);
 
     EXPECT_NE(hParent, hChild);
+}
+
+// ============ memTag 长度校验用例(HcommMemReg 入口) ============
+
+// TC-HcommMemReg-006: memTag 长度等于上限(HCOMM_RES_TAG_MAX_LEN) → 注册成功
+TEST_F(TestHcommMem, MemReg_When_MemTagLenEqualsMax_Expect_Success)
+{
+    RdmaHandle fakeRdmaHandle = reinterpret_cast<RdmaHandle>(0xABCD);
+    MrHandle fakeMrHandle = reinterpret_cast<MrHandle>(0x1234);
+    RegisterRaMrMockSuccess(fakeMrHandle);
+
+    auto mgr = MakeSharedMgr(fakeRdmaHandle);
+    EndpointHandle epHandle = InjectEndpoint(mgr);
+
+    CommMem mem{};
+    mem.type = COMM_MEM_TYPE_HOST;
+    mem.addr = reinterpret_cast<void*>(0x1000);
+    mem.size = 4096;
+
+    std::string memTag(HCOMM_RES_TAG_MAX_LEN, 'a');
+    ASSERT_EQ(memTag.size(), HCOMM_RES_TAG_MAX_LEN);
+    HcommMemHandle h = nullptr;
+    HcommResult ret = HcommMemReg(epHandle, memTag.c_str(), &mem, &h);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+    EXPECT_NE(h, nullptr);
+}
+
+// TC-HcommMemReg-006: memTag 长度超过上限 → 返回 HCCL_E_PARA, 不产生注册副作用
+TEST_F(TestHcommMem, MemReg_When_MemTagLenExceedsMax_Expect_ReturnParaError)
+{
+    RdmaHandle fakeRdmaHandle = reinterpret_cast<RdmaHandle>(0xABCD);
+    MrHandle fakeMrHandle = reinterpret_cast<MrHandle>(0x1234);
+    RegisterRaMrMockSuccess(fakeMrHandle);
+
+    auto mgr = MakeSharedMgr(fakeRdmaHandle);
+    EndpointHandle epHandle = InjectEndpoint(mgr);
+
+    CommMem mem{};
+    mem.type = COMM_MEM_TYPE_HOST;
+    mem.addr = reinterpret_cast<void*>(0x1000);
+    mem.size = 4096;
+
+    std::string memTag(HCOMM_RES_TAG_MAX_LEN + 1, 'a');
+    HcommMemHandle h = nullptr;
+    HcommResult ret = HcommMemReg(epHandle, memTag.c_str(), &mem, &h);
+    EXPECT_EQ(ret, HCCL_E_PARA);
+    EXPECT_EQ(h, nullptr);
+}
+
+// TC-HcommMemReg-006: memTag 未以\0结尾且前255字节内无\0 → 返回 HCCL_E_PARA(非NUL结尾安全)
+TEST_F(TestHcommMem, MemReg_When_MemTagNotNullTerminated_Expect_ReturnParaError)
+{
+    RdmaHandle fakeRdmaHandle = reinterpret_cast<RdmaHandle>(0xABCD);
+    MrHandle fakeMrHandle = reinterpret_cast<MrHandle>(0x1234);
+    RegisterRaMrMockSuccess(fakeMrHandle);
+
+    auto mgr = MakeSharedMgr(fakeRdmaHandle);
+    EndpointHandle epHandle = InjectEndpoint(mgr);
+
+    CommMem mem{};
+    mem.type = COMM_MEM_TYPE_HOST;
+    mem.addr = reinterpret_cast<void*>(0x1000);
+    mem.size = 4096;
+
+    char memTag[HCOMM_RES_TAG_MAX_LEN + 1];
+    memset(memTag, 'a', sizeof(memTag)); // 256字节全非零,无\0结尾
+    HcommMemHandle h = nullptr;
+    HcommResult ret = HcommMemReg(epHandle, memTag, &mem, &h);
+    EXPECT_EQ(ret, HCCL_E_PARA);
+    EXPECT_EQ(h, nullptr);
+}
+
+// TC-HcommMemReg-006: memTag为nullptr → 跳过长度校验, 注册成功
+TEST_F(TestHcommMem, MemReg_When_MemTagNullptr_Expect_Success)
+{
+    RdmaHandle fakeRdmaHandle = reinterpret_cast<RdmaHandle>(0xABCD);
+    MrHandle fakeMrHandle = reinterpret_cast<MrHandle>(0x1234);
+    RegisterRaMrMockSuccess(fakeMrHandle);
+
+    auto mgr = MakeSharedMgr(fakeRdmaHandle);
+    EndpointHandle epHandle = InjectEndpoint(mgr);
+
+    CommMem mem{};
+    mem.type = COMM_MEM_TYPE_HOST;
+    mem.addr = reinterpret_cast<void*>(0x1000);
+    mem.size = 4096;
+
+    HcommMemHandle h = nullptr;
+    HcommResult ret = HcommMemReg(epHandle, nullptr, &mem, &h);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+    EXPECT_NE(h, nullptr);
 }

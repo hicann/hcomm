@@ -62,7 +62,7 @@ protected:
     uintptr_t addr_{0};
     std::size_t size_{0};
     HcclMemType memType_{HcclMemType::HCCL_MEM_TYPE_DEVICE};
-    char memInfo_[256]{};
+    char memInfo_[256]{}; // memTag上限为HCOMM_RES_TAG_MAX_LEN(255)，此处引用不到该宏，暂用魔数，待后续修改
 };
 
 } // namespace Hccl

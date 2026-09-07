@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include <cstring>
 #include "hcomm_c_adpt.h"
 #include "hcomm_c_adpt_common.h"
 #include "hcomm_res_mgr.h"
@@ -34,6 +35,13 @@ EndpointMgr& GetEndpointMgrWithInit()
 HcommResult
 HcommMemReg(EndpointHandle endpointHandle, const char* memTag, const CommMem* mem, HcommMemHandle* memHandle)
 {
+    if (memTag != nullptr && mem != nullptr && memHandle != nullptr) {
+        size_t memTagLen = strnlen(memTag, HCOMM_RES_TAG_MAX_LEN + 1);
+        CHK_PRT_RET(
+            memTagLen > HCOMM_RES_TAG_MAX_LEN,
+            HCCL_ERROR("[%s] memTag too long, len[%zu], max[%u].", __func__, memTagLen, HCOMM_RES_TAG_MAX_LEN),
+            HCCL_E_PARA);
+    }
     auto endpoint = GetEndpointMgrWithInit().Get(endpointHandle);
     CHK_PRT_RET(
         endpoint == nullptr, HCCL_ERROR("[%s] endpoint not found, endpointHandle[%p]", __func__, endpointHandle),
