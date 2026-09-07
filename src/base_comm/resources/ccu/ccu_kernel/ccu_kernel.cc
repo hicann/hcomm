@@ -11,6 +11,7 @@
 #include "ccu_kernel.h"
 
 #include <algorithm>
+#include <map>
 
 #include "ccu_rep_v1.h"
 #include "ccu_kernel_resource.h"
@@ -1995,46 +1996,45 @@ static bool isLowPrecisionOut(Hccl::DataType dataType)
     return dataType == Hccl::DataType::FP16 || dataType == Hccl::DataType::BFP16 || dataType == Hccl::DataType::FP32;
 }
 
-constexpr uint32_t MAX_DATA_TYPE = 17;
-
-const Hccl::DataType orionDataTypes[]
-    = {Hccl::DataType::INT8,   Hccl::DataType::INT16,   Hccl::DataType::INT32,
-       Hccl::DataType::FP16,   Hccl::DataType::FP32,    Hccl::DataType::INT64,
-       Hccl::DataType::UINT64, Hccl::DataType::UINT8,   Hccl::DataType::UINT16,
-       Hccl::DataType::UINT32, Hccl::DataType::FP64,    Hccl::DataType::BFP16,
-       Hccl::DataType::INT128,
-#if !defined(OPEN_BUILD_PROJECT) || defined(ORION_MODE)
-       Hccl::DataType::HIF8,   Hccl::DataType::FP8E4M3, Hccl::DataType::FP8E5M2,
-       Hccl::DataType::FP8E8M0
-#endif
-};
-
 static Hccl::DataType HcommDataTypeToHcclDataType(const HcclDataType dataType)
 {
-    const auto dataTypeNum = static_cast<uint32_t>(dataType);
-    if (dataTypeNum > MAX_DATA_TYPE) {
+    static const std::map<HcclDataType, Hccl::DataType> hcclDataTypeMap = {
+        {HCCL_DATA_TYPE_INT8, Hccl::DataType::INT8},       {HCCL_DATA_TYPE_INT16, Hccl::DataType::INT16},
+        {HCCL_DATA_TYPE_INT32, Hccl::DataType::INT32},     {HCCL_DATA_TYPE_FP16, Hccl::DataType::FP16},
+        {HCCL_DATA_TYPE_FP32, Hccl::DataType::FP32},       {HCCL_DATA_TYPE_INT64, Hccl::DataType::INT64},
+        {HCCL_DATA_TYPE_UINT64, Hccl::DataType::UINT64},   {HCCL_DATA_TYPE_UINT8, Hccl::DataType::UINT8},
+        {HCCL_DATA_TYPE_UINT16, Hccl::DataType::UINT16},   {HCCL_DATA_TYPE_UINT32, Hccl::DataType::UINT32},
+        {HCCL_DATA_TYPE_FP64, Hccl::DataType::FP64},       {HCCL_DATA_TYPE_BFP16, Hccl::DataType::BFP16},
+        {HCCL_DATA_TYPE_INT128, Hccl::DataType::INT128},
+#if !defined(OPEN_BUILD_PROJECT) || defined(ORION_MODE)
+        {HCCL_DATA_TYPE_HIF8, Hccl::DataType::HIF8},       {HCCL_DATA_TYPE_FP8E4M3, Hccl::DataType::FP8E4M3},
+        {HCCL_DATA_TYPE_FP8E5M2, Hccl::DataType::FP8E5M2}, {HCCL_DATA_TYPE_FP8E8M0, Hccl::DataType::FP8E8M0},
+#endif
+    };
+
+    auto it = hcclDataTypeMap.find(dataType);
+    if (it == hcclDataTypeMap.end()) {
         return Hccl::DataType::INVALID;
     }
 
-    return orionDataTypes[dataTypeNum];
+    return it->second;
 }
-
-constexpr uint32_t MAX_REDUCE_TYPE = 4;
-const Hccl::ReduceOp orionReduceOps[] = {
-    Hccl::ReduceOp::SUM,
-    Hccl::ReduceOp::PROD,
-    Hccl::ReduceOp::MAX,
-    Hccl::ReduceOp::MIN,
-};
 
 static Hccl::ReduceOp HcommReduceOpToHcclReduceOp(const HcclReduceOp reduceOp)
 {
-    const auto reduceOpNum = static_cast<uint32_t>(reduceOp);
-    if (reduceOpNum > MAX_REDUCE_TYPE) {
+    static const std::map<HcclReduceOp, Hccl::ReduceOp> hcclReduceOpMap = {
+        {HCCL_REDUCE_SUM, Hccl::ReduceOp::SUM},
+        {HCCL_REDUCE_PROD, Hccl::ReduceOp::PROD},
+        {HCCL_REDUCE_MAX, Hccl::ReduceOp::MAX},
+        {HCCL_REDUCE_MIN, Hccl::ReduceOp::MIN},
+    };
+
+    auto it = hcclReduceOpMap.find(reduceOp);
+    if (it == hcclReduceOpMap.end()) {
         return Hccl::ReduceOp::INVALID;
     }
 
-    return orionReduceOps[reduceOpNum];
+    return it->second;
 }
 
 HcclResult CcuKernel::LocalReduceNb(
