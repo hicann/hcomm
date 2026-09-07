@@ -55,11 +55,11 @@ __aicore__ inline void
 AivBroadcastBig910B::Process(GM_ADDR input, GM_ADDR output, uint64_t len, int32_t tag, uint32_t root)
 {
     uint64_t blockNumPerGroup = rankSize_ - 1; // 每组使用ranksize-1个核
-    if (blockIdx_ >= blockNumPerGroup) {
+    uint64_t ubLength = UB_MAX_DATA_SIZE / sizeof(T);
+    uint64_t blockTotal = CeilDiv(len, ubLength);                   // 总搬运次数(需要多少核)
+    if (blockIdx_ >= blockNumPerGroup || blockIdx_ >= blockTotal) { // 无数据块的核直接返回，消除跨算子flag覆盖死锁
         return;
     }
-    uint64_t ubLength = UB_MAX_DATA_SIZE / sizeof(T);
-    uint64_t blockTotal = CeilDiv(len, ubLength); // 总搬运次数(需要多少核)
     __gm__ T* inputGM = (__gm__ T*)input;
     __gm__ T* cclGMRoot = (__gm__ T*)(GM_IN[root]);  // root卡的cclbuffer
     __gm__ T* cclGMSelf = (__gm__ T*)(GM_IN[rank_]); // 当前卡的cclbuffer
