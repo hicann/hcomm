@@ -29,22 +29,18 @@ enum class HcclWrOpCode {
 
 class TransportDeviceIbverbs : public TransportIbverbs {
 public:
-    TransportDeviceIbverbs(DispatcherPub *dispatcher,
-                           const std::unique_ptr<NotifyPool> &notifyPool,
-                           MachinePara &machinePara,
-                           std::chrono::milliseconds timeout,
-                           const TransportDeviceIbverbsData &transDevIbverbsData);
+    TransportDeviceIbverbs(DispatcherPub *dispatcher, const std::unique_ptr<NotifyPool> &notifyPool,
+        MachinePara &machinePara, std::chrono::milliseconds timeout,
+        const TransportDeviceIbverbsData &transDevIbverbsData);
     ~TransportDeviceIbverbs() override;
 
     HcclResult Init() override;
 
-    HcclResult TxAsync(UserMemType dstMemType, u64 dstOffset, const void *src, u64 len,
-                                  Stream &stream) override;
-    HcclResult TxAsync(std::vector<TxMemoryInfo>& txMems, Stream &stream) override;
+    HcclResult TxAsync(UserMemType dstMemType, u64 dstOffset, const void *src, u64 len, Stream &stream) override;
+    HcclResult TxAsync(std::vector<TxMemoryInfo> &txMems, Stream &stream) override;
 
-    HcclResult RxAsync(UserMemType srcMemType, u64 srcOffset, void *dst, u64 len,
-                                  Stream &stream) override;
-    HcclResult RxAsync(std::vector<RxMemoryInfo>& rxMems, Stream &stream) override;
+    HcclResult RxAsync(UserMemType srcMemType, u64 srcOffset, void *dst, u64 len, Stream &stream) override;
+    HcclResult RxAsync(std::vector<RxMemoryInfo> &rxMems, Stream &stream) override;
 
     HcclResult DataReceivedAck(Stream &stream) override;
 
@@ -56,17 +52,15 @@ public:
 
     HcclResult TxWaitDone(Stream &stream) override;
     HcclResult TxWithReduce(UserMemType dstMemType, u64 dstOffset, const void *src, u64 len,
-                              const HcclDataType datatype, HcclReduceOp redOp, Stream &stream) override;
+        const HcclDataType datatype, HcclReduceOp redOp, Stream &stream) override;
     HcclResult TxWithReduce(const std::vector<TxMemoryInfo> &txWithReduceMems, const HcclDataType datatype,
         HcclReduceOp redOp, Stream &stream) override;
 
     HcclResult TxPrepare(Stream &stream) override;
     HcclResult RxPrepare(Stream &stream) override;
 
-    HcclResult TxData(UserMemType dstMemType, u64 dstOffset, const void *src, u64 len,
-                                  Stream &stream) override;
-    HcclResult RxData(UserMemType srcMemType, u64 srcOffset, void *dst, u64 len,
-                                  Stream &stream) override;
+    HcclResult TxData(UserMemType dstMemType, u64 dstOffset, const void *src, u64 len, Stream &stream) override;
+    HcclResult RxData(UserMemType srcMemType, u64 srcOffset, void *dst, u64 len, Stream &stream) override;
 
     HcclResult TxDone(Stream &stream) override;
     HcclResult RxDone(Stream &stream) override;
@@ -76,11 +70,11 @@ public:
     HcclResult WriteReduceAsync(struct Transport::Buffer &remoteBuf, struct Transport::Buffer &localBuf,
         const HcclDataType datatype, HcclReduceOp redOp, Stream &stream);
 
-    HcclResult ReadAsync(struct Transport::Buffer &localBuf, struct Transport::Buffer &remoteBuf,
-        Stream &stream) override;
+    HcclResult ReadAsync(
+        struct Transport::Buffer &localBuf, struct Transport::Buffer &remoteBuf, Stream &stream) override;
 
-    HcclResult BatchTransferAsync(const HcommBatchTransferDesc *transferDescs, uint32_t descNum,
-        Stream &stream) override;
+    HcclResult BatchTransferAsync(
+        const HcommBatchTransferDesc *transferDescs, uint32_t descNum, Stream &stream) override;
 
     HcclResult PostReady(Stream &stream);
     HcclResult WaitReady(Stream &stream);
@@ -95,32 +89,32 @@ public:
     HcclResult Wait(u32 notifyIdx, Stream &stream, const u32 timeOut = NOTIFY_INVALID_WAIT_TIME) override;
 
     HcclResult AddWrList(void *dstMemPtr, const void *srcMemPtr, u64 srcMemSize, u32 srcKey, u32 dstKey,
-        WqeType wqeType, WrAuxInfo &aux, std::vector<WrInformation> &wrInfoVec);
+        WqeType wqeType, WrAuxInfo &aux, std::vector<WrInformation> &wrInfoVec, bool isLast = true);
     HcclResult GetMemInfo(UserMemType memType, void **dstMemPtr, unsigned int *dstKey, u64 &dstMemSize);
-    HcclResult TxPayLoad(UserMemType dstMemType, u64 dstOffset, const void *src, u64 len,
-        WqeType wqeType, WrAuxInfo &aux, std::vector<WrInformation>& wrInfoVec);
-    HcclResult TxSendDataAndNotifyWithSingleQP(std::vector<WrInformation> &wrInfoVec,
-        Stream &stream, bool useOneDoorbell = false);
+    HcclResult TxPayLoad(UserMemType dstMemType, u64 dstOffset, const void *src, u64 len, WqeType wqeType,
+        WrAuxInfo &aux, std::vector<WrInformation> &wrInfoVec);
+    HcclResult TxSendDataAndNotifyWithSingleQP(
+        std::vector<WrInformation> &wrInfoVec, Stream &stream, bool useOneDoorbell = false);
     HcclResult TxSendDataAndNotify(std::vector<WrInformation> &wrInfoVec, Stream &stream, bool useOneDoorbell = false);
-    HcclResult TxWrList(std::vector<WrInformation> &wrInfoVec, Stream &stream,
-        std::vector<struct SendWrRsp> &opRspVec, u32 multiQpIndex = RDMA_INVALID_QP_INDEX);
+    HcclResult TxWrList(std::vector<WrInformation> &wrInfoVec, Stream &stream, std::vector<struct SendWrRsp> &opRspVec,
+        u32 multiQpIndex = RDMA_INVALID_QP_INDEX);
     HcclResult SendWrList(
         u32 wrNum, WrInformation *wrlist, struct SendWrRsp *opRsp, u32 multiQpIndex = RDMA_INVALID_QP_INDEX);
     HcclResult SendWrlistExt(WrInformation wr[], struct SendWrRsp opRsp[], unsigned int sendNum,
         unsigned int *completeNum, u32 multiQpIndex = RDMA_INVALID_QP_INDEX);
-    HcclResult TxSendWrlistExt(WrInformation wrList[], u32 sendNum, struct SendWrRsp opRsp[],
-        unsigned int *completeNum, u32 multiQpIndex = RDMA_INVALID_QP_INDEX);
+    HcclResult TxSendWrlistExt(WrInformation wrList[], u32 sendNum, struct SendWrRsp opRsp[], unsigned int *completeNum,
+        u32 multiQpIndex = RDMA_INVALID_QP_INDEX);
     HcclResult RdmaSendAsync(struct SendWr &wr, Stream &stream, WqeType wqeType, u64 notifyAddr, u32 notifyId) override;
     HcclResult RdmaSendAsync(std::vector<WrInformation> &wqeInfoVec, Stream &stream, bool useOneDoorbell = false,
         u32 multiQpIndex = RDMA_INVALID_QP_INDEX);
     HcclResult GetWrDataAddr(void *dstAddr, WqeType wqeType, u64 &wrDataAddr, u32 &notifyId);
-    HcclResult TxSendWqe(void *dstMemPtr, u32 dstKey, const void *srcMemPtr, u32 srcKey,
-        u64 srcMemSize, Stream &stream, WqeType wqeType);
+    HcclResult TxSendWqe(void *dstMemPtr, u32 dstKey, const void *srcMemPtr, u32 srcKey, u64 srcMemSize, Stream &stream,
+        WqeType wqeType);
 
-    HcclResult ConstructPayLoadWqe(void *dstMemPtr, u32 dstKey, const void *src, u32 srcKey, u64 len,
-        WqeType wqeType, WrAuxInfo &aux, std::vector<WrInformation> &wrInfoVec, u32 txSendDataTimes);
-    HcclResult WriteCommon(const void *remoteAddr, const void *localAddr, u64 length, Stream &stream,
-        WqeType wqeType, struct WrAuxInfo &aux);
+    HcclResult ConstructPayLoadWqe(void *dstMemPtr, u32 dstKey, const void *src, u32 srcKey, u64 len, WqeType wqeType,
+        WrAuxInfo &aux, std::vector<WrInformation> &wrInfoVec, u32 txSendDataTimes, bool isLast = true);
+    HcclResult WriteCommon(const void *remoteAddr, const void *localAddr, u64 length, Stream &stream, WqeType wqeType,
+        struct WrAuxInfo &aux);
     bool UseMultiQp();
     HcclResult TxSendDataAndNotifyWithMultiQP(
         std::vector<WrInformation> &wqeInfoVec, u32 actualMultiQpNum, Stream &stream, bool useOneDoorbell);
@@ -136,11 +130,9 @@ private:
     using DeviceMemDetailsRmaMgr = RmaBufferMgr<BufferKey<uintptr_t, u64>, std::shared_ptr<RoceMemDetails>>;
     HcclResult InitMemDetails();
     HcclResult BuildMemDetailsRmaMgrs();
-    HcclResult BatchTransferImpl(const HcommBatchTransferDesc *transferDescs, uint32_t descNum,
-        Stream &stream);
-    HcclResult ResolveTransferDesc(const HcommBatchTransferDesc &desc,
-        const void *&remoteAddr, const void *&localAddr, u64 &length, WqeType &wqeType,
-        struct WrAuxInfo &aux);
+    HcclResult BatchTransferImpl(const HcommBatchTransferDesc *transferDescs, uint32_t descNum, Stream &stream);
+    HcclResult ResolveTransferDesc(const HcommBatchTransferDesc &desc, const void *&remoteAddr, const void *&localAddr,
+        u64 &length, WqeType &wqeType, struct WrAuxInfo &aux);
     HcclResult SubmitWqeBatch(std::vector<WrInformation> &wrInfoVec, Stream &stream);
 
     struct RdmaAddrKeyResolveParam {
@@ -161,11 +153,11 @@ private:
     MemDetails localInputMem_;
     MemDetails localOutputMem_;
     static std::atomic<u64> wrIdOffset_;
-    u32  multiQpThreshold_{HCCL_MULTI_QP_THRESHOLD_DEFAULT};
+    u32 multiQpThreshold_{HCCL_MULTI_QP_THRESHOLD_DEFAULT};
     std::unique_ptr<DeviceMemDetailsRmaMgr> localMemDetailsRmaMgr_;
     std::unique_ptr<DeviceMemDetailsRmaMgr> remoteMemDetailsRmaMgr_;
     bool useMemDetailsLookup_{false};
 };
-}  // namespace hccl
+} // namespace hccl
 
 #endif /* TRANSPORT_DEVICE_IBVERBS_PUB_H */

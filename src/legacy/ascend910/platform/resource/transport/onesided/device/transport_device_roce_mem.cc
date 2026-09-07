@@ -20,7 +20,8 @@ TransportDeviceRoceMem::TransportDeviceRoceMem(const std::unique_ptr<NotifyPool>
     const HcclNetDevCtx &netDevCtx, const HcclDispatcher &dispatcher, AttrInfo &attrInfo, bool aicpuUnfoldMode,
     const HcclQpInfoV2 &qpInfo)
     : TransportMem(notifyPool, netDevCtx, dispatcher, attrInfo, aicpuUnfoldMode),
-    timeout_{std::chrono::microseconds((attrInfo.timeout == INVALID_UINT) ? 0 : attrInfo.timeout)}, qpInfo_{qpInfo}
+      timeout_{std::chrono::microseconds((attrInfo.timeout == INVALID_UINT) ? 0 : attrInfo.timeout)},
+      qpInfo_{qpInfo}
 {
 }
 
@@ -28,8 +29,8 @@ TransportDeviceRoceMem::~TransportDeviceRoceMem()
 {
 }
 
-HcclResult TransportDeviceRoceMem::ExchangeMemDesc(const RmaMemDescs &localMemDescs, RmaMemDescs &remoteMemDescs,
-    u32 &actualNumOfRemote)
+HcclResult TransportDeviceRoceMem::ExchangeMemDesc(
+    const RmaMemDescs &localMemDescs, RmaMemDescs &remoteMemDescs, u32 &actualNumOfRemote)
 {
     HCCL_ERROR("TransportDeviceRoceMem doesn't support ExchangeMemDesc");
     return HCCL_E_NOT_SUPPORT;
@@ -89,8 +90,8 @@ HcclResult TransportDeviceRoceMem::AddOpFence(const rtStream_t &stream)
     return HCCL_E_NOT_SUPPORT;
 }
 
-HcclResult TransportDeviceRoceMem::GetTransInfo(HcclQpInfoV2 &qpInfo, u32 *lkey, u32 *rkey, HcclBuf *localMem,
-    HcclBuf *remoteMem, u32 num)
+HcclResult TransportDeviceRoceMem::GetTransInfo(
+    HcclQpInfoV2 &qpInfo, u32 *lkey, u32 *rkey, HcclBuf *localMem, HcclBuf *remoteMem, u32 num)
 {
     HCCL_ERROR("TransportDeviceRoceMem doesn't support GetTransInfo");
     return HCCL_E_NOT_SUPPORT;
@@ -102,20 +103,20 @@ HcclResult TransportDeviceRoceMem::WaitOpFence(const rtStream_t &stream)
     return HCCL_E_NOT_SUPPORT;
 }
 
-HcclResult TransportDeviceRoceMem::TransportDeviceRoceMem::BatchWrite(const std::vector<MemDetails> &remoteMems,
-    const std::vector<MemDetails> &localMems, Stream &stream)
+HcclResult TransportDeviceRoceMem::TransportDeviceRoceMem::BatchWrite(
+    const std::vector<MemDetails> &remoteMems, const std::vector<MemDetails> &localMems, Stream &stream)
 {
     return BatchOp(stream, localMems, remoteMems, false, false);
 }
 
-HcclResult TransportDeviceRoceMem::BatchRead(const std::vector<MemDetails> &localMems,
-    const std::vector<MemDetails> &remoteMems, Stream &stream)
+HcclResult TransportDeviceRoceMem::BatchRead(
+    const std::vector<MemDetails> &localMems, const std::vector<MemDetails> &remoteMems, Stream &stream)
 {
     return BatchOp(stream, localMems, remoteMems, true, false);
 }
 
-HcclResult TransportDeviceRoceMem::AddOpFence(const MemDetails &localFenceMem, const MemDetails &remoteFenceMem,
-    Stream &stream)
+HcclResult TransportDeviceRoceMem::AddOpFence(
+    const MemDetails &localFenceMem, const MemDetails &remoteFenceMem, Stream &stream)
 {
     std::vector<MemDetails> localMems(1, localFenceMem);
     std::vector<MemDetails> remoteMems(1, remoteFenceMem);
@@ -151,8 +152,10 @@ HcclResult TransportDeviceRoceMem::DoorBellSend(Stream &stream, u64 dbInfo, u32 
 HcclResult TransportDeviceRoceMem::FillMemDetails(std::vector<MemDetails> &localMemList,
     std::vector<MemDetails> &remoteMemList, MemDetails &localMem, MemDetails &remoteMem)
 {
-    CHK_PRT_RET(localMem.size != remoteMem.size, HCCL_ERROR("[TransportDeviceRoceMem][FillMemDetails] "
-        "local buffer size[%llu] is not equal to remote buffer size[%llu]", localMem.size, remoteMem.size),
+    CHK_PRT_RET(localMem.size != remoteMem.size,
+        HCCL_ERROR("[TransportDeviceRoceMem][FillMemDetails] "
+                   "local buffer size[%llu] is not equal to remote buffer size[%llu]",
+            localMem.size, remoteMem.size),
         HCCL_E_PARA);
     u64 remainingBytes = localMem.size;
     while (remainingBytes > 0) {
@@ -171,9 +174,11 @@ HcclResult TransportDeviceRoceMem::FillMemDetails(std::vector<MemDetails> &local
 HcclResult TransportDeviceRoceMem::BatchOp(Stream &stream, const std::vector<MemDetails> &localMems,
     const std::vector<MemDetails> &remoteMems, bool isRead, bool fence)
 {
-    constexpr u32 MAX_RDMA_WQE_NUM = 64;    // related to qp depth
-    CHK_PRT_RET(localMems.size() != remoteMems.size(), HCCL_ERROR("[TransportDeviceRoceMem][BatchOp] "
-        "local buffer num[%llu] is not equal to remote buffer num[%llu]", localMems.size(), remoteMems.size()),
+    constexpr u32 MAX_RDMA_WQE_NUM = 64; // related to qp depth
+    CHK_PRT_RET(localMems.size() != remoteMems.size(),
+        HCCL_ERROR("[TransportDeviceRoceMem][BatchOp] "
+                   "local buffer num[%llu] is not equal to remote buffer num[%llu]",
+            localMems.size(), remoteMems.size()),
         HCCL_E_PARA);
     u64 dbInfo = 0;
     u32 wqeCount = 0;
@@ -206,8 +211,8 @@ HcclResult TransportDeviceRoceMem::BatchPostSend(Stream &stream, u64 &dbInfo, st
     u32 sendWrCount = 0;
     while (sendWrCount < wrTotalCount) {
         const u32 wrCount = std::min(wrTotalCount - sendWrCount, SEND_WR_LEN);
-        CHK_RET(PostSend(stream, dbInfo, &(localMemList[sendWrCount]), &(remoteMemList[sendWrCount]), wrCount,
-            isRead, fence, wqeCount, wrDataLen));
+        CHK_RET(PostSend(stream, dbInfo, &(localMemList[sendWrCount]), &(remoteMemList[sendWrCount]), wrCount, isRead,
+            fence, wqeCount, wrDataLen));
         sendWrCount += wrCount;
         wqeCount += wrCount;
     }
@@ -243,13 +248,14 @@ HcclResult TransportDeviceRoceMem::PostSend(Stream &stream, u64 &dbInfo, struct 
                     ret);
                 if (retryCount % RETRY_DELAY_THRESH == 0) {
                     HCCL_WARNING("[PostSend] retryCount[%u] after failed, elapsedTime[%lld us] isRead[%u] "
-                        "remoteRankId[%u]", retryCount, elapsedTime.count(), isRead, remoteRankId_);
+                                 "remoteRankId[%u]",
+                        retryCount, elapsedTime.count(), isRead, remoteRankId_);
                 }
-                SaluSleep(ONE_MILLISECOND_OF_USLEEP *
-                    std::min(CeilDiv(retryCount, RETRY_DELAY_THRESH), RETRY_DELAY_THRESH));
+                SaluSleep(
+                    ONE_MILLISECOND_OF_USLEEP * std::min(CeilDiv(retryCount, RETRY_DELAY_THRESH), RETRY_DELAY_THRESH));
             }
             ++retryCount;
-            continue;   // to retry
+            continue; // to retry
         }
         CHK_PRT_RET(ret != HCCL_SUCCESS,
             HCCL_ERROR("[PostSend] HnsPostSend failed[%u], isRead[%u] remoteRankId[%u]", ret, isRead, remoteRankId_),
@@ -261,37 +267,38 @@ HcclResult TransportDeviceRoceMem::PostSend(Stream &stream, u64 &dbInfo, struct 
     return HCCL_SUCCESS;
 }
 
-HcclResult TransportDeviceRoceMem::RdmaPostSend(u64 &dbInfo, MemDetails *localMems, MemDetails *remoteMems, u32 memNum,
-    RdmaOp opCode, bool fence)
+HcclResult TransportDeviceRoceMem::RdmaPostSend(
+    u64 &dbInfo, MemDetails *localMems, MemDetails *remoteMems, u32 memNum, RdmaOp opCode, bool fence)
 {
     CHK_PTR_NULL(localMems);
     CHK_PTR_NULL(remoteMems);
 
     CHK_PRT_RET(memNum > SEND_WR_LEN,
-        HCCL_ERROR("[TransportDeviceRoceMem][RdmaPostSend] buffer size is:%u over SEND_WR_LEN: %u", memNum, SEND_WR_LEN),
+        HCCL_ERROR(
+            "[TransportDeviceRoceMem][RdmaPostSend] buffer size is:%u over SEND_WR_LEN: %u", memNum, SEND_WR_LEN),
         HCCL_E_PARA);
     const u32 last = memNum - 1;
     struct ibv_send_wr sendWr[SEND_WR_LEN] = {0};
-    struct ibv_sge  sge[SEND_WR_LEN] = {0};
+    struct ibv_sge sge[SEND_WR_LEN] = {0};
     for (u32 index = 0; index < memNum; index++) {
         // 设置WR的SGE
-        sge[index].addr   = localMems[index].addr;
+        sge[index].addr = localMems[index].addr;
         sge[index].length = remoteMems[index].size;
-        sge[index].lkey   = localMems[index].key;
+        sge[index].lkey = localMems[index].key;
 
         // 设置WR属性
-        sendWr[index].wr_id               = wrIdOffset_.fetch_add(1, std::memory_order_relaxed);
-        sendWr[index].num_sge             = 1; // 只有一个SGE
-        sendWr[index].sg_list             = &sge[index];
+        sendWr[index].wr_id = wrIdOffset_.fetch_add(1, std::memory_order_relaxed);
+        sendWr[index].num_sge = 1; // 只有一个SGE
+        sendWr[index].sg_list = &sge[index];
         sendWr[index].wr.rdma.remote_addr = remoteMems[index].addr;
-        sendWr[index].wr.rdma.rkey        = remoteMems[index].key;
-        sendWr[index].next = (index == last) ? nullptr : &sendWr[index + 1];        // 第一个WR指向第二个WR
-        sendWr[index].send_flags = (index == last) ?
-            (fence ? (IBV_SEND_SIGNALED | IBV_SEND_FENCE) : IBV_SEND_SIGNALED) : 0; // 最后一个WR才需要回复CQE
+        sendWr[index].wr.rdma.rkey = remoteMems[index].key;
+        sendWr[index].next = (index == last) ? nullptr : &sendWr[index + 1];         // 第一个WR指向第二个WR
+        sendWr[index].send_flags = fence ? (IBV_SEND_SIGNALED | IBV_SEND_FENCE) : 0; // addfence才需要回复CQE
         sendWr[index].opcode = static_cast<enum ibv_wr_opcode>(opCode);
         HCCL_DEBUG("[TransportDeviceRoceMem][RdmaPostSend] Direct ibv_post_send[%llu], opcode=[0x%x], "
-            "remote_addr=[0x%llx], size=[%u], fence[%u]", wrIdOffset_.load(), sendWr[index].opcode,
-            sendWr[index].wr.rdma.remote_addr, sendWr[index].sg_list->length, fence);
+                   "remote_addr=[0x%llx], size=[%u], fence[%u], send_flags=[%u]",
+            wrIdOffset_.load(), sendWr[index].opcode, sendWr[index].wr.rdma.remote_addr, sendWr[index].sg_list->length,
+            fence, sendWr[index].send_flags);
     }
 
     struct ibv_send_wr *badWr = nullptr;
@@ -310,4 +317,4 @@ HcclResult TransportDeviceRoceMem::RdmaPostSend(u64 &dbInfo, MemDetails *localMe
     }
     return ret;
 }
-}  // namespace hccl
+} // namespace hccl
