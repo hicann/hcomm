@@ -456,49 +456,63 @@ bool SocketManager::DelWhiteList(PortData& localPort, vector<RaSocketWhitelist>&
     return true;
 }
 
-void SocketManager::SetDeviceServerListenPortMap(
-    const std::unordered_map<u32, std::unordered_map<IpAddress, u32>>& rankListenPortMap)
+HcclResult SocketManager::SetDeviceServerListenPortMap(const RankIpPortMapPtr& rankListenPortMap)
 {
+    CHK_PTR_NULL(rankListenPortMap);
     std::lock_guard<std::mutex> lock(socketLock);
     rankListenPortMap_ = rankListenPortMap;
+    return HCCL_SUCCESS;
 }
 
-std::unordered_map<u32, std::unordered_map<IpAddress, u32>>
-SocketManager::GetSubCommDeviceServerListenPortMap(const std::vector<u32>& rankIds) const
+HcclResult
+SocketManager::GetSubCommDeviceServerListenPortMap(const std::vector<u32>& rankIds, RankIpPortMapPtr& subMap) const
 {
     std::lock_guard<std::mutex> lock(socketLock);
-    std::unordered_map<u32, std::unordered_map<IpAddress, u32>> subRankListenPortMap;
+    subMap = std::make_shared<RankIpPortMap>();
+    if (rankListenPortMap_ == nullptr) {
+        HCCL_WARNING("[SocketManager::%s]rankListenPortMap_ is null, subMap is empty.", __func__);
+        return HCCL_SUCCESS;
+    }
     for (u32 subRankId = 0; subRankId < rankIds.size(); ++subRankId) {
         u32 rankId = rankIds[subRankId];
-        if (rankListenPortMap_.find(rankId) == rankListenPortMap_.end()) {
+        if (rankListenPortMap_->find(rankId) == rankListenPortMap_->end()) {
             HCCL_WARNING("[SocketManager::%s]Cant't find listen port for rank %u to sub comm.", __func__, rankId);
         } else {
-            subRankListenPortMap.insert(std::make_pair(subRankId, rankListenPortMap_.at(rankId)));
+            subMap->insert(std::make_pair(subRankId, rankListenPortMap_->at(rankId)));
         }
     }
-    return subRankListenPortMap;
+    return HCCL_SUCCESS;
 }
 
 u32 SocketManager::GetDeviceListenPort(const u32& rankId, const IpAddress& ipAddress)
 {
-    u32 listenPort = rankListenPortMap_[rankId][ipAddress];
-    if (listenPort == 0) {
-        auto portRanges = EnvConfig::GetInstance().GetHostNicConfig().GetDeviceSocketPortRange();
-        if (!portRanges.empty()) {
-            listenPort = portRanges[0].min;
-            HCCL_INFO(
-                "[SocketManager::%s] Can't find rankId[%u], addr[%s] listen port, use port[%u] from "
-                "HCCL_NPU_SOCKET_PORT_RANGE",
-                __func__, rankId, ipAddress.Describe().c_str(), listenPort);
-        } else {
-            listenPort = DEFAULT_VALUE_TCPPORT;
-            HCCL_WARNING(
-                "[SocketManager::%s] Can't find rankId[%u], addr[%s] listen port, use default port[%u]", __func__,
-                rankId, ipAddress.Describe().c_str(), listenPort);
+    if (rankListenPortMap_ != nullptr) {
+        auto rankIter = rankListenPortMap_->find(rankId);
+        if (rankIter != rankListenPortMap_->end()) {
+            auto ipIter = rankIter->second.find(ipAddress);
+            if (ipIter != rankIter->second.end()) {
+                return ipIter->second;
+            }
         }
-        rankListenPortMap_[rankId][ipAddress] = listenPort;
     }
-    return listenPort;
+    u32 cachedPort = defaultListenPort_.load(std::memory_order_relaxed);
+    if (cachedPort != 0) {
+        return cachedPort;
+    }
+    auto portRanges = EnvConfig::GetInstance().GetHostNicConfig().GetDeviceSocketPortRange();
+    if (!portRanges.empty()) {
+        defaultListenPort_.store(portRanges[0].min, std::memory_order_relaxed);
+        HCCL_INFO(
+            "[SocketManager::%s] Can't find rankId[%u], addr[%s] listen port, use port[%u] from "
+            "HCCL_NPU_SOCKET_PORT_RANGE and cache it",
+            __func__, rankId, ipAddress.Describe().c_str(), defaultListenPort_.load(std::memory_order_relaxed));
+    } else {
+        defaultListenPort_.store(DEFAULT_VALUE_TCPPORT, std::memory_order_relaxed);
+        HCCL_WARNING(
+            "[SocketManager::%s] Can't find rankId[%u], addr[%s] listen port, use default port[%u] and cache it",
+            __func__, rankId, ipAddress.Describe().c_str(), defaultListenPort_.load(std::memory_order_relaxed));
+    }
+    return defaultListenPort_.load(std::memory_order_relaxed);
 }
 
 SocketManager::~SocketManager() { DECTOR_TRY_CATCH("SocketManager", DestroyAll()); }

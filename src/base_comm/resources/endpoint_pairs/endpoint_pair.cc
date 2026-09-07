@@ -83,7 +83,7 @@ HcclResult EndpointPair::EnsureSocketMgrCompat(const uint32_t myRank, const std:
     EXCEPTION_CATCH(
         newMgr = std::make_unique<Hccl::SocketManager>(myRank, devPhyId, devLogicId, socketTag), return HCCL_E_PTR);
     CHK_PTR_NULL(rankIpPortMap_);
-    newMgr->SetDeviceServerListenPortMap(*rankIpPortMap_);
+    CHK_RET(newMgr->SetDeviceServerListenPortMap(rankIpPortMap_));
 
     {
         std::lock_guard<std::mutex> lock(socketMgrMtx_);

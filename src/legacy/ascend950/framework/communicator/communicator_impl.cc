@@ -336,10 +336,10 @@ HcclResult CommunicatorImpl::CreateSubComm(
             std::unique_ptr<RankGraph> subRankGraph = rankGraph->CreateSubRankGraph(rankIds);
             // 初始化子通信域
             CHK_RET(subCommImpl->Init(subCommParams, subRankGraph, devLogicId));
-            auto rankIpPortMap = GetSocketManager().GetSubCommDeviceServerListenPortMap(rankIds);
-            RankIpPortMapPtr rankIpPortMapPtr = std::make_shared<decltype(rankIpPortMap)>(std::move(rankIpPortMap));
+            RankIpPortMapPtr rankIpPortMapPtr;
+            CHK_RET(GetSocketManager().GetSubCommDeviceServerListenPortMap(rankIds, rankIpPortMapPtr));
             CHK_RET(subCommImpl->SetRankIpPortMap(rankIpPortMapPtr));
-            subCommImpl->GetSocketManager().SetDeviceServerListenPortMap(*rankIpPortMapPtr);
+            CHK_RET(subCommImpl->GetSocketManager().SetDeviceServerListenPortMap(rankIpPortMapPtr));
             return HcclResult::HCCL_SUCCESS;
         } else {
             std::string msg = StringFormat("CreateSubComm fail, communicator has not been initialized, please check.");
@@ -362,10 +362,10 @@ HcclResult CommunicatorImpl::CreateSubComm(
                 "[%s]rankIds size[%u], rankIdsVec size[%u]", __func__, rankIds.size(), subCommImpl->rankIdsVec.size());
             // 初始化子通信域
             CHK_RET(subCommImpl->Init(subCommParams, subRankGraph, subConfig, devLogicId));
-            auto rankIpPortMap = GetSocketManager().GetSubCommDeviceServerListenPortMap(rankIds);
-            RankIpPortMapPtr rankIpPortMapPtr = std::make_shared<decltype(rankIpPortMap)>(std::move(rankIpPortMap));
+            RankIpPortMapPtr rankIpPortMapPtr;
+            CHK_RET(GetSocketManager().GetSubCommDeviceServerListenPortMap(rankIds, rankIpPortMapPtr));
             CHK_RET(subCommImpl->SetRankIpPortMap(rankIpPortMapPtr));
-            subCommImpl->GetSocketManager().SetDeviceServerListenPortMap(*rankIpPortMapPtr);
+            CHK_RET(subCommImpl->GetSocketManager().SetDeviceServerListenPortMap(rankIpPortMapPtr));
             return HcclResult::HCCL_SUCCESS;
         } else {
             std::string msg = StringFormat("CreateSubComm fail, communicator has not been initialized, please check.");
@@ -1631,7 +1631,10 @@ void CommunicatorImpl::InitSocketManager()
     if (ranktableInfo != nullptr) {
         auto rankIpPortMap = ranktableInfo->GetRankDeviceListenPortMap();
         rankIpPortMap_ = std::make_shared<decltype(rankIpPortMap)>(std::move(rankIpPortMap));
-        socketManager->SetDeviceServerListenPortMap(*rankIpPortMap_);
+        auto ret = socketManager->SetDeviceServerListenPortMap(rankIpPortMap_);
+        if (ret != HCCL_SUCCESS) {
+            HCCL_ERROR("[%s] SetDeviceServerListenPortMap failed, ret[%d]", __func__, ret);
+        }
     }
 }
 

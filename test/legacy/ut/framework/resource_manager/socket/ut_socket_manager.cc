@@ -248,11 +248,159 @@ TEST_F(SocketManagerTest, Ut_GetDeviceListenPort_When_PortInMap_Expect_UseMapPor
 
     SocketManager socketMgr(localRank, devicePhyId, devicePhyId, "tmp");
     IpAddress addr("1.0.0.0");
-    std::unordered_map<u32, std::unordered_map<IpAddress, u32>> portMap;
-    portMap[localRank][addr] = 20000;
-    socketMgr.SetDeviceServerListenPortMap(portMap);
+    RankIpPortMapPtr portMap = std::make_shared<RankIpPortMap>();
+    (*portMap)[localRank][addr] = 20000;
+    HcclResult ret = socketMgr.SetDeviceServerListenPortMap(portMap);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
 
     u32 port = socketMgr.GetDeviceListenPort(localRank, addr);
     EXPECT_EQ(port, 20000u);
+    GlobalMockObject::verify();
+}
+
+// 构造含 4 个 rank（0/1/2/3）的 RankIpPortMapPtr，每个 rank 关联一个 IpAddress+端口
+static RankIpPortMapPtr BuildRankIpPortMap(u32 basePort)
+{
+    RankIpPortMapPtr portMap = std::make_shared<RankIpPortMap>();
+    for (u32 rank = 0; rank < 4; ++rank) {
+        IpAddress addr(StringFormat("%u.0.0.0", rank));
+        (*portMap)[rank][addr] = basePort + rank;
+    }
+    return portMap;
+}
+
+// 共享指针不深拷贝并返回 HCCL_SUCCESS
+TEST_F(SocketManagerTest, Ut_SetDeviceServerListenPortMap_When_ValidSharedPtr_Expect_SharedNoCopy)
+{
+    SocketManager socketMgr(localRank, devicePhyId, devicePhyId, "tmp");
+    RankIpPortMapPtr portMap = BuildRankIpPortMap(60000);
+
+    long useCountBefore = portMap.use_count();
+    HcclResult ret = socketMgr.SetDeviceServerListenPortMap(portMap);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+
+    // 共享指针不深拷贝：内部 rankListenPortMap_ 与传入指针指向同一对象
+    EXPECT_EQ(socketMgr.rankListenPortMap_.get(), portMap.get());
+    // use_count 增加（外部 + 内部）
+    EXPECT_EQ(portMap.use_count(), useCountBefore + 1);
+    GlobalMockObject::verify();
+}
+
+// 传入空 shared_ptr 返回 HCCL_E_PTR
+TEST_F(SocketManagerTest, Ut_SetDeviceServerListenPortMap_When_NullPtr_Expect_ReturnEPtr)
+{
+    SocketManager socketMgr(localRank, devicePhyId, devicePhyId, "tmp");
+    // rankListenPortMap_ 初始为空
+    EXPECT_EQ(socketMgr.rankListenPortMap_, nullptr);
+
+    RankIpPortMapPtr nullPortMap = nullptr;
+    HcclResult ret = socketMgr.SetDeviceServerListenPortMap(nullPortMap);
+    // CHK_PTR_NULL 判空宏返回 HCCL_E_PTR
+    EXPECT_EQ(ret, HCCL_E_PTR);
+    // rankListenPortMap_ 未被赋值，保持原值（nullptr）
+    EXPECT_EQ(socketMgr.rankListenPortMap_, nullptr);
+    GlobalMockObject::verify();
+}
+
+// 先 Set 非空，再 Set nullptr，判空宏提前返回且不被置空
+TEST_F(SocketManagerTest, Ut_SetDeviceServerListenPortMap_When_SetNullAfterValid_Expect_KeepOriginal)
+{
+    SocketManager socketMgr(localRank, devicePhyId, devicePhyId, "tmp");
+    // 1. 先 Set 一次非空 map
+    RankIpPortMapPtr portMap = BuildRankIpPortMap(60000);
+    HcclResult ret = socketMgr.SetDeviceServerListenPortMap(portMap);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+    EXPECT_EQ(socketMgr.rankListenPortMap_.get(), portMap.get());
+
+    // 2. 调用 SetDeviceServerListenPortMap(nullptr)
+    RankIpPortMapPtr nullPortMap = nullptr;
+    ret = socketMgr.SetDeviceServerListenPortMap(nullPortMap);
+    // 3. 返回 HCCL_E_PTR
+    EXPECT_EQ(ret, HCCL_E_PTR);
+    // 4. rankListenPortMap_ 仍为步骤1设置的值（判空宏提前返回，未被置空）
+    EXPECT_EQ(socketMgr.rankListenPortMap_.get(), portMap.get());
+    GlobalMockObject::verify();
+}
+
+// 经 out 参数返回深拷贝子集且返回 HCCL_SUCCESS
+TEST_F(SocketManagerTest, Ut_GetSubCommDeviceServerListenPortMap_When_ValidRankIds_Expect_DeepCopySubSet)
+{
+    SocketManager socketMgr(localRank, devicePhyId, devicePhyId, "tmp");
+    // 设置含 rank 0,1,2,3 的 map
+    RankIpPortMapPtr portMap = BuildRankIpPortMap(60000);
+    HcclResult ret = socketMgr.SetDeviceServerListenPortMap(portMap);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+
+    // 取 rank 0,2 的子集
+    RankIpPortMapPtr subMap = nullptr;
+    std::vector<u32> rankIds = {0, 2};
+    ret = socketMgr.GetSubCommDeviceServerListenPortMap(rankIds, subMap);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+
+    // subMap 非空
+    EXPECT_NE(subMap, nullptr);
+    ASSERT_EQ(subMap->size(), 2u);
+    // subRankId 0 -> 原 rank 0 的端口；subRankId 1 -> 原 rank 2 的端口
+    IpAddress addr0(StringFormat("%u.0.0.0", 0));
+    IpAddress addr2(StringFormat("%u.0.0.0", 2));
+    EXPECT_EQ(subMap->at(0u).at(addr0), 60000u);
+    EXPECT_EQ(subMap->at(1u).at(addr2), 60002u);
+
+    // 子/父隔离：subMap 是深拷贝，修改 subMap 不影响父 map
+    (*subMap)[0u][addr0] = 99999;
+    EXPECT_EQ((*portMap)[0u][addr0], 60000u);
+    GlobalMockObject::verify();
+}
+
+// 空父 map（未 Set）时降级返回 HCCL_SUCCESS（subMap 为空 map，后续走默认端口兜底）
+TEST_F(SocketManagerTest, Ut_GetSubCommDeviceServerListenPortMap_When_NullParentMap_Expect_ReturnSuccessWithEmptySubMap)
+{
+    SocketManager socketMgr(localRank, devicePhyId, devicePhyId, "tmp");
+    // 1. 验证内部 rankListenPortMap_ 为空（未 Set）
+    EXPECT_EQ(socketMgr.rankListenPortMap_, nullptr);
+
+    RankIpPortMapPtr subMap = nullptr;
+    std::vector<u32> rankIds = {0, 2};
+    // 2. 调用 GetSubCommDeviceServerListenPortMap
+    HcclResult ret = socketMgr.GetSubCommDeviceServerListenPortMap(rankIds, subMap);
+    // 3. 空父 map 降级返回 HCCL_SUCCESS（subMap 为空 map，后续走默认端口兜底）
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+    EXPECT_NE(subMap, nullptr);
+    EXPECT_TRUE(subMap->empty());
+    GlobalMockObject::verify();
+}
+
+// 默认端口缓存命中，第二次未命中查询不重算
+TEST_F(SocketManagerTest, Ut_GetDeviceListenPort_When_PortRangeConfigured_Expect_CacheHitOnSecondCall)
+{
+    EnvHostNicConfig envConfig;
+    EnvHostNicConfig& fakeEnvConfig = envConfig;
+    fakeEnvConfig.hcclDeviceSocketPortRange = CfgField<std::vector<SocketPortRange>>{
+        "HCCL_NPU_SOCKET_PORT_RANGE", {{60001, 60010}}, [](const std::string& s) -> std::vector<SocketPortRange> {
+            return CastSocketPortRange(s, "HCCL_NPU_SOCKET_PORT_RANGE");
+        }};
+    fakeEnvConfig.hcclDeviceSocketPortRange.isParsed = true;
+    MOCKER_CPP(&EnvConfig::GetHostNicConfig).expects(mockcpp::once()).will(returnValue(fakeEnvConfig));
+
+    SocketManager socketMgr(localRank, devicePhyId, devicePhyId, "tmp");
+    // 缓存初始为 0
+    EXPECT_EQ(socketMgr.defaultListenPort_.load(std::memory_order_relaxed), 0u);
+
+    IpAddress addr("1.0.0.0");
+    u32 rankId = 5; // rank 5 不存在（未命中查询）
+
+    // 第一次调用（未命中）：计算并缓存 defaultListenPort_
+    u32 port1 = socketMgr.GetDeviceListenPort(rankId, addr);
+    EXPECT_EQ(port1, 60001u); // portRanges[0].min = 60001
+    EXPECT_EQ(socketMgr.defaultListenPort_.load(std::memory_order_relaxed), 60001u);
+
+    // 第二次调用（仍未命中）：走缓存不重算，返回值与首次相同
+    u32 port2 = socketMgr.GetDeviceListenPort(rankId, addr);
+    EXPECT_EQ(port2, 60001u);
+    // GetHostNicConfig 仅被调用 1 次（expects(once())），第二次走缓存未调 EnvConfig
+    EXPECT_EQ(socketMgr.defaultListenPort_.load(std::memory_order_relaxed), 60001u);
+
+    // map 未回写（未命中不回写 map）
+    EXPECT_EQ(socketMgr.rankListenPortMap_, nullptr);
     GlobalMockObject::verify();
 }

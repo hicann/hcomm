@@ -16,7 +16,24 @@
 namespace hccl {
 EngineCtxs::EngineCtxs() {}
 
-EngineCtxs::~EngineCtxs() {}
+EngineCtxs::~EngineCtxs()
+{
+    // 析构兜底：遍历 contextMap_ 释放尚未显式 Destroy 的 ctx 内存
+    std::lock_guard<std::mutex> lock(mutex_);
+    for (auto& tagPair : contextMap_) {
+        for (auto& enginePair : tagPair.second) {
+            CommEngine engine = enginePair.first;
+            void* addr = enginePair.second.addr;
+            HcclResult ret = static_cast<HcclResult>(HcommEngineCtxDestroy(engine, addr));
+            if (ret != HCCL_SUCCESS) {
+                HCCL_ERROR(
+                    "[%s] destroy engine ctx failed in destructor, tag[%s], engine[%s], ret[%d]", __func__,
+                    tagPair.first.c_str(), GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str(), ret);
+            }
+        }
+    }
+    contextMap_.clear();
+}
 
 HcclResult EngineCtxs::CreateCommEngineCtx(const std::string& tag, CommEngine engine, uint64_t size, void** ctx)
 {
@@ -107,12 +124,12 @@ HcclResult EngineCtxs::DestroyEngineCtx(const std::string& tag, CommEngine engin
     }
     // 获取内存信息
     HcclMem& memInfo = engineCtxMap[engine];
-    CHK_RET(static_cast<HcclResult>(HcommEngineCtxDestroy(engine, memInfo.addr)));
-    // 从映射中移除
+    HcclResult ret = static_cast<HcclResult>(HcommEngineCtxDestroy(engine, memInfo.addr));
     engineCtxMap.erase(engine);
     if (engineCtxMap.empty()) {
         contextMap_.erase(tag);
     }
+    CHK_RET(ret);
 
     HCCL_INFO(
         "[%s]destroy context success, tag[%s], engine[%s]", __func__, tag.c_str(),

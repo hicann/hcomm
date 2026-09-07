@@ -1202,10 +1202,9 @@ bool SocketManager::RegisterHostListenSocket(const PortData& portData, std::shar
 
 void SocketManager::ServerDeInit(PortData& portData) const {}
 
-void SocketManager::SetDeviceServerListenPortMap(
-    const std::unordered_map<u32, std::unordered_map<IpAddress, u32>>& rankListenPortMap)
+HcclResult SocketManager::SetDeviceServerListenPortMap(const RankIpPortMapPtr& rankListenPortMap)
 {
-    return;
+    return HCCL_SUCCESS;
 }
 
 HccpTlvHdcManager& HccpTlvHdcManager::GetInstance()

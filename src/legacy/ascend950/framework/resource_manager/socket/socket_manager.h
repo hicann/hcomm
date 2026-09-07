@@ -16,6 +16,7 @@
 #include <set>
 #include <unordered_map>
 #include <memory>
+#include <atomic>
 
 #include "../../unified_platform/resource/socket/socket.h"
 #include "virtual_topo.h"
@@ -42,11 +43,8 @@ public:
 
     SocketManager(u32 localRank, u32 devicePhyId, u32 deviceLogicId, const std::string& socketTag);
 
-    void
-    SetDeviceServerListenPortMap(const std::unordered_map<u32, std::unordered_map<IpAddress, u32>>& rankListenPortMap);
-
-    std::unordered_map<u32, std::unordered_map<IpAddress, u32>>
-    GetSubCommDeviceServerListenPortMap(const std::vector<u32>& rankIds) const;
+    HcclResult SetDeviceServerListenPortMap(const RankIpPortMapPtr& rankListenPortMap);
+    HcclResult GetSubCommDeviceServerListenPortMap(const std::vector<u32>& rankIds, RankIpPortMapPtr& subMap) const;
 
     u32 GetDeviceListenPort(const u32& rankId, const IpAddress& ipAddress);
 
@@ -94,7 +92,8 @@ private:
     u32 localRank;
     u32 devicePhyId;
     u32 deviceLogicId_;
-    std::unordered_map<u32, std::unordered_map<IpAddress, u32>> rankListenPortMap_{};
+    RankIpPortMapPtr rankListenPortMap_;
+    std::atomic<uint32_t> defaultListenPort_{0};
     std::function<shared_ptr<Socket>(
         IpAddress& localIpAddress, IpAddress& remoteIpAddress, u32 listenPort, SocketHandle socketHandle,
         const std::string& tag, SocketRole socketRole, NicType nicType)>
