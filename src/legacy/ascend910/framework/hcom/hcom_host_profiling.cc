@@ -14,7 +14,6 @@
 #include "hcom_host_profiling.h"
 #include "adapter_prof.h"
 #include "hccl/hccl_types.h"
-#include "dlprof_function_v2.h"
 using namespace hccl;
 extern HcclResult HcommProfilingReportKernel(uint64_t beginTime, const char* profName)
 {
@@ -113,14 +112,4 @@ extern HcclResult HcommProfilingUnRegThread(HcomProInfo profInfo, ThreadHandle* 
         HCCL_PROFILER_DEL_STREAM_BY_STREAMID(slaveStreamId);
     }
     return HCCL_SUCCESS;
-}
-
-extern uint64_t HcommGetProfilingSysCycleTime()
-{
-    DevType devType = DevType::DEV_TYPE_COUNT;
-    CHK_RET(hrtGetDeviceType(devType));
-    if (devType != DevType::DEV_TYPE_950 && devType != DevType::DEV_TYPE_960) {
-        return hrtMsprofSysCycleTime();
-    }
-    return Hccl::DlProfFunction::GetInstance().dlMsprofSysCycleTime();
 }

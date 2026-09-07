@@ -55,8 +55,6 @@ extern HcclResult HcommProfilingReportKernel(uint64_t beginTime, const char* pro
 // 上报acl host
 extern HcclResult HcommProfilingReportOp(HcomProInfo profInfo);
 
-extern uint64_t HcommGetProfilingSysCycleTime();
-
 #ifdef __cplusplus
 }
 #endif // __cplusplus

@@ -1010,6 +1010,20 @@ extern HcclResult HcclReportAivKernel(HcclComm comm, uint64_t beginTime)
     return HCCL_SUCCESS;
 }
 
+uint64_t HcommGetProfilingSysCycleTime()
+{
+    DevType devType = DevType::DEV_TYPE_COUNT;
+    HcclResult ret = hrtGetDeviceType(devType);
+    if (ret != HCCL_SUCCESS) {
+        HCCL_WARNING("[%s] hrtGetDeviceType failed, ret[%d], return 0.", __func__, ret);
+        return 0;
+    }
+    if (devType != DevType::DEV_TYPE_950 && devType != DevType::DEV_TYPE_960) {
+        return hrtMsprofSysCycleTime();
+    }
+    return Hccl::DfxDlProfFunction::GetInstance().dlMsprofSysCycleTime();
+}
+
 int32_t
 HcommChannelNotifyWaitOnThreadWithDefaultTimeout(ThreadHandle thread, ChannelHandle channel, uint32_t localNotifyIdx)
 {
