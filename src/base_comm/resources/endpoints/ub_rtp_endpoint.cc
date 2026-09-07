@@ -31,6 +31,14 @@ bool UbRtpEndpoint::IsCtxHandleValid() const
     return Hccl::RdmaHandleManager::GetInstance().IsHandleValid(static_cast<Hccl::RdmaHandle>(ctxHandle_));
 }
 
+CommQueueContext* UbRtpEndpoint::GetCommQueueContext()
+{
+    std::call_once(jettyContextOnce_, [this] {
+        jettyContext_ = std::make_unique<JettyContext>();
+    });
+    return jettyContext_.get();
+}
+
 HcclResult UbRtpEndpoint::ReleaseEndpointCtx()
 {
     if (endpointCtx_ == nullptr) {

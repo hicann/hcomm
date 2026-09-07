@@ -1008,7 +1008,7 @@ HcclResult HcclGroupStatusGet(bool* isGroupEnabled)
 
 static bool IsSharedQueueUbProtocol(CommProtocol protocol)
 {
-    return protocol == COMM_PROTOCOL_UB_CTP || protocol == COMM_PROTOCOL_UBC_TP;
+    return protocol == COMM_PROTOCOL_UB_CTP || protocol == COMM_PROTOCOL_UBC_TP || protocol == COMM_PROTOCOL_UB_RTP;
 }
 
 static bool IsSameLocalEndpoint(const EndpointDesc& a, const EndpointDesc& b)
@@ -1023,7 +1023,7 @@ static HcclResult ValidateSharedQueueDescs(const std::vector<HcclChannelDesc>& c
     for (uint32_t i = 0; i < channelDescs.size(); ++i) {
         if (!IsSharedQueueUbProtocol(channelDescs[i].channelProtocol)) {
             HCCL_ERROR(
-                "[%s] IS_SHARED_QUEUE only supports UB protocols (UB_CTP/UBC_TP), "
+                "[%s] IS_SHARED_QUEUE only supports UB protocols (UB_CTP/UBC_TP/UB_RTP), "
                 "channelDesc[%u] protocol[%d].",
                 __func__, i, channelDescs[i].channelProtocol);
             return HCCL_E_NOT_SUPPORT;

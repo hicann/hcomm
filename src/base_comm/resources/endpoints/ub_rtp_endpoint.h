@@ -12,7 +12,9 @@
 #define UB_RTP_ENDPOINT_H
 
 #include <memory>
+#include <mutex>
 #include "endpoint.h"
+#include "comm_queue_context/jetty_context.h"
 #include "server_socket_context/ub_rtp_uboe_server_socket_context.h"
 #include "ub_reged_mem_mgr.h"
 
@@ -30,6 +32,7 @@ public:
     RegedMemMgr* GetRegedMemMgr() override { return regedMemMgr_.get(); }
     void* GetRdmaHandle() override { return ctxHandle_; }
     bool IsCtxHandleValid() const override;
+    CommQueueContext* GetCommQueueContext() override;
     ServerSocketContext* GetServerSocketContext() override { return &serverSocketContext_; }
 
 private:
@@ -39,6 +42,8 @@ private:
     std::shared_ptr<EndpointCtx> endpointCtx_{};
     std::shared_ptr<UbRegedMemMgr> regedMemMgr_{};
     UbRtpUboeServerSocketContext serverSocketContext_{}; // no-op 监听语义
+    std::unique_ptr<JettyContext> jettyContext_{nullptr};
+    std::once_flag jettyContextOnce_;
 };
 
 } // namespace hcomm

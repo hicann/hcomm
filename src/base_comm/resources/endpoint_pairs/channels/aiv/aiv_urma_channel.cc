@@ -412,7 +412,7 @@ HcclResult AivUrmaChannel::CreateUbConnectionByProtocol(
     Hccl::OpMode opMode = Hccl::OpMode::OPBASE;
     bool devUsed = true;
     Hccl::HrtUbJfcMode jfcMode = Hccl::HrtUbJfcMode::USER_CTL;
-    // UB_CTP → HCOMM_TA_CTP_UB_TIMEOUT，UB_TP → HCOMM_TA_RTP_UB_TIMEOUT
+    // UB_CTP → HCOMM_TA_CTP_UB_TIMEOUT，UB_TP/UB_RTP → HCOMM_TA_RTP_UB_TIMEOUT
     u8 taTimeOut = 0;
     uint32_t taTimeOutValue = 0;
     if (ctx.protocol == Hccl::LinkProtocol::UB_CTP) {
@@ -455,7 +455,7 @@ AivUrmaChannel::AcquireSharedJettyInBuildConnection(const UbConnBuildContext& ct
 {
     // 共享 jetty 模式：复用同 Endpoint 下已创建的 jetty
     Endpoint* endpoint = static_cast<Endpoint*>(endpointHandle_);
-    // UB_CTP → HCOMM_TA_CTP_UB_TIMEOUT，UB_TP → HCOMM_TA_RTP_UB_TIMEOUT
+    // UB_CTP → HCOMM_TA_CTP_UB_TIMEOUT，UB_TP/UB_RTP → HCOMM_TA_RTP_UB_TIMEOUT
     u8 taTimeOut = 0;
     uint32_t taTimeOutValue = 0;
     if (ctx.protocol == Hccl::LinkProtocol::UB_CTP) {

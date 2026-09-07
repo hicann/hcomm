@@ -59,7 +59,7 @@ HcommResult：接口成功返回0，其他失败。
 2. 当config为nullptr时，行为与[HcommChannelCreate](HcommChannelCreate.md)完全等价。
 
 3. 当IS_SHARED_QUEUE=true时，有以下额外约束：
-   - 仅支持UB网络语义协议（COMM_PROTOCOL_UB_CTP），不支持UBMem/RoCE/UBOE/UB_RTP。
+   - 仅支持UB网络语义协议（COMM_PROTOCOL_UB_CTP/COMM_PROTOCOL_UB_RTP），不支持UBMem/RoCE/UBOE。
    - 使用相同endpointHandle多次调用本接口创建的Channel共享同一个Jetty。
    - 使用不同endpointHandle调用创建的Channel不共享Jetty。
    - 共享Jetty的不同Channel不支持并发使用，需由调用者按业务顺序串行调用。
@@ -70,9 +70,10 @@ HcommResult：接口成功返回0，其他失败。
 5. 各CommEngine支持的通信协议与芯片型号有关，具体如下：
 
    <!-- npu="950" id6 -->
-   针对Ascend 950PR/Ascend 950DT，仅支持AIV引擎的UB网络语义协议（UB_CTP）：
+   针对Ascend 950PR/Ascend 950DT，仅支持AIV引擎的UB网络语义协议（UB_CTP/UB_RTP）：
    - COMM_ENGINE_AIV
      - COMM_PROTOCOL_UB_CTP
+     - COMM_PROTOCOL_UB_RTP
    <!-- end id6 -->
 
 ## 调用示例

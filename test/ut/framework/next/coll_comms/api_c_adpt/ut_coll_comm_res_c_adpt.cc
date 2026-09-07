@@ -388,6 +388,53 @@ protected:
         EXPECT_EQ(hcommDesc.roceAttr.tc, expectTc) << "hcclQos=" << hcclQos;
     }
 
+protected:
+    // 共享 jetty 用例公共逻辑：仅协议和 tag 不同，提取消除重复代码
+    void DoSharedJettyAcquireTest(CommProtocol protocol, const char* tag)
+    {
+        HcclChannelConfig config = nullptr;
+        ASSERT_EQ(HcclChannelConfigCreate(&config), HCCL_SUCCESS);
+        ASSERT_EQ(HcclChannelConfigSetInt(config, HCCL_CHANNEL_CONFIG_TYPE_IS_SHARED_QUEUE, 1), HCCL_SUCCESS);
+        ASSERT_EQ(HcclChannelConfigSetStr(config, HCCL_CHANNEL_CONFIG_TYPE_SHARED_QUEUE_TAG, tag), HCCL_SUCCESS);
+
+        std::vector<HcclChannelDesc> channelDesc(1);
+        std::vector<ChannelHandle> channels(1);
+        ASSERT_EQ(HcclChannelDescInit(channelDesc.data(), 1), HCCL_SUCCESS);
+        channelDesc[0].remoteRank = 2;
+        channelDesc[0].channelProtocol = protocol;
+        channelDesc[0].notifyNum = 1;
+        channelDesc[0].localEndpoint.protocol = protocol;
+        channelDesc[0].localEndpoint.loc.locType = ENDPOINT_LOC_TYPE_DEVICE;
+        channelDesc[0].localEndpoint.loc.device.devPhyId = 0U;
+        channelDesc[0].localEndpoint.commAddr.type = COMM_ADDR_TYPE_IP_V4;
+        channelDesc[0].localEndpoint.commAddr.addr.s_addr = 0x01000001U;
+        channelDesc[0].remoteEndpoint.protocol = protocol;
+        channelDesc[0].remoteEndpoint.loc.locType = ENDPOINT_LOC_TYPE_DEVICE;
+        channelDesc[0].remoteEndpoint.loc.device.devPhyId = 1U;
+        channelDesc[0].remoteEndpoint.commAddr.type = COMM_ADDR_TYPE_IP_V4;
+        channelDesc[0].remoteEndpoint.commAddr.addr.s_addr = 0x02000002U;
+
+        MOCKER(&hcomm::ClusterMonitor::RegisterToClusterMonitor).stubs().will(returnValue(HCCL_SUCCESS));
+        MOCKER_CPP(&MyRank::GetOpExpansionMode).stubs().will(returnValue(0u));
+        MOCKER_CPP(&EndpointMgr::GetWithTag).stubs().will(returnValue(HCCL_SUCCESS));
+        MOCKER_CPP(&MyRank::PrepareMemHandles).stubs().will(returnValue(HCCL_SUCCESS));
+        MOCKER_CPP(&MyRank::BatchCreateSockets).stubs().will(returnValue(HCCL_SUCCESS));
+        MOCKER(HcommChannelCreateWithConfig).stubs().will(returnValue(0));
+        g_sharedJettyGetStatusCallCount = 0;
+        MOCKER(HcommChannelGetStatus).stubs().will(invoke(StubHcommChannelGetStatus));
+        MOCKER_CPP(&Hccl::EnvSocketConfig::GetLinkTimeOut).stubs().will(returnValue(static_cast<s32>(5)));
+        MOCKER_CPP(&MyRank::BatchExchangeAndCheckConsistency).stubs().will(returnValue(HCCL_SUCCESS));
+
+        ret = HcclChannelAcquireWithConfig(
+            comm, CommEngine::COMM_ENGINE_AIV, channelDesc.data(), 1, config, channels.data());
+        EXPECT_EQ(ret, HCCL_SUCCESS);
+
+        // 清理共享 jetty 池中本 MyRank 的条目，避免 MyRank 析构时以 null handle 调用真实 HcommChannelDestroy
+        MOCKER(HcommChannelDestroy).stubs().will(returnValue(0));
+        (void)SharedJettyChannelPool::GetInstance().DestroyAllByMyRank(hcclCommPtr->GetCollComm()->GetMyRank());
+        HcclChannelConfigDestroy(config);
+    }
+
 private:
     std::shared_ptr<hccl::hcclComm> hcclCommPtr;
     std::shared_ptr<Hccl::RankGraph> rankGraphV2;
@@ -957,48 +1004,14 @@ TEST_F(HcclChannelDescTest, Ut_HcclChannelQuery_When_DescMagicWordInvalid_Expect
 
 // 共享 jetty 路径覆盖：CreateSharedJettyChannelsForGroup（line 997/1000）与
 // WaitForSharedJettyChannelsReady（line 1256）通过 HcclChannelAcquireWithConfig 公共 API 触发。
+// 参数化封装：UB_CTP 与 UB_RTP 用例仅协议和 tag 不同，提取公共逻辑消除重复代码。
 TEST_F(HcclChannelDescTest, Ut_HcclChannelAcquireWithConfig_When_SharedJetty_Expect_Success)
 {
-    HcclChannelConfig config = nullptr;
-    ASSERT_EQ(HcclChannelConfigCreate(&config), HCCL_SUCCESS);
-    ASSERT_EQ(HcclChannelConfigSetInt(config, HCCL_CHANNEL_CONFIG_TYPE_IS_SHARED_QUEUE, 1), HCCL_SUCCESS);
-    ASSERT_EQ(HcclChannelConfigSetStr(config, HCCL_CHANNEL_CONFIG_TYPE_SHARED_QUEUE_TAG, "ut_sj_4900"), HCCL_SUCCESS);
+    DoSharedJettyAcquireTest(COMM_PROTOCOL_UB_CTP, "ut_sj_4900");
+}
 
-    std::vector<HcclChannelDesc> channelDesc(1);
-    std::vector<ChannelHandle> channels(1);
-    ASSERT_EQ(HcclChannelDescInit(channelDesc.data(), 1), HCCL_SUCCESS);
-    channelDesc[0].remoteRank = 2;
-    channelDesc[0].channelProtocol = COMM_PROTOCOL_UB_CTP;
-    channelDesc[0].notifyNum = 1;
-    channelDesc[0].localEndpoint.protocol = COMM_PROTOCOL_UB_CTP;
-    channelDesc[0].localEndpoint.loc.locType = ENDPOINT_LOC_TYPE_DEVICE;
-    channelDesc[0].localEndpoint.loc.device.devPhyId = 0U;
-    channelDesc[0].localEndpoint.commAddr.type = COMM_ADDR_TYPE_IP_V4;
-    channelDesc[0].localEndpoint.commAddr.addr.s_addr = 0x01000001U;
-    channelDesc[0].remoteEndpoint.protocol = COMM_PROTOCOL_UB_CTP;
-    channelDesc[0].remoteEndpoint.loc.locType = ENDPOINT_LOC_TYPE_DEVICE;
-    channelDesc[0].remoteEndpoint.loc.device.devPhyId = 1U;
-    channelDesc[0].remoteEndpoint.commAddr.type = COMM_ADDR_TYPE_IP_V4;
-    channelDesc[0].remoteEndpoint.commAddr.addr.s_addr = 0x02000002U;
-
-    MOCKER(&hcomm::ClusterMonitor::RegisterToClusterMonitor).stubs().will(returnValue(HCCL_SUCCESS));
-    MOCKER_CPP(&MyRank::GetOpExpansionMode).stubs().will(returnValue(0u));
-    MOCKER_CPP(&EndpointMgr::GetWithTag).stubs().will(returnValue(HCCL_SUCCESS));
-    MOCKER_CPP(&MyRank::PrepareMemHandles).stubs().will(returnValue(HCCL_SUCCESS));
-    MOCKER_CPP(&MyRank::BatchCreateSockets).stubs().will(returnValue(HCCL_SUCCESS));
-    MOCKER(HcommChannelCreateWithConfig).stubs().will(returnValue(0));
-    g_sharedJettyGetStatusCallCount = 0;
-    MOCKER(HcommChannelGetStatus).stubs().will(invoke(StubHcommChannelGetStatus));
-    MOCKER_CPP(&Hccl::EnvSocketConfig::GetLinkTimeOut).stubs().will(returnValue(static_cast<s32>(5)));
-    MOCKER_CPP(&MyRank::BatchExchangeAndCheckConsistency).stubs().will(returnValue(HCCL_SUCCESS));
-
-    ret = HcclChannelAcquireWithConfig(
-        comm, CommEngine::COMM_ENGINE_AIV, channelDesc.data(), 1, config, channels.data());
-    EXPECT_EQ(ret, HCCL_SUCCESS);
-
-    // 清理共享 jetty 池中本 MyRank 的条目，避免 MyRank 析构时以 null handle 调用真实 HcommChannelDestroy
-    MOCKER(HcommChannelDestroy).stubs().will(returnValue(0));
-    (void)SharedJettyChannelPool::GetInstance().DestroyAllByMyRank(hcclCommPtr->GetCollComm()->GetMyRank());
-
-    HcclChannelConfigDestroy(config);
+// 共享 jetty 支持 UB_RTP(UBG) 协议：门控放行 + AivUrmaChannel 路径
+TEST_F(HcclChannelDescTest, Ut_HcclChannelAcquireWithConfig_When_SharedJetty_UbRtp_Expect_Success)
+{
+    DoSharedJettyAcquireTest(COMM_PROTOCOL_UB_RTP, "ut_sj_ubrtp");
 }

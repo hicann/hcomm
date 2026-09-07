@@ -622,7 +622,7 @@ HcommResult HcommChannelConfigSetInt(HcommChannelConfig config, HcommChannelConf
 
 static bool IsUbProtocol(CommProtocol protocol)
 {
-    return protocol == COMM_PROTOCOL_UB_CTP || protocol == COMM_PROTOCOL_UBC_TP;
+    return protocol == COMM_PROTOCOL_UB_CTP || protocol == COMM_PROTOCOL_UBC_TP || protocol == COMM_PROTOCOL_UB_RTP;
 }
 
 static HcclResult ValidateSharedQueueConfig(const std::vector<HcommChannelDesc>& channelDescs)
@@ -631,7 +631,7 @@ static HcclResult ValidateSharedQueueConfig(const std::vector<HcommChannelDesc>&
         CommProtocol protocol = channelDescs[i].remoteEndpoint.protocol;
         if (!IsUbProtocol(protocol)) {
             HCCL_ERROR(
-                "[%s] IS_SHARED_QUEUE only supports UB protocols (UB_CTP/UBC_TP), "
+                "[%s] IS_SHARED_QUEUE only supports UB protocols (UB_CTP/UBC_TP/UB_RTP)"
                 "channelDesc[%u] protocol[%d].",
                 __func__, i, protocol);
             return HCCL_E_NOT_SUPPORT;
