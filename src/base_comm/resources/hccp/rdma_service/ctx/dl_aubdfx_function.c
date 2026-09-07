@@ -52,11 +52,11 @@ int RsAubdfxApiInit(void)
 {
     int ret = RsOpenAubdfxSo();
 
-    CHK_PRT_RETURN(ret != 0, hccp_err("rsOpenAubdfxSo[libaubdfx_u.so] failed! ret=[%d]", ret), ret);
+    CHK_PRT_RETURN(ret != 0, hccp_warn("rsOpenAubdfxSo[libaubdfx_u.so] unsuccessful! ret=[%d]", ret), ret);
 
     ret = RsAubdfxNotifyApiInit();
     if (ret != 0) {
-        hccp_err("rsAubdfxNotifyApiInit failed! ret=[%d]", ret);
+        hccp_warn("rsAubdfxNotifyApiInit unsuccessful! ret=[%d]", ret);
         RsCloseAubdfxSo();
         return ret;
     }
