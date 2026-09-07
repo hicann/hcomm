@@ -365,6 +365,18 @@ u32 EnvRdmaConfig::GetRdmaMultiQpThreshold() const { return multiQpThreshold.Get
 
 const MultiQpSrcPortConfig& EnvRdmaConfig::GetMultiQpSrcPortConfig() const { return multiQpSrcPortConfig_; }
 
+// EnvUbConfig
+
+void EnvUbConfig::Parse()
+{
+    ubMultiChannelNum.Parse();
+    HCCL_RUN_INFO(
+        "[HCCL_ENV] HCCL_UB_MULTI_CHANNEL_NUM set by %s to [%u]", ubMultiChannelNum.GetSource(),
+        GetUbMultiChannelNum());
+}
+
+u32 EnvUbConfig::GetUbMultiChannelNum() const { return ubMultiChannelNum.Get(); }
+
 // EnvAlgoConfig
 
 void EnvAlgoConfig::Parse()

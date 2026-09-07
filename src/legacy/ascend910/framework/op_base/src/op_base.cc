@@ -21,6 +21,7 @@
 #include "rank_consistentcy_checker.h"
 #include "externalinput_pub.h"
 #include "env_config.h"
+#include "env_config/env_config_v2.h"
 #include "../common/src/topo/topoinfo_detect.h"
 #include "../common/src/topo/topoinfo_ranktable_partition.h"
 #include "../common/src/state_guard.h"
@@ -3788,6 +3789,61 @@ static HcclConfigTypeOpExpansionMode OpExpansionModeValueToModeEnum(const uint32
 }
 #endif
 
+#if (!defined(HCCD)) && (!defined(CCL_KERNEL_AICPU))
+static HcclResult GetOpExpansionModeConfig(hccl::CollComm* collComm, uint32_t infoLen, void* info)
+{
+    constexpr size_t infoExpectedLen = sizeof(HcclConfigTypeOpExpansionMode);
+    if (static_cast<size_t>(infoLen) != infoExpectedLen) {
+        HCCL_ERROR("[%s] infoLen[%u] less than expected[%zu].", __func__, infoLen, infoExpectedLen);
+        return HcclResult::HCCL_E_PARA;
+    }
+    auto* myRank = collComm->GetMyRank();
+    CHK_PTR_NULL(myRank);
+    const uint32_t opExpansionModeValue = myRank->GetOpExpansionMode();
+    const auto opExpansionMode = OpExpansionModeValueToModeEnum(opExpansionModeValue);
+    if (opExpansionMode == HcclOpExpansionMode::HCCL_OP_EXPANSION_MODE_INVALID) {
+        HCCL_ERROR("[%s] unknown expansion mode[%d].", __func__, opExpansionMode);
+        return HcclResult::HCCL_E_INTERNAL;
+    }
+    *static_cast<HcclConfigTypeOpExpansionMode*>(info) = opExpansionMode;
+    return HcclResult::HCCL_SUCCESS;
+}
+
+static HcclResult GetHcclAlgoConfig(hccl::CollComm* collComm, uint32_t infoLen, void* info)
+{
+    constexpr size_t infoExpectedLen = static_cast<size_t>(HCCL_COMM_ALGO_MAX_LENGTH);
+    if (static_cast<size_t>(infoLen) < infoExpectedLen) {
+        HCCL_ERROR("[%s] infoLen[%u] less than expected[%zu].", __func__, infoLen, infoExpectedLen);
+        return HcclResult::HCCL_E_PARA;
+    }
+    const std::string& hcclAlgo = collComm->GetCommConfig().GetConfigHcclAlgoStr();
+    auto* algoInfo = static_cast<char*>(info);
+    int32_t ret = memset_s(algoInfo, infoLen, 0, infoLen);
+    CHK_PRT_RET(ret != EOK, HCCL_ERROR("[%s] memset error, ret[%d].", __func__, ret), HCCL_E_INTERNAL);
+    if (!hcclAlgo.empty() && hcclAlgo.size() < infoLen) {
+        ret = memcpy_s(algoInfo, infoLen, hcclAlgo.c_str(), hcclAlgo.size() + 1);
+    } else if (!hcclAlgo.empty()) {
+        ret = memcpy_s(algoInfo, infoLen, hcclAlgo.c_str(), infoLen);
+    }
+    CHK_PRT_RET(ret != EOK, HCCL_ERROR("[%s] memcpy error, ret[%d].", __func__, ret), HCCL_E_INTERNAL);
+    return HcclResult::HCCL_SUCCESS;
+}
+
+// UB多channel数量为进程级全局配置（解析自环境变量、进程内唯一），不依赖通信域，
+// 故不同于 GetOpExpansionModeConfig/GetHcclAlgoConfig，无需 collComm 入参。
+static HcclResult GetUbMultiChannelNumConfig(uint32_t infoLen, void* info)
+{
+    constexpr size_t infoExpectedLen = sizeof(uint32_t);
+    if (static_cast<size_t>(infoLen) != infoExpectedLen) {
+        HCCL_ERROR("[%s] infoLen[%u] not expected[%zu].", __func__, infoLen, infoExpectedLen);
+        return HcclResult::HCCL_E_PARA;
+    }
+    const uint32_t num = Hccl::EnvConfig::GetInstance().GetUbConfig().GetUbMultiChannelNum();
+    *static_cast<uint32_t*>(info) = num;
+    return HcclResult::HCCL_SUCCESS;
+}
+#endif
+
 HcclResult HcclConfigGetInfo(
     [[maybe_unused]] HcclComm comm, [[maybe_unused]] HcclConfigType cfgType, [[maybe_unused]] uint32_t infoLen,
     [[maybe_unused]] void* info)
@@ -3798,43 +3854,16 @@ HcclResult HcclConfigGetInfo(
     auto* hcclComm = static_cast<hccl::hcclComm*>(comm);
     auto* collComm = hcclComm->GetCollComm();
     CHK_PTR_NULL(collComm);
-    if (cfgType == HcclConfigType::HCCL_CONFIG_TYPE_OP_EXPANSION_MODE) {
-        constexpr size_t infoExpectedLen = sizeof(HcclConfigTypeOpExpansionMode);
-        if (static_cast<size_t>(infoLen) != infoExpectedLen) {
-            HCCL_ERROR("cfgType[%d] infoLen[%u] less than expected[%zu].", cfgType, infoLen, infoExpectedLen);
+    switch (cfgType) {
+        case HcclConfigType::HCCL_CONFIG_TYPE_OP_EXPANSION_MODE:
+            return GetOpExpansionModeConfig(collComm, infoLen, info);
+        case HcclConfigType::HCCL_CONFIG_TYPE_HCCL_ALGO:
+            return GetHcclAlgoConfig(collComm, infoLen, info);
+        case HcclConfigType::HCCL_CONFIG_TYPE_UB_MULTI_CHANNEL_NUM:
+            return GetUbMultiChannelNumConfig(infoLen, info);
+        default:
+            HCCL_ERROR("[%s] cfgType[%d] is invalid.", __func__, cfgType);
             return HcclResult::HCCL_E_PARA;
-        }
-        auto* myRank = collComm->GetMyRank();
-        CHK_PTR_NULL(myRank);
-        const uint32_t opExpansionModeValue = myRank->GetOpExpansionMode();
-        const auto opExpansionMode = OpExpansionModeValueToModeEnum(opExpansionModeValue);
-        if (opExpansionMode == HcclOpExpansionMode::HCCL_OP_EXPANSION_MODE_INVALID) {
-            HCCL_ERROR("[%s] unknown expansion mode[%d].", __func__, opExpansionMode);
-            return HcclResult::HCCL_E_INTERNAL;
-        }
-        auto* modeInfo = static_cast<HcclConfigTypeOpExpansionMode*>(info);
-        *modeInfo = opExpansionMode;
-        return HcclResult::HCCL_SUCCESS;
-    } else if (cfgType == HcclConfigType::HCCL_CONFIG_TYPE_HCCL_ALGO) {
-        constexpr size_t infoExpectedLen = static_cast<size_t>(HCCL_COMM_ALGO_MAX_LENGTH);
-        if (static_cast<size_t>(infoLen) < infoExpectedLen) {
-            HCCL_ERROR("cfgType[%d] infoLen[%u] less than expected[%zu].", cfgType, infoLen, infoExpectedLen);
-            return HcclResult::HCCL_E_PARA;
-        }
-        const std::string& hcclAlgo = collComm->GetCommConfig().GetConfigHcclAlgoStr();
-        auto* algoInfo = static_cast<char*>(info);
-        int32_t ret = memset_s(algoInfo, infoLen, 0, infoLen);
-        CHK_PRT_RET(ret != EOK, HCCL_ERROR("[%s] memset error, ret[%d].", __func__, ret), HCCL_E_INTERNAL);
-        if (!hcclAlgo.empty() && hcclAlgo.size() < infoLen) {
-            ret = memcpy_s(algoInfo, infoLen, hcclAlgo.c_str(), hcclAlgo.size() + 1);
-        } else if (!hcclAlgo.empty()) {
-            ret = memcpy_s(algoInfo, infoLen, hcclAlgo.c_str(), infoLen);
-        }
-        CHK_PRT_RET(ret != EOK, HCCL_ERROR("[%s] memcpy error, ret[%d].", __func__, ret), HCCL_E_INTERNAL);
-        return HcclResult::HCCL_SUCCESS;
-    } else {
-        HCCL_ERROR("[%s] cfgType[%d] is invalid.", __func__, cfgType);
-        return HcclResult::HCCL_E_PARA;
     }
 #endif
     HCCL_ERROR("[%s] is not support for hccd or kernel.", __func__);

@@ -251,6 +251,7 @@ global:
         "Hccl::EnvConfig::GetRdmaConfig()";  # _ZN4Hccl9EnvConfig13GetRdmaConfigEv
         "Hccl::EnvConfig::GetRtsConfig()";  # _ZN4Hccl9EnvConfig12GetRtsConfigEv
         "Hccl::EnvConfig::GetSocketConfig()";  # _ZN4Hccl9EnvConfig15GetSocketConfigEv
+        "Hccl::EnvConfig::GetUbConfig()";  # _ZN4Hccl9EnvConfig11GetUbConfigEv
         "Hccl::EnvHostNicConfig::GetControlIfIp() const";  # _ZNK4Hccl16EnvHostNicConfig14GetControlIfIpEv
         "Hccl::EnvHostNicConfig::GetDeviceSocketPortRange() const";  # _ZNK4Hccl16EnvHostNicConfig24GetDeviceSocketPortRangeEv
         "Hccl::EnvHostNicConfig::GetHostSocketPortRange() const";  # _ZNK4Hccl16EnvHostNicConfig22GetHostSocketPortRangeEv
@@ -269,6 +270,7 @@ global:
         "Hccl::EnvRtsConfig::GetExecTimeOut() const";  # _ZNK4Hccl12EnvRtsConfig14GetExecTimeOutEv
         "Hccl::EnvSocketConfig::GetLinkTimeOut() const";  # _ZNK4Hccl15EnvSocketConfig14GetLinkTimeOutEv
         "Hccl::EnvSocketConfig::GetSocketFamily() const";  # _ZNK4Hccl15EnvSocketConfig15GetSocketFamilyEv
+        "Hccl::EnvUbConfig::GetUbMultiChannelNum() const";  # _ZNK4Hccl11EnvUbConfig20GetUbMultiChannelNumEv
         "Hccl::ExceptionInfo::GetErrorCode(Hccl::ExceptionType const&)";  # _ZN4Hccl13ExceptionInfo12GetErrorCodeERKNS_13ExceptionTypeE
         "Hccl::ExceptionInfo::GetErrorMsg(Hccl::ExceptionType const&)";  # _ZN4Hccl13ExceptionInfo11GetErrorMsgERKNS_13ExceptionTypeE
         "Hccl::GetMultiQpPortsNumByIpPair(Hccl::MultiQpSrcPortConfig const&, Hccl::IpAddress const&, Hccl::IpAddress const&)";  # _ZN4Hccl26GetMultiQpPortsNumByIpPairERKNS_20MultiQpSrcPortConfigERKNS_9IpAddressES5_

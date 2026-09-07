@@ -393,7 +393,8 @@ typedef enum {
 typedef enum {
     HCCL_CONFIG_TYPE_INVALID = -1,
     HCCL_CONFIG_TYPE_OP_EXPANSION_MODE = 0,
-    HCCL_CONFIG_TYPE_HCCL_ALGO = 1
+    HCCL_CONFIG_TYPE_HCCL_ALGO = 1,
+    HCCL_CONFIG_TYPE_UB_MULTI_CHANNEL_NUM = 2
 } HcclConfigType;
 
 typedef HcclOpExpansionMode HcclConfigTypeOpExpansionMode;

@@ -33,6 +33,8 @@ public:
 
     const EnvRdmaConfig& GetRdmaConfig();
 
+    const EnvUbConfig& GetUbConfig();
+
     const EnvAlgoConfig& GetAlgoConfig();
 
     const EnvLogConfig& GetLogConfig();
@@ -50,6 +52,7 @@ private:
     EnvSocketConfig socketCfg;
     EnvRtsConfig rtsCfg;
     EnvRdmaConfig rdmaCfg;
+    EnvUbConfig ubCfg;
     EnvAlgoConfig algoCfg;
     EnvLogConfig logCfg;
     EnvDetourConfig detourCfg;

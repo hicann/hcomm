@@ -51,6 +51,35 @@ TEST_F(OpBaseMiscTest, Ut_HcclConfigGetInfo_When_CollCommIsNotInit_And_CfgTypeIs
     Ut_Comm_Destroy(comm);
 }
 
+TEST_F(OpBaseMiscTest, Ut_HcclConfigGetInfo_When_CfgTypeIsUB_MULTI_CHANNEL_NUM_Expect_ReturnIsHCCL_SUCCESS)
+{
+    UT_COMM_CREATE_DEFAULT(comm);
+    CollComm collComm(nullptr, 0, "ut_comm", ManagerCallbacks{}, CollCommInitMode::simpleMode);
+    MOCKER_CPP(&hcclComm::GetCollComm).stubs().will(returnValue(&collComm));
+    uint32_t multiChannelNum = 0;
+    HcclResult ret = HcclConfigGetInfo(
+        comm, HcclConfigType::HCCL_CONFIG_TYPE_UB_MULTI_CHANNEL_NUM, sizeof(uint32_t), &multiChannelNum);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+    EXPECT_GE(multiChannelNum, 1u);
+    EXPECT_LE(multiChannelNum, 16u);
+    Ut_Comm_Destroy(comm);
+}
+
+TEST_F(OpBaseMiscTest, Ut_HcclConfigGetInfo_When_CfgTypeIsOP_EXPANSION_MODE_Expect_ReturnIsHCCL_SUCCESS)
+{
+    UT_COMM_CREATE_DEFAULT(comm);
+    CollComm collComm(nullptr, 0, "ut_comm", ManagerCallbacks{}, CollCommInitMode::simpleMode);
+    MOCKER_CPP(&hcclComm::GetCollComm).stubs().will(returnValue(&collComm));
+    MyRank myRank(nullptr, 0, collComm.GetCommConfig(), ManagerCallbacks{}, nullptr, nullptr);
+    MOCKER_CPP(&CollComm::GetMyRank).stubs().will(returnValue(&myRank));
+    MOCKER_CPP(&MyRank::GetOpExpansionMode).stubs().will(returnValue(0u));
+    HcclOpExpansionMode opExpansionMode = HcclOpExpansionMode::HCCL_OP_EXPANSION_MODE_INVALID;
+    HcclResult ret = HcclConfigGetInfo(
+        comm, HcclConfigType::HCCL_CONFIG_TYPE_OP_EXPANSION_MODE, sizeof(HcclOpExpansionMode), &opExpansionMode);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+    Ut_Comm_Destroy(comm);
+}
+
 TEST_F(OpBaseMiscTest, Ut_HcclCommSymWinGet_When_GetCommSymWinSucceeds_Expect_ReturnIsHCCL_SUCCESS)
 {
     UT_COMM_CREATE_DEFAULT(comm);
