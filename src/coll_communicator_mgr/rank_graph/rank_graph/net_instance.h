@@ -53,6 +53,8 @@ public:
         u32 GetLocalDieId() const;
         TopoType GetTopoType() const;
         u32 GetTopoInstId() const;
+        u8 GetIpIndex() const { return ipIndex_; }
+        void SetIpIndex(u8 idx) { ipIndex_ = idx; }
         std::string Describe() const;
         bool operator==(const ConnInterface& rhs) const;
         bool operator!=(const ConnInterface& rhs) const;
@@ -66,6 +68,7 @@ public:
         u32 localDieId_{};
         TopoType topoType{TopoType::CLOS};
         u32 topoInstId{0};
+        u8 ipIndex_{0};
     };
 
     class Node {

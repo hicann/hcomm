@@ -69,6 +69,8 @@ public:
             remoteDeviceId_ = std::dynamic_pointer_cast<NetInstance::Peer>(targetPeer)->GetDeviceId();
             localAddr_ = srcConnIface->GetAddr();
             remoteAddr_ = targetConnIface->GetAddr();
+            localIpIndex_ = srcConnIface->GetIpIndex();
+            remoteIpIndex_ = targetConnIface->GetIpIndex();
             localDieId_ = srcConnIface->GetLocalDieId();
             hop = path.links[0].GetHop();
             fullmesh = true; // 单链路场景，标识为fullmesh
@@ -87,6 +89,8 @@ public:
             remoteDeviceId_ = std::dynamic_pointer_cast<NetInstance::Peer>(targetPeer)->GetDeviceId();
             localAddr_ = srcConnIface->GetAddr();
             remoteAddr_ = targetConnIface->GetAddr();
+            localIpIndex_ = srcConnIface->GetIpIndex();
+            remoteIpIndex_ = targetConnIface->GetIpIndex();
             localDieId_ = srcConnIface->GetLocalDieId();
             hop = path.links[0].GetHop();
             portGroupSize = static_cast<u8>(srcConnIface->GetPorts().size());
@@ -258,6 +262,11 @@ public:
 
     std::string GetReuseIdx() const { return std::to_string(reuseIdx_); };
 
+    u8 GetLocalIpIndex() const { return localIpIndex_; }
+    u8 GetRemoteIpIndex() const { return remoteIpIndex_; }
+    void SetLocalIpIndex(u8 idx) { localIpIndex_ = idx; }
+    void SetRemoteIpIndex(u8 idx) { remoteIpIndex_ = idx; }
+
 private:
     PortDeploymentType type;
     LinkProtocol linkProtocol_;
@@ -277,6 +286,8 @@ private:
     DeviceId remoteDeviceId_{UINT32_MAX};
     bool fullmesh{false}; // 标识是否为全互联单链路场景
     u32 reuseIdx_{0};     // socket复用idx，加在socket建链tag后面
+    u8 localIpIndex_{0};  // IP逻辑编号，用于hccpTag拼接替代IP字符串
+    u8 remoteIpIndex_{0};
 };
 } // namespace Hccl
 

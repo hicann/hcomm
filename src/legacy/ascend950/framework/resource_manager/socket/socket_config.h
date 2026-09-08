@@ -18,6 +18,8 @@
 
 namespace Hccl {
 MAKE_ENUM(SocketRole, SERVER, CLIENT)
+
+static constexpr size_t HCCP_TAG_MAX_LEN = 191; // SOCK_CONN_TAG_SIZE - 1 (留 1 字节给 '\0')
 class SocketConfig {
 public:
     RankId remoteRank;
@@ -30,51 +32,47 @@ public:
         : remoteRank(remoteRank),
           link(link),
           tag(tag),
-          role(link.GetLocalRankId() < link.GetRemoteRankId() ? SocketRole::SERVER : SocketRole::CLIENT),
-          hccpTag(
-              role == SocketRole::SERVER ?
-                  tag + "_" + to_string(link.GetLocalRankId()) + "_" + to_string(link.GetRemoteRankId()) + "_"
-                      + link.GetLocalAddr().GetIpStr() + "_" + link.GetRemoteAddr().GetIpStr() :
-                  tag + "_" + to_string(link.GetRemoteRankId()) + "_" + to_string(link.GetLocalRankId()) + "_"
-                      + link.GetRemoteAddr().GetIpStr() + "_" + link.GetLocalAddr().GetIpStr())
-    {}
+          role(link.GetLocalRankId() < link.GetRemoteRankId() ? SocketRole::SERVER : SocketRole::CLIENT)
+    {
+        hccpTag = BuildHccpTagWithRank(tag, link, role);
+        LogIpIndexMapping(link);
+        CheckAndTruncateHccpTag();
+    }
 
     SocketConfig(const LinkData& link, const std::string& tag)
         : remoteRank(link.GetRemoteRankId()),
           link(link),
           tag(tag),
-          role(link.GetLocalAddr() < link.GetRemoteAddr() ? SocketRole::SERVER : SocketRole::CLIENT),
-          hccpTag(
-              role == SocketRole::SERVER ?
-                  tag + "_" + to_string(link.GetLocalRankId()) + "_" + to_string(link.GetRemoteRankId()) + "_"
-                      + link.GetLocalAddr().GetIpStr() + "_" + link.GetRemoteAddr().GetIpStr() :
-                  tag + "_" + to_string(link.GetRemoteRankId()) + "_" + to_string(link.GetLocalRankId()) + "_"
-                      + link.GetRemoteAddr().GetIpStr() + "_" + link.GetLocalAddr().GetIpStr())
-    {}
+          role(link.GetLocalAddr() < link.GetRemoteAddr() ? SocketRole::SERVER : SocketRole::CLIENT)
+    {
+        hccpTag = BuildHccpTagWithRank(tag, link, role);
+        LogIpIndexMapping(link);
+        CheckAndTruncateHccpTag();
+    }
 
     SocketConfig(const LinkData& link, const std::string& tag, SocketRole role, const uint32_t listenPort)
         : remoteRank(link.GetRemoteRankId()),
           link(link),
           listeningPort(listenPort),
           tag(tag),
-          role(role),
-          hccpTag(
-              role == SocketRole::SERVER ?
-                  tag + "_" + link.GetLocalAddr().GetIpStr() + "_" + link.GetRemoteAddr().GetIpStr() :
-                  tag + "_" + link.GetRemoteAddr().GetIpStr() + "_" + link.GetLocalAddr().GetIpStr())
-    {}
+          role(role)
+    {
+        hccpTag = BuildHccpTagByIpIndex(tag, link, role);
+        LogIpIndexMapping(link);
+        CheckAndTruncateHccpTag();
+    }
 
     SocketConfig(const LinkData& link, const std::string& tag, bool noRankId)
         : remoteRank(link.GetRemoteRankId()),
           link(link),
           tag(tag),
           role(link.GetLocalAddr() < link.GetRemoteAddr() ? SocketRole::SERVER : SocketRole::CLIENT),
-          hccpTag(
-              role == SocketRole::SERVER ?
-                  tag + "_" + link.GetLocalAddr().GetIpStr() + "_" + link.GetRemoteAddr().GetIpStr() :
-                  tag + "_" + link.GetRemoteAddr().GetIpStr() + "_" + link.GetLocalAddr().GetIpStr()),
           noRankId(noRankId)
-    {}
+    {
+        hccpTag = BuildHccpTagByIpIndex(tag, link, role);
+        LogIpIndexMapping(link);
+        CheckAndTruncateHccpTag();
+    }
 
     SocketConfig(
         const LinkData& link, const uint32_t listenPort, const std::string& tag, uint32_t hostNic2DeviceNicMode,
@@ -94,14 +92,10 @@ public:
         }
         remoteRank = rmtRank;
         role = myRank < rmtRank ? SocketRole::SERVER : SocketRole::CLIENT;
-        if (role == SocketRole::SERVER) { // server: tag_local_remote
-            hccpTag = commTag + "_" + to_string(myRank) + "_" + to_string(rmtRank) + "_"
-                      + link.GetLocalAddr().GetIpStr() + "_" + link.GetRemoteAddr().GetIpStr();
-        } else { // client: tag_remote_local
-            hccpTag = commTag + "_" + to_string(rmtRank) + "_" + to_string(myRank) + "_"
-                      + link.GetRemoteAddr().GetIpStr() + "_" + link.GetLocalAddr().GetIpStr();
-        }
+        hccpTag = BuildHccpTagWithRank(commTag, myRank, rmtRank, link, role);
         hostNic2DeviceNicMode_ = hostNic2DeviceNicMode;
+        LogIpIndexMapping(link);
+        CheckAndTruncateHccpTag();
     }
 
     SocketConfig(const LinkData& link, const uint32_t listenPort, const std::string& tag)
@@ -111,14 +105,9 @@ public:
           tag(tag)
     {
         role = link.GetLocalAddr() < link.GetRemoteAddr() ? SocketRole::SERVER : SocketRole::CLIENT;
-
-        if (role == SocketRole::SERVER) { // server: tag_local_remote
-            hccpTag = tag + "_" + link.GetLocalAddr().GetIpStr() + "_" + link.GetRemoteAddr().GetIpStr() + "_"
-                      + to_string(listenPort);
-        } else { // client: tag_remote_local
-            hccpTag = tag + "_" + link.GetRemoteAddr().GetIpStr() + "_" + link.GetLocalAddr().GetIpStr() + "_"
-                      + to_string(listenPort);
-        }
+        hccpTag = BuildHccpTagWithPort(tag, link, role, listenPort);
+        LogIpIndexMapping(link);
+        CheckAndTruncateHccpTag();
     }
 
     SocketConfig(const LinkData& link, const uint32_t listenPort, const std::string& tag, const bool isServer)
@@ -128,14 +117,9 @@ public:
           tag(tag)
     {
         role = isServer ? SocketRole::SERVER : SocketRole::CLIENT;
-
-        if (role == SocketRole::SERVER) { // server: tag_local_remote
-            hccpTag = tag + "_" + link.GetLocalAddr().GetIpStr() + "_" + link.GetRemoteAddr().GetIpStr() + "_"
-                      + to_string(listenPort);
-        } else { // client: tag_remote_local
-            hccpTag = tag + "_" + link.GetRemoteAddr().GetIpStr() + "_" + link.GetLocalAddr().GetIpStr() + "_"
-                      + to_string(listenPort);
-        }
+        hccpTag = BuildHccpTagWithPort(tag, link, role, listenPort);
+        LogIpIndexMapping(link);
+        CheckAndTruncateHccpTag();
     }
 
     SocketRole GetRole() const { return role; }
@@ -145,6 +129,69 @@ public:
 private:
     SocketRole role{};
     string hccpTag;
+
+    // 带 rankId 的 hccpTag: tag_localRank_remoteRank_localIpIdx_remoteIpIdx (SERVER) /
+    // tag_remoteRank_localRank_remoteIpIdx_localIpIdx (CLIENT)
+    static string BuildHccpTagWithRank(const string& tag, const LinkData& link, SocketRole role)
+    {
+        if (role == SocketRole::SERVER) {
+            return tag + "_" + to_string(link.GetLocalRankId()) + "_" + to_string(link.GetRemoteRankId()) + "_"
+                   + to_string(link.GetLocalIpIndex()) + "_" + to_string(link.GetRemoteIpIndex());
+        }
+        return tag + "_" + to_string(link.GetRemoteRankId()) + "_" + to_string(link.GetLocalRankId()) + "_"
+               + to_string(link.GetRemoteIpIndex()) + "_" + to_string(link.GetLocalIpIndex());
+    }
+
+    // 带显式 rankId 的 hccpTag (构造函数5: hostNic2DeviceNicMode)
+    static string
+    BuildHccpTagWithRank(const string& tag, uint32_t myRank, uint32_t rmtRank, const LinkData& link, SocketRole role)
+    {
+        if (role == SocketRole::SERVER) {
+            return tag + "_" + to_string(myRank) + "_" + to_string(rmtRank) + "_" + to_string(link.GetLocalIpIndex())
+                   + "_" + to_string(link.GetRemoteIpIndex());
+        }
+        return tag + "_" + to_string(rmtRank) + "_" + to_string(myRank) + "_" + to_string(link.GetRemoteIpIndex()) + "_"
+               + to_string(link.GetLocalIpIndex());
+    }
+
+    // 仅 IP 索引的 hccpTag: tag_localIpIdx_remoteIpIdx (SERVER) / tag_remoteIpIdx_localIpIdx (CLIENT)
+    static string BuildHccpTagByIpIndex(const string& tag, const LinkData& link, SocketRole role)
+    {
+        if (role == SocketRole::SERVER) {
+            return tag + "_" + to_string(link.GetLocalIpIndex()) + "_" + to_string(link.GetRemoteIpIndex());
+        }
+        return tag + "_" + to_string(link.GetRemoteIpIndex()) + "_" + to_string(link.GetLocalIpIndex());
+    }
+
+    // 含 port 的 hccpTag: tag_localIpIdx_remoteIpIdx_port (SERVER) / tag_remoteIpIdx_localIpIdx_port (CLIENT)
+    static string BuildHccpTagWithPort(const string& tag, const LinkData& link, SocketRole role, uint32_t listenPort)
+    {
+        if (role == SocketRole::SERVER) {
+            return tag + "_" + to_string(link.GetLocalIpIndex()) + "_" + to_string(link.GetRemoteIpIndex()) + "_"
+                   + to_string(listenPort);
+        }
+        return tag + "_" + to_string(link.GetRemoteIpIndex()) + "_" + to_string(link.GetLocalIpIndex()) + "_"
+               + to_string(listenPort);
+    }
+
+    // 打印 ipIndex 与原 IP 的映射关系
+    static void LogIpIndexMapping(const LinkData& link)
+    {
+        HCCL_INFO(
+            "[SocketConfig] hccpTag uses ipIndex[%u](localIp[%s]) ipIndex[%u](remoteIp[%s])", link.GetLocalIpIndex(),
+            link.GetLocalAddr().GetIpStr().c_str(), link.GetRemoteIpIndex(), link.GetRemoteAddr().GetIpStr().c_str());
+    }
+
+    // 校验并截断 hccpTag
+    void CheckAndTruncateHccpTag()
+    {
+        if (hccpTag.size() > HCCP_TAG_MAX_LEN) {
+            HCCL_WARNING(
+                "[SocketConfig] hccpTag length[%zu] exceeds max[%zu], tag[%s]", hccpTag.size(), HCCP_TAG_MAX_LEN,
+                hccpTag.c_str());
+            hccpTag.resize(HCCP_TAG_MAX_LEN);
+        }
+    }
 
 public:
     bool noRankId{false};
