@@ -80,8 +80,8 @@ bool FindHostIpbyControlIfIp(const std::vector<std::pair<std::string, IpAddress>
         std::vector<std::string>(
             {ipAddress.GetIpStr(), "HCCL_IF_IP", "a valid IP from the available network interfaces"}));
     HCCL_ERROR(
-        "[%s] Env config \"HCCL_IF_IP\" is [%s] which is not found in the nic list.", __func__,
-        ipAddress.GetIpStr().c_str());
+        "[%s][%s] Env config \"HCCL_IF_IP\" is [%s] which is not found in the nic list.",
+        LOG_KEYWORDS_INIT_GROUP.c_str(), LOG_KEYWORDS_ENV_CONFIG.c_str(), ipAddress.GetIpStr().c_str());
     return false;
 }
 
@@ -214,12 +214,12 @@ bool FindLocalHostIp(const std::vector<std::pair<std::string, IpAddress>>& hostI
                     {ifnames.configIfNameStr, "HCCL_SOCKET_IFNAME",
                      "a valid network interface name from the available interfaces"}));
             HCCL_ERROR(
-                "[Init][EnvVarParam][%s] Env config \"HCCL_SOCKET_IFNAME\" is [%s] which is not found in the nic list",
-                __func__, ifnames.configIfNameStr.c_str());
+                "[%s][%s] Env config \"HCCL_SOCKET_IFNAME\" is [%s] which is not found in the nic list",
+                LOG_KEYWORDS_INIT_GROUP.c_str(), LOG_KEYWORDS_ENV_CONFIG.c_str(), ifnames.configIfNameStr.c_str());
             for (auto& ifInfo : hostIfInfos) {
                 HCCL_ERROR(
-                    "[%s] get host ip fail by socket Ifname. nic name[%s] ip[%s]", __func__, ifInfo.first.c_str(),
-                    ifInfo.second.Describe().c_str());
+                    "[%s][%s] get host ip fail by socket Ifname. nic name[%s] ip[%s]", LOG_KEYWORDS_INIT_GROUP.c_str(),
+                    LOG_KEYWORDS_ENV_CONFIG.c_str(), ifInfo.first.c_str(), ifInfo.second.Describe().c_str());
             }
         }
         return ret;

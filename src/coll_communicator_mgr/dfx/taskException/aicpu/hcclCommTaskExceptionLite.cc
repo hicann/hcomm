@@ -34,7 +34,8 @@ constexpr uint32_t TASK_CONTEXT_INFO_SIZE
     = LOG_TMPBUF_SIZE - TASK_CONTEXT_SIZE; // task 执行失败时打印前序task信息的长度限制
 constexpr u32 MAX_NAME_LEN = 64;
 constexpr u32 TASK_ID_SHIFT_BITS = 16;
-constexpr u32 ADDR_WORD_SHIFT_BITS = 32; // 将32位高位地址与低地址拼接为64位地址的移位数
+constexpr u32 ADDR_WORD_SHIFT_BITS = 32;      // 将32位高位地址与低地址拼接为64位地址的移位数
+constexpr uint32_t UB_CQE_STATUS_MASK = 0xFF; // ubCqeStatus取低8位
 
 HcclCommTaskExceptionLite& HcclCommTaskExceptionLite::GetInstance()
 {
@@ -119,7 +120,7 @@ HcclResult HcclCommTaskExceptionLite::HandleDpuTaskexception(CollCommAicpu* aicp
     if (errorCode != 0) {
         // 触发taskexception
         HCCL_ERROR(
-            "[HcclCommTaskExceptionLite][DPU] taskexceptionVa[%p], errorCode[%d], devId[%u], commId[%s]",
+            "[HcclCommTaskExceptionLite][DPU] taskexceptionVa[%p], errorCode[0x%x], devId[%u], commId[%s]",
             taskexceptionVa, errorCode, aicpuComm->GetDevId(), commId.c_str());
         // 1、取notify，并构造rtLogicCqReport_t
         auto* hcclCommDfxLite = aicpuComm->GetHcclCommDfxLite();
@@ -473,7 +474,7 @@ void HcclCommTaskExceptionLite::FillReduceErrMsg(
     errMsgInfo.notifyId = taskInfo.taskPara.Reduce.notifyId;
     errMsgInfo.notifyValue = INVALID_U32;
     GetEidFromChannelHandle(taskInfo, errMsgInfo.locEid, errMsgInfo.rmtEid);
-    errMsgInfo.ubCqeStatus = exceptionInfo.errorCode & 0xFF;
+    errMsgInfo.ubCqeStatus = exceptionInfo.errorCode & UB_CQE_STATUS_MASK;
     errMsgInfo.linkType = Hccl::DfxLinkType(static_cast<Hccl::DfxLinkType::Value>(taskInfo.linkType));
     errMsgInfo.size = taskInfo.taskPara.Reduce.size;
     errMsgInfo.taskSrcAddr = taskInfo.taskPara.Reduce.srcAddr;
@@ -507,7 +508,7 @@ void HcclCommTaskExceptionLite::FillUbErrMsg(
     const Hccl::DfxTaskInfo& taskInfo, Hccl::ErrorMessageReport& errMsgInfo, const rtLogicCqReport_t& exceptionInfo)
 {
     GetEidFromChannelHandle(taskInfo, errMsgInfo.locEid, errMsgInfo.rmtEid);
-    errMsgInfo.ubCqeStatus = exceptionInfo.errorCode & 0xFF;
+    errMsgInfo.ubCqeStatus = exceptionInfo.errorCode & UB_CQE_STATUS_MASK;
     errMsgInfo.linkType = Hccl::DfxLinkType(static_cast<Hccl::DfxLinkType::Value>(taskInfo.linkType));
     errMsgInfo.size = taskInfo.taskPara.ubDma.size;
     errMsgInfo.taskSrcAddr = taskInfo.taskPara.ubDma.srcAddr;
@@ -544,7 +545,7 @@ HcclResult HcclCommTaskExceptionLite::SendTaskExceptionByMBox(
     aicpuSqe.u.aicpu_record.fault_task_id = 0xffffffff;
 
     if (exceptionInfo.sqeType == ubSqeType) {
-        aicpuSqe.u.aicpu_record.ret_code = SwitchUBCqeErrCodeToTsErrCode(exceptionInfo.errorCode & 0xFF);
+        aicpuSqe.u.aicpu_record.ret_code = SwitchUBCqeErrCodeToTsErrCode(exceptionInfo.errorCode & UB_CQE_STATUS_MASK);
     } else if (exceptionInfo.sqeType == sdmaSqeType) {
         aicpuSqe.u.aicpu_record.ret_code = SwitchSdmaCqeErrCodeToTsErrCode(exceptionInfo.errorCode);
     } else {
@@ -568,7 +569,7 @@ HcclResult HcclCommTaskExceptionLite::SendTaskExceptionByMBox(
         return HCCL_E_DRV;
     }
     HCCL_RUN_INFO(
-        "[%s]finished, notifyId=%u, hostpid=%u, vfId=%u, tsId=%u, errorType=%u, errorCode=%u, ret_code=%u", __func__,
+        "[%s]finished, notifyId=%u, hostpid=%u, vfId=%u, tsId=%u, errorType=%u, errorCode=0x%x, ret_code=%u", __func__,
         notifyId, hostpid, vfId, tsId, exceptionInfo.errorType, exceptionInfo.errorCode,
         aicpuSqe.u.aicpu_record.ret_code);
     return HCCL_SUCCESS;

@@ -52,13 +52,17 @@ private:
     void HandleHostErrorReport(rtExceptionInfo_t* exceptionInfo, const Hccl::TaskInfo& taskInfo) const;
     void ReportErrorMsg(
         const Hccl::TaskInfo& exceptionTaskInfo, const std::string& groupRankContent,
-        const Hccl::ErrorMessageReport& errorMessage, rtExceptionInfo_t* exceptionInfo) const;
-    void ReportEI0018Error(const Hccl::TaskInfo& exceptionTaskInfo, const Hccl::ErrorMessageReport& errorMessage) const;
+        const Hccl::ErrorMessageReport& errorMessage, rtExceptionInfo_t* exceptionInfo,
+        const std::string& stageErrInfo) const;
+    void ReportEI0018Error(
+        const Hccl::TaskInfo& exceptionTaskInfo, const Hccl::ErrorMessageReport& errorMessage,
+        const std::string& stageErrInfo) const;
     bool ShouldReportError() const;
 
     std::string GetGroupRankInfo(const Hccl::TaskInfo& taskInfo) const;
     void ProcessException(rtExceptionInfo_t* exceptionInfo, const Hccl::TaskInfo& taskInfo);
-    void PrintTaskContextInfo(uint32_t deviceId, uint32_t streamId, uint32_t taskId) const;
+    void
+    PrintTaskContextInfo(uint32_t deviceId, uint32_t streamId, uint32_t taskId, const std::string& stageErrInfo) const;
     void PrintUbDfxInfo(rtExceptionInfo_t* exceptionInfo, const Hccl::ErrorMessageReport& errorMessage) const;
     void PrintGroupErrorMessage(
         const Hccl::ErrorMessageReport& errorMessage, const Hccl::TaskInfo& exceptionTaskInfo,

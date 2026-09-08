@@ -123,8 +123,16 @@ void PreemptPortManager::PreemptPortInRange(
     NicType nicType = listenSocket->GetNicType();
     if (nicType == NicType::HOST_NIC_TYPE) {
         RPT_INPUT_ERR(true, "EI0019", std::vector<std::string>({"reason"}), std::vector<std::string>({errormessage}));
+        HCCL_ERROR(
+            "[%s][%s] socket type[2], %s Please check the port status and whether the port is being used by other "
+            "process.",
+            LOG_KEYWORDS_INIT_GROUP.c_str(), LOG_KEYWORDS_RANKTABLE_DETECT.c_str(), errormessage.c_str());
     } else {
         RPT_INPUT_ERR(true, "EI0020", std::vector<std::string>({"reason"}), std::vector<std::string>({errormessage}));
+        HCCL_ERROR(
+            "[%s][%s] socket type[2], %s Please check the port status and whether the port is being used by other "
+            "process.",
+            LOG_KEYWORDS_INIT_GROUP.c_str(), LOG_KEYWORDS_RANKTABLE_DETECT.c_str(), errormessage.c_str());
     }
     std::string portRangeStr = GetRangeStr(portRange);
     HCCL_ERROR("[PreemptPortManager::%s] Complete polling of socket port range:%s", __func__, portRangeStr.c_str());

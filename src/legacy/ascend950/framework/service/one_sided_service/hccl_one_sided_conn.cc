@@ -14,6 +14,7 @@
 #include "hccl_mem.h"
 #include "communicator_impl.h"
 #include "transport_urma_mem.h"
+#include "hccl_log_keywords.h"
 namespace Hccl {
 using namespace std;
 
@@ -76,6 +77,9 @@ void HcclOneSidedConn::WaitOneSidedTransportReady()
             RPT_INPUT_ERR(
                 true, "EI0006", std::vector<std::string>({"reason"}),
                 std::vector<std::string>({"WaitOneSidedTransportReady timeout, SOCKET_TIMEOUT."}));
+            HCCL_ERROR(
+                "[%s][%s] wait socket establish timeout, WaitOneSidedTransportReady timeout.",
+                LOG_KEYWORDS_INIT_CHANNEL.c_str(), LOG_KEYWORDS_TIMEOUT.c_str());
             THROW<InternalException>("WaitOneSidedTransportReady timeout.");
         }
     }

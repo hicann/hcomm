@@ -1359,8 +1359,9 @@ void TaskExceptionHandler::PrintAicpuErrorMessage(rtExceptionInfo* exceptionInfo
                 static_cast<u64>(errorMessage.notifyId), errorMessage.stage, errorMessage.remoteUserRank);
             TaskInfo exceptionTaskInfo(
                 streamId, errorMessage.taskId, tag, errorMessage.taskType, errorMessage.algType, index, para);
-            auto logKeywordL2 = exceptionTaskInfo.taskType == TaskType::TASK_NOTIFY_WAIT ? LOG_KEYWORDS_TIMEOUT :
-                                                                                           LOG_KEYWORDS_RUN_FAILED;
+            const auto& logKeywordL2 = exceptionTaskInfo.taskType == TaskType::TASK_NOTIFY_WAIT ?
+                                           LOG_KEYWORDS_TIMEOUT :
+                                           LOG_KEYWORDS_RUN_FAILED;
             auto stageErrInfo = "[" + LOG_KEYWORDS_TASK_EXEC + "][" + logKeywordL2 + "][" + LOG_KEYWORDS_AICPU + "]";
             HCCL_ERROR("%sTask from HCCL run failed.", stageErrInfo.c_str());
             // 防止tag字符串过长， 信息分开打印

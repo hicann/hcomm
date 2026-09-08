@@ -14,6 +14,7 @@
 #include "orion_adapter_hccp.h"
 #include "orion_adapter_rts.h"
 #include "hccp_tlv_hdc_manager.h"
+#include "hccl_log_keywords.h"
 
 namespace Hccl {
 using namespace std;
@@ -223,6 +224,10 @@ void CcuErrorHandler::GenStatusInfo(
             std::vector<std::string>(
                 {std::to_string(baseInfo.deviceId), baseInformation.c_str(), taskInformation.c_str(),
                  groupRankContent.c_str()}));
+        HCCL_ERROR(
+            "[%s][%s][%s] Task run failed, EI0002, deviceID:[%u], %s, %s.", LOG_KEYWORDS_TASK_EXEC.c_str(),
+            LOG_KEYWORDS_TIMEOUT.c_str(), LOG_KEYWORDS_CCU.c_str(), baseInfo.deviceId, baseInformation.c_str(),
+            taskInformation.c_str());
     }
     const string statusMsg = StatusCode2Str(highPart, lowPart);
     const auto sRet

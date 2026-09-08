@@ -402,7 +402,7 @@ TEST_F(TaskExceptionHandlerTest, Ut_ProcessAivException_When_Normal_Expect_Print
 namespace Hccl {
 void ReportErrorMsg(
     const TaskInfo& exceptionTaskInfo, const string& groupRankContent, const ErrorMessageReport& errorMessage,
-    const rtExceptionInfo_t* exceptionInfo);
+    const rtExceptionInfo_t* exceptionInfo, const std::string& stageErrInfo);
 }
 
 namespace {
@@ -431,7 +431,7 @@ TEST_F(TaskExceptionHandlerTest, Ut_ReportErrorMsg_When_TaskNotifyWait_Expect_EI
     g_capturedErrorCode.clear();
     g_capturedValues.clear();
     MOCKER(RptInputErr).stubs().will(invoke(stub_RptInputErr_capture));
-    EXPECT_NO_THROW(ReportErrorMsg(*taskInfo, testGroupRank, errorMessage, &exceptionInfo));
+    EXPECT_NO_THROW(ReportErrorMsg(*taskInfo, testGroupRank, errorMessage, &exceptionInfo, ""));
     EXPECT_EQ(g_capturedErrorCode, "EI0002");
     ASSERT_EQ(g_capturedValues.size(), 4);
     EXPECT_EQ(g_capturedValues[3], testGroupRank);
@@ -450,7 +450,7 @@ TEST_F(TaskExceptionHandlerTest, Ut_ReportErrorMsg_When_TaskWriteWithNotify_Expe
     rtExceptionInfo_t exceptionInfo{};
     g_capturedErrorCode.clear();
     MOCKER(RptInputErr).stubs().will(invoke(stub_RptInputErr_capture));
-    EXPECT_NO_THROW(ReportErrorMsg(*taskInfo, "", errorMessage, &exceptionInfo));
+    EXPECT_NO_THROW(ReportErrorMsg(*taskInfo, "", errorMessage, &exceptionInfo, ""));
     EXPECT_EQ(g_capturedErrorCode, "EI0018");
 }
 
@@ -467,7 +467,7 @@ TEST_F(TaskExceptionHandlerTest, Ut_ReportErrorMsg_When_TaskUbReduceInline_Expec
     rtExceptionInfo_t exceptionInfo{};
     g_capturedErrorCode.clear();
     MOCKER(RptInputErr).stubs().will(invoke(stub_RptInputErr_capture));
-    EXPECT_NO_THROW(ReportErrorMsg(*taskInfo, "", errorMessage, &exceptionInfo));
+    EXPECT_NO_THROW(ReportErrorMsg(*taskInfo, "", errorMessage, &exceptionInfo, ""));
     EXPECT_EQ(g_capturedErrorCode, "EI0018");
 }
 

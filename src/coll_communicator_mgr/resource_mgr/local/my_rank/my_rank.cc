@@ -36,6 +36,7 @@
 #include <unordered_map>
 #include <unordered_set>
 #include "shared_jetty_channel_pool.h"
+#include "hccl_log_keywords.h"
 
 using namespace hcomm;
 
@@ -1261,8 +1262,10 @@ MyRank::BatchConnectChannels(const HcclChannelDesc* channelDescs, ChannelHandle*
                 = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - startTime)
                       .count();
             HCCL_ERROR(
-                "[%s] channel connect timeout after %lld sec, channelNum[%u], elapsed[%lld]ms, retryCount[%u]",
-                __func__, timeout.count(), channelNum, elapsed, retryCount);
+                "[%s][%s] wait socket establish timeout, channel connect timeout after %lld sec, "
+                "channelNum[%u], elapsed[%lld]ms, retryCount[%u]",
+                LOG_KEYWORDS_INIT_CHANNEL.c_str(), LOG_KEYWORDS_TIMEOUT.c_str(), timeout.count(), channelNum, elapsed,
+                retryCount);
             RPT_INPUT_ERR(
                 true, "EI0006", std::vector<std::string>({"reason"}),
                 std::vector<std::string>({GET_SOCKET_TIMEOUT_REASON_CLOSE_DETECT}));

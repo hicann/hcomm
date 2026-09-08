@@ -1413,7 +1413,7 @@ void Heartbeat::SetStatus(UIDType& crimer, UIDType& informer, HeartBeatStatus st
         }
         HCCL_RUN_INFO(
             "[%s][%s]local rank [%s]: crimer rank [%s] status[%s] by informer rank [%s]",
-            LOG_KEYWORDS_TASK_EXEC.c_str(), LOG_KEYWORDS_HEARTBEAT_EVETN.c_str(), FormatUId(uid_).c_str(),
+            LOG_KEYWORDS_TASK_EXEC.c_str(), LOG_KEYWORDS_HEARTBEAT_EVENT.c_str(), FormatUId(uid_).c_str(),
             FormatUId(crimer).c_str(), GetHeartBeatStatusStr(status).c_str(), FormatUId(informer).c_str());
     }
 }
@@ -1453,7 +1453,7 @@ void Heartbeat::MakeErrMsg(std::queue<HeartBeatFrame>& keyEvents, std::vector<st
         std::string crimerStr = FormatUId(tmp.crimer);
         std::string informerStr = FormatUId(tmp.informer);
 
-        std::string headStr = "[" + LOG_KEYWORDS_TASK_EXEC + "][" + LOG_KEYWORDS_HEARTBEAT_EVETN + "]"
+        std::string headStr = "[" + LOG_KEYWORDS_TASK_EXEC + "][" + LOG_KEYWORDS_HEARTBEAT_EVENT + "]"
                               + "Cluster Exception Location[IP/ID]:[";
 
         time_t tm = std::chrono::system_clock::to_time_t(tmp.TOASystem);
@@ -1745,12 +1745,12 @@ void Heartbeat::PrintAndBroadCastErrorCqe(const ErrCqeInfo& info)
     if (now == nullptr) {
         HCCL_ERROR(
             "[%s][%s][%s]localtime fail, cqe error status[%u], %s", LOG_KEYWORDS_TASK_EXEC.c_str(),
-            LOG_KEYWORDS_HEARTBEAT_EVETN.c_str(), LOG_KEYWORDS_CQE_ERROR.c_str(), info.cqeInfo.status,
+            LOG_KEYWORDS_HEARTBEAT_EVENT.c_str(), LOG_KEYWORDS_CQE_ERROR.c_str(), info.cqeInfo.status,
             errorLinkLogBuffer);
     } else {
         HCCL_ERROR(
             "[%s][%s][%s]cqe error status[%u], time:[%04u-%02d-%02d %02d:%0d:%02d.%06u], %s",
-            LOG_KEYWORDS_TASK_EXEC.c_str(), LOG_KEYWORDS_HEARTBEAT_EVETN.c_str(), LOG_KEYWORDS_CQE_ERROR.c_str(),
+            LOG_KEYWORDS_TASK_EXEC.c_str(), LOG_KEYWORDS_HEARTBEAT_EVENT.c_str(), LOG_KEYWORDS_CQE_ERROR.c_str(),
             info.cqeInfo.status, now->tm_year + TIME_FROM_1900, now->tm_mon + 1, now->tm_mday, now->tm_hour,
             now->tm_min, now->tm_sec, static_cast<u32>(info.cqeInfo.time.tv_usec), errorLinkLogBuffer);
     }

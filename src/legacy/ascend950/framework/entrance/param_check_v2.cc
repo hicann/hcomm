@@ -83,9 +83,13 @@ HcclResult HcomCheckTagV2(const char* tag)
             true, "EI0003", vector<string>({"ccl_op", "value", "parameter", "expect"}),
             vector<string>({"HcomCheckTagV2", std::to_string(tagLen), "tag", errReason}));
         if (tagLen == 0) {
-            HCCL_ERROR("[Check][Tag]errNo[0x%llx] tag is empty", HCCL_E_PARA);
+            HCCL_ERROR(
+                "[%s][%s] errNo[0x%016llx] tag is empty", LOG_KEYWORDS_TASK_EXEC.c_str(),
+                LOG_KEYWORDS_INVALID_ARGUMENT.c_str(), HCCL_ERROR_CODE(HCCL_E_PARA));
         } else {
-            HCCL_ERROR("[Check][Tag]errNo[0x%llx] tag is too long, range[1,%u]", HCCL_E_PARA, TAG_MAX_LEN);
+            HCCL_ERROR(
+                "[%s][%s] errNo[0x%016llx] tag is too long, range[1,%u]", LOG_KEYWORDS_TASK_EXEC.c_str(),
+                LOG_KEYWORDS_INVALID_ARGUMENT.c_str(), HCCL_ERROR_CODE(HCCL_E_PARA), TAG_MAX_LEN);
         }
         return HCCL_E_PARA;
     }
@@ -103,7 +107,8 @@ HcclResult HcomCheckGroupNameV2(const char* group)
                 true, "EI0003", vector<string>({"ccl_op", "value", "parameter", "expect"}),
                 vector<string>({"HcomCheckGroupNameV2", std::to_string(groupLen), "group name", errReason}));
             HCCL_ERROR(
-                "[Check][GroupName]errNo[0x%llx] group name[%s] length[%lu] is invalid", HCCL_E_PARA, group, groupLen);
+                "[%s][%s] errNo[0x%016llx] group name[%s] length[%lu] is invalid", LOG_KEYWORDS_TASK_EXEC.c_str(),
+                LOG_KEYWORDS_INVALID_ARGUMENT.c_str(), HCCL_ERROR_CODE(HCCL_E_PARA), group, groupLen);
             return HCCL_E_PARA;
         }
     }
@@ -118,7 +123,8 @@ HcclResult HcomCheckCountV2(const u64 count)
             true, "EI0003", vector<string>({"ccl_op", "value", "parameter", "expect"}),
             vector<string>({"HcomCheckCountV2", std::to_string(count), "count", errReason}));
         HCCL_ERROR(
-            "[Check][Count]errNo[0x%llx] count[%llu] is invalid(bigger than MAX count[%llu])", HCCL_E_PARA, count,
+            "[%s][%s] errNo[0x%016llx] count[%llu] is invalid(bigger than MAX count[%llu])",
+            LOG_KEYWORDS_TASK_EXEC.c_str(), LOG_KEYWORDS_INVALID_ARGUMENT.c_str(), HCCL_ERROR_CODE(HCCL_E_PARA), count,
             SYS_MAX_COUNT);
         return HCCL_E_PARA;
     }
@@ -154,7 +160,8 @@ HcclResult HcomCheckDataTypeV2(const HcclDataType dataType)
             true, "EI0003", vector<string>({"ccl_op", "value", "parameter", "expect"}),
             vector<string>({"HcomCheckDataTypeV2", GetDataTypeEnumStrV2(dataType).c_str(), "dataType", expect}));
         HCCL_ERROR(
-            "[Check][DataType]errNo[0x%llx] data type[%s] not supported", HCCL_E_NOT_SUPPORT,
+            "[%s][%s] errNo[0x%016llx] data type[%s] not supported", LOG_KEYWORDS_TASK_EXEC.c_str(),
+            LOG_KEYWORDS_INVALID_ARGUMENT.c_str(), HCCL_ERROR_CODE(HCCL_E_NOT_SUPPORT),
             GetDataTypeEnumStrV2(dataType).c_str());
         return HCCL_E_NOT_SUPPORT;
     }
@@ -165,7 +172,9 @@ HcclResult
 HcomCheckOpParamV2(const char* tag, const u64 count, const HcclDataType dataType, const char* group, const void* stream)
 {
     HcclResult ret = HcomCheckGroupNameV2(group);
-    CHK_PRT_RET(ret != HCCL_SUCCESS, HCCL_ERROR("[Check][OpParam]errNo[0x%llx] group name is invalid", ret), ret);
+    CHK_PRT_RET(
+        ret != HCCL_SUCCESS, HCCL_ERROR("[Check][OpParam]errNo[0x%016llx] group name is invalid", HCCL_ERROR_CODE(ret)),
+        ret);
 
     CHK_RET(HcomCheckOpParamV2(tag, count, dataType, stream));
 
@@ -175,7 +184,9 @@ HcomCheckOpParamV2(const char* tag, const u64 count, const HcclDataType dataType
 HcclResult HcomCheckOpParamV2(const u64 count, const HcclDataType dataType, const char* group)
 {
     HcclResult ret = HcomCheckGroupNameV2(group);
-    CHK_PRT_RET(ret != HCCL_SUCCESS, HCCL_ERROR("[Check][OpParam]errNo[0x%llx] group name is invalid", ret), ret);
+    CHK_PRT_RET(
+        ret != HCCL_SUCCESS, HCCL_ERROR("[Check][OpParam]errNo[0x%016llx] group name is invalid", HCCL_ERROR_CODE(ret)),
+        ret);
 
     CHK_RET(HcomCheckOpParamV2(count, dataType));
 
@@ -188,7 +199,9 @@ HcclResult HcomCheckOpParamV2(
     CHK_RET(HcomCheckOpParamV2(tag, count, dataType));
 
     if (stream == nullptr) {
-        HCCL_ERROR("[Check][Stream]errNo[0x%016llx] stream is NULL.", HCCL_E_PTR);
+        HCCL_ERROR(
+            "[%s][%s] errNo[0x%016llx] stream is NULL.", LOG_KEYWORDS_TASK_EXEC.c_str(),
+            LOG_KEYWORDS_INVALID_ARGUMENT.c_str(), HCCL_ERROR_CODE(HCCL_E_PTR));
         RPT_INPUT_ERR(
             true, "EI0003", vector<string>({"ccl_op", "value", "parameter", "expect"}),
             vector<string>({"HcomCheckOpParamV2", "NULL", "stream", "please check stream that should not be nullptr"}));
@@ -201,13 +214,18 @@ HcclResult HcomCheckOpParamV2(
 HcclResult HcomCheckOpParamV2(const char* tag, const u64 count, const HcclDataType dataType)
 {
     HcclResult ret = HcomCheckTagV2(tag);
-    CHK_PRT_RET(ret != HCCL_SUCCESS, HCCL_ERROR("[Check][OpParam]errNo[0x%llx] tag is invalid", ret), ret);
+    CHK_PRT_RET(
+        ret != HCCL_SUCCESS, HCCL_ERROR("[Check][OpParam]errNo[0x%016llx] tag is invalid", HCCL_ERROR_CODE(ret)), ret);
 
     ret = HcomCheckCountV2(count);
-    CHK_PRT_RET(ret != HCCL_SUCCESS, HCCL_ERROR("[Check][OpParam]errNo[0x%llx] count is out of range", ret), ret);
+    CHK_PRT_RET(
+        ret != HCCL_SUCCESS, HCCL_ERROR("[Check][OpParam]errNo[0x%016llx] count is out of range", HCCL_ERROR_CODE(ret)),
+        ret);
 
     ret = HcomCheckDataTypeV2(dataType);
-    CHK_PRT_RET(ret != HCCL_SUCCESS, HCCL_ERROR("[Check][OpParam]errNo[0x%llx] dataType is invalid", ret), ret);
+    CHK_PRT_RET(
+        ret != HCCL_SUCCESS, HCCL_ERROR("[Check][OpParam]errNo[0x%016llx] dataType is invalid", HCCL_ERROR_CODE(ret)),
+        ret);
 
     return HCCL_SUCCESS;
 }
@@ -215,10 +233,14 @@ HcclResult HcomCheckOpParamV2(const char* tag, const u64 count, const HcclDataTy
 HcclResult HcomCheckOpParamV2(const u64 count, const HcclDataType dataType)
 {
     HcclResult ret = HcomCheckCountV2(count);
-    CHK_PRT_RET(ret != HCCL_SUCCESS, HCCL_ERROR("[Check][OpParam]errNo[0x%llx] count is out of range", ret), ret);
+    CHK_PRT_RET(
+        ret != HCCL_SUCCESS, HCCL_ERROR("[Check][OpParam]errNo[0x%016llx] count is out of range", HCCL_ERROR_CODE(ret)),
+        ret);
 
     ret = HcomCheckDataTypeV2(dataType);
-    CHK_PRT_RET(ret != HCCL_SUCCESS, HCCL_ERROR("[Check][OpParam]errNo[0x%llx] dataType is invalid", ret), ret);
+    CHK_PRT_RET(
+        ret != HCCL_SUCCESS, HCCL_ERROR("[Check][OpParam]errNo[0x%016llx] dataType is invalid", HCCL_ERROR_CODE(ret)),
+        ret);
 
     return HCCL_SUCCESS;
 }
@@ -239,8 +261,8 @@ HcclResult HcomCheckReductionOpV2(const HcclReduceOp op)
             true, "EI0003", vector<string>({"ccl_op", "value", "parameter", "expect"}),
             vector<string>({"HcomCheckReductionOpV2", GetReduceOpEnumStrV2(op), "op", "one of " + supportedList}));
         HCCL_ERROR(
-            "[Check][ReductionOp]errNo[0x%016llx] Op:[%s] not supported", HCCL_E_PARA,
-            GetReduceOpEnumStrV2(op).c_str());
+            "[%s][%s] errNo[0x%016llx] Op:[%s] not supported", LOG_KEYWORDS_TASK_EXEC.c_str(),
+            LOG_KEYWORDS_INVALID_ARGUMENT.c_str(), HCCL_ERROR_CODE(HCCL_E_PARA), GetReduceOpEnumStrV2(op).c_str());
         return HCCL_E_NOT_SUPPORT;
     }
     return HCCL_SUCCESS;
@@ -263,7 +285,8 @@ HcclResult HcomCheckProdDataTypeV2(const HcclDataType dataType)
             vector<string>(
                 {"HcomCheckProdDataTypeV2", GetDataTypeEnumStrV2(dataType), "dataType", "one of " + supportedList}));
         HCCL_ERROR(
-            "[Check][ProdDataType]errNo[0x%016llx] DataType:[%s] not supported PROD", HCCL_E_PARA,
+            "[%s][%s] errNo[0x%016llx] DataType:[%s] not supported PROD", LOG_KEYWORDS_TASK_EXEC.c_str(),
+            LOG_KEYWORDS_INVALID_ARGUMENT.c_str(), HCCL_ERROR_CODE(HCCL_E_PARA),
             GetDataTypeEnumStrV2(dataType).c_str());
         return HCCL_E_NOT_SUPPORT;
     }
@@ -417,7 +440,7 @@ HcclResult HcomCheckUserRankV2(const u32 totalRanks, const u32 userRank)
 {
     if (userRank >= totalRanks) {
         HCCL_ERROR(
-            "[Check][UserRank]errNo[0x%016llx] userRank:[%u] is out of range[0 ~ %u]", HCOM_ERROR_CODE(HCCL_E_PARA),
+            "[Check][UserRank]errNo[0x%016llx] userRank:[%u] is out of range[0 ~ %u]", HCCL_ERROR_CODE(HCCL_E_PARA),
             userRank, totalRanks - 1);
         return HCCL_E_PARA;
     }
@@ -440,7 +463,9 @@ HcclResult HcomLoadRankTableFileV2(const char* clusterInfo, std::string& rankTab
             std::vector<std::string>(
                 {rankTablePath, "The rankTable file path does not exist, the permission is insufficient, or the JSON "
                                 "format is incorrect."}));
-        HCCL_ERROR("RanktableRealPath: %s is not a valid real path", clusterInfo);
+        HCCL_ERROR(
+            "[%s][%s] errNo[0x%016llx] RanktableRealPath: %s is not a valid real path", LOG_KEYWORDS_INIT_GROUP.c_str(),
+            LOG_KEYWORDS_RANKTABLE_CONFIG.c_str(), HCCL_ERROR_CODE(HCCL_E_PARA), clusterInfo);
         return HCCL_E_PARA;
     }
 

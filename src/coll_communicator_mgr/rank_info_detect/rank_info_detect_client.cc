@@ -24,6 +24,7 @@
 #include "socket_manager.h"
 #include "topo_addr_info.h"
 #include "adapter_error_manager_pub.h"
+#include "hccl_log_keywords.h"
 #include "network_api_exception.h"
 #include "phy_topo_builder.h"
 #include "preempt_port_manager_v2.h"
@@ -176,14 +177,16 @@ void RankInfoDetectClient::CheckStatus()
     while (true) {
         bool isTimeout = ((std::chrono::steady_clock::now() - startTime) >= timeout);
         if (isTimeout) {
-            HCCL_ERROR(
-                "[RankInfoDetectClient::%s] get connected status socket timeout! timeout[%lld s]", __func__, timeout);
             RPT_INPUT_ERR(
                 isTimeout, "EI0015", std::vector<std::string>({"error_reason"}),
                 std::vector<std::string>({StringFormat(
                     "Receiving message from the root node timed out "
                     "Timeout was set to %lld seconds. Check whether node rankId[%u] reports an error.",
                     static_cast<long long>(timeout.count()), rankId_)}));
+            HCCL_ERROR(
+                "[%s][%s] errNo[0x%016llx] topo exchange agent get socket timeout, timeout[%lld s], rankId[%u]",
+                LOG_KEYWORDS_INIT_GROUP.c_str(), LOG_KEYWORDS_RANKTABLE_DETECT.c_str(),
+                HCOM_ERROR_CODE(HcclResult::HCCL_E_TIMEOUT), static_cast<long long>(timeout.count()), rankId_);
             // 建链超时后，sleep 20s，避免上层应用提前退出，确保其他正常 client 能够收到 server 发出的临终遗言
             sleep(WAIT_ERROR_BROADCAST_TIME);
             THROW<TimeoutException>("client get connection timeout");
@@ -267,7 +270,9 @@ void CheckRootInfoJson(const nlohmann::json& parseJson)
         RPT_INPUT_ERR(
             true, "EI0016", std::vector<std::string>({"value", "variable", "expect"}),
             std::vector<std::string>({version, "version", "2.0"}));
-        HCCL_ERROR("[%s] failed with version [%s] is not \"2.0\".", __func__, version.c_str());
+        HCCL_ERROR(
+            "[%s][%s] errNo[0x%016llx] version[%s] is not \"2.0\"", LOG_KEYWORDS_INIT_GROUP.c_str(),
+            LOG_KEYWORDS_RANKTABLE_CHECK.c_str(), HCOM_ERROR_CODE(HcclResult::HCCL_E_PARA), version.c_str());
         THROW<InvalidParamsException>("version error");
     }
 
@@ -285,7 +290,9 @@ void CheckRootInfoJson(const nlohmann::json& parseJson)
         RPT_INPUT_ERR(
             true, "EI0016", std::vector<std::string>({"value", "variable", "expect"}),
             std::vector<std::string>({topoFilePath, "topo_file_path", "valid path"}));
-        HCCL_ERROR("[%s] topo_file_path[%s] is not a valid real path", __func__, topoFilePath.c_str());
+        HCCL_ERROR(
+            "[%s][%s] errNo[0x%016llx] topo_file_path[%s] is not a valid real path", LOG_KEYWORDS_INIT_GROUP.c_str(),
+            LOG_KEYWORDS_RANKTABLE_CHECK.c_str(), HCOM_ERROR_CODE(HcclResult::HCCL_E_PARA), topoFilePath.c_str());
         THROW<InvalidParamsException>("topo_file_path error");
     }
 
@@ -310,9 +317,9 @@ void CheckRootInfoJson(const nlohmann::json& parseJson)
             true, "EI0016", std::vector<std::string>({"value", "variable", "expect"}),
             std::vector<std::string>({std::to_string(rankCount), "rankCount", std::to_string(rankJsons.size())}));
         HCCL_ERROR(
-            "[%s] failed with rankCount is not equal to rank_list size. "
-            "rankCount[%u], ranks.size[%u]",
-            __func__, rankCount, rankJsons.size());
+            "[%s][%s] errNo[0x%016llx] rankCount[%u] != rank_list size[%zu]", LOG_KEYWORDS_INIT_GROUP.c_str(),
+            LOG_KEYWORDS_RANKTABLE_CHECK.c_str(), HCOM_ERROR_CODE(HcclResult::HCCL_E_PARA), rankCount,
+            rankJsons.size());
         THROW<InvalidParamsException>("rankCount error");
     }
 }
@@ -570,8 +577,8 @@ void RankInfoDetectClient::ParseRankTable(vector<char>& rankInfoMsg)
     if (failedAgentIdList.size() > 0) {
         // 建链失败时，打印 root 节点发来的临终遗言
         HCCL_ERROR(
-            "[RankInfoDetectClient::%s] TopoDetect ERROR occur, failedRankIdList[%s]", __func__,
-            failedAgentIdList.c_str());
+            "[%s][%s] Failed to connect agent, failedRankIdList[%s]", LOG_KEYWORDS_INIT_GROUP.c_str(),
+            LOG_KEYWORDS_RANKTABLE_DETECT.c_str(), failedAgentIdList.c_str());
     }
 
     HCCL_INFO("[RankInfoDetectClient::%s] end.", __func__);
@@ -664,7 +671,9 @@ void RankInfoDetectClient::ReportTlsConfigurationError(
         true, "EI0016", std::vector<std::string>({"value", "variable", "expect"}),
         std::vector<std::string>({tlsInconsistentTlsType, "\"" + tlsType + "\"", expectMessage}));
 
-    HCCL_ERROR("[ReportTlsConfigurationError][RanktableCheck] %s", errormessage.c_str());
+    HCCL_ERROR(
+        "[%s][%s] errNo[0x%016llx] %s", LOG_KEYWORDS_INIT_GROUP.c_str(), LOG_KEYWORDS_RANKTABLE_CHECK.c_str(),
+        HCOM_ERROR_CODE(HcclResult::HCCL_E_PARA), errormessage.c_str());
 }
 
 HcclResult RankInfoDetectClient::VerifyTlsConsistency() const

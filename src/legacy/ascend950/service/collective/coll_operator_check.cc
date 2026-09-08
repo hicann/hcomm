@@ -11,6 +11,7 @@
 #include "coll_operator_check.h"
 #include "exception_util.h"
 #include "adapter_error_manager_pub.h"
+#include "hccl_log_keywords.h"
 
 namespace Hccl {
 
@@ -29,6 +30,10 @@ void ReportOpCheckFailed(
     RPT_INPUT_ERR(
         true, "EI0005", std::vector<std::string>({"ccl_op", "group", "para_name", "local_para", "remote_para"}),
         std::vector<std::string>({opInfo, optag, paraName, localPara, remotePara}));
+    HCCL_ERROR(
+        "[%s][%s] CMD information op[%s] tag[%s] %s check fail. local[%s], remote[%s]",
+        LOG_KEYWORDS_INIT_CHANNEL.c_str(), LOG_KEYWORDS_PARAMETER_CONFLICT.c_str(), opInfo.c_str(), optag.c_str(),
+        paraName.c_str(), localPara.c_str(), remotePara.c_str());
     THROW<InvalidParamsException>(StringFormat(
         "[RankConsistentImpl][CompareFrame][%s]op information%s group%s %s check fail. "
         "local[%s], remote[%s]",
@@ -50,6 +55,10 @@ void ReportOpCheckFailed(
     RPT_INPUT_ERR(
         true, "EI0005", std::vector<std::string>({"ccl_op", "group", "para_name", "local_para", "remote_para"}),
         std::vector<std::string>({opInfo, optag, paraName, std::to_string(localPara), std::to_string(remotePara)}));
+    HCCL_ERROR(
+        "[%s][%s] CMD information op[%s] tag[%s] %s check fail. local[%u], remote[%u]",
+        LOG_KEYWORDS_INIT_CHANNEL.c_str(), LOG_KEYWORDS_PARAMETER_CONFLICT.c_str(), opInfo.c_str(), optag.c_str(),
+        paraName.c_str(), localPara, remotePara);
     THROW<InvalidParamsException>(StringFormat(
         "[RankConsistentImpl][CompareFrame][%s]op information%s group%s %s check fail. "
         "local[%u], remote[%u]",

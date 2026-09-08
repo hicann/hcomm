@@ -15,6 +15,7 @@
 #include "null_ptr_exception.h"
 #include "invalid_params_exception.h"
 #include "adapter_error_manager_pub.h"
+#include "hccl_log_keywords.h"
 
 namespace Hccl {
 
@@ -50,6 +51,9 @@ void PhyTopoBuilder::Build(const std::string& topoPath)
                 {"Please check the path configuration of the topo json file.",
                  "The rankTable file path does not exist, the permission is insufficient, or the JSON format is "
                  "incorrect."}));
+        HCCL_ERROR(
+            "[%s][%s]errNo[0x%016llx] topo path %s is not a valid real path.", LOG_KEYWORDS_INIT_GROUP.c_str(),
+            LOG_KEYWORDS_RANKTABLE_CONFIG.c_str(), HCOM_ERROR_CODE(HcclResult::HCCL_E_PARA), topoPath.c_str());
         THROW<InvalidParamsException>("[PhyTopoBuilder::%s] Topo path is empty.", __func__);
     }
 
@@ -92,8 +96,9 @@ std::shared_ptr<TopoInfo> PhyTopoBuilder::LoadTopoInfo(const std::string& topoPa
     struct stat fileStat;
     if (stat(topoPath.c_str(), &fileStat) != 0) {
         HCCL_ERROR(
-            "[PhyTopoBuilder][LoadTopoInfo] Get file stat failed, file path:%s, errno:%d, error: %s", topoPath.c_str(),
-            errno, strerror(errno));
+            "[%s][%s] errNo[0x%016llx] Get file stat failed, file path:%s, errno:%d, error: %s",
+            LOG_KEYWORDS_INIT_GROUP.c_str(), LOG_KEYWORDS_RANKTABLE_CONFIG.c_str(),
+            HCOM_ERROR_CODE(HcclResult::HCCL_E_PARA), topoPath.c_str(), errno, strerror(errno));
         THROW<InvalidParamsException>(
             "[PhyTopoBuilder][LoadTopoInfo]Get file stat failed, file path:%s, errno:%d, error: %s", topoPath.c_str(),
             errno, strerror(errno));
@@ -102,8 +107,9 @@ std::shared_ptr<TopoInfo> PhyTopoBuilder::LoadTopoInfo(const std::string& topoPa
     u64 topoFileSize = static_cast<u64>(fileStat.st_size);
     if (topoFileSize > SUPPORT_MAX_TOPOFILE_SIZE || topoFileSize <= 0) {
         HCCL_ERROR(
-            "[PhyTopoBuilder][LoadTopoInfo] topoFileSize size: %llu, topoFile must be greater than 0 and less than %u",
-            topoFileSize, SUPPORT_MAX_TOPOFILE_SIZE);
+            "[%s][%s] errNo[0x%016llx] topoFileSize size: %llu exceeds max allowed size (%u bytes)",
+            LOG_KEYWORDS_INIT_GROUP.c_str(), LOG_KEYWORDS_RANKTABLE_CONFIG.c_str(),
+            HCOM_ERROR_CODE(HcclResult::HCCL_E_PARA), topoFileSize, SUPPORT_MAX_TOPOFILE_SIZE);
         THROW<InvalidParamsException>(StringFormat(
             "[PhyTopoBuilder][LoadTopoInfo]file %s size (%llu bytes) exceeds max allowed size (%u bytes)",
             topoPath.c_str(), topoFileSize, SUPPORT_MAX_TOPOFILE_SIZE));

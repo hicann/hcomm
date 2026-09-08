@@ -587,11 +587,11 @@ TEST_F(hcclCommTaskExceptionLiteTest, Ut_ReportErrorMsg_When_DuplicateReport_Exp
     ASSERT_NE(handler, nullptr);
 
     MOCKER(RptInputErr).stubs().will(returnValue(HCCL_SUCCESS));
-    handler->ReportErrorMsg(taskInfo, "", errorMessage, &exceptionInfo);
+    handler->ReportErrorMsg(taskInfo, "", errorMessage, &exceptionInfo, "");
     GlobalMockObject::verify();
 
     MOCKER(RptInputErr).expects(never());
-    handler->ReportErrorMsg(taskInfo, "", errorMessage, &exceptionInfo);
+    handler->ReportErrorMsg(taskInfo, "", errorMessage, &exceptionInfo, "");
 }
 
 TEST_F(hcclCommTaskExceptionLiteTest, Ut_Register_When_CommRegisterMapEmpty_Expect_RegisterCallbackAndUnregisterLegacy)

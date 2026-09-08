@@ -564,7 +564,9 @@ static HcclResult GetRankTableInfo(const char* rankTablePath, std::string& rankt
     // 校验文件是否存在
     char resolvedPath[PATH_MAX] = {0};
     if (realpath(rankTablePath, resolvedPath) == nullptr) {
-        HCCL_ERROR("RanktableRealPath: %s is not a valid real path", rankTablePath);
+        HCCL_ERROR(
+            "[%s][%s] errNo[0x%016llx] RanktableRealPath: %s is not a valid real path", LOG_KEYWORDS_INIT_GROUP.c_str(),
+            LOG_KEYWORDS_RANKTABLE_CONFIG.c_str(), HCOM_ERROR_CODE(HCCL_E_INTERNAL), rankTablePath);
         return HCCL_E_INTERNAL;
     }
 

@@ -11,6 +11,7 @@
 #include <climits>
 #include "json_parser.h"
 #include "adapter_error_manager_pub.h"
+#include "hccl_log_keywords.h"
 
 namespace Hccl {
 
@@ -102,6 +103,9 @@ void JsonParser::ParseFileToJson(const std::string& filePath, nlohmann::json& pa
             std::vector<std::string>(
                 {filePath, "The rankTable file path does not exist, the permission is insufficient, or the JSON format "
                            "is incorrect."}));
+        HCCL_ERROR(
+            "[%s][%s] errNo[0x%016llx] path %s is not a valid real path", LOG_KEYWORDS_INIT_GROUP.c_str(),
+            LOG_KEYWORDS_RANKTABLE_CONFIG.c_str(), HCOM_ERROR_CODE(HcclResult::HCCL_E_PARA), filePath.c_str());
         THROW<InvalidParamsException>(StringFormat(
             "[Get][RanktableRealPath]errNo[0x%016llx] path %s is not a valid real path",
             HCOM_ERROR_CODE(HcclResult::HCCL_E_PARA), filePath.c_str()));

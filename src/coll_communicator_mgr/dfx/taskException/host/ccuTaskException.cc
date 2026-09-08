@@ -16,6 +16,7 @@
 #include "comm_addr_logger.h"
 #include "coll_comm.h"
 #include <adapter_error_manager_pub.h>
+#include "hccl_log_keywords.h"
 #include "task_param.h"
 #include "ccu_kernel_mgr.h"
 #include "hcomm_c_adpt.h"
@@ -165,7 +166,9 @@ std::string CcuGetAndPrintClusterMonitorErr(const u32 deviceId)
         }
 
         for (int i = 0; i < errSize; i++) {
-            HCCL_ERROR("%s", errStatusVec[i].c_str());
+            HCCL_ERROR(
+                "[%s][%s][%s] %s", LOG_KEYWORDS_TASK_EXEC.c_str(), LOG_KEYWORDS_RUN_FAILED.c_str(),
+                LOG_KEYWORDS_CCU.c_str(), errStatusVec[i].c_str());
             if (i < maxListSize) {
                 errMsg += ("\t" + errStatusVec[i] + "\n");
             }
@@ -546,6 +549,10 @@ void CcuTaskException::GenStatusInfo(const ErrorInfoBase& baseInfo, vector<CcuEr
             std::vector<std::string>(
                 {std::to_string(baseInfo.deviceId), baseInformation.c_str(),
                  (taskInformation + clusterMonitorErrMsg).c_str(), "none"}));
+        HCCL_ERROR(
+            "[%s][%s][%s] Task run failed, EI0002, deviceID:[%u], %s, %s.", LOG_KEYWORDS_TASK_EXEC.c_str(),
+            LOG_KEYWORDS_TIMEOUT.c_str(), LOG_KEYWORDS_CCU.c_str(), baseInfo.deviceId, baseInformation.c_str(),
+            taskInformation.c_str());
     }
     const string statusMsg = StatusCode2Str(highPart, lowPart);
     const auto sRet
