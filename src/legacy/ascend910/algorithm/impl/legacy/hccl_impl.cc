@@ -764,7 +764,7 @@ HcclResult hcclImpl::CreateMutiStreamRes(
     std::unique_lock<std::mutex> mutiStreamLock(tagStreamInfoLock_);
     CHK_PRT_RET(
         tagStreamInfo_.find(tag) != tagStreamInfo_.end(),
-        HCCL_DEBUG("[Create][MutiStreamRes]tag[%s] is already exit, do nothing", tag.c_str()), HCCL_SUCCESS);
+        HCCL_DEBUG("[Create][MutiStreamRes]tag[%s] already exists, do nothing", tag.c_str()), HCCL_SUCCESS);
 
     level1StreamInfo_t streamInfo;
     CHK_RET(CreateMutiStreamRes(tag, stream, streamInfo, algType, false, isBatchSendRecv, ringNum));

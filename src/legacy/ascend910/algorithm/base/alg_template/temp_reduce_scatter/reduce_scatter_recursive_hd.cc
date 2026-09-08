@@ -74,7 +74,7 @@ HcclResult ReduceScatterRecursiveHalvingDoubling::RunAsync(
             part1Size_, blockSize_, rankSize),
         ret);
 
-    HCCL_DEBUG("rank[%u] calculate par1size[%u] blocksize[%u] ranksize[%u]", rank, part1Size_, blockSize_, rankSize);
+    HCCL_DEBUG("rank[%u] calculate part1size[%u] blocksize[%u] ranksize[%u]", rank, part1Size_, blockSize_, rankSize);
 
     CHK_RET(ReduceInPartOne(rank, links));
 
@@ -245,9 +245,9 @@ ReduceScatterRecursiveHalvingDoubling::ScatterInPartOne(u32 rank, u32 rankSize, 
             ret = ExecuteTxSync(
                 links[peerRank], UserMemType::INPUT_MEM, offset + baseOffset_, srcAddr, bytesPerSlice, stream_);
             CHK_PRT_RET(
-                ret != HCCL_SUCCESS, HCCL_ERROR("[Scatter][InPartOne]tx sync to peerank[%u] failed", peerRank), ret);
+                ret != HCCL_SUCCESS, HCCL_ERROR("[Scatter][InPartOne]tx sync to peerRank[%u] failed", peerRank), ret);
             ret = links[peerRank]->TxWaitDone(stream_);
-            CHK_PRT_RET(ret != HCCL_SUCCESS, HCCL_ERROR("[Reduce][InPartOne]TxWaitDone failed"), ret);
+            CHK_PRT_RET(ret != HCCL_SUCCESS, HCCL_ERROR("[Scatter][InPartOne]TxWaitDone failed"), ret);
         }
     } else if (rank < part1Size_ && rank % 2 == 1) { // 模2计算奇偶性，奇数rank接收偶数rank发过来下半份的数据
         u32 peerRank = rank - 1;
@@ -269,9 +269,9 @@ ReduceScatterRecursiveHalvingDoubling::ScatterInPartOne(u32 rank, u32 rankSize, 
             ret = ExecuteRxSync(
                 links[peerRank], UserMemType::INPUT_MEM, offset + baseOffset_, dstAddr, bytesPerSlice, stream_);
             CHK_PRT_RET(
-                ret != HCCL_SUCCESS, HCCL_ERROR("[Scatter][InPartOne]rx sync from peerank[%u] failed", peerRank), ret);
+                ret != HCCL_SUCCESS, HCCL_ERROR("[Scatter][InPartOne]rx sync from peerRank[%u] failed", peerRank), ret);
             ret = links[peerRank]->RxWaitDone(stream_);
-            CHK_PRT_RET(ret != HCCL_SUCCESS, HCCL_ERROR("[Reduce][InPartOne]RxWaitDone failed"), ret);
+            CHK_PRT_RET(ret != HCCL_SUCCESS, HCCL_ERROR("[Scatter][InPartOne]RxWaitDone failed"), ret);
         }
     }
 

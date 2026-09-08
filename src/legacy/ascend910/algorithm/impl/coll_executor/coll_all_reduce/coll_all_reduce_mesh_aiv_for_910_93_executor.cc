@@ -155,7 +155,7 @@ HcclResult CollAllReduceMeshAivFor91093Executor::GetAivExecParam(
     args.reduceOp = param.reduceType;
 
     HCCL_INFO(
-        "SPK [CollAllReduceMeshAivFor91093Executor][GetAivExecParam], rank[%llu], rankSize[%llu], "
+        "[CollAllReduceMeshAivFor91093Executor][GetAivExecParam], rank[%llu], rankSize[%llu], "
         "len[%llu],datatype[%llu], op[%llu]",
         args.rank, args.rankSize, args.len, args.dataType, args.reduceOp);
 

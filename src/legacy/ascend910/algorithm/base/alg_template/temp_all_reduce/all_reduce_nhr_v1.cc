@@ -122,7 +122,7 @@ AllReduceNHRV1::RunAsyncStaged(const u32 rank, const u32 rankSize, const std::ve
                 ret);
             break;
         default:
-            HCCL_ERROR("[AllReduceNHRV1][RunAsyncStaged]stage[%d]is not support", stage);
+            HCCL_ERROR("[AllReduceNHRV1][RunAsyncStaged]stage[%d] is not supported", stage);
             return HCCL_E_NOT_SUPPORT;
     }
     HCCL_INFO("AllReduceNHRV1 RunAsyncStaged stage[%d] finished: rank[%u] ranksize[%u]", stage, rank, rankSize);

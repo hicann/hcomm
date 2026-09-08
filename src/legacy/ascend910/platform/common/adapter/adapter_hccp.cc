@@ -676,7 +676,7 @@ HcclResult HrtRaSendWrlist(
             CHK_PRT_RET(
                 bTimeout,
                 HCCL_ERROR(
-                    "[Send][RaWrList]errNo[0x%016llx] ra send wrlsit async timeout[%d s]. "
+                    "[Send][RaWrList]errNo[0x%016llx] ra send wrlist async timeout[%d s]. "
                     "return[%d], params: send_wrAddr[%p], opRspAddr[%p]",
                     HCCL_ERROR_CODE(HCCL_E_ROCE_TRANSFER), timeout, ret, wr, opRsp),
                 HCCL_E_ROCE_TRANSFER);
@@ -805,7 +805,7 @@ HcclResult HrtRaSendNormalWrlist(
             CHK_PRT_RET(
                 bTimeout,
                 HCCL_ERROR(
-                    "[Send][HrtRaSendNormalWrlist]errNo[0x%016llx] ra send wrlsit async timeout[%d s]. "
+                    "[Send][HrtRaSendNormalWrlist]errNo[0x%016llx] ra send wrlist async timeout[%d s]. "
                     "return[%d], params: send_wrAddr[%p], opRspAddr[%p]",
                     HCCL_ERROR_CODE(HCCL_E_ROCE_TRANSFER), timeout, ret, wr, opRsp),
                 HCCL_E_ROCE_TRANSFER);
@@ -1652,7 +1652,7 @@ HcclResult hrtRaSocketNonBlockSendHeterog(const FdHandle fdHandle, const void* d
     } else if (ret == SOCK_EAGAIN) {
         return HCCL_E_AGAIN;
     } else {
-        HCCL_RUN_INFO(
+        HCCL_RUN_WARNING(
             "[hrtRaSocketNonBlockSend]ra socket send failed, data[%p], size[%llu Byte], "
             "sent[%llu Byte], ret[%d]",
             data, size, *sentSize, ret);
@@ -1773,7 +1773,7 @@ HcclResult hrtRaSocketNonBlockRecvHeterog(const FdHandle fdHandle, void* data, u
     } else if (ret == SOCK_EAGAIN) {
         return HCCL_E_AGAIN;
     } else {
-        HCCL_RUN_INFO(
+        HCCL_RUN_WARNING(
             "[hrtRaSocketNonBlockRecv]ra socket recv failed, data[%p], size[%llu Byte], "
             "recv[%llu Byte], ret[%d], errno[%d][%s]",
             data, size, recvSize, ret, errno, strerror(errno));
@@ -2618,7 +2618,7 @@ HcclResult DestroyQpWithSharedCq(const QpInfo& info, s32 qpAppend)
 
     unique_lock<mutex> lock(g_qpRecordsMutex);
     if (g_qpRecords[label].empty()) {
-        HCCL_ERROR("qp label[%s] no exist.", label.c_str());
+        HCCL_ERROR("qp label[%s] does not exist.", label.c_str());
         return HCCL_E_PARA;
     } else {
         for (auto itCq = g_qpRecords[label].begin(); itCq != g_qpRecords[label].end(); itCq++) {
@@ -2643,11 +2643,11 @@ HcclResult DestroyQpWithSharedCq(const QpInfo& info, s32 qpAppend)
                         return HCCL_SUCCESS;
                     }
                 }
-                HCCL_ERROR("DestroyQp: the qp is no exist");
+                HCCL_ERROR("DestroyQp: the qp does not exist");
                 return HCCL_E_PARA;
             }
         }
-        HCCL_ERROR("DestroyQp: the cq is no exist");
+        HCCL_ERROR("DestroyQp: the cq does not exist");
         return HCCL_E_PARA;
     }
 }
@@ -2849,7 +2849,7 @@ HcclResult hrtRaDestroyCompChannel(RdmaHandle rdmaHandle, void* compChannel)
     CHK_PRT_RET(
         ret != 0,
         HCCL_ERROR(
-            "[Destroy][CompChannel]errNo[0x%016llx] ra destroy normal qp fail. "
+            "[Destroy][CompChannel]errNo[0x%016llx] ra destroy comp channel fail. "
             "return[%d], params: rdmaHandle[%p], compChannel[%p]",
             HCCL_ERROR_CODE(HCCL_E_NETWORK), ret, rdmaHandle, compChannel),
         HCCL_E_NETWORK);
@@ -2967,7 +2967,7 @@ HcclResult hrtRaDestroySrq(RdmaHandle rdmaHandle, SrqInfo& srqInfo)
     CHK_PRT_RET(
         ret != 0,
         HCCL_ERROR(
-            "[Destroy][Srq]errNo[0x%016llx] ra destroy normal qp fail. "
+            "[Destroy][Srq]errNo[0x%016llx] ra destroy srq fail. "
             "return[%d], params: rdmaHandle[%p]",
             HCCL_ERROR_CODE(HCCL_E_NETWORK), ret, rdmaHandle),
         HCCL_E_NETWORK);
@@ -3162,7 +3162,7 @@ HcclResult hrtRaRecvWrlist(QpHandle handle, struct RecvWrlistData* wr, unsigned 
             CHK_PRT_RET(
                 bTimeout,
                 HCCL_ERROR(
-                    "[Recv][RaWrList]errNo[0x%016llx] ra Recv wrlsit async timeout[%d s]. "
+                    "[Recv][RaWrList]errNo[0x%016llx] ra Recv wrlist async timeout[%d s]. "
                     "return[%d], params: send_wrAddr[%p]",
                     HCCL_ERROR_CODE(HCCL_E_ROCE_TRANSFER), timeout, ret, wr),
                 HCCL_E_ROCE_TRANSFER);
@@ -3236,7 +3236,7 @@ HcclResult hrtRaGetSocketVnicIpInfos(u32 phyId, enum IdType type, vector<u32> de
             CHK_PRT_RET(
                 ret != 0,
                 HCCL_ERROR(
-                    "[hrtRaGetSocketVnicIpInfo]errNo[0x%016llx] ra get VnicIpfail. ret[%d]",
+                    "[hrtRaGetSocketVnicIpInfo]errNo[0x%016llx] ra get VnicIp fail. ret[%d]",
                     HCCL_ERROR_CODE(HCCL_E_TCP_CONNECT), ret),
                 HCCL_E_TCP_CONNECT);
 

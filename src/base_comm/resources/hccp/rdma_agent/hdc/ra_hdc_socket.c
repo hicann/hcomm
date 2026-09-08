@@ -182,7 +182,7 @@ int RaHdcSocketListenStop(unsigned int phyId, struct SocketListenInfoT conn[], u
     ret = RaGetSocketListenInfo(conn, num, socketListenData.txData.conn, MAX_SOCKET_NUM);
     CHK_PRT_RETURN(ret,
         hccp_err("[listen_stop][ra_hdc_socket]ra_hdc_socket_listen_stop memcpy_s failed, ret(%d)"
-                 "phyId(%u).",
+                 " phyId(%u).",
             ret, phyId),
         -EINVAL);
 
@@ -397,7 +397,7 @@ int RaHdcGetSockets(unsigned int phyId, unsigned int role, struct SocketInfoT co
     socketInfoData = (union OpSocketInfoData *)calloc(sizeof(union OpSocketInfoData), sizeof(char));
     CHK_PRT_RETURN(socketInfoData == NULL,
         hccp_err("[get][ra_hdc_sockets]socket info data"
-                 "calloc failed phyId(%u)",
+                 " calloc failed phyId(%u)",
             phyId),
         -ENOMEM);
     socketInfoData->txData.num = num;

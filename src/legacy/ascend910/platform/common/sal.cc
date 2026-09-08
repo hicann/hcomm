@@ -551,8 +551,8 @@ HcclResult IsAllDigit(const char* strNum)
     for (; index < nLength; index++) {
         if (!isdigit(strNum[index])) {
             HCCL_ERROR(
-                "[Check][Isdigit]errNo[0x%016llx] In judge all digit, check isdigit failed."
-                "ensure that the number is an integer. strNum[%u] is [%d](Dec)",
+                "[Check][Isdigit]errNo[0x%016llx] In judge all digit, check isdigit failed. "
+                "Ensure that the number is an integer. strNum[%u] is [%d](Dec)",
                 HCCL_ERROR_CODE(HCCL_E_PARA), index, strNum[index]);
             return HCCL_E_PARA;
         }

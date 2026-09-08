@@ -440,7 +440,7 @@ HcclResult HccdImplPml::AtomicInitSet()
         initializedFlag_.test_and_set(),
         HCCL_ERROR(
             "[HcclImplBase][AtomicInitSet]errNo[0x%016llx] instance "
-            "already been initialized",
+            "has already been initialized",
             HCCL_ERROR_CODE(HCCL_E_INTERNAL)),
         HCCL_E_INTERNAL);
     return HCCL_SUCCESS;

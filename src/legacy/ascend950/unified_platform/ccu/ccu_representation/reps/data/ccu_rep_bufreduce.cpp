@@ -37,7 +37,7 @@ namespace CcuRep {
         translated = true;
 
         if (count > CCU_REDUCE_MAX_MS || mem.size() > CCU_REDUCE_MAX_MS) {
-            THROW<CcuApiException>("count and mem size must less than %u", CCU_REDUCE_MAX_MS);
+            THROW<CcuApiException>("count and mem size must be less than %u", CCU_REDUCE_MAX_MS);
         }
         if (count < CCU_REDUCE_MIN_MS) {
             THROW<Hccl::CcuApiException>("count must be at least %u", CCU_REDUCE_MIN_MS);

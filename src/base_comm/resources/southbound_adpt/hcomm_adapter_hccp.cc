@@ -323,7 +323,7 @@ HcclResult HccpUbCreateJettyAsync(
     if (ret != 0 || !raReqHandle) {
         HCCL_ERROR(
             "[%s] failed, call interface error[%d], raReqHandle[%p], "
-            "ctxHanlde[%p].",
+            "ctxHandle[%p].",
             __func__, ret, raReqHandle, ctxhandle);
         return HcclResult::HCCL_E_NETWORK;
     }

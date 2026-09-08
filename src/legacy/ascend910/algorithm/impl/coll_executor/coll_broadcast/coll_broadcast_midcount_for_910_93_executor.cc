@@ -168,7 +168,7 @@ HcclResult CollBroadcastMidCountFor91093Executor::RunLoopInner(OpParam& param, E
 
     HCCL_DEBUG(
         "[CollBroadcastMidCountFor91093Executor][RunLoopInner]inputMem[%p], outputMem[%p]"
-        "intputPtr[%p], curCount[%llu], curSize[%llu]",
+        "inputPtr[%p], curCount[%llu], curSize[%llu]",
         execMem.inputMem.ptr(), execMem.outputMem.ptr(), execMem.inputPtr, execMem.count, curSize);
     CHK_PRT_RET(
         (execMem.count == 0),

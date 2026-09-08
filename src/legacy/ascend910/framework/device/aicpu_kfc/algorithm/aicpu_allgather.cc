@@ -204,7 +204,7 @@ HcclResult AicpuAllgather::GenRingTask(
     HcclResult ret = HCCL_SUCCESS;
     if (step == 1U) { // 首轮send->winIn
         ret = AicpuDispatcher::CopyData(streamId, sndAddr, winIn, gatherSize, dataType, HCCL_REDUCE_RESERVED, rankId_);
-        CHK_PRT_RET(ret != HCCL_SUCCESS, HCCL_ERROR("Turn %u step %u send to clock winIn failed", turn_, step), ret);
+        CHK_PRT_RET(ret != HCCL_SUCCESS, HCCL_ERROR("Turn %u step %u send to block winIn failed", turn_, step), ret);
     }
     // 片间同步 notify后卡 wait前卡
     ret = AicpuDispatcher::SignalRecord(streamId, postRankId, AicpuDispatcher::IPC, AicpuDispatcher::PRE_SYNC);

@@ -101,13 +101,13 @@ HcclResult ReduceRecursiveHalvingDoubling::ReduceInPartOne(u32 rank, const std::
 
             HcclResult ret = links[peerRank]->TxAck(stream_);
             CHK_PRT_RET(
-                ret != HCCL_SUCCESS, HCCL_ERROR("[Reduce][InPartOne]tx ack to peerrank[%u] failed", peerRank), ret);
+                ret != HCCL_SUCCESS, HCCL_ERROR("[Reduce][InPartOne]tx ack to peerRank[%u] failed", peerRank), ret);
             ret = links[peerRank]->RxAck(stream_);
             CHK_PRT_RET(
-                ret != HCCL_SUCCESS, HCCL_ERROR("[Reduce][InPartOne]rx ack from peerank[%u] failed", peerRank), ret);
+                ret != HCCL_SUCCESS, HCCL_ERROR("[Reduce][InPartOne]rx ack from peerRank[%u] failed", peerRank), ret);
 
             //  接收数据到本端的 output
-            HCCL_DEBUG("send mem[%p] size[%llu] to peerank[%u]", outputMem_.ptr(), outputMem_.size(), peerRank);
+            HCCL_DEBUG("send mem[%p] size[%llu] to peerRank[%u]", outputMem_.ptr(), outputMem_.size(), peerRank);
             ret = links[peerRank]->TxAsync(UserMemType::INPUT_MEM, baseOffset_, outputMem_.ptr(), 0, stream_);
             CHK_PRT_RET(
                 ret != HCCL_SUCCESS,
@@ -128,17 +128,17 @@ HcclResult ReduceRecursiveHalvingDoubling::ReduceInPartOne(u32 rank, const std::
             CHK_SMART_PTR_NULL(links[peerRank]);
             HcclResult ret = links[peerRank]->TxAck(stream_);
             CHK_PRT_RET(
-                ret != HCCL_SUCCESS, HCCL_ERROR("[Reduce][InPartOne]tx ack to peerrank[%u] failed", peerRank), ret);
+                ret != HCCL_SUCCESS, HCCL_ERROR("[Reduce][InPartOne]tx ack to peerRank[%u] failed", peerRank), ret);
             ret = links[peerRank]->RxAck(stream_);
             CHK_PRT_RET(
-                ret != HCCL_SUCCESS, HCCL_ERROR("[Reduce][InPartOne]rx ack from peerank[%u] failed", peerRank), ret);
+                ret != HCCL_SUCCESS, HCCL_ERROR("[Reduce][InPartOne]rx ack from peerRank[%u] failed", peerRank), ret);
             //  发送到对端的output
             HCCL_DEBUG(
                 "rank[%u] sends inputMem[%p] to PeerRank[%u] Offset[%llu], Size[%llu]", rank, inputMem_.ptr(), peerRank,
                 baseOffset_, inputMem_.size());
             ret = senderInfo_->run(links[peerRank], baseOffset_, inputMem_, stream_);
             CHK_PRT_RET(
-                ret != HCCL_SUCCESS, HCCL_ERROR("[Reduce][InPartOne]tx sync to peerank[%u] failed", peerRank), ret);
+                ret != HCCL_SUCCESS, HCCL_ERROR("[Reduce][InPartOne]tx sync to peerRank[%u] failed", peerRank), ret);
             ret = links[peerRank]->RxAsync(UserMemType::OUTPUT_MEM, baseOffset_, inputMem_.ptr(), 0, stream_);
             CHK_PRT_RET(
                 ret != HCCL_SUCCESS,
@@ -290,11 +290,11 @@ HcclResult ReduceRecursiveHalvingDoubling::GatherInBlock(u32 rank, u32 rankSize,
             HcclResult ret = subLinks[peerRank]->TxAck(stream_);
             CHK_PRT_RET(
                 ret != HCCL_SUCCESS,
-                HCCL_ERROR("[Gather][InBlock]rank[%u] tx ack from peerank[%u] failed", rank, peerRank), ret);
+                HCCL_ERROR("[Gather][InBlock]rank[%u] tx ack from peerRank[%u] failed", rank, peerRank), ret);
             ret = subLinks[peerRank]->RxAck(stream_);
             CHK_PRT_RET(
                 ret != HCCL_SUCCESS,
-                HCCL_ERROR("[Gather][InBlock]rank[%u] rx ack from peerank[%u] failed", rank, peerRank), ret);
+                HCCL_ERROR("[Gather][InBlock]rank[%u] rx ack from peerRank[%u] failed", rank, peerRank), ret);
 
             // 等待对端可以接收数据
             HCCL_DEBUG(
@@ -315,13 +315,13 @@ HcclResult ReduceRecursiveHalvingDoubling::GatherInBlock(u32 rank, u32 rankSize,
             HcclResult ret = subLinks[peerRank]->TxAck(stream_);
             CHK_PRT_RET(
                 ret != HCCL_SUCCESS,
-                HCCL_ERROR("[Gather][InBlock]rank[%u] tx ack from peerank[%u] failed", rank, peerRank), ret);
+                HCCL_ERROR("[Gather][InBlock]rank[%u] tx ack from peerRank[%u] failed", rank, peerRank), ret);
             ret = subLinks[peerRank]->RxAck(stream_);
             CHK_PRT_RET(
                 ret != HCCL_SUCCESS,
-                HCCL_ERROR("[Gather][InBlock]rank[%u] rx ack from peerank[%u] failed", rank, peerRank), ret);
+                HCCL_ERROR("[Gather][InBlock]rank[%u] rx ack from peerRank[%u] failed", rank, peerRank), ret);
             HCCL_DEBUG(
-                "rank[%u] outputMem[%p] sends to peerrank[%u] outputmem, offset[%llu], "
+                "rank[%u] outputMem[%p] sends to peerRank[%u] outputmem, offset[%llu], "
                 "size[%llu]",
                 rank, outputMem_.ptr(), peerRank, baseOffset_ + txSlices_[step].offset, txSlices_[step].size);
             ret = ExecuteTxSync(

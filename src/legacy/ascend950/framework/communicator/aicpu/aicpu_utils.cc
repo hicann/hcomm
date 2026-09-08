@@ -116,7 +116,7 @@ int AicpuUtils::GetException(
     }
     uint32_t reportNum = recvInfo->report_cqe_num;
     if (reportNum > MAX_REPORT_CNT) {
-        HCCL_WARNING("[%s]report cqe num %u should not big than %u", typeStr, reportNum, MAX_REPORT_CNT);
+        HCCL_WARNING("[%s]report cqe num %u should not be bigger than %u", typeStr, reportNum, MAX_REPORT_CNT);
         return 1;
     }
 

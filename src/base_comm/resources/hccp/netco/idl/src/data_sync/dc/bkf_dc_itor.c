@@ -51,7 +51,7 @@ void BkfDcItorUninit(BkfDc *dc)
     if (dc == VOS_NULL) {
         return;
     }
-    BKF_LOG_DEBUG(BKF_LOG_HND, "2unit\n");
+    BKF_LOG_DEBUG(BKF_LOG_HND, "dc itor uninit done\n");
 
     return;
 }

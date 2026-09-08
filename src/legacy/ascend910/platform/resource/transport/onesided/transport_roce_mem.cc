@@ -286,7 +286,7 @@ HcclResult TransportRoceMem::SetSocket(const std::shared_ptr<HcclSocket>& socket
 {
     CHK_SMART_PTR_NULL(socket);
     if (socket->GetStatus() != HcclSocketStatus::SOCKET_OK) {
-        HCCL_ERROR("sockets does not connected");
+        HCCL_ERROR("sockets is not connected");
         return HCCL_E_PARA;
     }
     socket_ = socket;
@@ -423,7 +423,7 @@ HcclResult TransportRoceMem::Write(const HcclBuf& remoteMem, const HcclBuf& loca
     CHK_PRT_RET(
         (localMem.len == 0U) || (remoteMem.len == 0U),
         HCCL_ERROR(
-            "[TransportRoceMem]localMem size[%llu] or remoteMem size[%llu]is invalid", localMem.len, remoteMem.len),
+            "[TransportRoceMem]localMem size[%llu] or remoteMem size[%llu] is invalid", localMem.len, remoteMem.len),
         HCCL_E_PARA);
     CHK_PRT_RET(stream == nullptr, HCCL_ERROR("[TransportRoceMem]stream is invalid"), HCCL_E_PARA);
 
@@ -443,7 +443,7 @@ HcclResult TransportRoceMem::Write(const RmaOpMem& remoteMem, const RmaOpMem& lo
     CHK_PRT_RET(
         (localMem.size == 0U) || (remoteMem.size == 0U),
         HCCL_ERROR(
-            "[TransportRoceMem]localMem size[%llu] or remoteMem size[%llu]is invalid", localMem.size, remoteMem.size),
+            "[TransportRoceMem]localMem size[%llu] or remoteMem size[%llu] is invalid", localMem.size, remoteMem.size),
         HCCL_E_PARA);
     CHK_PRT_RET(stream == nullptr, HCCL_ERROR("[TransportRoceMem]stream is invalid"), HCCL_E_PARA);
 
@@ -463,7 +463,7 @@ HcclResult TransportRoceMem::Read(const HcclBuf& localMem, const HcclBuf& remote
     CHK_PRT_RET(
         (localMem.len == 0U) || (remoteMem.len == 0U),
         HCCL_ERROR(
-            "[TransportRoceMem]localMem size[%llu] or remoteMem size[%llu]is invalid", localMem.len, remoteMem.len),
+            "[TransportRoceMem]localMem size[%llu] or remoteMem size[%llu] is invalid", localMem.len, remoteMem.len),
         HCCL_E_PARA);
     CHK_PRT_RET(stream == nullptr, HCCL_ERROR("[TransportRoceMem]stream is invalid"), HCCL_E_PARA);
 
@@ -483,7 +483,7 @@ HcclResult TransportRoceMem::Read(const RmaOpMem& localMem, const RmaOpMem& remo
     CHK_PRT_RET(
         (localMem.size == 0U) || (remoteMem.size == 0U),
         HCCL_ERROR(
-            "[TransportRoceMem]localMem size[%llu] or remoteMem size[%llu]is invalid", localMem.size, remoteMem.size),
+            "[TransportRoceMem]localMem size[%llu] or remoteMem size[%llu] is invalid", localMem.size, remoteMem.size),
         HCCL_E_PARA);
     CHK_PRT_RET(stream == nullptr, HCCL_ERROR("[TransportRoceMem]stream is invalid"), HCCL_E_PARA);
 
@@ -541,7 +541,7 @@ HcclResult TransportRoceMem::GetMemInfo(u32& lkey, u32& rkey, HcclBuf& localMem,
     CHK_PRT_RET(
         (localMem.len == 0U) || (remoteMem.len == 0U),
         HCCL_ERROR(
-            "[TransportRoceMem] localMem size[%llu] or remoteMem size[%llu]is invalid", localMem.len, remoteMem.len),
+            "[TransportRoceMem] localMem size[%llu] or remoteMem size[%llu] is invalid", localMem.len, remoteMem.len),
         HCCL_E_PARA);
 
     RmaBufferSlice localRmaBufferSlice{};
@@ -821,7 +821,7 @@ HcclResult TransportRoceMem::RdmaDbSend(u32 dbindex, u64 dbinfo, const struct Se
         ret != HCCL_SUCCESS,
         HCCL_ERROR(
             "[RdmaDbSend]errNo[0x%016llx] rdma db send fail, "
-            "return[%d]. para: dbindex[%u]dbinfo[%llu].",
+            "return[%d]. para: dbindex[%u] dbinfo[%llu].",
             HCCL_ERROR_CODE(HCCL_E_INTERNAL), ret, dbindex, dbinfo),
         HCCL_E_INTERNAL);
     return HCCL_SUCCESS;

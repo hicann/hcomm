@@ -529,7 +529,7 @@ HcclResult TopoInfoRanktableParser::CheckUniqueAndInsertPool(
         if (srvIt != uniqueInfoCheckPool_[static_cast<u32>(type)].end()) {
             RPT_INPUT_ERR(
                 true, "EI0014", std::vector<std::string>({"value", "variable", "expect"}),
-                std::vector<std::string>({value, " \"IP\" is repeate", "please check the ranktable"}));
+                std::vector<std::string>({value, " \"IP\" is repeated", "please check the ranktable"}));
             HCCL_ERROR(
                 "[%s][%s]errNo[0x%016llx] [%s]:[%s] is already exist", LOG_KEYWORDS_INIT_GROUP.c_str(),
                 LOG_KEYWORDS_RANKTABLE_CHECK.c_str(), HCOM_ERROR_CODE(HCCL_E_PARA), strUniqueInfoType.c_str(),

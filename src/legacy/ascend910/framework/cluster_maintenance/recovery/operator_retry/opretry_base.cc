@@ -628,7 +628,7 @@ HcclResult OpRetryBase::InitChangeLinkInfo(RetryContext* retryCtx, bool incre, b
 
                 retryCtx->lastLinkPortStatus_.insert({remoteRank, true});
 
-                HCCL_RUN_INFO("[OpRetry][Agnet]init changeLinkInfoStr add remoteRank[%u]", remoteRank);
+                HCCL_RUN_INFO("[OpRetry][Agent]init changeLinkInfoStr add remoteRank[%u]", remoteRank);
             }
         }
     } else {
@@ -646,7 +646,7 @@ HcclResult OpRetryBase::InitChangeLinkInfo(RetryContext* retryCtx, bool incre, b
                     + std::to_string(retryCtx->localChangeLinkInfo_.isUseDefaultPort[i]) + "; ");
             retryCtx->lastLinkPortStatus_.insert({retryCtx->localChangeLinkInfo_.remoteRankList[i], true});
         }
-        HCCL_RUN_INFO("[OpRetry][Agnet]init changeLinkInfoStr:%s", changeLinkInfoStr.c_str());
+        HCCL_RUN_INFO("[OpRetry][Agent]init changeLinkInfoStr:%s", changeLinkInfoStr.c_str());
     }
 
     return HCCL_SUCCESS;
@@ -790,11 +790,11 @@ OpRetryBase::RecvActiveSwitchInfo(std::shared_ptr<HcclSocket> socket, const u32 
         CHK_PRT_RET(
             elapsed > timeout,
             HCCL_ERROR(
-                "[SwitchNic][Server] timeout in recv agent ActiveSwitchInfo, waitime[%u s>%u s]", elapsed, timeout),
+                "[SwitchNic][Server] timeout in recv agent ActiveSwitchInfo, waittime[%u s>%u s]", elapsed, timeout),
             HCCL_E_TIMEOUT);
         ret = WaitActiveSwitchInfo(socket, switchInfo);
         if (ret == HCCL_SUCCESS) {
-            HCCL_INFO("[SwitchNic][Server] recv ActiveSwitchInfo form rank[%u]", rankId);
+            HCCL_INFO("[SwitchNic][Server] recv ActiveSwitchInfo from rank[%u]", rankId);
             break;
         } else if (ret == HCCL_E_AGAIN) {
             // 未收到数据，发送一个保活数据给agent

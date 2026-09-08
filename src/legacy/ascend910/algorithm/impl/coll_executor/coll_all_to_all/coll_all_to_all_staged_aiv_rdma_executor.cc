@@ -108,7 +108,7 @@ HcclResult CollRunAlltoAllStagedAivRdmaExecutor::CalNumBlocks(
         HCCL_E_PARA);
 
     HCCL_INFO(
-        "[CollRunAlltoAllStagedAivRdmaExecutor][CalNumBlocks] numBlocks is set to [%u], limit[%u], recommanded[%u]",
+        "[CollRunAlltoAllStagedAivRdmaExecutor][CalNumBlocks] numBlocks is set to [%u], limit[%u], recommended[%u]",
         numBlocks, numBlocks_, bestNumBlocks);
     return HCCL_SUCCESS;
 }

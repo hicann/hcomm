@@ -95,7 +95,7 @@ HcclResult CollReduceScatterMeshAivExecutor::CalNumBlocks(
     }
 
     HCCL_INFO(
-        "[CollReduceScatterMeshAivExecutor][CalNumBlocks] numBlocks is set to [%u], limit[%u], recommanded[%u]",
+        "[CollReduceScatterMeshAivExecutor][CalNumBlocks] numBlocks is set to [%u], limit[%u], recommended[%u]",
         numBlocks, numBlocks_, bestNumBlocks);
     return HCCL_SUCCESS;
 }
@@ -135,7 +135,7 @@ HcclResult CollReduceScatterMeshAivExecutor::GetAivExecParam(
         }
     }
     HCCL_INFO(
-        "SPK, buffersIn [%p] [%p] [%p] [%p]"
+        "[CollReduceScatterMeshAivExecutor][GetAivExecParam], buffersIn [%p] [%p] [%p] [%p] "
         "buffersOut [%p] [%p] [%p] [%p]",
         args.buffersIn[0], args.buffersIn[1], args.buffersIn[2], args.buffersIn[3], args.buffersOut[0],
         args.buffersOut[1], args.buffersOut[2], args.buffersOut[3]);
@@ -154,7 +154,7 @@ HcclResult CollReduceScatterMeshAivExecutor::GetAivExecParam(
             HCCL_ERROR_CODE(ret), param.tag.c_str()),
         ret);
     HCCL_INFO(
-        "SPK [CollReduceScatterMeshAivExecutor][GetAivExecParam], rank[%llu], rankSize[%llu], "
+        "[CollReduceScatterMeshAivExecutor][GetAivExecParam], rank[%llu], rankSize[%llu], "
         "len[%llu],datatype[%llu], op[%llu], devType[%u]",
         args.rank, args.rankSize, args.len, args.dataType, args.reduceOp, args.devType);
 

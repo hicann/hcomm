@@ -163,7 +163,7 @@ HcclResult HDCommunicate::Get(u32 offset, u32 length, u8* value)
     CHK_PTR_NULL(value);
     CHK_PRT_RET(
         (offset + length > buffLen_),
-        HCCL_ERROR("[HDCommunicate][Get]Invalid length, offset=%u, length=%u, befferLen=%u", offset, length, buffLen_),
+        HCCL_ERROR("[HDCommunicate][Get]Invalid length, offset=%u, length=%u, bufferLen=%u", offset, length, buffLen_),
         HCCL_E_PARA);
     std::shared_lock<std::shared_mutex> lock(lock_);
     HcclResult ret = Read(offset, length, value);

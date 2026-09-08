@@ -191,7 +191,8 @@ void TaskExceptionFunc::Call()
                 uint32_t reportNum = recvInfo->report_cqe_num;
                 if (reportNum > MAX_REPORT_CNT) {
                     HCCL_ERROR(
-                        "[TaskExceptionFunc]report cqe num %u should not big than %u", reportNum, MAX_REPORT_CNT);
+                        "[TaskExceptionFunc]report cqe num %u should not be greater than %u", reportNum,
+                        MAX_REPORT_CNT);
                     continue;
                 }
                 for (uint32_t idx = 0U; idx < reportNum; ++idx) {

@@ -57,7 +57,7 @@ HcclResult CcuJettyMgr::PrepareCreate(const std::vector<LinkData>& links)
             ret == HcclResult::HCCL_E_UNAVAIL,
             HCCL_WARNING(
                 "[CcuJettyMgr][%s] failed to alloc ccu channels, ccu resources "
-                "are unavaialble, locAddr[%s], devLogicId[%d].",
+                "are unavailable, locAddr[%s], devLogicId[%d].",
                 __func__, locAddr.Describe().c_str(), devLogicId_),
             ret);
         CHK_RET(ret);
@@ -100,7 +100,7 @@ HcclResult CcuJettyMgr::GetAvailableBatch(const BatchKey& batchKey, ResourceBatc
         ret == HcclResult::HCCL_E_UNAVAIL,
         HCCL_WARNING(
             "[CcuJettyMgr][%s] failed to alloc ccu channels, ccu resources "
-            "are unavaialble, locAddr[%s], sqSize[%u], devLogicId[%d].",
+            "are unavailable, locAddr[%s], sqSize[%u], devLogicId[%d].",
             __func__, batchKey.Describe().c_str(), sqSize, devLogicId_),
         ret);
     // 其他错误直接返回错误码
@@ -108,7 +108,7 @@ HcclResult CcuJettyMgr::GetAvailableBatch(const BatchKey& batchKey, ResourceBatc
         ret != HCCL_SUCCESS,
         HCCL_ERROR(
             "[CcuJettyMgr][%s] failed to alloc ccu channels, ccu resources "
-            "are unavaialble, locAddr[%s], sqSize[%u], devLogicId[%d].",
+            "are unavailable, locAddr[%s], sqSize[%u], devLogicId[%d].",
             __func__, batchKey.Describe().c_str(), sqSize, devLogicId_),
         ret);
     // 如果新增资源保存失败，手动释放避免泄露

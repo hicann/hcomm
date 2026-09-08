@@ -154,7 +154,7 @@ HcclMsg (*AicpuKfcRpcServerV2::GetMsgWorkSpace())[HCCL_MSG_CNT]
 uint64_t AicpuKfcRpcServerV2::GetFinishAddr(int32_t idx) const
 {
     if (idx >= static_cast<int32_t>(HCCL_MSG_CNT) || hcclMsgArea_ == nullptr) {
-        HCCL_ERROR("idx %d exceed max or msg area is not initialized.", idx);
+        HCCL_ERROR("idx %d exceeds max idx %u or msg area is not initialized.", idx, HCCL_MSG_CNT);
         return 0;
     }
     return reinterpret_cast<uint64_t>(&(hcclMsgArea_->commMsg.singleMsg.finishedTurnCnt[idx].cnt));
@@ -163,7 +163,7 @@ uint64_t AicpuKfcRpcServerV2::GetFinishAddr(int32_t idx) const
 uint64_t AicpuKfcRpcServerV2::GetCommitareaAddr(int32_t idx) const
 {
     if (idx >= static_cast<int32_t>(HCCL_MSG_CNT) || hcclMsgArea_ == nullptr) {
-        HCCL_ERROR("idx %d exceed max or hcclMsgArea_ is not initialized.", idx);
+        HCCL_ERROR("idx %d exceeds max idx %u or hcclMsgArea_ is not initialized.", idx, HCCL_MSG_CNT);
         return 0;
     }
     return reinterpret_cast<uint64_t>(&(hcclMsgArea_->commMsg.singleMsg.commitTurnCnt[idx].cnt));

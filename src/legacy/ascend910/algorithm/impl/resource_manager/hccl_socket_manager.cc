@@ -147,7 +147,7 @@ HcclResult HcclSocketManager::ConstructWhiteList(
         wlistInfo.connLimit = GetConnLimit(socketType);
         s32 sRet = memcpy_s(&wlistInfo.tag[0], sizeof(wlistInfo.tag), tag.c_str(), tag.size() + 1);
         if (sRet != EOK) {
-            HCCL_ERROR("[Construct][WhiteList]memory copy failed. errorno[%d]", sRet);
+            HCCL_ERROR("[Construct][WhiteList]memory copy failed. errno[%d]", sRet);
             return HCCL_E_MEMORY;
         }
 
@@ -402,7 +402,7 @@ HcclResult HcclSocketManager::CreateSockets(
     }
 
     HCCL_INFO(
-        "[Create][Sockets]client socket map size %u, server socket map size %u", serverSocketsMap.size(),
+        "[Create][Sockets]client socket map size %u, server socket map size %u", clientSocketsMap.size(),
         serverSocketsMap.size());
 
     // 需要等待连接建立成功时，则会阻塞

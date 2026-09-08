@@ -930,7 +930,7 @@ HcclResult TransportHeterogRoce::GetNetworkResource()
     CHK_RET(NetworkManager::GetInstance(index_).GetRaResourceInfo(raResourceInfo));
     auto it = raResourceInfo.nicSocketMap.find(selfIp_);
     if (it == raResourceInfo.nicSocketMap.end()) {
-        HCCL_ERROR("[TransportHeterogRoce][Init]nic socket handle did not found");
+        HCCL_ERROR("[TransportHeterogRoce][Init]nic socket handle was not found");
         return HCCL_E_PARA;
     }
     nicSocketHandle_ = it->second.nicSocketHandle;
@@ -1325,7 +1325,7 @@ HcclResult TransportHeterogRoce::PsRdmaDbSend(uint32_t dbindex, uint64_t dbinfo,
         ret != RT_ERROR_NONE,
         HCCL_ERROR(
             "[rtRDMADBSend]errNo[0x%016llx] rt rdma send fail, "
-            "return[%d]. para: dbindex[%u]dbinfo[%llu].",
+            "return[%d]. para: dbindex[%u] dbinfo[%llu].",
             HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret, dbindex, dbinfo),
         HCCL_E_RUNTIME);
     if (deviceLogicId_ == HOST_DEVICE_ID) {

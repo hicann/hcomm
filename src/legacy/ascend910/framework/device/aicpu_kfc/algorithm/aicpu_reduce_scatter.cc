@@ -39,7 +39,7 @@ HcclResult AicpuReduceScatter::RunAlgorithm(
     }
     // dataCount 为tile的输入的数据量（scatter前）
     if (dataCount % rankNum_ != 0) { // 每个tile数据量必须能均分至每张卡
-        HCCL_ERROR("Reduce scatter dataCount %lu max be multiple of rankNum_.", dataCount);
+        HCCL_ERROR("Reduce scatter dataCount %lu must be a multiple of rankNum %u.", dataCount, rankNum_);
         return HCCL_E_NOT_SUPPORT;
     }
 
@@ -326,7 +326,7 @@ HcclResult AicpuReduceScatter::GenRingTask(
     HcclResult ret = HCCL_SUCCESS;
     if (step == 1U) { // 首轮send->winIn winOut
         ret = AicpuDispatcher::CopyData(streamId, sndAddr, winIn, curSize, dataType, HCCL_REDUCE_RESERVED, rankId_);
-        CHK_PRT_RET(ret != HCCL_SUCCESS, HCCL_ERROR("Turn %u step %u send to clock winIn failed", turn_, step), ret);
+        CHK_PRT_RET(ret != HCCL_SUCCESS, HCCL_ERROR("Turn %u step %u send to block winIn failed", turn_, step), ret);
 
         ret = AicpuDispatcher::CopyData(
             streamId, sndAddr + scatterSize, winOut, curSize, dataType, HCCL_REDUCE_RESERVED, rankId_);

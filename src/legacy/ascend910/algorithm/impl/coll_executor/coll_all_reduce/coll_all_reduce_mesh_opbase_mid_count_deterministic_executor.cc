@@ -264,7 +264,7 @@ HcclResult CollAllReduceMeshOpbaseMidCountDeterministicExecutor::RunLoopInner(
     const u64 curSize = execMem.count * unitSize;
     HCCL_DEBUG(
         "[%s]inputMem[%p][%llu], outputMem[%p][%llu], "
-        "intputPtr[%p], outputPtr[%p], curCount[%llu], curSize[%llu]",
+        "inputPtr[%p], outputPtr[%p], curCount[%llu], curSize[%llu]",
         __func__, execMem.inputMem.ptr(), execMem.inputMem.size(), execMem.outputMem.ptr(), execMem.outputMem.size(),
         execMem.inputPtr, execMem.outputPtr, execMem.count, curSize);
     CHK_PRT_RET((execMem.count == 0), HCCL_ERROR("[%s]In OP_BASE curCount is zero.", __func__), HCCL_E_PARA);

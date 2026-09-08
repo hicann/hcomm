@@ -149,7 +149,7 @@ HcclResult AllReduceReduceBcast::RunReduce(u32 rank, u32 rankSize, const std::ve
     } else {
         ret = RunAllReduceBDReduceSend(rank, 0, links);
     }
-    CHK_PRT_RET(ret != HCCL_SUCCESS, HCCL_ERROR("[AllReduceReduceBcastReduce]rank[%u]failed", rank), ret);
+    CHK_PRT_RET(ret != HCCL_SUCCESS, HCCL_ERROR("[AllReduceReduceBcastReduce]rank[%u] failed", rank), ret);
     return HCCL_SUCCESS;
 }
 
@@ -177,7 +177,7 @@ HcclResult AllReduceReduceBcast::RunBroadcast(u32 rank, u32 rankSize, const std:
     } else {
         ret = RunAllReduceBDMemcpyReceive(rank, 0, links);
     }
-    CHK_PRT_RET(ret != HCCL_SUCCESS, HCCL_ERROR("[AllReduceReduceBcast]rank[%u]failed", rank), ret);
+    CHK_PRT_RET(ret != HCCL_SUCCESS, HCCL_ERROR("[AllReduceReduceBcast]rank[%u] failed", rank), ret);
 
     HCCL_INFO("AllReduceReduceBcast RunBroadcast: rank[%u]", rank);
     return HCCL_SUCCESS;

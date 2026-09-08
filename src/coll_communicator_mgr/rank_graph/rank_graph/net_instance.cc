@@ -200,7 +200,7 @@ bool CheckPortGroupSize(u32 netLayer, NetInstance::Link& srcLink, NetInstance::L
         auto localRankId = std::dynamic_pointer_cast<NetInstance::Peer>(srcPeer)->GetRankId();
         auto remoteRankId = std::dynamic_pointer_cast<NetInstance::Peer>(targetPeer)->GetRankId();
         HCCL_WARNING(
-            "[GetPaths][CheckPortGroupSize] portGroupSize is not equal => src[%u], target[%u]."
+            "[GetPaths][CheckPortGroupSize] portGroupSize is not equal => src[%u], target[%u]. "
             "LocatedInfo: NetLayer[%u], localRank[%u], rmtRank[%u], localAddr[%s], rmtAddr[%s]",
             srcPortGroupSize, tgtPortGroupSize, netLayer, localRankId, remoteRankId, localAddr.Describe().c_str(),
             remoteAddr.Describe().c_str());

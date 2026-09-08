@@ -123,7 +123,7 @@ TransportMem::DoExchangeMemDesc(const RmaMemDescs& localMemDescs, RmaMemDescs& r
         CHK_RET(SendLocalMemDesc(localMemDescs));
         CHK_RET(ReceiveRemoteMemDesc(remoteMemDescs, actualNumOfRemote));
     }
-    HCCL_INFO("[HcclOneSidedConn][ExchangeMemDesc]get actualNumOfRemotee[%u]", actualNumOfRemote);
+    HCCL_INFO("[HcclOneSidedConn][ExchangeMemDesc]get actualNumOfRemote[%u]", actualNumOfRemote);
     // 校验remoteDescs中的remoteRankId和conn对象中保存的localRankId是否一样
     for (u32 i = 0; i < actualNumOfRemote; i++) {
         CHK_PTR_NULL((remoteMemDescs.array) + i);

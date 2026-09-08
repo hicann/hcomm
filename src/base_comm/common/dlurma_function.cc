@@ -54,7 +54,7 @@ HcclResult DlUrmaFunction::DlUrmaFunctionInit()
             handle_ == nullptr,
             HCCL_ERROR(
                 "dlopen [%s] failed, %s", "liburma.so.0",
-                (errMsg == nullptr) ? "please check the file exist or permission denied." : errMsg),
+                (errMsg == nullptr) ? "Please verify that the file exists and that you have permission." : errMsg),
             HCCL_E_OPEN_FILE_FAILURE);
     }
 

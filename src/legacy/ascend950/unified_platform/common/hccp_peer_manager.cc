@@ -45,7 +45,7 @@ void HccpPeerManager::DeInit(s32 deviceLogicId)
     std::lock_guard<std::mutex> lock(managerMutex_);
 
     if (isDestroy) {
-        HCCL_WARNING("[HccpPeerManager::%s] HccpPeerManager has been detroy", __func__);
+        HCCL_WARNING("[HccpPeerManager::%s] HccpPeerManager has been destroyed", __func__);
         return;
     }
 

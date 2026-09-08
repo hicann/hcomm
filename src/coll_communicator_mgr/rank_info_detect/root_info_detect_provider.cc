@@ -58,7 +58,7 @@ namespace {
         CHK_PRT_RET(
             sRet != EOK,
             HCCL_ERROR(
-                "[%s] memcpy root info fail. errorno[%d] params:destMaxSize[%u], count[%u]", __func__, sRet,
+                "[%s] memcpy root info fail. errno[%d] params:destMaxSize[%u], count[%u]", __func__, sRet,
                 HCCL_ROOT_INFO_BYTES, rootHandleLen),
             HCCL_E_MEMORY);
 

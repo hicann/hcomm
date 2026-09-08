@@ -55,7 +55,7 @@ void PreemptPortManager::ListenPreempt(
 {
     CHK_PRT_RET(
         !initialized,
-        HCCL_ERROR("[PreemptPortManager::%s] preempt port manager has already been release.", __func__), );
+        HCCL_ERROR("[PreemptPortManager::%s] preempt port manager has already been released.", __func__), );
 
     CHK_SMART_PTR_RET_NULL(listenSocket);
     NicType nicType = listenSocket->GetNicType();
@@ -69,7 +69,7 @@ void PreemptPortManager::Release(const std::shared_ptr<Socket>& listenSocket)
 {
     CHK_PRT_RET(
         !initialized,
-        HCCL_WARNING("[PreemptPortManager::%s] preempt port manager has already been release.", __func__), );
+        HCCL_WARNING("[PreemptPortManager::%s] preempt port manager has already been released.", __func__), );
 
     CHK_SMART_PTR_RET_NULL(listenSocket);
     NicType nicType = listenSocket->GetNicType();
@@ -144,7 +144,7 @@ void PreemptPortManager::PreemptPortInRange(
         = nicType == NicType::HOST_NIC_TYPE ? "HCCL_HOST_SOCKET_PORT_RANGE" : "HCCL_NPU_SOCKET_PORT_RANGE";
     HCCL_ERROR(
         "NOTICE: Users need to make sure ports in %s are available for HCCL."
-        "Please double check whether the port are used by others unexpected process. "
+        "Please double check whether the ports are used by other unexpected processes. "
         "The port ranges size should also be enough when running multi-process HCCL.",
         envName.c_str());
     HCCL_ERROR("NOTICE: The host port range size is not suggested to be smaller than the process number"
@@ -174,7 +174,7 @@ void PreemptPortManager::ReleasePreempt(
         HCCL_ERROR(
             "[PreemptPortManager::%s] ref[%d], ip[%s] port[%u] has already been released.", __func__, ref.Count(),
             ipAddr.c_str(), port),
-        InvalidParamsException, "socket port dulplicate release");
+        InvalidParamsException, "socket port duplicate release");
 
     // 释放绑定端口的Socket
     listenSocket->StopListen();

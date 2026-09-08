@@ -806,7 +806,10 @@ HcclResult ExecutorBase::PrepareSliceData(
         temp.offset = totalSize - residueSize + piplineOffset;
         i++;
         CHK_PRT_RET(
-            (sliceSize <= 0), HCCL_ERROR("[Prepare][SliceData]data_slice_prepare sliceSize[%llu]", sliceSize),
+            (sliceSize <= 0),
+            HCCL_ERROR(
+                "[Prepare][SliceData]data_slice_prepare sliceSize[%llu] is invalid, should be greater than 0",
+                sliceSize),
             HCCL_E_PARA);
         residueSize -= sliceSize;
         dataSlice.push_back(temp);
@@ -877,7 +880,7 @@ ExecutorBase::CalcBinaryBlockHalvingDoubleLinkReleation(u32 rank, u32 rankSize, 
     CalcBinaryBlockParams(
         rank, rankSize, stepsInBlock, lowerBlockSize, myBlockSize, rankInMyBlock, myBlockOffset, higherBlockSize);
     if (lowerBlockSize == 0) {
-        HCCL_ERROR("[Calc][BinaryBlockHalvingDoubleLinkReleation]lowerBlockSize size is zero.");
+        HCCL_ERROR("[Calc][BinaryBlockHalvingDoubleLinkRelation]lowerBlockSize size is zero.");
         return HCCL_E_PARA;
     }
     for (u32 i = 0; i < rankSize; i++) {

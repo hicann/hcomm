@@ -145,8 +145,8 @@ private:
             }
         }
         HCCL_INFO(
-            "LGC requiredQue_.size is [%llu]. intraQue_.size is [%llu]. interQue_.size is [%llu].", requiredQue_.size(),
-            intraQue_.size(), interQue_.size());
+            "[CalcQue] requiredQue_.size is [%llu]. intraQue_.size is [%llu]. interQue_.size is [%llu].",
+            requiredQue_.size(), intraQue_.size(), interQue_.size());
         syncQueues_.emplace_back(intraQue_[0]);
         syncQueues_.emplace_back(interQue_[0]);
         return HCCL_SUCCESS;

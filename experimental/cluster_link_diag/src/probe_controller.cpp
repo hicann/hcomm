@@ -538,7 +538,7 @@ int main(int argc, char** argv)
     if (!lat_file.is_open() || !pass_rate_file.is_open() || !bad_link_file.is_open()
         || !bad_link_candidate_file.is_open()
         || (enable_l2_pingpong && (!l2_latency_file.is_open() || !l2_passrate_file.is_open()))) {
-        std::cerr << "无法打开输出文件！" << std::endl;
+        std::cerr << "failed to open output file!" << std::endl;
         return -1;
     }
     lat_file << std::fixed << std::setprecision(3);

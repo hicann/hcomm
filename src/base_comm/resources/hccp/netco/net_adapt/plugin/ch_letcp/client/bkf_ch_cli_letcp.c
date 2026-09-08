@@ -233,7 +233,7 @@ STATIC void BkfChCliLetcpDisconn(BkfChCli *ch, BkfChCliConnId *connId)
     BKF_RETURNvoid_IF(ch == VOS_NULL);
     BKF_RETURNvoid_IF(connId == VOS_NULL);
     BKF_RETURNvoid_IF(connId->ch == VOS_NULL);
-    BKF_LOG_INFO(BKF_LOG_HND, "ch(%#x)/serUrl(%s)/localUrl(%s), fd %d, conndId %#x\n", BKF_MASK_ADDR(ch),
+    BKF_LOG_INFO(BKF_LOG_HND, "ch(%#x)/serUrl(%s)/localUrl(%s), fd %d, connId %#x\n", BKF_MASK_ADDR(ch),
         BkfUrlGetStr(&connId->keyUrlSer, buf, sizeof(buf)), BkfUrlGetStr(&connId->keyUrlCli, buf2, sizeof(buf2)),
         connId->connFd, BKF_MASK_ADDR(connId));
 
@@ -281,7 +281,7 @@ STATIC int32_t BkfChCliLetcpRead(BkfChCliConnId *connId, void *dataBuf, int32_t 
     uint8_t buf[BKF_1K / 8];
     uint8_t buf2[BKF_1K / 8];
 
-    BKF_LOG_INFO(BKF_LOG_HND, "LetcpRead serUrl(%s)/localUrl(%s), conndId %#x\n",
+    BKF_LOG_INFO(BKF_LOG_HND, "LetcpRead serUrl(%s)/localUrl(%s), connId %#x\n",
         BkfUrlGetStr(&connId->keyUrlSer, buf, sizeof(buf)), BkfUrlGetStr(&connId->keyUrlCli, buf2, sizeof(buf2)),
         BKF_MASK_ADDR(connId));
     int32_t ret = recv(connId->connFd, dataBuf, bufLen, 0);
@@ -299,7 +299,7 @@ STATIC int32_t BkfChCliLetcpSend(BkfChCliConnId *connId, void *dataBuf, int32_t 
     uint8_t buf[BKF_1K / 8];
     uint8_t buf2[BKF_1K / 8];
 
-    BKF_LOG_INFO(BKF_LOG_HND, "LetcpSend serUrl(%s)/localUrl(%s), conndId %#x\n",
+    BKF_LOG_INFO(BKF_LOG_HND, "LetcpSend serUrl(%s)/localUrl(%s), connId %#x\n",
         BkfUrlGetStr(&connId->keyUrlSer, buf, sizeof(buf)), BkfUrlGetStr(&connId->keyUrlCli, buf2, sizeof(buf2)),
         BKF_MASK_ADDR(connId));
     int32_t ret = send(connId->connFd, dataBuf, dataLen, 0);
@@ -614,7 +614,7 @@ STATIC uint32_t BkfChCliLetcpConnToSer(BkfChCliConnId *connId)
     uint8_t buf[BKF_1K / 8];
     uint8_t buf2[BKF_1K / 8];
 
-    BKF_LOG_INFO(BKF_LOG_HND, "ConnToSer serUrl(%s)/localUrl(%s), conndId %#x\n",
+    BKF_LOG_INFO(BKF_LOG_HND, "ConnToSer serUrl(%s)/localUrl(%s), connId %#x\n",
         BkfUrlGetStr(&connId->keyUrlSer, buf, sizeof(buf)), BkfUrlGetStr(&connId->keyUrlCli, buf2, sizeof(buf2)),
         BKF_MASK_ADDR(connId));
 

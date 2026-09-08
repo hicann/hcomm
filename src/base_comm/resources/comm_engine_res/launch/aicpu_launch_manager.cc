@@ -367,7 +367,7 @@ HcclResult AicpuLaunchMgr::NotifyKernelLaunchFree(
 
     CHK_RET(LaunchNotifyKernel(opParam, binCustomHandle));
     HCCL_RUN_INFO(
-        "[AicpuLaunchMgr][%s] notify free kernalLaunch success, commid[%s], notifyNum[%u]", __func__, commId.c_str(),
+        "[AicpuLaunchMgr][%s] notify free kernelLaunch success, commid[%s], notifyNum[%u]", __func__, commId.c_str(),
         aicpuNotifys.size());
     return HCCL_SUCCESS;
 }

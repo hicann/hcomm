@@ -103,7 +103,7 @@ class ParallelCommandExecutor:
                     # 将输出放入队列（带进程索引）
                     self.output_queue.put((index, line.strip()))
         except Exception as e:
-            self.output_queue.put((index, f"错误捕获输出: {str(e)}"))
+            self.output_queue.put((index, f"error captured output: {str(e)}"))
         finally:
             # 标记进程完成
             self.output_queue.put((index, None))

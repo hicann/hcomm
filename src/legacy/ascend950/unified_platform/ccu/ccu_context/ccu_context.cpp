@@ -1334,7 +1334,7 @@ void CcuContext::DumpCcuProfilingInfo(const std::vector<CcuProfilingInfo>& ccuPr
     for (const auto& profInfo : ccuProfilingInfo) {
         if (profInfo.type == CcuProfilinType::CCU_TASK_PROFILING) {
             HCCL_INFO(
-                "Dump CCU Profiling Info:SQE Profiling Info: ctxSignautre(%s), "
+                "Dump CCU Profiling Info:SQE Profiling Info: ctxSignature(%s), "
                 "dieId(%d), missionId(%d), instrId(%d).",
                 profInfo.name.c_str(), static_cast<int>(profInfo.dieId), static_cast<int>(profInfo.missionId),
                 static_cast<int>(profInfo.instrId));

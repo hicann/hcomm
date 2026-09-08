@@ -111,7 +111,7 @@ HcclResult CollAlltoAllDirectFullmeshAIVExecutor::CalNumBlocks(
         HCCL_E_PARA);
 
     HCCL_INFO(
-        "[CollAlltoAllDirectFullmeshAIVExecutor][%s] numBlocks is set to [%u], limit[%u], recommanded[%u]", __func__,
+        "[CollAlltoAllDirectFullmeshAIVExecutor][%s] numBlocks is set to [%u], limit[%u], recommended[%u]", __func__,
         numBlocks, numBlocks_, numBlocks);
     return HCCL_SUCCESS;
 }

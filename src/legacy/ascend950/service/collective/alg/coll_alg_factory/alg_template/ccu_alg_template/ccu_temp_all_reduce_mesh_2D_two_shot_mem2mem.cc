@@ -161,7 +161,7 @@ HcclResult CcuTempAllReduceMeshTwoShotMem2Mem2D::PrepareLinks(const ResLinks& te
         }
     }
     HCCL_INFO(
-        "[CcuTempAllReduceMeshTwoShotMem2Mem2D] PrepareLinks Eends. linksX Size[%u], linksY Size[%u]", linksX_.size(),
+        "[CcuTempAllReduceMeshTwoShotMem2Mem2D] PrepareLinks Ends. linksX Size[%u], linksY Size[%u]", linksX_.size(),
         linksY_.size());
     return HcclResult::HCCL_SUCCESS;
 }

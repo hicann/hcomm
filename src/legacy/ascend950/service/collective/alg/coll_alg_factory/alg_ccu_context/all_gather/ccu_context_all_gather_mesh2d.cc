@@ -62,7 +62,7 @@ CcuContextAllGatherMesh2D::CcuContextAllGatherMesh2D(
     localAxisSignalName_ = "CcuContextAllGatherMesh2DAxisSync_" + std::to_string(axisId_);
     anotherAxisSignalName_ = "CcuContextAllGatherMesh2DAxisSync_" + std::to_string(1 - axisId_);
     HCCL_INFO(
-        "[CcuContextAllGatherMesh2D] RankId[%u], DimSize: D0[%u]--D1[%u], localId[%u], lcoalSize[%u]", rankId_,
+        "[CcuContextAllGatherMesh2D] RankId[%u], DimSize: D0[%u]--D1[%u], localId[%u], localSize[%u]", rankId_,
         dimSize_[0], dimSize_[1], localId_, localSize_);
 }
 
@@ -196,7 +196,7 @@ void CcuContextAllGatherMesh2D::FirstStep()
 
 void CcuContextAllGatherMesh2D::SecondStep()
 {
-    HCCL_INFO("[CcuContextAllGatherMesh2D] secodeStep run begins");
+    HCCL_INFO("[CcuContextAllGatherMesh2D] secondStep run begins");
     uint64_t anotherSize = dimSize_[1 - axisId_];
 
     CcuRep::Memory src = CreateMemory();

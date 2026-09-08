@@ -185,7 +185,7 @@ HcclResult OpRetryServerHandleError::ProcessEvent(RetryContext* retryCtx)
     while (true) {
         CHK_PRT_RET(
             retryCtx->isServerStateWaitResume_,
-            HCCL_RUN_INFO("[OpRetry][Server]switched state form wait handle error to wait resume"), HCCL_SUCCESS);
+            HCCL_RUN_INFO("[OpRetry][Server]switched state from wait handle error to wait resume"), HCCL_SUCCESS);
         // 判断是否超时
         std::chrono::steady_clock::time_point curTime = std::chrono::steady_clock::now();
         const auto elapsed = std::chrono::duration_cast<std::chrono::seconds>(curTime - startTime);
@@ -446,7 +446,7 @@ HcclResult OpRetryServerWaitResp::ProcessEvent(RetryContext* retryCtx)
     while (recvVaild.size() < retryCtx->needRetryServerRanks_.size()) {
         CHK_PRT_RET(
             retryCtx->isServerStateWaitResume_,
-            HCCL_RUN_INFO("[OpRetry][Server]switched state form wait resp to wait resume"), HCCL_SUCCESS);
+            HCCL_RUN_INFO("[OpRetry][Server]switched state from wait resp to wait resume"), HCCL_SUCCESS);
         std::chrono::steady_clock::time_point curTime = std::chrono::steady_clock::now();
         const auto elapsed = std::chrono::duration_cast<std::chrono::seconds>(curTime - startTime);
         CHK_PRT_RET(elapsed > timeout, HCCL_ERROR("[OpRetry][Server]OpRetryServerWaitResp timeout"), HCCL_E_TIMEOUT);
@@ -541,7 +541,7 @@ HcclResult OpRetryServerWaitLinkInfo::ProcessEvent(RetryContext* retryCtx)
     while (recvVaild.size() < retryCtx->needRetryServerRanks_.size()) {
         CHK_PRT_RET(
             retryCtx->isServerStateWaitResume_,
-            HCCL_RUN_INFO("[OpRetry][Server]switched state form wait link to wait resume"), HCCL_SUCCESS);
+            HCCL_RUN_INFO("[OpRetry][Server]switched state from wait link to wait resume"), HCCL_SUCCESS);
         std::chrono::steady_clock::time_point curTime = std::chrono::steady_clock::now();
         const auto elapsed = std::chrono::duration_cast<std::chrono::seconds>(curTime - startTime);
         CHK_PRT_RET(
@@ -747,12 +747,12 @@ HcclResult SwitchNicServerCheckAllSwitchRanks::CollectSingleAgentActiveSwitchInf
     while (true) {
         CHK_PRT_RET(
             retryCtx->isServerStateWaitResume_,
-            HCCL_RUN_INFO("[OpRetry][Server]switched state form check switch Nic to wait resume"), HCCL_SUCCESS);
+            HCCL_RUN_INFO("[OpRetry][Server]switched state from check switch Nic to wait resume"), HCCL_SUCCESS);
         std::chrono::steady_clock::time_point curTime = std::chrono::steady_clock::now();
         const auto elapsed = std::chrono::duration_cast<std::chrono::seconds>(curTime - startTime);
         CHK_PRT_RET(
             elapsed > timeout,
-            HCCL_ERROR("[SwitchNic][Server] timeout in recv agent RetryInfo, waitime[%u s>%u s]", elapsed, timeout),
+            HCCL_ERROR("[SwitchNic][Server] timeout in recv agent RetryInfo, waittime[%u s>%u s]", elapsed, timeout),
             HCCL_E_TIMEOUT);
         ret = WaitResponse(agentInfo.socket, agentInfo.retryInfo);
         if (ret == HCCL_SUCCESS) { // 成功接收到数据
@@ -762,7 +762,7 @@ HcclResult SwitchNicServerCheckAllSwitchRanks::CollectSingleAgentActiveSwitchInf
                 if (ret != HCCL_SUCCESS) {
                     return ret;
                 }
-                HCCL_INFO("[SwitchNic][server] recv ActiveSwitchInfo form rank[%u] while collecting", rankId);
+                HCCL_INFO("[SwitchNic][server] recv ActiveSwitchInfo from rank[%u] while collecting", rankId);
                 retryCtx->switchInfoMap_[rankId] = agentInfo.switchInfo;
                 return HCCL_SUCCESS;
             }

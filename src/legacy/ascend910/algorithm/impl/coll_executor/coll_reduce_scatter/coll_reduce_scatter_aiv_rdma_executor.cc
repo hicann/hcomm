@@ -94,7 +94,7 @@ HcclResult CollReduceScatterAivRdmaExecutor::CalNumBlocks(
         HCCL_E_PARA);
 
     HCCL_INFO(
-        "[CollReduceScatterAivRdmaExecutor][CalNumBlocks] numBlocks is set to [%u], limit[%u], recommanded[%u]",
+        "[CollReduceScatterAivRdmaExecutor][CalNumBlocks] numBlocks is set to [%u], limit[%u], recommended[%u]",
         numBlocks, numBlocks_, bestNumBlocks);
     return HCCL_SUCCESS;
 }

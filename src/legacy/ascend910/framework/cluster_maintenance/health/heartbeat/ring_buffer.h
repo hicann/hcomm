@@ -34,7 +34,7 @@ public:
         }
         capacity_ = capacity;
         if (capacity_ <= 0) {
-            HCCL_ERROR("[RingBuffer] capacity[%u] must greater than 0", capacity_);
+            HCCL_ERROR("[RingBuffer] capacity[%u] must be greater than 0", capacity_);
             return HCCL_E_PARA;
         }
 

@@ -51,7 +51,7 @@ HcclResult PreemptPortManager::ListenPreempt(
     const std::shared_ptr<HcclSocket>& listenSocket, const std::vector<HcclSocketPortRange>& portRange, u32& usePort)
 {
     CHK_PRT_RET(
-        !initialized, HCCL_ERROR("[PreemptPortManager][ListenPreempt] preempt port manager has already been release."),
+        !initialized, HCCL_ERROR("[PreemptPortManager][ListenPreempt] preempt port manager has already been released."),
         HCCL_E_INTERNAL);
 
     CHK_SMART_PTR_NULL(listenSocket);
@@ -71,7 +71,7 @@ HcclResult PreemptPortManager::ListenPreempt(
 HcclResult PreemptPortManager::Release(const std::shared_ptr<HcclSocket>& listenSocket)
 {
     CHK_PRT_RET(
-        !initialized, HCCL_RUN_WARNING("[PreemptPortManager][Release] preempt port manager has already been release."),
+        !initialized, HCCL_RUN_WARNING("[PreemptPortManager][Release] preempt port manager has already been released."),
         HCCL_SUCCESS);
 
     CHK_SMART_PTR_NULL(listenSocket);
@@ -131,7 +131,7 @@ HcclResult PreemptPortManager::PreemptPortInRange(
                 ret != HCCL_E_UNAVAIL,
                 HCCL_ERROR(
                     "[PreemptPortManager][PreemptPortInRange] attempt to listen on port[%u] for ip[%s] fail."
-                    " some unexpected error occurs, errNo[0x%016llx]. attemptation is stopped.",
+                    " some unexpected error occurs, errNo[0x%016llx]. attempt is stopped.",
                     port, ipAddr.c_str(), ret),
                 ret);
             // 当前端口已被占用，尝试抢占下一个端口
@@ -154,7 +154,7 @@ HcclResult PreemptPortManager::PreemptPortInRange(
     HCCL_ERROR("[PreemptPortManager][PreemptPortInRange] All ports in socket port range are bound already. "
                "no available port to listen. Please check the ports status, or change the port range to listen on.");
     HCCL_ERROR("NOTICE: Users need to make sure ports in HCCL_HOST_SOCKET_PORT_RANGE and HCCL_NPU_SOCKET_PORT_RANGE "
-               "are available for HCCL. Please double check whether the port are used by others unexpected process. "
+               "are available for HCCL. Please double check whether the ports are used by other unexpected processes. "
                "The port ranges size should also be enough when running multi-process HCCL.");
     HCCL_ERROR("NOTICE: The host/npu port range size is not suggested to be smaller than the process number"
                " on current rank.");
@@ -184,7 +184,7 @@ HcclResult PreemptPortManager::ReleasePreempt(
         ref.Count() <= 0,
         HCCL_ERROR(
             "[PreemptPortManager][ReleasePreempt] ref[%u], ip[%s] port[%u] has already been released. "
-            "Please do not dulplicate release.",
+            "Please do not duplicate release.",
             ref.Count(), ipAddr.c_str(), port),
         HCCL_E_INTERNAL);
 

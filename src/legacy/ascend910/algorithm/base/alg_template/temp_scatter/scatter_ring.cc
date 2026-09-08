@@ -80,7 +80,7 @@ HcclResult ScatterRing::RunScatterOnEndRank()
     CHK_RET(linkLeft_->TxAck(stream_));
 
     dst = outputMem_.range(scatterOffset, scatterResult);
-    HCCL_DEBUG("last rank[%u] rx data ouputoffset[%llu] size[%llu]", interRank_, scatterOffset, scatterResult);
+    HCCL_DEBUG("last rank[%u] rx data outputoffset[%llu] size[%llu]", interRank_, scatterOffset, scatterResult);
     HcclResult ret
         = linkLeft_->RxAsync(UserMemType::OUTPUT_MEM, scatterOffset + baseOffset_, dst.ptr(), scatterResult, stream_);
     CHK_PRT_RET(

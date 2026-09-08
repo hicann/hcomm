@@ -68,7 +68,7 @@ InsTempAllReduceMesh2DTwoShot::CreateQueNotifiesRequest(u32 queueNum, u32 pairNu
     };
 
     u32 slaveNum = queueNum - 1;
-    HCCL_INFO("[Create][MasterSlaveQueNotifiesRequest] slavNum[%u]", slaveNum);
+    HCCL_INFO("[Create][MasterSlaveQueNotifiesRequest] slaveNum[%u]", slaveNum);
     if (slaveNum < 1 || pairNum < 1) {
         return notifyRequests;
     }

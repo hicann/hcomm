@@ -55,7 +55,7 @@ HcclResult AllGatherVPipeline::Prepare(
     streamNotifyMain_ = notifyMain;
     if (streamNotifyMain_.size() < intraRankSize_) {
         HCCL_ERROR(
-            "[AllGatherVPipeline][Prepare]rank[%u] streamNotifyMain_ size[%u] error, is smaller than,"
+            "[AllGatherVPipeline][Prepare]rank[%u] streamNotifyMain_ size[%u] is smaller than "
             "intraRankSize_[%u]",
             userRank_, streamNotifyMain_.size(), intraRankSize_);
         return HCCL_E_INTERNAL;
@@ -63,7 +63,7 @@ HcclResult AllGatherVPipeline::Prepare(
     streamNotifySub_ = notifySub;
     if (streamNotifySub_.size() < intraRankSize_) {
         HCCL_ERROR(
-            "[AllGatherVPipeline][Prepare]rank[%u] streamNotifySub_ size[%u] error, is smaller than, "
+            "[AllGatherVPipeline][Prepare]rank[%u] streamNotifySub_ size[%u] is smaller than "
             "intraRankSize_[%u]",
             userRank_, streamNotifySub_.size(), intraRankSize_);
         return HCCL_E_INTERNAL;
@@ -168,7 +168,7 @@ HcclResult AllGatherVPipeline::RunAsync()
                 static_cast<u8*>(dmaMem_[srcDMAMemSliceId].ptr()) + serverOffsetByte,
                 userMemSlice_[serverRankOffset].size, subStream_[0]));
             HCCL_DEBUG(
-                "[AllGatherVPipeline][RunAsync] local rank[%u] localOffset[%llu]tx with remoteRank[%u],"
+                "[AllGatherVPipeline][RunAsync] local rank[%u] localOffset[%llu] tx with remoteRank[%u], "
                 "remoteOffset[%llu] with slice[%llu]",
                 userRank_, serverOffsetByte, nextInterRankId, serverOffsetByte, userMemSlice_[serverRankOffset].size);
             // 对于RDM RxAsync，内存属性入参无效 RDMA::Wait
@@ -178,7 +178,7 @@ HcclResult AllGatherVPipeline::RunAsync()
                 static_cast<u8*>(dmaMem_[dstDMAMemSliceId].ptr()) + readRemoteOffsetByte,
                 userMemSlice_[readRemoteOffset].size, subStream_[0])); // wait
             HCCL_DEBUG(
-                "[AllGatherVPipeline][RunAsync]read local rank[%u] localOffset[%llu]tx with remoteRank[%u],"
+                "[AllGatherVPipeline][RunAsync]read local rank[%u] localOffset[%llu] tx with remoteRank[%u], "
                 "remoteOffset[%llu] with slice[%llu]",
                 userRank_, readRemoteOffsetByte, readRemoteOffset, readRemoteOffsetByte,
                 userMemSlice_[readRemoteOffset].size);

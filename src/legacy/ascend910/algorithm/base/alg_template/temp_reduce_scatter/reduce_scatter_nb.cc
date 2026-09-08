@@ -274,7 +274,7 @@ HcclResult ReduceScatterNB::RunDestReducerNB(
                     DeviceMem srcMem = inputMem_.range(inputSlices[rxIndex].offset, inputSlices[rxIndex].size);
                     DeviceMem scratchMem = scratchMem_.range(outputSlices[rxIndex].offset, outputSlices[rxIndex].size);
                     HCCL_DEBUG(
-                        "final reduce rxSliceIdx[%u] will reduce with inputMem_ offset[%llu] to ouput_mem_ "
+                        "final reduce rxSliceIdx[%u] will reduce with inputMem_ offset[%llu] to output_mem_ "
                         "offset[%llu] size[%llu]",
                         rxIndex, inputSlices[rxIndex].offset, outputSlices[rxIndex].offset, outputSlices[rxIndex].size);
 

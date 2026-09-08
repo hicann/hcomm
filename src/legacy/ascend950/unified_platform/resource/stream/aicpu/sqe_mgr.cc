@@ -40,7 +40,7 @@ HcclResult SqeMgr::Begin(u32 sqId)
     sqInfo->sqBaseAddr = QuerySqBaseAddr(sqId);
     s32 ret = memset_s(sqInfo->sqeBuffer, sizeof(sqInfo->sqeBuffer), 0, sizeof(sqInfo->sqeBuffer));
     if (ret != EOK) {
-        std::string formatStr = StringFormat("SqeMgr::%s memcpy_s failed. errorno[%d]", __func__, ret);
+        std::string formatStr = StringFormat("SqeMgr::%s memset_s failed. ret[%d]", __func__, ret);
         HCCL_ERROR("%s", formatStr.c_str());
         THROW<InternalException>(formatStr);
     }
@@ -199,7 +199,7 @@ u32 SqeMgr::QuerySqStatusByType(u32 sqId, drvSqCqPropType_t type) const
     queryInfo.cqId = 0;
     queryInfo.type = DRV_NORMAL_TYPE;
     queryInfo.prop = type;
-    HCCL_INFO("%s::halSqCqQuery begin, type %d sqiId %u", __func__, type, sqId);
+    HCCL_INFO("%s::halSqCqQuery begin, type %d sqId %u", __func__, type, sqId);
     drvError_t ret = halSqCqQuery(devPhyId, &queryInfo);
     if (ret != 0) {
         std::string formatStr

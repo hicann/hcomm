@@ -73,7 +73,7 @@ HcclResult AllReduceRecursiveHalvingDoubling::RunAsyncStaged(
             CHK_RET(GatherInPartOne(rank, links));
             break;
         default:
-            HCCL_ERROR("[AllReduceRecursiveHalvingDoubling][RunAsyncStaged]stage[%d]is not support", stage);
+            HCCL_ERROR("[AllReduceRecursiveHalvingDoubling][RunAsyncStaged]stage[%d] is not supported", stage);
             return HCCL_E_NOT_SUPPORT;
     }
     HCCL_INFO(
@@ -146,13 +146,13 @@ HcclResult AllReduceRecursiveHalvingDoubling::ReduceInPartOne(u32 rank, const st
             HcclResult ret = link->TxAck(stream_);
             CHK_PRT_RET(
                 ret != HCCL_SUCCESS,
-                HCCL_ERROR("[Reduce][InPartOneToEven]rank[%u] tx ack from peerank[%u] failed", rank, peerRank), ret);
+                HCCL_ERROR("[Reduce][InPartOneToEven]rank[%u] tx ack from peerRank[%u] failed", rank, peerRank), ret);
             ret = link->RxAck(stream_);
             CHK_PRT_RET(
                 ret != HCCL_SUCCESS,
-                HCCL_ERROR("[Reduce][InPartOneToEven]rank[%u] rx ack from peerank[%u] failed", rank, peerRank), ret);
+                HCCL_ERROR("[Reduce][InPartOneToEven]rank[%u] rx ack from peerRank[%u] failed", rank, peerRank), ret);
             //  接收数据到本端的 output
-            HCCL_DEBUG("send mem[%p] size[%llu] to peerank[%u]", outputMem_.ptr(), outputMem_.size(), peerRank);
+            HCCL_DEBUG("send mem[%p] size[%llu] to peerRank[%u]", outputMem_.ptr(), outputMem_.size(), peerRank);
             ret = link->TxAsync(UserMemType::INPUT_MEM, baseOffset_, outputMem_.ptr(), 0, stream_);
             CHK_PRT_RET(
                 ret != HCCL_SUCCESS,
@@ -174,18 +174,18 @@ HcclResult AllReduceRecursiveHalvingDoubling::ReduceInPartOne(u32 rank, const st
             HcclResult ret = link->TxAck(stream_);
             CHK_PRT_RET(
                 ret != HCCL_SUCCESS,
-                HCCL_ERROR("[Reduce][InPartOneToEven]rank[%u] tx ack from peerank[%u] failed", rank, peerRank), ret);
+                HCCL_ERROR("[Reduce][InPartOneToEven]rank[%u] tx ack from peerRank[%u] failed", rank, peerRank), ret);
             ret = link->RxAck(stream_);
             CHK_PRT_RET(
                 ret != HCCL_SUCCESS,
-                HCCL_ERROR("[Reduce][InPartOneToEven]rank[%u] rx ack from peerank[%u] failed", rank, peerRank), ret);
+                HCCL_ERROR("[Reduce][InPartOneToEven]rank[%u] rx ack from peerRank[%u] failed", rank, peerRank), ret);
             //  发送到对端的output
             HCCL_DEBUG(
                 "rank[%u] sends inputMem[%p] to PeerRank[%u] Offset[%llu], Size[%llu]", rank, inputMem_.ptr(), peerRank,
                 baseOffset_, inputMem_.size());
             ret = senderInfo_->run(link, baseOffset_, inputMem_, stream_);
             CHK_PRT_RET(
-                ret != HCCL_SUCCESS, HCCL_ERROR("[Reduce][InPartOne]tx sync to peerank[%u] failed", peerRank), ret);
+                ret != HCCL_SUCCESS, HCCL_ERROR("[Reduce][InPartOne]tx sync to peerRank[%u] failed", peerRank), ret);
             ret = link->RxAsync(UserMemType::OUTPUT_MEM, baseOffset_, inputMem_.ptr(), 0, stream_);
             CHK_PRT_RET(
                 ret != HCCL_SUCCESS,
@@ -284,13 +284,13 @@ HcclResult AllReduceRecursiveHalvingDoubling::GatherInPartOne(u32 rank, const st
             HcclResult ret = links[peerRank]->TxAck(stream_);
             CHK_PRT_RET(
                 ret != HCCL_SUCCESS,
-                HCCL_ERROR("[Gather][InPartOneToEven]rank[%u] tx ack from peerank[%u] failed", rank, peerRank), ret);
+                HCCL_ERROR("[Gather][InPartOneToEven]rank[%u] tx ack from peerRank[%u] failed", rank, peerRank), ret);
             ret = links[peerRank]->RxAck(stream_);
             CHK_PRT_RET(
                 ret != HCCL_SUCCESS,
-                HCCL_ERROR("[Gather][InPartOneToEven]rank[%u] rx ack from peerank[%u] failed", rank, peerRank), ret);
+                HCCL_ERROR("[Gather][InPartOneToEven]rank[%u] rx ack from peerRank[%u] failed", rank, peerRank), ret);
             HCCL_DEBUG(
-                "rank[%u] outputMem[%p] sends to peerrank[%u] outputmem, offset[%llu], size[%llu]", rank,
+                "rank[%u] outputMem[%p] sends to peerRank[%u] outputMem, offset[%llu], size[%llu]", rank,
                 outputMem_.ptr(), peerRank, baseOffset_, outputMem_.size());
             ret = ExecuteTxSync(
                 links[peerRank], UserMemType::OUTPUT_MEM, baseOffset_, outputMem_.ptr(), outputMem_.size(), stream_);
@@ -313,11 +313,11 @@ HcclResult AllReduceRecursiveHalvingDoubling::GatherInPartOne(u32 rank, const st
             HcclResult ret = links[peerRank]->TxAck(stream_);
             CHK_PRT_RET(
                 ret != HCCL_SUCCESS,
-                HCCL_ERROR("[Gather][InPartOneToEven]rank[%u] tx ack from peerank[%u] failed", rank, peerRank), ret);
+                HCCL_ERROR("[Gather][InPartOneToEven]rank[%u] tx ack from peerRank[%u] failed", rank, peerRank), ret);
             ret = links[peerRank]->RxAck(stream_);
             CHK_PRT_RET(
                 ret != HCCL_SUCCESS,
-                HCCL_ERROR("[Gather][InPartOneToEven]rank[%u] rx ack from peerank[%u] failed", rank, peerRank), ret);
+                HCCL_ERROR("[Gather][InPartOneToEven]rank[%u] rx ack from peerRank[%u] failed", rank, peerRank), ret);
             // 等待对端可以接收数据
             HCCL_DEBUG(
                 "rank[%u] outputMem[%p] receive from PeerRank[%u] outputMem, Offset[%llu], "

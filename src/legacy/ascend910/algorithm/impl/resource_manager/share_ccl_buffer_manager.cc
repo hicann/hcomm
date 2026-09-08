@@ -44,7 +44,7 @@ HcclResult ShareCCLbufferMgr::CreateDevMem(u64 size, DeviceMem& buffer)
         static_cast<bool>(size) && !buffer,
         HCCL_ERROR(
             "[ShareCCLbufferMgr][CreateDevMem]Create ccl buffer size[%llu] fail,"
-            "please check env ironmental variable HCCL_BUFFSIZE.",
+            "please check environmental variable HCCL_BUFFSIZE.",
             size),
         HCCL_E_PTR);
     return HCCL_SUCCESS;
@@ -116,7 +116,7 @@ HcclResult ShareCCLbufferMgr::FreeShareCCLbuffer(const std::string& bufferName)
     auto it = memRecord_.find(bufferName);
     if (it == memRecord_.end()) {
         HCCL_ERROR(
-            "[ShareCCLbufferMgr][FreeShareCCLbuffer] Cannot found the corresponding record of memory[%s].",
+            "[ShareCCLbufferMgr][FreeShareCCLbuffer] Cannot find the corresponding record of memory[%s].",
             bufferName.c_str());
         return HCCL_E_PARA;
     }

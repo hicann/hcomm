@@ -25,14 +25,14 @@
 namespace dfx_tracer {
 void ExecutorTracer::BackGroundDfx(void* info)
 {
-    HCCL_RUN_INFO("Start to back ground.");
+    HCCL_RUN_INFO("Start to background.");
     // 外部保证info有效
     auto ctx = static_cast<AicpuComContext*>(info);
     hccl::HcclCommAicpu::ResetErrMsgReport(); // 业务重新拉起的场景，重置ErrMesg上报标记位
     while (true) {
         // 停止背景线程
         if (ctx->dfxExtendInfo.commandToBackGroud == CommandToBackGroud::kStop) {
-            HCCL_INFO("Back ground thread returned.");
+            HCCL_INFO("Background thread returned.");
             break;
         }
         HandleDestroyComm(ctx);
@@ -40,7 +40,7 @@ void ExecutorTracer::BackGroundDfx(void* info)
         bool isNotStop = false;
         StopBackGround(ctx, isNotStop);
         if (!isNotStop) {
-            HCCL_RUN_INFO("stop backGround Thread");
+            HCCL_RUN_INFO("stop background thread");
             break;
         }
         HandleReportStatusInComm();
@@ -135,7 +135,7 @@ void ExecutorTracer::StopBackGroundDfx(void* info)
     // 外部保证info有效
     auto ctx = static_cast<AicpuComContext*>(info);
     ctx->dfxExtendInfo.commandToBackGroud = CommandToBackGroud::kStop;
-    HCCL_INFO("Stop back ground thread.");
+    HCCL_INFO("Stop background thread.");
 }
 
 // handle StopLaunch Command
@@ -158,7 +158,7 @@ void ExecutorTracer::StopLaunchCommandHandle(AicpuComContext* const ctx)
                         hcclAicpu->SetCommRecoveryFlag(true);
                         hcclAicpu->SetNsStopLaunchStatus(true);
                         HCCL_RUN_INFO(
-                            "[NsRecovery][backGround]group[%s] send in aicpu environment",
+                            "[NsRecovery][background]group[%s] send in aicpu environment",
                             hcclAicpu->GetGroupName().c_str());
                     }
                 }

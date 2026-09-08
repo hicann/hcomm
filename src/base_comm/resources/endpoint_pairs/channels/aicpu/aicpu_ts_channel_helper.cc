@@ -79,7 +79,7 @@ HcclResult AicpuTsChannelHelper::LaunchKernel(
     const HcommChannelDesc* channelDescs, aclrtBinHandle binHandle)
 {
     CHK_PTR_NULL(channelList);
-    CHK_PRT_RET((listNum == 0), HCCL_ERROR("[%s]Invalid listNum, listNum[%u]", __func__, listNum), HCCL_E_PARA);
+    CHK_PRT_RET((listNum == 0), HCCL_ERROR("[%s] Invalid listNum, listNum[%u]", __func__, listNum), HCCL_E_PARA);
 
     // 过滤出未就绪的子集，避免重复下 kernel 导致 device 侧 channel 对象泄漏
     std::vector<ChannelHandle> subHostHandles;
@@ -157,7 +157,7 @@ HcclResult AicpuTsChannelHelper::PreAllocChannels(
     CHK_PTR_NULL(targetChannels);
     CHK_PTR_NULL(userChannels);
     CHK_PRT_RET(
-        (channelNum == 0), HCCL_ERROR("[%s]Invalid channelNum, channelNum[%u]", __func__, channelNum), HCCL_E_PARA);
+        (channelNum == 0), HCCL_ERROR("[%s] Invalid channelNum, channelNum[%u]", __func__, channelNum), HCCL_E_PARA);
 
     for (uint32_t i = 0; i < channelNum; i++) {
         auto* channel = reinterpret_cast<Channel*>(targetChannels[i]);

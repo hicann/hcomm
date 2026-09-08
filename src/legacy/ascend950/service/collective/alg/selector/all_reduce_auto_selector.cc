@@ -183,7 +183,7 @@ SelectorStatus AllReduceAutoSelector::SelectCcuScheduleAlgo(
                 SelectorStatus::NOT_MATCH);
             double ratio; // 以8卡为基线确定ratio，用来表示不同卡数对下发的影响系数
             if (rankSize_ == 0) {
-                HCCL_WARNING("[AllReduceAutoSelector]the selector is not set RankSize_]");
+                HCCL_WARNING("[AllReduceAutoSelector] the selector is not set rankSize_.");
                 ratio = 1;
             } else {
                 ratio = DEFAULT_RANK_SIZE / rankSize_ / rankSize_;
@@ -209,7 +209,7 @@ SelectorStatus AllReduceAutoSelector::SelectCcuScheduleAlgo(
                 // MESH_1D 即可链接所有卡， 使用 MESH_1D 算法
                 double ratio; // 以8卡为基线确定ratio，用来表示不同卡数对下发的影响系数
                 if (rankSize_ == 0) {
-                    HCCL_WARNING("[AllReduceAutoSelector]the selector is not set RankSize_]");
+                    HCCL_WARNING("[AllReduceAutoSelector] the selector is not set rankSize_.");
                     ratio = 1;
                 } else {
                     ratio = DEFAULT_RANK_SIZE / rankSize_ / rankSize_;
@@ -281,7 +281,7 @@ SelectorStatus AllReduceAutoSelector::SelectAicpuAlgo(
         if (topoInfo.level0Shape == Level0Shape::MESH_1D) {
             double ratio; // 以8卡为基线确定ratio，用来表示不同卡数对下发的影响系数
             if (rankSize_ == 0) {
-                HCCL_WARNING("[AllReduceAutoSelector]the selector is not set RankSize_]");
+                HCCL_WARNING("[AllReduceAutoSelector] the selector is not set rankSize_.");
                 ratio = 1;
             } else {
                 ratio = DEFAULT_RANK_SIZE / rankSize_ / rankSize_;
@@ -308,7 +308,7 @@ SelectorStatus AllReduceAutoSelector::SelectAicpuAlgo(
                 // MESH_1D 即可链接所有卡， 使用 MESH_1D 算法
                 double ratio; // 以8卡为基线确定ratio，用来表示不同卡数对下发的影响系数
                 if (rankSize_ == 0) {
-                    HCCL_WARNING("[AllReduceAutoSelector]the selector is not set RankSize_]");
+                    HCCL_WARNING("[AllReduceAutoSelector] the selector is not set rankSize_.");
                     ratio = 1;
                 } else {
                     ratio = DEFAULT_RANK_SIZE / rankSize_ / rankSize_;

@@ -80,7 +80,7 @@ HcclResult CollBroadCastMix::KernelRun(const OpParam& param, ExecMem& execMem)
     CHK_PRT_RET(
         perDataSize == 0,
         HCCL_ERROR(
-            "[CollBroadCastMix][KernelRun]errNo[0x%01611x] datatype[%d] is invalid", HCCL_ERROR_CODE(HCCL_E_PARA),
+            "[CollBroadCastMix][KernelRun]errNo[0x%016llx] datatype[%d] is invalid", HCCL_ERROR_CODE(HCCL_E_PARA),
             param.DataDes.dataType),
         HCCL_E_PARA);
 
@@ -110,7 +110,8 @@ HcclResult CollBroadCastMix::KernelRun(const OpParam& param, ExecMem& execMem)
             CHK_PRT_RET(
                 mulRingSlice.size() != ringNum,
                 HCCL_ERROR(
-                    "[CollBroadCastMix][KernelRun] ringNum[%u] !=mulRingSlice size[%zu]", ringNum, mulRingSlice.size()),
+                    "[CollBroadCastMix][KernelRun] ringNum[%u] != mulRingSlice size[%zu]", ringNum,
+                    mulRingSlice.size()),
                 HCCL_E_INTERNAL);
         } else {
             mulRingSlice.push_back(dataSegsSlice); // 应该offset全为0，而大小和dataSegsSlice中一样,里面的offset不使用

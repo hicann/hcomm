@@ -574,7 +574,7 @@ STATIC BkfDispFunc *BkfDispProcParseDispFunc(BkfDisp *disp, char **inStr, uint8_
     dispFunc = BkfDispFindFunc(disp, funcName);
     if ((dispFunc == VOS_NULL) || !BKF_DISP_FUNC_MAY_USE(disp, dispFunc)) {
         BKF_DISP_INC_CNT(disp, BKF_DISP_CNT_PROC_NO_VALID_FUNC_FIND);
-        BKF_DISP_PRINTF(disp, "[%s(^)], no valid func find, BkfDispHelp for help\n", funcName);
+        BKF_DISP_PRINTF(disp, "[%s(^)], no valid func found, BkfDispHelp for help\n", funcName);
         return VOS_NULL;
     }
 
@@ -1659,7 +1659,7 @@ void BkfDispFuncObjNameFunc(BkfDisp *disp, char *funcName)
     /* func */
     dispFunc = BkfDispFindFunc(disp, funcName);
     if ((dispFunc == VOS_NULL) || !BKF_DISP_FUNC_MAY_USE(disp, dispFunc)) {
-        BKF_DISP_PRINTF(disp, "%s, func not find\n", funcName);
+        BKF_DISP_PRINTF(disp, "%s, func not found\n", funcName);
         return;
     }
 

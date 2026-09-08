@@ -85,8 +85,8 @@ HcclResult HcclCommMemReg(HcclComm comm, const char* memTag, const CommMem* mem,
     attr.value = 0;
     HcclResult ret = hcclComm->GetIndependentOp().GetCommMemMgr().CommRegMem(memTagStr, hcclMem, attr, memHandle);
     CHK_PRT_RET(
-        ret != HCCL_SUCCESS, HCCL_ERROR("[HcclCommMemReg]legcy Bind failed. memTag[%s], ret[%d]", memTag, ret), ret);
-    HCCL_INFO("[HcclCommMemReg]legcy success: raw handle[%p]", *memHandle);
+        ret != HCCL_SUCCESS, HCCL_ERROR("[HcclCommMemReg]legacy Bind failed. memTag[%s], ret[%d]", memTag, ret), ret);
+    HCCL_INFO("[HcclCommMemReg]legacy success: raw handle[%p]", *memHandle);
 
     return HCCL_SUCCESS;
 }

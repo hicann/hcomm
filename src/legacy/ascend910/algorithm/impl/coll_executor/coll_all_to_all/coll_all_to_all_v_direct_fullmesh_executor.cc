@@ -52,7 +52,7 @@ HcclResult CollRunAlltoAllDirectFullmesh::Orchestrate(OpParam& param, AlgResourc
 
 HcclResult CollRunAlltoAllDirectFullmesh::GetAdjInfo(AlgResourceResponse& algRes, AdjInfo& adjInfo)
 {
-    HCCL_INFO("[GetAdjInfo-nslbdp] GetAdjInfo.");
+    HCCL_INFO("[CollRunAlltoAllDirectFullmesh] GetAdjInfo.");
     algResResp_ = &algRes;
     SubCommInfo levelCommInfo = {};
     AdjInfo nslbAdjInfo = {};
@@ -63,7 +63,7 @@ HcclResult CollRunAlltoAllDirectFullmesh::GetAdjInfo(AlgResourceResponse& algRes
 
     std::unique_ptr<AlgTemplateBase> levelTempAlg;
 
-    HCCL_INFO("[GetAdjInfo-nslbdp] SelectTempAlg.");
+    HCCL_INFO("[CollRunAlltoAllDirectFullmesh] SelectTempAlg.");
     levelTempAlg = AlgTemplateRegistry::Instance().GetAlgTemplate(
         TemplateType::TEMPLATE_ALL_2_ALL_V_DIRECT_FULL_MESH, dispatcher_);
     CHK_SMART_PTR_NULL(levelTempAlg);
@@ -71,7 +71,7 @@ HcclResult CollRunAlltoAllDirectFullmesh::GetAdjInfo(AlgResourceResponse& algRes
     CHK_RET(GetLocalSDMAGroupInfo(topoAttr_.userRank, devNumInlocalPod, rankIdxInPod));
 
     if (devNumInlocalPod == INVALID_VALUE_RANKSIZE) {
-        HCCL_INFO("[GetAdjInfo-nslbdp] devNumInlocalPod == INVALID_VALUE_RANKSIZE.");
+        HCCL_INFO("[CollRunAlltoAllDirectFullmesh] devNumInlocalPod == INVALID_VALUE_RANKSIZE.");
         return HCCL_SUCCESS;
     }
 
@@ -79,7 +79,7 @@ HcclResult CollRunAlltoAllDirectFullmesh::GetAdjInfo(AlgResourceResponse& algRes
     CHK_RET(levelTempAlg->GetNslbAdjInfo(localRank, localRankSize, levelCommInfo.links, nslbAdjInfo));
 
     adjInfo.dstRankNum = nslbAdjInfo.dstRankNum;
-    HCCL_INFO("[GetAdjInfo-nslbdp] adjInfo.dstRankNum[%u].", adjInfo.dstRankNum);
+    HCCL_INFO("[CollRunAlltoAllDirectFullmesh] adjInfo.dstRankNum[%u].", adjInfo.dstRankNum);
 
     for (size_t i = 0; i < nslbAdjInfo.nsAdjInfo.size(); i++) {
         NslbDpAdjInfo dpAdjInfo = {};
@@ -88,8 +88,8 @@ HcclResult CollRunAlltoAllDirectFullmesh::GetAdjInfo(AlgResourceResponse& algRes
         dpAdjInfo.rev = 0;
         adjInfo.nsAdjInfo.push_back(dpAdjInfo);
         HCCL_INFO(
-            "[nslbdp]GetAdjInfo dstLocalRankId[%u], phaseId[%u].", nslbAdjInfo.nsAdjInfo[i].dstLocalRankId,
-            nslbAdjInfo.nsAdjInfo[i].phaseId);
+            "[CollRunAlltoAllDirectFullmesh][GetAdjInfo] dstLocalRankId[%u], phaseId[%u].",
+            nslbAdjInfo.nsAdjInfo[i].dstLocalRankId, nslbAdjInfo.nsAdjInfo[i].phaseId);
     }
     return HCCL_SUCCESS;
 }
@@ -420,7 +420,7 @@ HcclResult CollRunAlltoAllDirectFullmesh::KernelRun(const OpParam& param, ExecMe
 HcclResult CollRunAlltoAllDirectFullmesh::Getlevel1CommRank(SubCommInfo& level1CommInfo)
 {
     HCCL_INFO(
-        "[GetAdjInfo-nslbdp] Getlevel1CommRank userRank[%u]--userRankSize[%u].", topoAttr_.userRank,
+        "[CollRunAlltoAllDirectFullmesh] Getlevel1CommRank userRank[%u]--userRankSize[%u].", topoAttr_.userRank,
         topoAttr_.userRankSize);
     level1CommInfo.localRank = topoAttr_.userRank;
     level1CommInfo.localRankSize = topoAttr_.userRankSize;
@@ -431,7 +431,7 @@ HcclResult
 CollRunAlltoAllDirectFullmesh::SelectTempAlg(std::unique_ptr<AlgTemplateBase>& level1TempAlg, u32 level1RankSize)
 {
     (void)level1RankSize;
-    HCCL_INFO("[GetAdjInfo-nslbdp] SelectTempAlg.");
+    HCCL_INFO("[CollRunAlltoAllDirectFullmesh] SelectTempAlg.");
     level1TempAlg = AlgTemplateRegistry::Instance().GetAlgTemplate(
         TemplateType::TEMPLATE_ALL_2_ALL_V_DIRECT_FULL_MESH, dispatcher_);
     CHK_SMART_PTR_NULL(level1TempAlg);
@@ -441,7 +441,7 @@ CollRunAlltoAllDirectFullmesh::SelectTempAlg(std::unique_ptr<AlgTemplateBase>& l
 
 HcclResult CollRunAlltoAllDirectFullmesh::GetDevNumInlocalPod(u32& devNumInlocalPod)
 {
-    HCCL_INFO("[GetAdjInfo-nslbdp] GetDevNumInlocalPod.");
+    HCCL_INFO("[CollRunAlltoAllDirectFullmesh] GetDevNumInlocalPod.");
     // 获取当前超节点内总卡数
     u32 rankIdxInPod = INVALID_VALUE_RANKID;
     CHK_RET(GetLocalSDMAGroupInfo(topoAttr_.userRank, devNumInlocalPod, rankIdxInPod));

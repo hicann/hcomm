@@ -76,7 +76,7 @@ HCCP_ATTRI_VISI_DEF int RaIsLastUsed(int insId)
 HCCP_ATTRI_VISI_DEF int RaRdevGetHandle(unsigned int phyId, void **rdmaHandle)
 {
     CHK_PRT_RETURN(phyId >= RA_MAX_PHY_ID_NUM,
-        hccp_err("[get][ra_rdev]phyId(%u) must smaller than %u", phyId, RA_MAX_PHY_ID_NUM), -EINVAL);
+        hccp_err("[get][ra_rdev]phyId(%u) must be smaller than %u", phyId, RA_MAX_PHY_ID_NUM), -EINVAL);
     CHK_PRT_RETURN(rdmaHandle == NULL, hccp_err("[get][ra_rdev]rdma_handle is NULL, phyId(%u)", phyId), -EINVAL);
     CHK_PRT_RETURN(gRaRdevHandle[phyId] == NULL, hccp_run_info("[get][ra_rdev]handle is NULL, phyId(%u)", phyId),
         -ENODEV);
@@ -88,7 +88,7 @@ HCCP_ATTRI_VISI_DEF int RaRdevGetHandle(unsigned int phyId, void **rdmaHandle)
 void RaRdevSetHandle(unsigned int phyId, void *rdmaHandle)
 {
     if (phyId >= RA_MAX_PHY_ID_NUM) {
-        hccp_warn("[set][ra_rdev]phyId(%u) must smaller than %u", phyId, RA_MAX_PHY_ID_NUM);
+        hccp_warn("[set][ra_rdev]phyId(%u) must be smaller than %u", phyId, RA_MAX_PHY_ID_NUM);
         return;
     }
 
@@ -153,7 +153,7 @@ HCCP_ATTRI_VISI_DEF int RaInit(struct RaInitConfig *config)
 
     phyId = config->phyId;
     CHK_PRT_RETURN(phyId >= RA_MAX_PHY_ID_NUM,
-        hccp_err("[init][ra]phyId(%u) is invalid! it must greater or "
+        hccp_err("[init][ra]phyId(%u) is invalid! it must be greater than or "
                  "equal to 0 and less than %d!",
             phyId, RA_MAX_PHY_ID_NUM),
         ConverReturnCode(HCCP_INIT, -EINVAL));
@@ -217,7 +217,7 @@ HCCP_ATTRI_VISI_DEF int RaDeinit(struct RaInitConfig *config)
 
     phyId = config->phyId;
     CHK_PRT_RETURN(phyId >= RA_MAX_PHY_ID_NUM,
-        hccp_err("[deinit][ra]phyId(%u) is invalid! it must greater or equal to 0 and less than %d!", phyId,
+        hccp_err("[deinit][ra]phyId(%u) is invalid! it must be greater than or equal to 0 and less than %d!", phyId,
             RA_MAX_PHY_ID_NUM),
         ConverReturnCode(HCCP_INIT, -EINVAL));
 

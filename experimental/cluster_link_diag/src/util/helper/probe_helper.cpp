@@ -309,7 +309,7 @@ void ProbeHelper::mesh_full_trace()
                     for (auto& this_trace : trace_ports_res) {
                         int len = this_trace.size();
                         if ((len != level_trace_len[link_level]) && (len + 1 != level_trace_len[link_level])) {
-                            std::cout << "[probe_topo][Warning] there are path len error!";
+                            std::cout << "[probe_topo][Warning] path length error detected!";
                             this_trace.resize(level_trace_len[link_level]);
                         } else if (len % 2 == 0) {
                             mesh.add_kid_link(
@@ -445,7 +445,7 @@ void ProbeHelper::addition_tracert_for_pinglist()
                 for (auto& this_trace : trace_ports_res) {
                     int len = this_trace.size();
                     if ((len != level_trace_len[link_level]) && (len + 1 != level_trace_len[link_level])) {
-                        std::cout << "[probe_topo][Warning] there are path len error!";
+                        std::cout << "[probe_topo][Warning] path length error detected!";
                         this_trace.resize(level_trace_len[link_level]);
                     } else if (len % 2 == 0) {
                         mesh.add_kid_link(
@@ -466,7 +466,7 @@ void ProbeHelper::gen_id()
 {
     if (Mesh::get_unfinished_link() > 0) {
         // throw std::runtime_error("[probe_topo] there are unfinished link");
-        std::cout << "[probe_topo][Warning] there are unfinished link" << std::endl;
+        std::cout << "[probe_topo][Warning] there are unfinished links" << std::endl;
     }
     auto& tracert_res_id = meshTopo.tracert_res_id;
     /*生成tracert_res_id(探测结果从ip_list转化为id_list)*/

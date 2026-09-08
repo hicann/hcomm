@@ -818,13 +818,13 @@ std::vector<CcuTaskParam> Mc2Compont::GetAlgoCcuTaskInfo(InsExeQue::ExtInsExeEnt
     std::vector<CcuTaskParam> ccuTaskParam{};
     auto serverItor = ccuServerMap.find(execId);
     if (serverItor == ccuServerMap.end()) {
-        HCCL_INFO("[Mc2Compont]Failed to find ccuServer by executeId[%llu]", execId);
+        HCCL_WARNING("[Mc2Compont]Failed to find ccuServer by executeId[%llu]", execId);
         return ccuTaskParam;
     }
     for (uint64_t algoSign : serverItor->second) {
         auto algoTemplateItor = algoTemplateMap.find(algoSign);
         if (algoTemplateItor == algoTemplateMap.end()) {
-            HCCL_INFO("[Mc2Compont]Failed to find ccuTaskParam by algoSign[%llu]", algoSign);
+            HCCL_WARNING("[Mc2Compont]Failed to find ccuTaskParam by algoSign[%llu]", algoSign);
             continue;
         }
         for (const auto& taskParam : algoTemplateItor->second) {

@@ -31,7 +31,8 @@ HcclResult CalcCrc::HcclCalcCrc(const char* data, u64 length, u32& crcValue)
 
     CHK_PRT_RET(
         length <= 0 || length > STRING_MAX_LENGTH,
-        HCCL_ERROR("[Calc][StringCrc]String length[%llu] is empty or over than %d bytes.", length, STRING_MAX_LENGTH),
+        HCCL_ERROR(
+            "[Calc][StringCrc]String length[%llu] is empty or greater than %d bytes.", length, STRING_MAX_LENGTH),
         HCCL_E_PARA);
     HCCL_DEBUG("data[%s], length[%llu]", data, length);
 

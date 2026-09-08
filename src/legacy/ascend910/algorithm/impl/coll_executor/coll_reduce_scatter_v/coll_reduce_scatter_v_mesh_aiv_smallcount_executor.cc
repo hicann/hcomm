@@ -64,7 +64,7 @@ HcclResult CollReduceScatterVMeshAivSmallCountExecutor::CalNumBlocks(
 
     HCCL_INFO(
         "[CollReduceScatterVMeshAivSmallCountExecutor][CalNumBlocks] numBlocks is set to [%u], limit[%u], "
-        "recommanded[%u]",
+        "recommended[%u]",
         numBlocks, numBlocks_, bestNumBlocks);
     return HCCL_SUCCESS;
 }

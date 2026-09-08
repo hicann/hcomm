@@ -702,7 +702,11 @@ HcclResult HcclBatchPutMRByAscendQP(
     CHK_RET(CheckSendRecvLinkInfo(sendRecvLinkInfo));
     CHK_PRT_RET(
         sendRecvLinkInfo->wqePerDoorbell == 0 || sendRecvLinkInfo->wqePerDoorbell > MAX_WQE_PER_DOORBELL,
-        HCCL_ERROR("[HcclBatchPutMRByAscendQP] The value of wqePerDoorbell is exceed 300 or equal to 0."), HCCL_E_PARA);
+        HCCL_ERROR(
+            "[HcclBatchPutMRByAscendQP] wqePerDoorbell[%u] is invalid, should be greater than 0 and not exceed "
+            "MAX_WQE_PER_DOORBELL[%u].",
+            sendRecvLinkInfo->wqePerDoorbell, MAX_WQE_PER_DOORBELL),
+        HCCL_E_PARA);
     QpHandle qpHandle;
     CHK_RET(TypicalQpManager::GetInstance().GetQpHandleByQpn(sendRecvLinkInfo->localQPinfo->qpn, qpHandle));
 
@@ -792,7 +796,10 @@ HcclResult HcclOneSideBatchPutByAscendQP(
     CHK_RET(CheckSendLinkInfo(sendlinkInfo));
     CHK_PRT_RET(
         sendlinkInfo->wqePerDoorbell == 0 || sendlinkInfo->wqePerDoorbell > MAX_WQE_PER_DOORBELL,
-        HCCL_ERROR("[HcclOneSideBatchPutByAscendQP] The value of wqePerDoorbell is exceed 300 or equal to 0."),
+        HCCL_ERROR(
+            "[HcclOneSideBatchPutByAscendQP] wqePerDoorbell[%u] is invalid, should be greater than 0 and not exceed "
+            "MAX_WQE_PER_DOORBELL[%u].",
+            sendlinkInfo->wqePerDoorbell, MAX_WQE_PER_DOORBELL),
         HCCL_E_PARA);
     QpHandle qpHandle;
     CHK_RET(TypicalQpManager::GetInstance().GetQpHandleByQpn(sendlinkInfo->localQPinfo->qpn, qpHandle));

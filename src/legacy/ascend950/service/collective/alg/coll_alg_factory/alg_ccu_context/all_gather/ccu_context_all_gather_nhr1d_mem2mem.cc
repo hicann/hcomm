@@ -319,7 +319,7 @@ std::vector<uint64_t> CcuContextAllGatherNHR1D::GeneArgs(const CcuTaskArg& arg)
 
     HCCL_INFO(
         "[CcuContextAllGatherNHR1D] TaskArgs: inputAddr[%llu], outputAddr[%llu], "
-        "die0Size[%llu], die1Size[%llu], repeatNum[%llu]"
+        "die0Size[%llu], die1Size[%llu], repeatNum[%llu] "
         "inputSliceStride[%llu], outputSliceStride[%llu], inputRepeatStride[%llu], outputRepeatStride[%llu]",
         inputAddr, outputAddr, die0Size, die1Size, repeatNum, inputSliceStride, outputSliceStride, inputRepeatStride,
         outputRepeatStride);

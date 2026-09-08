@@ -833,8 +833,8 @@ HcclResult TopoInfoExchangeServer::DisplayConnectingStatus(
             }
         }
 
-        std::string infoStr = "succ sockets is [" + std::to_string((totalSockets - waitSockets))
-                              + "], waiting sockets is [" + std::to_string(waitSockets) + "], wait sockets rankid: ";
+        std::string infoStr = "succ sockets are [" + std::to_string((totalSockets - waitSockets))
+                              + "], waiting sockets are [" + std::to_string(waitSockets) + "], wait sockets rankid: ";
         for (u32 index = 0; index < unsocketinfos.size(); index++) {
             if (index == (unsocketinfos.size() - 1)) {
                 infoStr += "[" + unsocketinfos[index] + "]";
@@ -845,8 +845,8 @@ HcclResult TopoInfoExchangeServer::DisplayConnectingStatus(
 
         HCCL_RUN_INFO("[HCCL_TRACE] %s", infoStr.c_str());
     } else {
-        std::string infoStr = "succ sockets is [" + std::to_string(totalSockets - waitSockets)
-                              + "], waiting sockets is [" + std::to_string(waitSockets) + "]";
+        std::string infoStr = "succ sockets are [" + std::to_string(totalSockets - waitSockets)
+                              + "], waiting sockets are [" + std::to_string(waitSockets) + "]";
         HCCL_RUN_INFO("[HCCL_TRACE] %s , isByMasterInfo[%d]", infoStr.c_str(), isByMasterInfo_);
     }
 
@@ -862,7 +862,7 @@ HcclResult TopoInfoExchangeServer::GetRemoteFdAndRankSize(
     auto iter = connectSockets.find(agentID);
     CHK_PRT_RET(
         iter != connectSockets.end(),
-        HCCL_ERROR("[Get][Connection]GetConnection failed. agnet[%s] has been connected.", agentID.c_str()),
+        HCCL_ERROR("[Get][Connection]GetConnection failed. agent[%s] has been connected.", agentID.c_str()),
         HCCL_E_INTERNAL);
     connectSockets.insert({agentID, socket});
 
@@ -1015,8 +1015,8 @@ HcclResult TopoInfoExchangeServer::VerifyRemoteRankNum(u32& previousRankNum, u32
         CHK_PRT_RET(
             (remoteRankNum != previousRankNum),
             HCCL_ERROR(
-                "[Verify][RemoteRankNum]VerifyRemoteRankNum failed. remoteRankNum[%u] is difference "
-                "with others[%u].",
+                "[Verify][RemoteRankNum]VerifyRemoteRankNum failed. remoteRankNum[%u] is different "
+                "from others[%u].",
                 remoteRankNum, previousRankNum),
             HCCL_E_INTERNAL);
     }

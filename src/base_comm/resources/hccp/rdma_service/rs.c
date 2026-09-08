@@ -182,7 +182,7 @@ int RsGetRdevCb(struct rs_cb *rsCb, unsigned int rdevIndex, struct RsRdevCb **rd
     }
 
     *rdevCb = NULL;
-    hccp_err("rdev_cb for rdev_index[%u] do not available!", rdevIndex);
+    hccp_err("rdev_cb for rdev_index[%u] is not available!", rdevIndex);
 
     return -ENODEV;
 }
@@ -1115,7 +1115,7 @@ STATIC void RsDestroyQpList(unsigned int phyId, unsigned int rdevIndex, struct R
     int ret;
 
     if (!RsListEmpty(&rdevCb->qpList)) {
-        hccp_warn("qp list do not empty!");
+        hccp_warn("qp list is not empty!");
         RS_LIST_GET_HEAD_ENTRY(qpCb, qpCb2, &rdevCb->qpList, list, struct RsQpCb);
         for (; (&qpCb->list) != &rdevCb->qpList;
              qpCb = qpCb2, qpCb2 = list_entry(qpCb2->list.next, struct RsQpCb, list)) {
@@ -1362,7 +1362,7 @@ STATIC void RsFreeAcceptOneNode(struct rs_cb *rscb, struct RsAcceptInfo *accept)
 
     if (rscb->sslEnable == RS_SSL_ENABLE) {
         if (accept->ssl == NULL) {
-            hccp_warn("[Server] accept->ssl is NULL, it maybe has not establish tls link");
+            hccp_warn("[Server] accept->ssl is NULL, it may not have established tls link");
         } else {
             ssl_adp_shutdown(accept->ssl);
             ssl_adp_free(accept->ssl);
@@ -1386,7 +1386,7 @@ STATIC void RsFreeAccpetList(struct rs_cb *rscb)
     struct RsAcceptInfo *accept2 = NULL;
 
     if (!RsListEmpty(&rscb->connCb.serverAcceptList)) {
-        hccp_warn("Server accept list do not empty!");
+        hccp_warn("Server accept list is not empty!");
         RS_LIST_GET_HEAD_ENTRY(accept, accept2, &rscb->connCb.serverAcceptList, list, struct RsAcceptInfo);
         for (; (&accept->list) != &rscb->connCb.serverAcceptList;
              accept = accept2, accept2 = list_entry(accept2->list.next, struct RsAcceptInfo, list)) {
@@ -1427,7 +1427,7 @@ STATIC void RsFreeConnOneNode(struct rs_cb *rscb, struct RsConnInfo *conn)
 
     if (rscb->sslEnable == RS_SSL_ENABLE) {
         if (conn->ssl == NULL) {
-            hccp_warn("[Client] conn->ssl is NULL, it maybe has not establish tls link");
+            hccp_warn("[Client] conn->ssl is NULL, it may not have established tls link");
         } else {
             ssl_adp_shutdown(conn->ssl);
             ssl_adp_free(conn->ssl);
@@ -1453,7 +1453,7 @@ STATIC void RsFreeClientConnList(struct rs_cb *rscb)
     struct RsConnInfo *conn2 = NULL;
 
     if (!RsListEmpty(&rscb->connCb.clientConnList)) {
-        hccp_warn("Client conn node do not empty!");
+        hccp_warn("Client conn node is not empty!");
         RS_LIST_GET_HEAD_ENTRY(conn, conn2, &rscb->connCb.clientConnList, list, struct RsConnInfo);
         for (; (&conn->list) != &rscb->connCb.clientConnList;
              conn = conn2, conn2 = list_entry(conn2->list.next, struct RsConnInfo, list)) {
@@ -1475,7 +1475,7 @@ STATIC void RsFreeDesignatedClientConnNode(struct rs_cb *rscb, struct RsIpAddrIn
         for (; (&conn->list) != &rscb->connCb.clientConnList;
              conn = conn2, conn2 = list_entry(conn2->list.next, struct RsConnInfo, list)) {
             if (!RsCompareIpAddr(&conn->clientIp, localIp)) {
-                hccp_warn("Client conn node for IP[%s] do not empty!", localIp->readAddr);
+                hccp_warn("Client conn node for IP[%s] is not empty!", localIp->readAddr);
                 RsFreeConnOneNode(rscb, conn);
                 conn = NULL;
             }
@@ -1491,7 +1491,7 @@ STATIC void RsFreeServerConnList(struct rs_cb *rscb)
     struct RsConnInfo *conn2 = NULL;
 
     if (!RsListEmpty(&rscb->connCb.serverConnList)) {
-        hccp_warn("Server conn node do not empty!");
+        hccp_warn("Server conn node is not empty!");
         RS_LIST_GET_HEAD_ENTRY(conn, conn2, &rscb->connCb.serverConnList, list, struct RsConnInfo);
         for (; (&conn->list) != &rscb->connCb.serverConnList;
              conn = conn2, conn2 = list_entry(conn2->list.next, struct RsConnInfo, list)) {
@@ -1513,7 +1513,7 @@ STATIC void RsFreeDesignatedServerConnNode(struct rs_cb *rscb, struct RsIpAddrIn
         for (; (&conn->list) != &rscb->connCb.serverConnList;
              conn = conn2, conn2 = list_entry(conn2->list.next, struct RsConnInfo, list)) {
             if (!RsCompareIpAddr(&conn->serverIp, localIp)) {
-                hccp_warn("Server conn node for IP[%s] do not empty!", localIp->readAddr);
+                hccp_warn("Server conn node for IP[%s] is not empty!", localIp->readAddr);
                 RsFreeConnOneNode(rscb, conn);
                 conn = NULL;
             }
@@ -1553,7 +1553,7 @@ STATIC void RsFreeListenList(struct rs_cb *rscb)
     struct RsListenInfo *listen2 = NULL;
 
     if (!RsListEmpty(&rscb->connCb.listenList)) {
-        hccp_warn("Server listen node do not empty!");
+        hccp_warn("Server listen node is not empty!");
         RS_LIST_GET_HEAD_ENTRY(listen, listen2, &rscb->connCb.listenList, list, struct RsListenInfo);
         for (; (&listen->list) != &rscb->connCb.listenList;
              listen = listen2, listen2 = list_entry(listen2->list.next, struct RsListenInfo, list)) {
@@ -1623,7 +1623,7 @@ STATIC void RsFreeWhiteList(struct rs_cb *rscb)
     struct RsWhiteList *wlist2 = NULL;
 
     if (!RsListEmpty(&rscb->connCb.whiteList)) {
-        hccp_warn("Server white list do not empty!");
+        hccp_warn("Server white list is not empty!");
         RS_LIST_GET_HEAD_ENTRY(wlist, wlist2, &rscb->connCb.whiteList, list, struct RsWhiteList);
         for (; (&wlist->list) != &rscb->connCb.whiteList;
              wlist = wlist2, wlist2 = list_entry(wlist2->list.next, struct RsWhiteList, list)) {
@@ -1762,7 +1762,7 @@ STATIC void RsFreeHeterogTcpFdList(struct rs_cb *rsCb)
     struct RsHeterogTcpFdInfo *fdNode1 = NULL;
 
     if (!RsListEmpty(&rsCb->heterogTcpFdList)) {
-        hccp_warn("heterog_tcp_fd_list do not empty!");
+        hccp_warn("heterog_tcp_fd_list is not empty!");
         RS_LIST_GET_HEAD_ENTRY(fdNode, fdNode1, &rsCb->heterogTcpFdList, list, struct RsHeterogTcpFdInfo);
         for (; (&fdNode->list) != &rsCb->heterogTcpFdList;
              fdNode = fdNode1, fdNode1 = list_entry(fdNode1->list.next, struct RsHeterogTcpFdInfo, list)) {

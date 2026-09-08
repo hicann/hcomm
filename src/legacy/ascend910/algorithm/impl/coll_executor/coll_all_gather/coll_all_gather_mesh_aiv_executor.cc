@@ -93,7 +93,7 @@ HcclResult CollAllGatherMeshAivExecutor::CalNumBlocks(
     }
 
     HCCL_INFO(
-        "[CollAllGatherMeshAivExecutor][CalNumBlocks] numBlocks is set to [%u], limit[%u], recommanded[%u]", numBlocks,
+        "[CollAllGatherMeshAivExecutor][CalNumBlocks] numBlocks is set to [%u], limit[%u], recommended[%u]", numBlocks,
         numBlocks_, bestNumBlocks);
     return HCCL_SUCCESS;
 }

@@ -88,6 +88,10 @@ def log_info(message):
     get_console_logger().info(message)
 
 
+def log_warning(message):
+    get_console_logger().warning(message)
+
+
 def log_error(message):
     get_console_logger().error(message)
 

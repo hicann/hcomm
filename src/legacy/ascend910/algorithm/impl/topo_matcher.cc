@@ -539,7 +539,7 @@ HcclResult TopoMatcher::GetLocalServerRankSize(const u32 userRank, u32& devNumIn
 HcclResult TopoMatcher::SetDeterministicConfig(const u8 deterministic)
 {
     if (deterministic > DETERMINISTIC_STRICT) {
-        HCCL_ERROR("[SetDeterministicConfig] deterministic should be 0, 1 or 2.");
+        HCCL_ERROR("[SetDeterministicConfig] deterministic[%u] is invalid, should be 0, 1 or 2.", deterministic);
         return HCCL_E_PARA;
     }
     HCCL_INFO("[SetDeterministicConfig]deterministic is set to [%d]", deterministic);

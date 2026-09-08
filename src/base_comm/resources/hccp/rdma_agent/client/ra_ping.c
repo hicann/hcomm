@@ -34,7 +34,7 @@ STATIC int RaUdevInitCheck(unsigned int phyId, void *pingHandle)
 {
     CHK_PRT_RETURN(phyId >= RA_MAX_PHY_ID_NUM,
         hccp_err("[check][ra_ping_init]phyId(%u) is invalid! "
-                 "it must greater or equal to 0 and less than %d!",
+                 "it must be greater than or equal to 0 and less than %d!",
             phyId, RA_MAX_PHY_ID_NUM),
         -EINVAL);
     CHK_PRT_RETURN(pingHandle == NULL, hccp_err("[check][ra_ping_init]phyId(%u) ping_handle is null!", phyId), -EINVAL);
@@ -83,7 +83,7 @@ STATIC int RaPingInitGetHandle(struct PingInitAttr *initAttr, struct PingInitInf
     pingHandle->bufferSize = initAttr->bufferSize;
 
     ret = pthread_mutex_init(&pingHandle->mutex, NULL);
-    CHK_PRT_RETURN(ret, hccp_err("[init][ra_ping]init mutext failed, ret:%d", ret), ret);
+    CHK_PRT_RETURN(ret, hccp_err("[init][ra_ping]init mutex failed, ret:%d", ret), ret);
 
     return 0;
 }
@@ -138,7 +138,7 @@ HCCP_ATTRI_VISI_DEF int RaPingTargetAdd(void *pingHandle, struct PingTargetInfo 
 
     phyId = pingHandleTmp->phyId;
     CHK_PRT_RETURN(phyId >= RA_MAX_PHY_ID_NUM,
-        hccp_err("[add][ra_ping]phyId(%u) must less than %d!", phyId, RA_MAX_PHY_ID_NUM),
+        hccp_err("[add][ra_ping]phyId(%u) must be less than %d!", phyId, RA_MAX_PHY_ID_NUM),
         ConverReturnCode(RDMA_OP, -EINVAL));
     CHK_PRT_RETURN(pingHandleTmp->targetCnt + num < num,
         hccp_err("[add][ra_ping]pingHandleTmp->targetCnt + num is out of range"), ConverReturnCode(RDMA_OP, -EINVAL));
@@ -185,7 +185,7 @@ HCCP_ATTRI_VISI_DEF int RaPingTaskStart(void *pingHandle, struct PingTaskAttr *a
 
     phyId = pingHandleTmp->phyId;
     CHK_PRT_RETURN(phyId >= RA_MAX_PHY_ID_NUM,
-        hccp_err("[start][ra_ping]phyId(%u) must less than %d!", phyId, RA_MAX_PHY_ID_NUM),
+        hccp_err("[start][ra_ping]phyId(%u) must be less than %d!", phyId, RA_MAX_PHY_ID_NUM),
         ConverReturnCode(RDMA_OP, -EINVAL));
 
     RA_PTHREAD_MUTEX_LOCK(&pingHandleTmp->mutex);
@@ -240,7 +240,7 @@ HCCP_ATTRI_VISI_DEF int RaPingGetResults(void *pingHandle, struct PingTargetResu
 
     phyId = pingHandleTmp->phyId;
     CHK_PRT_RETURN(phyId >= RA_MAX_PHY_ID_NUM,
-        hccp_err("[get][ra_ping]phyId(%u) must less than %d!", phyId, RA_MAX_PHY_ID_NUM),
+        hccp_err("[get][ra_ping]phyId(%u) must be less than %d!", phyId, RA_MAX_PHY_ID_NUM),
         ConverReturnCode(RDMA_OP, -EINVAL));
 
     // num invalid, bigger than target exist
@@ -292,7 +292,7 @@ HCCP_ATTRI_VISI_DEF int RaPingTargetDel(void *pingHandle, struct PingTargetCommI
 
     phyId = pingHandleTmp->phyId;
     CHK_PRT_RETURN(phyId >= RA_MAX_PHY_ID_NUM,
-        hccp_err("[del][ra_ping]phyId(%u) must less than %d!", phyId, RA_MAX_PHY_ID_NUM),
+        hccp_err("[del][ra_ping]phyId(%u) must be less than %d!", phyId, RA_MAX_PHY_ID_NUM),
         ConverReturnCode(RDMA_OP, -EINVAL));
 
     ret = pingHandleTmp->pingOps->raPingTargetDel(pingHandleTmp, target, num);
@@ -326,7 +326,7 @@ HCCP_ATTRI_VISI_DEF int RaPingTaskStop(void *pingHandle)
 
     phyId = pingHandleTmp->phyId;
     CHK_PRT_RETURN(phyId >= RA_MAX_PHY_ID_NUM,
-        hccp_err("[stop][ra_ping]phyId(%u) must less than %d!", phyId, RA_MAX_PHY_ID_NUM),
+        hccp_err("[stop][ra_ping]phyId(%u) must be less than %d!", phyId, RA_MAX_PHY_ID_NUM),
         ConverReturnCode(RDMA_OP, -EINVAL));
 
     // no task to stop
@@ -366,7 +366,7 @@ STATIC int RaPingDeinitParaCheck(struct RaPingHandle *pingHandle)
 
     phyId = pingHandle->phyId;
     CHK_PRT_RETURN(phyId >= RA_MAX_PHY_ID_NUM,
-        hccp_err("[deinit][ra_ping]phyId(%u) must smaller than %u", phyId, RA_MAX_PHY_ID_NUM), -EINVAL);
+        hccp_err("[deinit][ra_ping]phyId(%u) must be smaller than %u", phyId, RA_MAX_PHY_ID_NUM), -EINVAL);
 
     devInfo = pingHandle->dev;
     if (pingHandle->protocol == PROTOCOL_RDMA) {

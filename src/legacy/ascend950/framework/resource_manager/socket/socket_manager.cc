@@ -476,7 +476,7 @@ SocketManager::GetSubCommDeviceServerListenPortMap(const std::vector<u32>& rankI
     for (u32 subRankId = 0; subRankId < rankIds.size(); ++subRankId) {
         u32 rankId = rankIds[subRankId];
         if (rankListenPortMap_->find(rankId) == rankListenPortMap_->end()) {
-            HCCL_WARNING("[SocketManager::%s]Cant't find listen port for rank %u to sub comm.", __func__, rankId);
+            HCCL_WARNING("[SocketManager::%s]Can't find listen port for rank %u to sub comm.", __func__, rankId);
         } else {
             subMap->insert(std::make_pair(subRankId, rankListenPortMap_->at(rankId)));
         }

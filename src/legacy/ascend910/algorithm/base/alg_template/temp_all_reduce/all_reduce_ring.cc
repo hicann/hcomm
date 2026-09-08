@@ -42,7 +42,7 @@ HcclResult AllReduceRing::RunAsync(const u32 rank, const u32 rankSize, const std
     CHK_PRT_RET(
         ret != HCCL_SUCCESS,
         HCCL_ERROR(
-            "[AllReduceRing][RunAsync]rank[%u] count[%llu] failed in reducescater "
+            "[AllReduceRing][RunAsync]rank[%u] count[%llu] failed in ReduceScatter "
             "step",
             rank, count_),
         ret);
@@ -86,7 +86,7 @@ AllReduceRing::RunAsyncStaged(const u32 rank, const u32 rankSize, const std::vec
                 ret != HCCL_SUCCESS,
                 HCCL_ERROR(
                     "[AllReduceRing][RunAsyncStaged]rank[%u] count[%llu] "
-                    "failed in reducescater step",
+                    "failed in ReduceScatter step",
                     rank, count_),
                 ret);
             break;
@@ -102,7 +102,7 @@ AllReduceRing::RunAsyncStaged(const u32 rank, const u32 rankSize, const std::vec
                 ret);
             break;
         default:
-            HCCL_ERROR("[AllReduceRing][RunAsyncStaged]stage[%d]is not support", stage);
+            HCCL_ERROR("[AllReduceRing][RunAsyncStaged]stage[%d] is not supported", stage);
             return HCCL_E_NOT_SUPPORT;
     }
     HCCL_INFO("AllReduceRing RunAsyncStaged stage[%d] finished: rank[%u] ranksize[%u]", stage, rank, rankSize);

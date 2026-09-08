@@ -659,7 +659,7 @@ HcclResult CommBase::CreateDestLink(
     MachinePara machinePara;
     CHK_RET(SetMachinePara(machineType, serverId, dstRank, sockets, machinePara));
     HCCL_INFO(
-        "[creakLink para]rank[%u]-localUserrank[%u]-localIpAddr[%s], linkMode[%d] "
+        "[createLink para]rank[%u]-localUserrank[%u]-localIpAddr[%s], linkMode[%d] "
         "dst_rank[%u]-remoteUserrank[%u]-remote_ip_addr[%s], machineType[%d], serverId[%s], nicDeploy[%d] ",
         rank_, paraVector_[rank_].worldRank, paraVector_[rank_].serverId.c_str(), machinePara.linkMode, dstRank,
         paraVector_[dstRank].worldRank, paraVector_[dstRank].serverId.c_str(), machinePara.machineType,
@@ -677,14 +677,14 @@ HcclResult CommBase::CreateDestLink(
             HCCL_ERROR("%s", err_str.c_str());
         }
         const std::string CREATE_LINK_ERR
-            = "[Create][DestLink]Create Dest error! creakLink para:rank[" + std::to_string(rank_) + "]-localUserrank["
+            = "[Create][DestLink]Create Dest error! createLink para:rank[" + std::to_string(rank_) + "]-localUserrank["
               + std::to_string(paraVector_[rank_].worldRank) + "]-localIpAddr[" + paraVector_[rank_].serverId.c_str()
               + "], dst_rank[" + std::to_string(dstRank) + "]-remoteUserrank["
               + std::to_string(paraVector_[dstRank].worldRank) + "]-remote_ip_addr["
               + paraVector_[dstRank].serverId.c_str() + "]";
 
         HCCL_ERROR(
-            "[Create][DestLink]Transport init error! creakLink para:rank[%u]-localUserrank[%u]-localIpAddr[%s], "
+            "[Create][DestLink]Transport init error! createLink para:rank[%u]-localUserrank[%u]-localIpAddr[%s], "
             "dst_rank[%u]-remoteUserrank[%u]-remote_ip_addr[%s], machineType[%d], serverId[%s], linkMode[%d], "
             "shmDev_[%u], tag[%s]",
             rank_, paraVector_[rank_].worldRank, paraVector_[rank_].serverId.c_str(), dstRank,
@@ -693,7 +693,7 @@ HcclResult CommBase::CreateDestLink(
         return ret;
     }
     HCCL_INFO(
-        "[creakLink success]:rank[%u]-localUserrank[%u]-localIpAddr[%s], "
+        "[createLink success]:rank[%u]-localUserrank[%u]-localIpAddr[%s], "
         "dst_rank[%u]-remoteUserrank[%u]-remote_ip_addr[%s], transportType_[%d], tag[%s]",
         rank_, paraVector_[rank_].worldRank, paraVector_[rank_].serverId.c_str(), dstRank,
         paraVector_[dstRank].worldRank, paraVector_[dstRank].serverId.c_str(), transportType_[dstRank],
@@ -714,7 +714,7 @@ HcclResult CommBase::TransportInit(const u32 dstRank, MachinePara& machinePara)
 {
     CHK_PRT_RET(
         dstRank >= transportInfo_.size(),
-        HCCL_ERROR("[TransportQuerry] Transport[%u] is invalid, should init before query it.", dstRank), HCCL_E_PARA);
+        HCCL_ERROR("[TransportQuery] Transport[%u] is invalid, should init before query it.", dstRank), HCCL_E_PARA);
     // 实例化TransportBase
     CHK_RET(SetTransportType(dstRank));
     TransportPara para{};
@@ -904,7 +904,7 @@ HcclResult CommBase::BuildQuerry(u32& status)
         }
     }
     CHK_RET(GetBuildStatus(status));
-    HCCL_DEBUG("BuildQuerry: %u", status);
+    HCCL_DEBUG("BuildQuery: %u", status);
     return HCCL_SUCCESS;
 }
 
@@ -944,7 +944,7 @@ HcclResult CommBase::TransportBuildAsync(
 {
     CHK_PRT_RET(
         dstRank >= transportInfo_.size(),
-        HCCL_ERROR("[TransportQuerry] Transport[%u] is invalid, should init before query it.", dstRank), HCCL_E_PARA);
+        HCCL_ERROR("[TransportQuery] Transport[%u] is invalid, should init before query it.", dstRank), HCCL_E_PARA);
     MachinePara machinePara;
     CHK_RET(SetMachinePara(machineType, serverId, dstRank, sockets, machinePara));
     // 实例化TransportBase
@@ -971,7 +971,7 @@ HcclResult CommBase::TransportBuildQuerry(u32 dstRank, u32& status)
 {
     CHK_PRT_RET(
         dstRank >= transportInfo_.size(),
-        HCCL_ERROR("[TransportQuerry] Transport[%u] is invalid, should init before query it.", dstRank), HCCL_E_PARA);
+        HCCL_ERROR("[TransportQuery] Transport[%u] is invalid, should init before query it.", dstRank), HCCL_E_PARA);
     if (transportInfo_[dstRank]) {
         CHK_RET(transportInfo_[dstRank]->ConnectQuerry(status));
         if (status == HETEROG_P2P_SUCCESS && checkStatus_[dstRank] == false) {
@@ -981,7 +981,7 @@ HcclResult CommBase::TransportBuildQuerry(u32 dstRank, u32& status)
     } else {
         status = HETEROG_P2P_WAIT;
     }
-    HCCL_DEBUG("TransportBuildQuerry[%u] %u", dstRank, status);
+    HCCL_DEBUG("TransportBuildQuery[%u] %u", dstRank, status);
     return HCCL_SUCCESS;
 }
 

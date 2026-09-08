@@ -124,7 +124,7 @@ HcclResult CcuTransport::AppendRes(uint32_t ckesNum, uint32_t xnsNum)
         HCCL_ERROR(e.what());
         return HCCL_E_INTERNAL;
     } catch (...) {
-        HCCL_ERROR("Unknown error occured during unimport jetty or destroy jetty!");
+        HCCL_ERROR("Unknown error occurred during unimport jetty or destroy jetty!");
         return HCCL_E_INTERNAL;
     }
     return HCCL_SUCCESS;

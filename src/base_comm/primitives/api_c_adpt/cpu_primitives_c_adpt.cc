@@ -98,7 +98,7 @@ int32_t HcommLocalReduceOnThread(
     CHK_PRT_RET(
         (IsSupportReduce(dataType, reduceOp) == false),
         HCCL_ERROR(
-            "[HcommLocalReduceOnThread]Not support reduce, "
+            "[HcommLocalReduceOnThread] Not support reduce, "
             "dst[%p], src[%p], count[%llu], dataType[%d], reduceOp[%d]",
             dst, src, count, dataType, reduceOp),
         HCCL_E_PARA);
@@ -351,7 +351,7 @@ int32_t HcommWriteReduceOnThread(
     CHK_PRT_RET(
         (IsSupportReduce(dataType, reduceOp) == false),
         HCCL_ERROR(
-            "[HcommWriteReduceOnThread]Not support reduce, "
+            "[HcommWriteReduceOnThread] Not support reduce, "
             "dst[%p], src[%p], count[%llu], dataType[%d], reduceOp[%d]",
             dst, src, count, dataType, reduceOp),
         HCCL_E_PARA);
@@ -391,7 +391,7 @@ HcclResult CommWriteReduceWithNotify(
     CHK_PRT_RET(
         (IsSupportReduce(dataType, reduceOp) == false),
         HCCL_ERROR(
-            "[CommWriteReduceWithNotify]Not support reduce, "
+            "[CommWriteReduceWithNotify] Not support reduce, "
             "dst[%p], src[%p], count[%llu], dataType[%d], reduceOp[%d]",
             dst, src, count, dataType, reduceOp),
         HCCL_E_PARA);
@@ -546,7 +546,7 @@ int32_t HcommReadReduceOnThread(
     CHK_PRT_RET(
         (IsSupportReduce(dataType, reduceOp) == false),
         HCCL_ERROR(
-            "[HcommReadReduceOnThread]Not support reduce, "
+            "[HcommReadReduceOnThread] Not support reduce, "
             "dst[%p], src[%p], count[%llu], dataType[%d], reduceOp[%d]",
             dst, src, count, dataType, reduceOp),
         HCCL_E_PARA);

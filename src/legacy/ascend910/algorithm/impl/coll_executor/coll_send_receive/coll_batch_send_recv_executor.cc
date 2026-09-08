@@ -306,7 +306,7 @@ HcclResult CollBatchSendRecvExecutor::GetAdjInfo(AlgResourceResponse& algRes, Ad
     CHK_RET(level1TempAlg->GetNslbAdjInfo(localRank, localRankSize, level1CommInfo.links, nslbAdjInfo));
 
     adjInfo.dstRankNum = nslbAdjInfo.dstRankNum;
-    HCCL_INFO("[nslbdp] adjInfo.dstRankNum[%u].", adjInfo.dstRankNum);
+    HCCL_INFO("[CollBatchSendRecvExecutor][GetAdjInfo] adjInfo.dstRankNum[%u].", adjInfo.dstRankNum);
 
     for (size_t i = 0; i < nslbAdjInfo.nsAdjInfo.size(); i++) {
         NslbDpAdjInfo dpAdjInfo = {};
@@ -315,8 +315,8 @@ HcclResult CollBatchSendRecvExecutor::GetAdjInfo(AlgResourceResponse& algRes, Ad
         dpAdjInfo.rev = 0;
         adjInfo.nsAdjInfo.push_back(dpAdjInfo);
         HCCL_INFO(
-            "[nslbdp]GetAdjInfo dstLocalRankId[%u], phaseId[%u].", nslbAdjInfo.nsAdjInfo[i].dstLocalRankId,
-            nslbAdjInfo.nsAdjInfo[i].phaseId);
+            "[CollBatchSendRecvExecutor][GetAdjInfo] dstLocalRankId[%u], phaseId[%u].",
+            nslbAdjInfo.nsAdjInfo[i].dstLocalRankId, nslbAdjInfo.nsAdjInfo[i].phaseId);
     }
     return HCCL_SUCCESS;
 }

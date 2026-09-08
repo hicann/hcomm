@@ -375,7 +375,7 @@ HcclResult CollAllGatherRingFor91093Executor::KernelRun(const OpParam& param, Ex
 
         CHK_RET(RunTemplate(level2AGExecutor, level2CommInfo));
         HCCL_INFO(
-            "AllGather ring [superpod] level2 AllGather run successtopoType_[%u], agv[%u]", topoType_, isAllGatherV_);
+            "AllGather ring [superpod] level2 AllGather run success, topoType_[%u], agv[%u]", topoType_, isAllGatherV_);
     }
     if (level1RankSize > 1) {
         // 计算slice, 不同超节点相同slice
@@ -427,7 +427,7 @@ HcclResult CollAllGatherRingFor91093Executor::KernelRun(const OpParam& param, Ex
 
         CHK_RET(RunTemplate(level1AGExecutor, logicalLevel1CommInfo_));
         HCCL_INFO(
-            "AllGather ring [superpod] level1 AllGather run successtopoType_[%u], agv[%u]", topoType_, isAllGatherV_);
+            "AllGather ring [superpod] level1 AllGather run success, topoType_[%u], agv[%u]", topoType_, isAllGatherV_);
     }
     // 节点内做AllGather ring
     std::vector<std::vector<Slice>> multRingsSlice;
@@ -469,7 +469,7 @@ HcclResult CollAllGatherRingFor91093Executor::Getlevel1CommRank(SubCommInfo& lev
         return HCCL_SUCCESS;
     }
     if (CheckCommSize(COMM_LEVEL2, COMM_INDEX_0 + 1) != HCCL_SUCCESS) {
-        HCCL_INFO("[nslbdp] Getlevel1CommRank size not match.");
+        HCCL_INFO("[AllGatherRingFor91093] Getlevel1CommRank size not match.");
         return HCCL_E_UNAVAIL;
     }
     level1CommInfo = GetSubCommInfo(COMM_LEVEL2, COMM_INDEX_0);
@@ -480,7 +480,7 @@ HcclResult CollAllGatherRingFor91093Executor::Getlevel1CommRank(SubCommInfo& lev
 HcclResult
 CollAllGatherRingFor91093Executor::SelectTempAlg(std::unique_ptr<AlgTemplateBase>& level1TempAlg, u32 level1RankSize)
 {
-    HCCL_INFO("[nslbdp] Entry SelectTempAlg, level1RankSize = [%u].", level1RankSize);
+    HCCL_INFO("[AllGatherRingFor91093] Entry SelectTempAlg, level1RankSize = [%u].", level1RankSize);
     bool isSelectAHC
         = (algType_.algoLevel1 == AlgTypeLevel1::ALG_LEVEL1_AHC
            || algType_.algoLevel1 == AlgTypeLevel1::ALG_LEVEL1_AHC_BROKE);

@@ -511,7 +511,7 @@ bool CheckNsCommand(hccl::HcclCommAicpu* comm)
         return false;
     }
     comm->SetNsStopLaunchStatus(true);
-    HCCL_WARNING("N second stop Launch for recv stop launch cmd.");
+    HCCL_WARNING("N second stop launch for receiving stop launch cmd.");
     return true;
 }
 
@@ -791,7 +791,8 @@ bool SelectAlgName(const std::string& algConfig, u32 topoType, std::string& algN
         algName = res->second;
         return true;
     }
-    HCCL_ERROR("[AicpuHcclProcess][%s] algo_name is not exist, algConfig %s is no.", __func__, algConfig.c_str());
+    HCCL_ERROR(
+        "[AicpuHcclProcess][%s] algo_name does not exist, algConfig %s is invalid.", __func__, algConfig.c_str());
     return false;
 }
 
@@ -800,7 +801,7 @@ bool SplitHcclAlgoGetLevel1Res(std::string& algoConfig, std::string& algos)
     std::string remainAlgoConfig;
     std::size_t found = algoConfig.find(";");
     if ((found == 0) || (found == (algoConfig.length() - 1)) || (found == std::string::npos)) {
-        HCCL_INFO("algoConfig %s thereis no level1 algo config", algoConfig.c_str());
+        HCCL_INFO("algoConfig %s: there is no level1 algo config", algoConfig.c_str());
         return true;
     }
     remainAlgoConfig = algoConfig.substr(found + 1);

@@ -30,7 +30,7 @@ static bool CreateCcuJettys(CcuCommunicator& ccuComm, const std::vector<LinkData
         createStatus = false; // 预留处理资源不足回退情况，当前不支持回退
         HCCL_WARNING(
             "[CcuInsPreprocessor][%s] create ccu jettys failed, "
-            "ccu resource is unavaialble, please check.",
+            "ccu resource is unavailable, please check.",
             __func__);
         return false;
     }
@@ -58,7 +58,7 @@ static bool CreateCcuTransports(
             createStatus = false; // 预留处理资源不足回退情况，当前不支持回退
             HCCL_WARNING(
                 "[CcuInsPreprocessor][%s] create ccu transports failed, "
-                "ccu resource is unavaialble, please check.",
+                "ccu resource is unavailable, please check.",
                 __func__);
             return false;
         }
@@ -160,7 +160,7 @@ void CcuInsPreprocessor::CreateCcuCtxGroup(
 bool CcuInsPreprocessor::CheckCtxTransportStatus(bool resAllocSuccess)
 {
     if (!resAllocSuccess) {
-        HCCL_INFO(
+        HCCL_WARNING(
             "[CcuInsPreprocessor::%s] CreateCcuCtx alloc local resource fail, ccuCtxGroups"
             " size[%zu], resPackIdxs size[%zu], ctxSignatures size[%zu], insPtrs size[%zu]",
             __func__, ccuCtxGroups.size(), resPackIdxs.size(), ctxSignatures.size(), insPtrs.size());
@@ -218,7 +218,7 @@ void CcuInsPreprocessor::InsPreprocess(InsIterator& insIter, u32 resPackIndex, b
             if (res != HcclResult::HCCL_E_UNAVAIL) {
                 THROW<InternalException>("[CcuCtxMgr::AllocRes]AllocRes failed, unexpected error, please check.");
             }
-            HCCL_INFO("[CcuInsPreprocessor::%s] AllocRes failed, ret[%u]", __func__, res);
+            HCCL_WARNING("[CcuInsPreprocessor::%s] AllocRes failed, ret[%u]", __func__, res);
             resAllocSuccess = false;
         }
     } else {
@@ -244,7 +244,7 @@ void CcuInsPreprocessor::PrepareCcuCtx(std::shared_ptr<InsQueue>& insQueue, bool
             }
             InsPreprocess(ins, resPackIndex, isMc2);
             if (needHandShake && !resAllocSuccess) {
-                HCCL_INFO(
+                HCCL_WARNING(
                     "[CcuInsPreprocessor::%s] slave insQueue ins alloc local resource fail, "
                     "resPackIndex[%u], ins[%s].",
                     __func__, resPackIndex, ins->Describe().c_str());
@@ -264,7 +264,7 @@ void CcuInsPreprocessor::PrepareCcuCtx(std::shared_ptr<InsQueue>& insQueue, bool
         }
         InsPreprocess(ins, resPackIndex, isMc2);
         if (needHandShake && !resAllocSuccess) {
-            HCCL_INFO(
+            HCCL_WARNING(
                 "[CcuInsPreprocessor::%s] master insQueue ins alloc local resource fail, "
                 "resPackIndex[%u], ins[%s].",
                 __func__, resPackIndex, ins->Describe().c_str());

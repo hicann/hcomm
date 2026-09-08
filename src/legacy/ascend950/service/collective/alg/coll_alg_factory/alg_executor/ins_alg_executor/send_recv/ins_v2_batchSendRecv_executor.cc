@@ -217,7 +217,7 @@ HcclResult InsV2BatchSendRecvExecutor<AlgTopoMatch>::GetPairWiseList()
 
     if (sendToSelfDeque_.size() != recvFromSelfDeque_.size()) {
         HCCL_ERROR(
-            "[InsV2BatchSendRecvExecutor][GetPairWiseList] selfSendRecv is not equal,vsendQue size is [%u], recvQue "
+            "[InsV2BatchSendRecvExecutor][GetPairWiseList] selfSendRecv is not equal, sendQue size is [%u], recvQue "
             "size is [%u]",
             sendToSelfDeque_.size(), recvFromSelfDeque_.size());
         return HcclResult::HCCL_E_PARA;
@@ -423,7 +423,7 @@ HcclResult InsV2BatchSendRecvExecutor<AlgTopoMatch>::CalcResOffload(
     (void)rankGraph;
     (void)dataSize;
     (void)resReq;
-    HCCL_ERROR("[InsCollAlgFactory][InsV2BatchSendRecvExecutor][CalcResOffload] offload is not support");
+    HCCL_ERROR("[InsCollAlgFactory][InsV2BatchSendRecvExecutor][CalcResOffload] offload is not supported");
     return HcclResult::HCCL_E_NOT_SUPPORT;
 }
 

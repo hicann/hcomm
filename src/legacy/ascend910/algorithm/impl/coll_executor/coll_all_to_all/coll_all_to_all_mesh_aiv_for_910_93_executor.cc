@@ -125,7 +125,7 @@ HcclResult CollAlltoAllMeshAivFor91093Executor::GetAivExecParam(
     args.reduceOp = param.reduceType;
     args.devType = static_cast<u32>(topoAttr_.deviceType);
     HCCL_INFO(
-        "SPK [CollAlltoAllMeshAivFor91093Executor][GetAivExecParam], rank[%llu], rankSize[%llu], "
+        "[CollAlltoAllMeshAivFor91093Executor][GetAivExecParam], rank[%llu], rankSize[%llu], "
         "len[%llu],datatype[%llu], op[%llu]",
         args.rank, args.rankSize, args.len, args.dataType, args.reduceOp);
 

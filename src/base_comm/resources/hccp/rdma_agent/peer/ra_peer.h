@@ -23,7 +23,7 @@
         do {                                                                                                           \
             ret_ = close(fd);                                                                                          \
             if (ret_ < 0) {                                                                                            \
-                hccp_warn("close filedscp[%d] unsuccessful, errno:%d", fd, errno);                                     \
+                hccp_warn("close fd[%d] unsuccessful, errno:%d", fd, errno);                                           \
             }                                                                                                          \
         } while ((ret_ < 0) && (errno == EINTR));                                                                      \
         fd = -1;                                                                                                       \

@@ -192,7 +192,7 @@ HcclResult TopoinfoRanktableHeterog::GetRanktableInfo(RankTable_t& clusterInfo)
     CHK_RET(GetJsonProperty(fileContent_, "collective_id", collective_id, false));
     if (collective_id.length() > COLLECTIVEID_MAX_LEN) {
         HCCL_ERROR(
-            "[Get][RanktableInfo]errNo[0x%016llx] collectiveId length is over than %d bytes.",
+            "[Get][RanktableInfo]errNo[0x%016llx] collectiveId length is greater than %d bytes.",
             HCOM_ERROR_CODE(HCCL_E_PARA), collective_id.length());
         return HCCL_E_PARA;
     }
@@ -240,7 +240,7 @@ HcclResult TopoinfoRanktableHeterog::CheckNicDeployConsistence(RankTable_t& clus
                 || (tmpNicDeply == NICDeployment::NIC_DEPLOYMENT_HOST && it.hostIp.IsInvalid()),
             HCCL_ERROR(
                 "[Get][RanktableInfo] errNo[0x%016llx] "
-                "hostIp config bettewn ranks is different.",
+                "hostIp config between ranks is different.",
                 HCOM_ERROR_CODE(HCCL_E_PARA)),
             HCCL_E_PARA);
     }

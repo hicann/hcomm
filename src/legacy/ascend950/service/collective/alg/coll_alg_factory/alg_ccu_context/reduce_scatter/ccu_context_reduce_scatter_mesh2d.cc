@@ -43,8 +43,8 @@ CcuContextReduceScatterMesh2D::CcuContextReduceScatterMesh2D(
     localSize_ = dimSize_[axisId_];
     oppsiteSize_ = dimSize_[1 - axisId_];
     HCCL_INFO(
-        "[CcuContextReduceScatterMesh2D] RankId[%u], DimSize0[%u], DimSize1[%u], localId[%u], lcoalSize[%u], "
-        "oppsiteSize[%u]",
+        "[CcuContextReduceScatterMesh2D] RankId[%u], DimSize0[%u], DimSize1[%u], localId[%u], localSize[%u], "
+        "oppositeSize[%u]",
         rankId_, dimSize_[0], dimSize_[1], localId_, localSize_, oppsiteSize_);
     dataType_ = ctxArg->op_.dataType;
     outputDataType_ = ctxArg->op_.outputDataType;
@@ -130,7 +130,7 @@ void CcuContextReduceScatterMesh2D::AxisSync(uint32_t signalIndex)
     const uint32_t DIE_NUM = 2;
     if (signalIndex > 1) {
         THROW<InvalidParamsException>(
-            StringFormat("[CcuContextReduceScatterMesh2D] Unexpected SignalInex[%u]", signalIndex));
+            StringFormat("[CcuContextReduceScatterMesh2D] Unexpected SignalIndex[%u]", signalIndex));
     }
     LocalCtxPost(anotherAxisSignal_, 1 << (axisId_ + signalIndex * DIE_NUM));
     LocalWait(localAxisSignal_, 1 << (1 - axisId_ + signalIndex * DIE_NUM));

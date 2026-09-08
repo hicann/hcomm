@@ -223,14 +223,14 @@ class GitSync:
 
         remote_commit = self.get_remote_commit(remote_repo)
         if not remote_commit:
-            common.log_info("[warning] remote repo is empty, doing full sync")
+            common.log_warning("[warning] remote repo is empty, doing full sync")
             self.full_sync(local_repo, remote_repo)
             return
         remote_commit = self.validate_commit(remote_commit)
 
         changed_files, deleted_files = self.get_changed_files(local_repo, remote_commit)
         if not changed_files and not deleted_files:
-            common.log_info("[warning] no change detected, doing nothing")
+            common.log_warning("[warning] no change detected, doing nothing")
             return
 
         self.log_changed_files(changed_files, deleted_files)
@@ -320,7 +320,7 @@ class GitSync:
         self.execute_command(f"mkdir -p {self.quote_remote_path(self.remote_path_join(remote_repo, '.git'))}")
         self.create_bundle(local_repo, local_bundle_path, remote_commit)
         if not self.bundle_has_data(local_repo, local_bundle_path):
-            common.log_info("[warning] bundle is empty, doing nothing")
+            common.log_warning("[warning] bundle is empty, doing nothing")
             os.remove(local_bundle_path)
             return
 
@@ -416,7 +416,7 @@ if __name__ == "__main__":
             # 使用git bundle进行高效同步
             sync.sync_with_bundle(local_repo, remote_repo)
     except KeyboardInterrupt:
-        common.log_info("[warning] interrupted by user")
+        common.log_warning("[warning] interrupted by user")
     except paramiko.ssh_exception.NoValidConnectionsError:
         common.log_error("[error] no valid connections")
     except (paramiko.SSHException, OSError, RuntimeError, ValueError) as err:

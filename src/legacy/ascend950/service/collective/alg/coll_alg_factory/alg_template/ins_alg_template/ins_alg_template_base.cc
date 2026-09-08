@@ -98,7 +98,7 @@ HcclResult InsAlgTemplateBase::CalcResDetour(const RankGraph* rankGraph, AlgTemp
 {
     (void)rankGraph;
     (void)tempResReq;
-    HCCL_ERROR("[InsCollAlgFactory] Current alg do not support detour mode!");
+    HCCL_ERROR("[InsCollAlgFactory] Current algorithm does not support detour mode!");
     return HcclResult::HCCL_E_INTERNAL;
 }
 
@@ -106,7 +106,7 @@ HcclResult InsAlgTemplateBase::CalcResDetour(ConnectedLinkMgr* linkMgr, AlgTempR
 {
     (void)linkMgr;
     (void)tempResReq;
-    HCCL_ERROR("[InsCollAlgFactory] Current alg do not support detour mode!");
+    HCCL_ERROR("[InsCollAlgFactory] Current algorithm does not support detour mode!");
     return HcclResult::HCCL_E_INTERNAL;
 }
 
@@ -277,7 +277,7 @@ InsAlgTemplateBase::CreateMasterSlaveQueNotifiesRequest(u32 queueNum, u32 pairNu
     };
 
     u32 slaveNum = queueNum - 1;
-    HCCL_INFO("[Create][MasterSlaveQueNotifiesRequest] slavNum[%u]", slaveNum);
+    HCCL_INFO("[Create][MasterSlaveQueNotifiesRequest] slaveNum[%u]", slaveNum);
     if (slaveNum < 1 || pairNum < 1) {
         return notifyRequests;
     }

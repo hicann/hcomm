@@ -423,8 +423,8 @@ void RankInfoDetectService::DisplayConnectingStatus(u32 totalSockets, u32 waitSo
         }
     }
 
-    std::string infoStr = "succ sockets is [" + std::to_string((totalSockets - waitSockets)) + "], waiting sockets is ["
-                          + std::to_string(waitSockets) + "], wait sockets rankid: ";
+    std::string infoStr = "succ sockets are [" + std::to_string((totalSockets - waitSockets))
+                          + "], waiting sockets is [" + std::to_string(waitSockets) + "], wait sockets rankid: ";
     for (u32 index = 0; index < unsocketinfos.size(); index++) {
         if (index == (unsocketinfos.size() - 1)) {
             infoStr += "[" + unsocketinfos[index] + "]";

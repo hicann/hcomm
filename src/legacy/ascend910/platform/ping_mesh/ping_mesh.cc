@@ -358,7 +358,7 @@ inline HcclResult RpingUbAttrInit(
     initAttr.mode = NETWORK_OFFLINE; // net work mode 枚举值
     initAttr.ub.phyId = deviceId;
     if (eidmap.find(ipAddr.GetEid()) == eidmap.end()) {
-        HCCL_ERROR("eidmap don't have input Eid,Input Eid %s", ipAddr.GetEid().Describe().c_str());
+        HCCL_ERROR("eidmap does not have the input Eid, input Eid: %s", ipAddr.GetEid().Describe().c_str());
         return HCCL_E_NOT_FOUND;
     }
     initAttr.dev.ub.eidIndex = eidmap.at(ipAddr.GetEid()); // 从eid_list获取eidIndex
@@ -884,13 +884,13 @@ HcclResult PingMesh::HccnRpingInit(
             if (ret != HCCL_SUCCESS) {
                 status = RpingInitState::HCCL_TSD_NEED_CLOSE;
                 HCCL_ERROR(
-                    "[HccnRpingInit]call ra_get_dev_eid_map failed, devideId[%u], error code =%d.", deviceId, ret);
+                    "[HccnRpingInit]call ra_get_dev_eid_map failed, deviceId[%u], error code =%d.", deviceId, ret);
                 break;
             }
             ret = RpingUbAttrInit(devicePhyId_, ipAddr, port, nodeNum, bufferSize, sl, tc, initAttr, eidmap);
             if (ret != HCCL_SUCCESS) {
                 status = RpingInitState::HCCL_TSD_NEED_CLOSE;
-                HCCL_ERROR("[HccnRpingInit]RpingUbAttrInit failed, devideId[%u], error code =%d.", deviceId, ret);
+                HCCL_ERROR("[HccnRpingInit]RpingUbAttrInit failed, deviceId[%u], error code =%d.", deviceId, ret);
                 break;
             }
         }

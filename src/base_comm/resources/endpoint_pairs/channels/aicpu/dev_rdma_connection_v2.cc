@@ -33,7 +33,7 @@ HcclResult DevRdmaConnectionV2::Init()
 {
     if (rdmaConnStatus_ != RdmaConnStatus::CLOSED) {
         HCCL_INFO(
-            "[DevRdmaConnectionV2][%s] status[%s] is not need init.", __func__, rdmaConnStatus_.Describe().c_str());
+            "[DevRdmaConnectionV2][%s] status[%s] does not need init.", __func__, rdmaConnStatus_.Describe().c_str());
         return HCCL_SUCCESS;
     }
 
@@ -168,7 +168,7 @@ HcclResult DevRdmaConnectionV2::GetDmaMode()
 HcclResult DevRdmaConnectionV2::CreateQp()
 {
     if (socket_->GetStatus() != Hccl::SocketStatus::OK) {
-        HCCL_WARNING("[DevRdmaConnectionV2::CreateQp] socket status is not ok, please");
+        HCCL_WARNING("[DevRdmaConnectionV2::CreateQp] socket status is not ok, please check socket connection.");
         return HCCL_E_AGAIN;
     }
 
@@ -280,7 +280,7 @@ HcclResult DevRdmaConnectionV2::ModifyQp()
     }
 
     if (!rmtQpAttr_.IsValid()) {
-        HCCL_ERROR("[DevRdmaConnectionV2][%s] romate Qp Attr is empty, exchange qp attr first", __func__);
+        HCCL_ERROR("[DevRdmaConnectionV2][%s] remote Qp Attr is empty, exchange qp attr first", __func__);
         return HCCL_E_INTERNAL;
     }
 

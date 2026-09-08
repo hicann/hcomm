@@ -58,7 +58,7 @@ HcclResult CollAllGatherAivRdmaExecutor::CalNumBlocks(
         HCCL_E_PARA);
 
     HCCL_INFO(
-        "[CollAllGatherAivRdmaExecutor][CalNumBlocks] numBlocks is set to [%u], limit[%u], recommanded[%u]", numBlocks,
+        "[CollAllGatherAivRdmaExecutor][CalNumBlocks] numBlocks is set to [%u], limit[%u], recommended[%u]", numBlocks,
         numBlocks_, bestNumBlocks);
     return HCCL_SUCCESS;
 }

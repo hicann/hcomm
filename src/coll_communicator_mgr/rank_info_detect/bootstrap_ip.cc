@@ -179,7 +179,7 @@ bool FindHostIPByNicClass(
         return true;
     }
 
-    HCCL_WARNING("[%s] find hostIp by nic class[normal_docket_lo] fail.", __func__);
+    HCCL_WARNING("[%s] find hostIp by nic class[normal_docker_lo] fail.", __func__);
     return false;
 }
 

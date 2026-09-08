@@ -44,7 +44,7 @@ HcclResult Reducer::run(
 
     u64 dataBytes = remoteRcvTemp.size();
     HCCL_DEBUG(
-        "localSrc[%p] localDst[%p] remoteRcvtmep[%p] offset[%llu]", localSrc.ptr(), localDst.ptr(), remoteRcvTemp.ptr(),
+        "localSrc[%p] localDst[%p] remoteRcvTemp[%p] offset[%llu]", localSrc.ptr(), localDst.ptr(), remoteRcvTemp.ptr(),
         remoteMemOffset);
 
     // server 内 reduce 并且 reduceAttribute_ 也支持，走该分支

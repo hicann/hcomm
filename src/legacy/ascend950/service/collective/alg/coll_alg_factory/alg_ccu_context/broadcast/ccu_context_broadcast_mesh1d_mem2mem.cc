@@ -316,7 +316,7 @@ std::vector<uint64_t> CcuContextBroadcastMesh1DMem2Mem::GeneArgs(const CcuTaskAr
         "[CcuContextBroadcastMesh1DMem2Mem] TaskArgs: inputAddr[%llx], outputAddr[%llx], "
         "currentRankSliceInputOffset[%llu], "
         "currentRankSliceOutputOffset[%llu], inputRepeatStride[%llu], outputRepeatStride[%llu], "
-        "normalSliceSize[%llu], lastSliceSize[%llu], allgatherSliceSize[%llu], repeatNumVar[%llu] ",
+        "normalSliceSize[%llu], lastSliceSize[%llu], allgatherOffset[%llu], repeatNumVar[%llu] ",
         inputAddr, outputAddr, currentRankSliceInputOffset, currentRankSliceOutputOffset, inputRepeatStride,
         outputRepeatStride, normalSliceSize, lastSliceSize, allgatherOffset, repeatNumVar);
 

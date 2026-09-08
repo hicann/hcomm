@@ -207,7 +207,7 @@ bool hcclNslbDp::CheckAhcSupport(u8 algType, std::string identifier)
 
     s32 ret = strncpy_s(commDesc, COMM_DESC_MAX_LENGTH, identifier.c_str(), identifier.size());
     if (ret != EOK) {
-        HCCL_INFO("strncpy_s commDesc fail");
+        HCCL_WARNING("strncpy_s commDesc fail");
         return true;
     }
     commDesc[COMM_DESC_MAX_LENGTH - 1] = '\0';
@@ -642,7 +642,7 @@ HcclResult hcclNslbDp::SetNslbDpRootRank(HcclCMDType opType, u32 rootRank, std::
         s32 ret
             = strncpy_s(hcclNslbDpRootRankVal_.commDesc, COMM_DESC_MAX_LENGTH, identifier.c_str(), identifier.size());
         if (ret != EOK) {
-            HCCL_INFO("strncpy_s hcclNslbDpRootRankVal_.commDesc fail");
+            HCCL_WARNING("strncpy_s hcclNslbDpRootRankVal_.commDesc fail");
             return HCCL_SUCCESS;
         }
         hcclNslbDpRootRankVal_.commDesc[COMM_DESC_MAX_LENGTH - 1] = '\0';
@@ -1003,7 +1003,7 @@ bool hcclNslbDp::FillAlgInfoAdjInfo(NslbDpAlgorithmInfo& algorithmInfo, const Ad
 
     if (nslbAdjInfo.nsAdjInfo.size() == 0) {
         algorithmInfo.dstRankNum = 0;
-        HCCL_INFO("[NSLB-DP] get nsAdjInfo fail dstRankNum:[%u]", algorithmInfo.dstRankNum);
+        HCCL_WARNING("[NSLB-DP] get nsAdjInfo fail dstRankNum:[%u]", algorithmInfo.dstRankNum);
         return false;
     }
 
@@ -1037,7 +1037,7 @@ void hcclNslbDp::fullcommDescInitTime(std::string identifier, NslbDpOperatorInfo
     /* 获取通信域唯一标识 */
     s32 ret = strncpy_s(OperatorInfo.commDesc, COMM_DESC_MAX_LENGTH, identifier.c_str(), identifier.size());
     if (ret != EOK) {
-        HCCL_INFO("[NSLB-DP] strncpy_s OperatorInfo.commDesc fail");
+        HCCL_WARNING("[NSLB-DP] strncpy_s OperatorInfo.commDesc fail");
         return;
     }
     HCCL_DEBUG("[NSLB-DP-OPER] fullcommDescInitTime commDesc[%s] .", identifier.c_str());
@@ -1097,7 +1097,7 @@ HcclResult hcclNslbDp::GenerateOpAndAdjTable(
 
     // 去除不存在的通信域信息
     if (CheckCommDescExit(OperatorInfo) == false) {
-        HCCL_INFO("[NSLB-DP-OPER] CheckCommDesc not exit ");
+        HCCL_INFO("[NSLB-DP-OPER] CheckCommDesc not exist ");
         return HCCL_SUCCESS;
     }
 
@@ -1240,7 +1240,7 @@ void hcclNslbDp::fullCommConfigInfo(NslbDpCommConfigInfo& tab_f, NslbDpCommConfi
     tab_f.taskId = cominfo.taskId;
     s32 sRet = memcpy_s(tab_f.commDesc, sizeof(tab_f.commDesc), cominfo.commDesc, COMM_DESC_MAX_LENGTH);
     if (sRet != EOK) {
-        HCCL_INFO("memcpy_s commDesc fail");
+        HCCL_WARNING("memcpy_s commDesc fail");
     }
     tab_f.commInitTime = cominfo.commInitTime;
 
@@ -1253,7 +1253,7 @@ void hcclNslbDp::fullCommConfigInfo(NslbDpCommConfigInfo& tab_f, NslbDpCommConfi
     }
     sRet = memcpy_s(tab_f.commMd5Sum, sizeof(tab_f.commMd5Sum), cominfo.commMd5Sum, sizeof(cominfo.commMd5Sum));
     if (sRet != EOK) {
-        HCCL_INFO("memcpy_s commmd5 fail");
+        HCCL_WARNING("memcpy_s commmd5 fail");
     }
 }
 
@@ -1329,7 +1329,7 @@ HcclResult hcclNslbDp::SendRankTable(NslbDpCommConfigInfo tab_f)
     HCCL_INFO("[NSLB-DP] SendRankTable tlvData.len:[%u] success.", datlen);
 
     if (nslbdp_handle_ == nullptr) {
-        HCCL_INFO("[NSLB-DP] ndlbdp nslbdp_handle_ error SendRankTable.");
+        HCCL_WARNING("[NSLB-DP] nslbdp nslbdp_handle_ error SendRankTable.");
         return HCCL_SUCCESS;
     }
 
@@ -1451,7 +1451,7 @@ HcclResult hcclNslbDp::SendOpAndAdjTable()
         tab_f.maskLen = hcclNslbDpOperatorVal_[i].maskLen;
         SendRankTableOpAndAdj(tab_f);
         hcclNslbDpOperatorVal_[i].sedFlag = 1;
-        HCCL_INFO("[NSLB-DP] try to sen RankTableOpAndAdj times:[%u].", i);
+        HCCL_INFO("[NSLB-DP] try to send RankTableOpAndAdj times:[%u].", i);
     }
     HCCL_INFO("[NSLB-DP] SendOpAndAdjTable end.");
     return HCCL_SUCCESS;
@@ -1570,7 +1570,7 @@ HcclResult hcclNslbDp::SendAlgorithmInfoTable()
             tab_f.commMd5Sum, sizeof(tab_f.commMd5Sum), hcclNslbDpAlgorithmInfo_[i].commMd5Sum,
             sizeof(hcclNslbDpAlgorithmInfo_[i].commMd5Sum));
         if (sRet != EOK) {
-            HCCL_INFO("memcpy_s commDesc fail");
+            HCCL_WARNING("memcpy_s commDesc fail");
         }
         tab_f.srcLocalRankId = hcclNslbDpAlgorithmInfo_[i].srcLocalRankId;
         tab_f.rootRank = hcclNslbDpAlgorithmInfo_[i].rootRank;
@@ -1584,7 +1584,7 @@ HcclResult hcclNslbDp::SendAlgorithmInfoTable()
         tab_f.AdjInfo = hcclNslbDpAlgorithmInfo_[i].AdjInfo;
 
         SendRankTableAlgorithmInfo(tab_f);
-        HCCL_INFO("[NSLB-DP] try to sen AlgorithmInfoTable times:[%u].", i);
+        HCCL_INFO("[NSLB-DP] try to send AlgorithmInfoTable times:[%u].", i);
 
         hcclNslbDpAlgorithmInfo_[i].sedFlag = 1;
     }
@@ -1856,7 +1856,7 @@ HcclResult hcclNslbDp::SendGlobalDisRankTable()
     s32 sRet = memcpy_s(
         tab_f.rev, sizeof(tab_f.rev), hcclNslbDpGlobalDisRankVal_.rev, sizeof(hcclNslbDpGlobalDisRankVal_.rev));
     if (sRet != EOK) {
-        HCCL_INFO("memcpy_s rev info fail");
+        HCCL_WARNING("memcpy_s rev info fail");
     }
     tab_f.rankTotalNum = hcclNslbDpGlobalDisRankVal_.rankTotalNum;
 
@@ -1954,7 +1954,7 @@ HcclResult hcclNslbDp::SendRootRankTable()
         tab_f.commDesc, sizeof(tab_f.commDesc), hcclNslbDpRootRankVal_.commDesc,
         sizeof(hcclNslbDpRootRankVal_.commDesc));
     if (sRet != EOK) {
-        HCCL_INFO("memcpy_s commDesc info fail");
+        HCCL_WARNING("memcpy_s commDesc info fail");
     }
     tab_f.commInitTime = hcclNslbDpRootRankVal_.commInitTime;
     tab_f.oper = hcclNslbDpRootRankVal_.oper;

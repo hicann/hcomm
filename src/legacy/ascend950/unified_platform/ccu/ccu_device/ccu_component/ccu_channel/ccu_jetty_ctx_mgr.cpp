@@ -158,7 +158,7 @@ static HcclResult GetSqeBuffVa(const uint64_t ccuResBaseVa, const uint32_t jetty
     if (UINT32_MAX / CCU_SQ_BUFFER_SIZE < jettyCtxId) {
         HCCL_ERROR(
             "[CcuJettyCtxMgr][%s] jetty context id[%u] is greater "
-            "than expected, CCU_SQ_UBFFER_SIZE[%u], their product will exceed the "
+            "than expected, CCU_SQ_BUFFER_SIZE[%u], their product will exceed the "
             "range of uint32_t.",
             __func__, jettyCtxId, CCU_SQ_BUFFER_SIZE);
         return HcclResult::HCCL_E_INTERNAL;

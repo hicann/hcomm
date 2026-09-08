@@ -215,7 +215,7 @@ protected:
         (void)loc;
         (void)rmt;
         (void)cfg;
-        HCCL_ERROR("[RdmaBaseOps::%s] This Backend Not support Read Now.", __func__);
+        HCCL_ERROR("[RdmaBaseOps::%s] This backend does not support Read now.", __func__);
         return HCCL_E_NOT_SUPPORT;
     }
 
@@ -225,7 +225,7 @@ protected:
         (void)loc;
         (void)rmt;
         (void)cfg;
-        HCCL_ERROR("[RdmaBaseOps::%s] This Backend Not support Write Now.", __func__);
+        HCCL_ERROR("[RdmaBaseOps::%s] This backend does not support Write Now.", __func__);
         return HCCL_E_NOT_SUPPORT;
     }
 
@@ -238,7 +238,7 @@ protected:
         (void)cfg;
         (void)dataType;
         (void)reduceOp;
-        HCCL_ERROR("[RdmaBaseOps::%s] This Backend Not support WriteReduce Now.", __func__);
+        HCCL_ERROR("[RdmaBaseOps::%s] This backend does not support WriteReduce Now.", __func__);
         return HCCL_E_NOT_SUPPORT;
     }
 
@@ -251,7 +251,7 @@ protected:
     virtual int32_t PollCqImpl(int32_t numEntries, [[maybe_unused]] std::vector<int32_t>& errList)
     {
         (void)numEntries;
-        HCCL_ERROR("[RdmaBaseOps::%s] This Backend Not support PollCq Now.", __func__);
+        HCCL_ERROR("[RdmaBaseOps::%s] This backend does not support PollCq now.", __func__);
         return HCCL_E_NOT_SUPPORT;
     }
 

@@ -26,8 +26,8 @@ HCCP_ATTRI_VISI_DEF int RaGetEidByIpAsync(void *ctxHandle, struct IpInfo ip[], u
         ConverReturnCode(RDMA_OP, -EINVAL));
 
     CHK_PRT_RETURN(*num == 0 || *num > HCCP_EID_IP_QUERY_MAX_NUM,
-        hccp_err("[get][eid_by_ip]num(%u) must greater than 0"
-                 " and less or equal to %d",
+        hccp_err("[get][eid_by_ip]num(%u) must be greater than 0"
+                 " and less than or equal to %d",
             *num, HCCP_EID_IP_QUERY_MAX_NUM),
         ConverReturnCode(RDMA_OP, -EINVAL));
 
@@ -55,8 +55,8 @@ HCCP_ATTRI_VISI_DEF int RaGetIpByEidAsync(void *ctxHandle, union HccpEid eid[], 
         ConverReturnCode(RDMA_OP, -EINVAL));
 
     CHK_PRT_RETURN(*num == 0 || *num > HCCP_EID_IP_QUERY_MAX_NUM,
-        hccp_err("[get][IpByEid]num(%u) must greater than 0"
-                 " and less or equal to %d",
+        hccp_err("[get][IpByEid]num(%u) must be greater than 0"
+                 " and less than or equal to %d",
             *num, HCCP_EID_IP_QUERY_MAX_NUM),
         ConverReturnCode(RDMA_OP, -EINVAL));
 

@@ -67,7 +67,7 @@ HcclResult SnapShotParser::ParseSnapshotToLocalBuff(void* snapshotBuf, uint32_t 
         return HCCL_E_INTERNAL;
     };
     HCCL_INFO(
-        "[%s] end, napshotBuf is:subGroup num[%u], comm groupName[%s]", __func__, localBuff.groupNum,
+        "[%s] end, snapshotBuf is:subGroup num[%u], comm groupName[%s]", __func__, localBuff.groupNum,
         localBuff.snapshot.groupName);
     return HCCL_SUCCESS;
 }
@@ -405,14 +405,14 @@ HcclResult SnapShotParser::DeserializeParamsInfo(BinaryStream& binaryStream, Hcc
 
 HcclResult SnapShotParser::DeserializeRankTableInfo(BinaryStream& binaryStream, RankTableInfo& rankTableInfo) const
 {
-    HCCL_INFO("[%s]Snapshot recovering: Start to dserialized rankTable info.", __func__);
+    HCCL_INFO("[%s]Snapshot recovering: Start to deserialize rankTable info.", __func__);
     rankTableInfo = RankTableInfo(binaryStream);
     return HCCL_SUCCESS;
 }
 
 HcclResult SnapShotParser::DeserializeTopoInfo(BinaryStream& binaryStream, TopoInfo& topoInfo) const
 {
-    HCCL_INFO("[%s]Snapshot recovering: Start to dserialized topo info.", __func__);
+    HCCL_INFO("[%s]Snapshot recovering: Start to deserialize topo info.", __func__);
     topoInfo = TopoInfo(binaryStream);
     return HCCL_SUCCESS;
 }
@@ -421,7 +421,7 @@ void SnapShotParser::SerializeSubCommInfo(
     const CommParams& commParams, const HcclCommConfig& subConfig, const std::vector<u32>& rankId,
     BinaryStream& binStream) const
 {
-    HCCL_INFO("[%s]Snapshot saving: Start to serial subComm static info.", __func__);
+    HCCL_INFO("[%s]Snapshot saving: Start to serialize subComm static info.", __func__);
     SerializeSubCommParamsInfo(commParams, binStream);
     SerializeSubCommConfigInfo(subConfig, binStream);
     SerializeRankIds(rankId, binStream);
@@ -471,7 +471,7 @@ HcclResult SnapShotParser::DeserializeSubCommInfo(BinaryStream& stream, SubSnaps
 
 HcclResult SnapShotParser::DeserializeSubCommConfigInfo(BinaryStream& binaryStream, HcclCommConfig& subConfig) const
 {
-    HCCL_INFO("[%s]Snapshot recovering: Start to deserial sub commConfig info.", __func__);
+    HCCL_INFO("[%s]Snapshot recovering: Start to deserialize sub commConfig info.", __func__);
     binaryStream >> subConfig.reserved >> subConfig.hcclBufferSize >> subConfig.hcclDeterministic
         >> subConfig.hcclCommName >> subConfig.hcclUdi;
     HCCL_INFO(
