@@ -1806,7 +1806,7 @@ HcclResult HcclCommunicator::GetWorkspaceSubStreamNum(
         iter->second.c_str(), streamNum);
 
     u64 sliceNum = CalculatePiplineSliceNum(opType, dataSize, algType, deviceType_, deviceNumPerServer_, serverNum_);
-    // 图模式下数据量固定, 按照当前数据量判断是否支持pipline切分并申请从流
+    // 图模式下数据量固定, 按照当前数据量判断是否支持pipeline切分并申请从流
     if (implAlg_ != nullptr && sliceNum >= MIN_PIPLINE_SLICE_NUM) {
         streamNum++;
     }
@@ -2007,7 +2007,7 @@ HcclResult HcclCommunicator::HcclGetAlgExecParam(
 {
     /* 将Host申请和注册好的资源，传给AICPU */
     // 1\ algName 从getstr里某一个名字里获取出来（要防止名字重复） commContext & len 从 response里拿
-    // 2\ rtmemcopy 先获取一下algoperator对象，用这个调用getalgxxx
+    // 2\ rtmemcpy 先获取一下algoperator对象，用这个调用getalgxxx
     AivSuperKernelArgs aivSuperKernelArgs;
     SetWorkflowMode(HcclWorkflowMode::HCCL_WORKFLOW_MODE_OPS_KERNEL_INFO_LIB);
 
@@ -5970,7 +5970,7 @@ HcclResult HcclCommunicator::BuildOpTopoResParam(
 HcclResult HcclCommunicator::BuildOpRemoteLinkP2pResParam(
     const LINK& link, HccltagRemoteResV3& tagRemoteRes, TransportLinkType linkType)
 {
-    // hccs sio并发场景，sio链路（linkTyp为SIO）打包到linkP2pSio, hccs链路（linkTyp为HCCS）打包到linkP2p；
+    // hccs sio并发场景，sio链路（linkType为SIO）打包到linkP2pSio, hccs链路（linkType为HCCS）打包到linkP2p；
     // 其他场景打包到linkP2p
     HcclLinkP2pV2* linkp2p = &(tagRemoteRes.tagRemoteResPtr->linkP2p);
     if (linkType == TransportLinkType::SIO) {

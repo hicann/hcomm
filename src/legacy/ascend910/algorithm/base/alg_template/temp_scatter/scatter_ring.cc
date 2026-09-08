@@ -196,7 +196,7 @@ ScatterRing::RunAsync(const u32 rank, const u32 rankSize, const std::vector<std:
     CHK_PRT_RET(
         unitSize == 0, HCCL_ERROR("[ScatterRing][RunAsync]rank[%u] unit data size is zero", rank), HCCL_E_INTERNAL);
 
-    // 带入vecotr为空，计算每个rank的结果偏移和大小
+    // 带入vector为空，计算每个rank的结果偏移和大小
     if (slices_.size() == 0) {
         PrepareSlicesData(unitSize, count_, interRankSize_);
     }
@@ -468,7 +468,7 @@ HcclResult ScatterRing::ScatterSlicesPrep(u32 rankSize, u32 nicSize)
                 break;
             }
             std::vector<u32>::iterator iterNic = std::find(nicRankList_.begin(), nicRankList_.end(), nicIdx);
-            if (iterNic != nicRankList_.end()) { // 当前rank为网口所在位置，将网口对应的chunksize份silce放入sliceList
+            if (iterNic != nicRankList_.end()) { // 当前rank为网口所在位置，将网口对应的chunksize份slice放入sliceList
                 u32 nicListIdx = distance(nicRankList_.begin(), iterNic);
                 for (u32 chunkIdx = 0; chunkIdx < chunkSize; chunkIdx++) {
                     sliceList.push_back(chunkSize * nicListIdx + chunkIdx);

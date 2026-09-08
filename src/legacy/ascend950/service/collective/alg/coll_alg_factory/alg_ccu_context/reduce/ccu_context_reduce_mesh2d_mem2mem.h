@@ -74,8 +74,8 @@ private:
     GroupOpSize yAxisGroupOpSize_;
     GroupOpSize curGoSize_; // for loop-group local copy
     // variables for mesh-chunk
-    std::vector<CcuRep::Variable> xChunkSize_; // for xsliceszie
-    std::vector<CcuRep::Variable> yChunkSize_; // for ysliceszie
+    std::vector<CcuRep::Variable> xChunkSize_; // for x slice size
+    std::vector<CcuRep::Variable> yChunkSize_; // for y slice size
     std::vector<CcuRep::Variable> chunkSize_;  // for current axis
     CcuRep::Variable chunkOffset_;
 

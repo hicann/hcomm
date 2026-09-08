@@ -125,7 +125,7 @@ private:
     std::set<HcclIpAddress> whiteNicSet_;  // 保存nic的白名单
     std::shared_ptr<HcclSocket> vnicSocket_ = nullptr;
     std::shared_ptr<HcclSocket> nicSocket_ = nullptr;
-    std::vector<std::shared_ptr<HcclSocket>> clientSockets_; // 保存clien端的socket
+    std::vector<std::shared_ptr<HcclSocket>> clientSockets_; // 保存client端的socket
     std::map<HcclIpAddress, HcclIpAddress> ipMap_;
     std::map<HcclIpAddress, std::shared_ptr<HcclSocket>> socketMap_;
     std::map<HcclIpAddress, HcclNetDevCtx> nicNetDevCtxMap_;

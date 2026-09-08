@@ -130,7 +130,7 @@ enum class RoceCqeType : uint32_t {
 struct Roce3CqeEntry {
     uint32_t owner_id_qpn; /* ownerbit: cqe_size:dif_en:wq_id:error_code:qpn = 1:2:1:4:4:20; */
     uint32_t op_sr_wqebb;  /* opcode:s_r:inline_r:merge:fake:rsvd:linkwqe_used:wqebb_index = 5:1:1:1:1:2:1:20; */
-    uint32_t byte_cnt;     /* reflect the data size we reveive; */
+    uint32_t byte_cnt;     /* reflect the data size we receive; */
     uint32_t imm_data;     /* the immediate data we receive */
 
     union {

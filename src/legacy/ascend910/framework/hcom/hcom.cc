@@ -1984,7 +1984,7 @@ HcclResult GetRankListHeterog(u32 rankNum, const u32* rankIds, HcclGroupParams& 
     }
     // groupRanks 个数已经校验非0
     std::string serverId = hcomInfo.rankTable.rankList[params.groupRanks[0]].serverId;
-    u32 serverNum = 1; // severNum初始值应为1，代表groupId为0的serverId;
+    u32 serverNum = 1; // serverNum初始值应为1，代表groupId为0的serverId;
     RankInfo_t rankInfo;
     for (u32 i = 0; i < rankNum; i++) {
         rankInfo = hcomInfo.rankTable.rankList[params.groupRanks[i]];
@@ -4416,7 +4416,7 @@ HcclResult CalcTaskNum(
         if ((deviceNumPerServer == 0) && (serverNum == 0)) {
             taskNum = OP_DEFAULT_TASK_NUM;
         } else {
-            // 计算Server间pipline切分数量
+            // 计算Server间pipeline切分数量
             u32 dataTypeSize;
             u64 totalSize = 0;
             ret = SalGetDataTypeSize(hcomOpParam->dataType, dataTypeSize);
@@ -4437,7 +4437,7 @@ HcclResult CalcTaskNum(
             CHK_RET(GetToSlaveStreamTaskNum(sCollectiveType, streamNum, piplineSliceNum, masterTaskNum));
             // 计算与主stream同步task数量
             CHK_RET(GetToMasterStreamTaskNum(sCollectiveType, slaveTaskNum));
-            // 计算Server间Pipline从stream和主stream同步的task数量
+            // 计算Server间Pipeline从stream和主stream同步的task数量
             piplineTaskNum += (piplineSliceNum >= MIN_PIPLINE_SLICE_NUM) ?
                                   piplineSliceNum * PIPLINE_STREAM_EVENT_NUM * COM_STEP_NUM :
                                   0;

@@ -219,7 +219,7 @@ bool hcclNslbDp::CheckAhcSupport(u8 algType, std::string identifier)
     return true;
 }
 
-/* 判断指定 commDesc + taskId 的表一是否已存在(避免重复填充, inittime 必然不同) */
+/* 判断指定 commDesc + taskId 的表一是否已存在(避免重复填充, init time 必然不同) */
 bool hcclNslbDp::IsCommDescDuplicated(const char* commDesc, u64 taskId) const
 {
     for (size_t i = 0; i < hcclNslbDpCommConfig_.size(); i++) {

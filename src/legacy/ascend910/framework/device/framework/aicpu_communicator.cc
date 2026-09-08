@@ -1476,7 +1476,7 @@ HcclResult HcclCommAicpu::RefreshTransportsResForRank(
     // 1. init公共参数（对应remoteWorldRank，remoteUsrRankId暂不处理：windowsIn，windowsOut）
     rankData_[rankId].remoteWorldRank = rankRelationResPtr->remoteWorldRank;
     rankData_[rankId].remoteUsrRankId = rankRelationResPtr->remoteUsrRankId;
-    // 2. 遍历链表，获取HccltagRemoteResV2创建Tranport对象
+    // 2. 遍历链表，获取HccltagRemoteResV2创建Transport对象
     if (reinterpret_cast<ListCommon*>(rankRelationResPtr->nextTagRes.nextDevice) != &(rankRelationResPtr->nextTagRes)) {
         HCCL_DEBUG(
             "[%s] Start to parse rankId[%u] tag resources, head[%p], nextDevice[%p], pre Device[%p], group[%s]",

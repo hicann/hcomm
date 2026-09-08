@@ -947,7 +947,7 @@ typedef struct tag_ts_task {
     uint16_t next_stream_idx; /**< offset 8 */
     uint16_t task_state;      /**< 10*/
     uint8_t task_prof_en : 7; /**< offset 12* */
-    uint8_t isctrl : 1;       /* ctrltask is 1; othertask is 0 */
+    uint8_t isctrl : 1;       /* ctrl task is 1; other task is 0 */
     uint8_t task_info_flag;   /* bit 0: is need send cq; bit 1: is bind task;
                                * bit 2: endgraph dump, bit 3: unsink flag
                                * bit 4: overflow dump, bit 5: invalid flag

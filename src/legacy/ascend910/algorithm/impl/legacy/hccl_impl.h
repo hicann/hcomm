@@ -212,7 +212,7 @@ private:
     bool meshSinglePlane_ = false;
     bool isAllRankSamePlane_ = false;
 
-    u64 piplineSliceNum_ = 0; // Server间pipline切分数量 0: 不支持; 1: 当前数据量下切1份; 其他: 走pipline模式
+    u64 piplineSliceNum_ = 0; // Server间pipeline切分数量 0: 不支持; 1: 当前数据量下切1份; 其他: 走pipeline模式
     const HcclDispatcher dispatcher_; // dispatcher放到最后析构
     const std::unique_ptr<NotifyPool>& notifyPool_;
     std::map<HcclIpAddress, HcclNetDevCtx>& netDevCtxMap_;

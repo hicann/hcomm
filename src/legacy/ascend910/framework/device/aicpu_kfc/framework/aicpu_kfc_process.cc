@@ -1866,7 +1866,7 @@ AicpuKfcProcess::AicpuCcOpExe(AivAicpuOpParam* commParam, AivAicpuOpParam* commP
     ctx->commLen = ctx->unitSize * commParam->count;
     ctx->commType = commParam->commType;
     ctx->reducekind = commParam->opType;
-    ctx->commOpType = GetCcOpType(ctx->commLen, ctx->rankNum); // twoshot.onshot...
+    ctx->commOpType = GetCcOpType(ctx->commLen, ctx->rankNum); // twoshot.oneshot...
     ctx->totalTurnCnt = commParam->totalTurnCnt;
     ctx->useBufferType = commParam->useBufferType;
     ctx->winOffset = commParam->winOffset;

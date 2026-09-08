@@ -159,7 +159,7 @@ public:
         }
 
         if (GetExternalInputHcclEnableFfts()) {
-            // FFTS打开的时候 L0和L1都上报FFTSLauch和contextID
+            // FFTS打开的时候 L0和L1都上报FFTSLaunch和contextID
             if (((profconfig & PROF_TASK_TIME_MASK) != 0) || ((profconfig & PROF_HCCL_TRACE_MASK) != 0)) {
                 StartFftsLaunchSubscribe();
             }

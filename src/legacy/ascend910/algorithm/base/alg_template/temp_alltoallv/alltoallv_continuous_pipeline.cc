@@ -493,7 +493,7 @@ AlltoallvContinuousPipeline::LocalCopyFromInputToInBuffer(const u32 targetRank, 
     // 刷新send info
     CHK_RET(UpdateLocalSendInfo(targetRank, copyCount));
 
-    // 记录in bufer中该分块存放了多少数据
+    // 记录in buffer中该分块存放了多少数据
     inBufferDataSize_[targetRank] = copySize;
 
     HCCL_DEBUG(

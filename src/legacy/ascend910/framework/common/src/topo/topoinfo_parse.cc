@@ -274,7 +274,7 @@ HcclResult TopoInfoParse::CheckRankTableNicInfo(std::vector<u32>& nicIdx)
     return HCCL_SUCCESS;
 }
 
-// 校验server内4p场景下deivce选取是否合法，2p与标卡场景重合
+// 校验server内4p场景下device选取是否合法，2p与标卡场景重合
 HcclResult TopoInfoParse::CheckServerInnerRankInfo()
 {
     // 校验server内device选取

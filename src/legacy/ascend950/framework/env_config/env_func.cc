@@ -233,7 +233,7 @@ std::vector<SocketPortRange> CastSocketPortRange(const std::string& s, const std
         return hcclSocketPortRange;
     }
 
-    // the socket port range is set to auto, then the os will listen on the ports dymamically and automatically.
+    // the socket port range is set to auto, then the os will listen on the ports dynamically and automatically.
     if (socketPortRange == HCCL_AUTO_PORT_CONFIG) {
         SocketPortRange autoSocketPortRange = {HCCL_SOCKET_PORT_RANGE_AUTO, HCCL_SOCKET_PORT_RANGE_AUTO};
         hcclSocketPortRange.emplace_back(autoSocketPortRange);

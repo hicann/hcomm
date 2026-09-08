@@ -65,7 +65,7 @@ void HccpHdcManager::DestroyAll()
     }
     destroyed.store(true);
 
-    // 析构前先注销reset devcie的回调，防止嵌套调用
+    // 析构前先注销reset device的回调，防止嵌套调用
     UnregisterDeviceResetCallback();
 
     std::lock_guard<std::recursive_mutex> lock(managerMutex);

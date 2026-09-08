@@ -196,7 +196,7 @@ u64 CalculatePiplineSliceNum(
         if (!GetExternalInputHcclEnablePipline()) {
             break;
         }
-        /* 不支持pipline流水的场景 */
+        /* 不支持pipeline流水的场景 */
         // 支持的硬件场景
         if (deviceType != DevType::DEV_TYPE_910B || deviceNumPerAggregation < HCCL_DEVICE_NUM_TWO
             || moduleNum < HCCL_DEVICE_NUM_TWO) {
@@ -213,12 +213,12 @@ u64 CalculatePiplineSliceNum(
             break;
         }
 
-        /* 支持pipline流水, 但数据量不足以进行切分的场景 */
+        /* 支持pipeline流水, 但数据量不足以进行切分的场景 */
         // Server间使用Ring算法, 且单Server数据量<64KB时, 不做切分
         if ((isInterRing && dataSize / moduleNum < MIN_RING_DATA_SIZE)) {
             sliceNumTemp = 1;
         }
-        // 支持pipline但数据量不满足切分条件时, 返回1, 用于单算子场景预申请流资源
+        // 支持pipeline但数据量不满足切分条件时, 返回1, 用于单算子场景预申请流资源
         piplineSliceNum = (sliceNumTemp == 0) ? 1 : sliceNumTemp;
     } while (0);
     return piplineSliceNum;

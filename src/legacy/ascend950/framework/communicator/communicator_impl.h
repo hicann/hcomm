@@ -476,8 +476,8 @@ private:
     OpExecuteConfig commExecuteConfig;                                         // 通信域粒度 加速模式
     std::string curAlgName;                                                    // 当前算法名称
     bool isLoadOp{false}; // 是否已加载过算子,只要算子下发过就不让改加速模式 loadop offload AllocCommResource
-    u32 aivTag{1};        // aiv kernal内部用于标志位计数
-    u32 aivOffloadTag{0}; // aiv kernal内部用于标志位计数
+    u32 aivTag{1};        // aiv kernel内部用于标志位计数
+    u32 aivOffloadTag{0}; // aiv kernel内部用于标志位计数
     u8 algorithmType_{0};
     std::atomic<u32> tagResourceIndex_{0};
 

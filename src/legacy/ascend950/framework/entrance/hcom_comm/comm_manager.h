@@ -63,7 +63,7 @@ using HcclCommInfoV2 = struct HcclCommInfoCtxV2 {
     std::map<std::string, HcclGroupParamsV2> hcclGroupMap;
     std::mutex groupParamsLock; // 操作hcclGroupMap前加锁
     bool isUsed{false};
-    DeviceStatus status{DeviceStatus::DEVICE_IDLE}; // Deivce状态
+    DeviceStatus status{DeviceStatus::DEVICE_IDLE}; // Device状态
     u64 step{0};                                    // 新增
     CcuStatus ccuStatus;                            // 管理ccu资源使用情况
 

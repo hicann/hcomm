@@ -171,7 +171,7 @@ HcclResult ExecutorBase::Prepare([[maybe_unused]] u32 interRank, [[maybe_unused]
 }
 
 /* 3个参数 */
-// for AllGatherHalvingDoubling based on intput_scratch_Mem_nicRankList Prepare
+// for AllGatherHalvingDoubling based on input_scratch_Mem_nicRankList Prepare
 // and should be called soon template AllGatherHalvingDoubling created
 HcclResult ExecutorBase::Prepare(
     [[maybe_unused]] u32 blockSize, [[maybe_unused]] UserMemType hdInputMemType,

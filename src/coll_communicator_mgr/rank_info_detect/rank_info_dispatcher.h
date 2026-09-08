@@ -33,9 +33,9 @@ public:
         u32 rankId;
         u64 header;
         size_t headerLen = sizeof(u64); // the header need to send
-        size_t headerSended = 0;        // the header have sended length
+        size_t headerSended = 0;        // the header have sent length
         size_t bodyLen = 0;             // the whole data length
-        size_t bodySended = 0;          // the data have sended
+        size_t bodySended = 0;          // the data have sent
         void* data;                     // data pointer
 
         bool Send(std::shared_ptr<Socket> socket);

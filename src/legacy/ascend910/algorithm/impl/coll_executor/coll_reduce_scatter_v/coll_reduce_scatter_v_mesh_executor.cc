@@ -36,7 +36,7 @@ void CollReduceScatterVMeshExecutor::ParseParam(const OpParam& param)
         totalSize += counts[i] * SIZE_TABLE[param.VDataDes.dataType];
     }
     totalSize_ = totalSize;
-    scratchMemFlag_ = false; // mesh算法不需要使用scrachMem
+    scratchMemFlag_ = false; // mesh算法不需要使用scratchMem
     aicpuUnfoldMode_ = param.aicpuUnfoldMode;
 }
 

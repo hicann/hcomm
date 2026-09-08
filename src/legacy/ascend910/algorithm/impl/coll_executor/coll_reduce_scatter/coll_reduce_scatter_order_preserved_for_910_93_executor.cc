@@ -176,7 +176,7 @@ HcclResult CollReduceScatterOrderPreservedFor91093Executor::RunReduceScatterLeve
     HCCL_CONFIG_INFO(HCCL_ALG, "[%s] Run TEMPLATE_REDUCESCATTER_PLANT_LOCAL_REDUCE in COMM_COMBINE_L1", __func__);
     CHK_SMART_PTR_NULL(level1TempAlg);
 
-    // execMem.scratchMem在单算子模式下为cclout，图模式为scrach，因此output传入scrach即可
+    // execMem.scratchMem在单算子模式下为cclout，图模式为scratch，因此output传入scratch即可
     CHK_RET(level1TempAlg->Prepare(
         execMem.inputPtr, execMem.inputMem, execMem.scratchMem, param.stream, algResResp_->slaveStreams,
         algResResp_->notifiesMain, algResResp_->notifiesAux, groupSlicesInfoLevel0, param.reduceType, all2allOffset_,

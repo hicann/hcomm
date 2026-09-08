@@ -328,7 +328,7 @@ void HcclSocketManager::DestroySockets(std::vector<std::shared_ptr<HcclSocket>> 
 }
 
 // public API
-// isWaitEstablished 为 true 时, 连接建立完成后返回; 为 flase时, 连接请求发起后即返回. 默认为 true.
+// isWaitEstablished 为 true 时, 连接建立完成后返回; 为 false时, 连接请求发起后即返回. 默认为 true.
 // 预留 调用时设置为 false, 通过多线程的方式提升建链性能.
 HcclResult HcclSocketManager::CreateSockets(
     const std::string& commTag, bool isInterLink, const HcclNetDevCtx netDevCtx,

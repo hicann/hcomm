@@ -195,7 +195,7 @@ HcclResult CollReduceScatterVDeterExecutor::RunReduceScattervLevel0(
         TemplateType::TEMPLATE_REDUCESCATTER_PLANT_LOCAL_REDUCE, dispatcher_);
     CHK_SMART_PTR_NULL(level0TempAlg);
 
-    // execMem.scratchMem在单算子模式下为cclout，图模式为scrach，因此output传入scrach即可
+    // execMem.scratchMem在单算子模式下为cclout，图模式为scratch，因此output传入scratch即可
     CHK_RET(level0TempAlg->Prepare(
         execMem.inputPtr, execMem.inputMem, execMem.scratchMem, param.stream, algResResp_->slaveStreams,
         algResResp_->notifiesMain, algResResp_->notifiesAux, groupSlicesInfoLevel0, param.reduceType, all2allOffset_,

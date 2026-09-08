@@ -65,7 +65,7 @@ HcclResult AivTempAllGatherMesh1D::GenExtIns(
     aivAllGatherArgs.dataType = dataType_;
     aivAllGatherArgs.op = reduceOp_;
     aivAllGatherArgs.root = root_;
-    aivAllGatherArgs.aivTag = sliceId_; // 传入aivTag，Lauch时重新组装为aivTag
+    aivAllGatherArgs.aivTag = sliceId_; // 传入aivTag，Launch时重新组装为aivTag
     aivAllGatherArgs.isOpBase = (tempFuncs.opMode == OpMode::OPBASE);
     aivAllGatherArgs.xRankSize = tempVTopo_[0].size();
     aivAllGatherArgs.yRankSize = 0;

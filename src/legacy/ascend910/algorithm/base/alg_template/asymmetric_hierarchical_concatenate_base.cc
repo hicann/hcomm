@@ -344,7 +344,7 @@ void CommAHCBaseInfo::GetIntraCommGroup(u32 rank, std::vector<u32>& intraCommGro
 
 void CommAHCBaseInfo::GetInterCommGroupIdxList(u32 rank, std::vector<u32>& interCommGroupIdxList)
 {
-    // broke 方式的合法vetor大小为0或1,AHC 方式的合法vetor大小大于等于1
+    // broke 方式的合法vector大小为0或1,AHC 方式的合法vector大小大于等于1
     for (u32 i = 0; i < logicCardCommGroups_.size(); ++i) {
         for (u32 j = 0; j < logicCardCommGroups_[i].size(); ++j) {
             if (rank == logicCardCommGroups_[i][j]) {
@@ -356,7 +356,7 @@ void CommAHCBaseInfo::GetInterCommGroupIdxList(u32 rank, std::vector<u32>& inter
 
 void CommAHCBaseInfo::GetInterCommGroupList(u32 rank, std::vector<std::vector<u32>>& interCommGroupList)
 {
-    // broke 方式的合法vetor大小为0或1,AHC 方式的合法vetor大小大于等于1
+    // broke 方式的合法vector大小为0或1,AHC 方式的合法vector大小大于等于1
     for (u32 i = 0; i < logicCardCommGroups_.size(); ++i) {
         for (u32 j = 0; j < logicCardCommGroups_[i].size(); ++j) {
             if (rank == logicCardCommGroups_[i][j]) {

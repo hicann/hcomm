@@ -86,7 +86,7 @@ HcclResult CollAllReduceOrderPreservedExecutor::CalcCommInfo(std::vector<LevelNS
 HcclResult CollAllReduceOrderPreservedExecutor::CalcTransportMemType(
     TransportMemType& inputType, TransportMemType& outputType) const
 {
-    // 图模式场景使用PARAM_INPUT/OUTPUT -> userInput/userOutPut，不需要scrachMem
+    // 图模式场景使用PARAM_INPUT/OUTPUT -> userInput/userOutPut，不需要scratchMem
     inputType = workflowMode_ != HcclWorkflowMode::HCCL_WORKFLOW_MODE_OP_BASE ? TransportMemType::PARAM_INPUT :
                                                                                 TransportMemType::CCL_INPUT;
     outputType = workflowMode_ != HcclWorkflowMode::HCCL_WORKFLOW_MODE_OP_BASE ? TransportMemType::PARAM_OUTPUT :

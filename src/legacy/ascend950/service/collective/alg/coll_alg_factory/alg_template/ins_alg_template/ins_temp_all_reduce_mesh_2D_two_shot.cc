@@ -143,7 +143,7 @@ HcclResult InsTempAllReduceMesh2DTwoShot::GenExtIns(
     std::vector<InsQuePtr>& tempInsQues)
 {
     InitInnerParams(tempFuncs, tempAlgParams, tempLinks, tempInsQues);
-    // step1: reducescatter, X轴划分为M个块，每个块大小N*chunksize, Y轴划分为N个块，每个块M*chucksize
+    // step1: reducescatter, X轴划分为M个块，每个块大小N*chunksize, Y轴划分为N个块，每个块M*chunksize
     CHK_RET(PreSyncQues(tempInsQues, 0));
     CHK_RET(PostSyncQues(tempInsQues, 0));
     SubStageArgs bufferInfo

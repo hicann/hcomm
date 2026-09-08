@@ -90,8 +90,8 @@ HcclResult AllGatherVGraphPipeline::ExecIntraServer(u32 step)
 {
     for (u32 i = 1; i < intraRankSize_; i++) {
         u32 remIntraRankId = (intraRankId_ + i) % intraRankSize_;
-        CHK_RET(intraLinks_[remIntraRankId]->TxAck(subStream_[i])); // ackrecord
-        CHK_RET(intraLinks_[remIntraRankId]->RxAck(subStream_[i])); // ackwait
+        CHK_RET(intraLinks_[remIntraRankId]->TxAck(subStream_[i])); // ack record
+        CHK_RET(intraLinks_[remIntraRankId]->RxAck(subStream_[i])); // ack wait
 
         void* remDMAMemPtr = nullptr;
         CHK_RET(intraLinks_[remIntraRankId]->GetRemoteMem(UserMemType::OUTPUT_MEM, &remDMAMemPtr));

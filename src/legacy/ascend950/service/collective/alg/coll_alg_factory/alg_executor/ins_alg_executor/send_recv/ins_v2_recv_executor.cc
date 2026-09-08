@@ -201,7 +201,7 @@ HcclResult InsV2RecvExecutor::ExecAiv(
         aivRecvArgs.rankSize = rankSize_;
         aivRecvArgs.count = currDataCount; // 需要传输的数据量
         aivRecvArgs.dataType = op.dataType;
-        aivRecvArgs.aivTag = sliceId_; // 传入aivTag，Lauch时重新组装为aivTag
+        aivRecvArgs.aivTag = sliceId_; // 传入aivTag，Launch时重新组装为aivTag
         aivRecvArgs.isOpBase = (opMode_ == OpMode::OPBASE);
         aivRecvArgs.xRankSize = rankSize_;
         aivRecvArgs.yRankSize = 0;

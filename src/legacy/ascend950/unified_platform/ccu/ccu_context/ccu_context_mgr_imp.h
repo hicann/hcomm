@@ -149,7 +149,7 @@ private:
 
     inline void ExpandResInfo(vector<ResInfo>& expendResInfos, const vector<ResInfo>& resInfos) const
     {
-        // 将resInfo中的资源信息扩展到megedRes中
+        // 将resInfo中的资源信息扩展到mergedRes中
         for (auto& resInfo : resInfos) {
             for (uint32_t id = 0; id < resInfo.num; id++) {
                 expendResInfos.push_back({(resInfo.startId + id), {1}});

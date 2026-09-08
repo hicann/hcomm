@@ -310,7 +310,7 @@ struct Mc2CommConfig {
 };
 struct Mc2Tiling {
     uint32_t version;                // 版本
-    uint32_t commConfigNum;          // commComfig的个数，每个通信切片一个hcclConfig
+    uint32_t commConfigNum;          // commConfig的个数，每个通信切片一个hcclConfig
     struct Mc2ServerCfg serverCfg;   // 计算部分tiling
     struct Mc2CommConfig commConfig; // 通信部分tiling，共有Mc2CommConfig个，每个通信切片一个hcclConfig
 

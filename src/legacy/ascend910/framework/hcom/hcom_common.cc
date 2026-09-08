@@ -350,7 +350,7 @@ HcclResult GetRankList(u32 rankNum, const u32* rankIds, HcclGroupParams& params)
     }
     // groupRanks 个数已经校验非0
     std::string serverId = hcomInfo.rankTable.rankList[params.groupRanks[0]].serverId;
-    u32 serverNum = 1; // severNum初始值应为1，代表groupId为0的serverId;
+    u32 serverNum = 1; // serverNum初始值应为1，代表groupId为0的serverId;
     RankInfo_t rankInfo;
     for (u32 i = 0; i < rankNum; i++) {
         rankInfo = hcomInfo.rankTable.rankList[params.groupRanks[i]];

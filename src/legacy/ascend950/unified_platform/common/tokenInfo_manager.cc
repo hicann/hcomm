@@ -71,7 +71,7 @@ void TokenInfoManager::PutTokenInfo(const BufferKey<uintptr_t, u64>& bufKey, Tok
 
 bool HasIntersect(const vector<BufferKey<uintptr_t, u64>>& bufKeys, const BufferKey<uintptr_t, u64>& inputBufKey)
 {
-    // 遍历bufKeys, 若bufKeys中存在和inputBufKey相交的bufKey则返回true, 否则fasle
+    // 遍历bufKeys, 若bufKeys中存在和inputBufKey相交的bufKey则返回true, 否则false
     auto it = std::find_if(bufKeys.begin(), bufKeys.end(), [inputBufKey](const auto& curBufKeyInVec) {
         return inputBufKey.IsIntersect(curBufKeyInVec);
     });

@@ -252,7 +252,7 @@ public:
     NslbDpGlobalRankVal hcclNslbDpGlobalRankVal_;
     // 分表5-基础数据，在非ranktble场景下创建通信与场景域场景下的分布式rank表
     NslbDpGlobalDisRankVal hcclNslbDpGlobalDisRankVal_;
-    // 分表6-基础数据，非对称算子 statter， reduce，bcast 算子场景下会有rootrabnk表
+    // 分表6-基础数据，非对称算子 scatter， reduce，bcast 算子场景下会有rootrank表
     NslbDpRootRank hcclNslbDpRootRankVal_;
 
 private:

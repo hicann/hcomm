@@ -349,7 +349,7 @@ void InsBroadcastParallelAiCpuExecutor<
             sliceCount,
             static_cast<u64>(static_cast<double>(scratchCount) / scratchMaxMultiple)); // 向下取整，防止Scratch溢出
     }
-    /* 刷新slicecout0 和slicecout1确保是interLocalRankSize_ * intraLocalRankSize_整倍数 */
+    /* 刷新sliceCountPart0 和sliceCountPart1确保是interLocalRankSize_ * intraLocalRankSize_整倍数 */
     u64 sliceCountPart0 = static_cast<u64>(sliceCount * splitDataSize.at(0));
     sliceCountPart0
         = (sliceCountPart0 / interLocalRankSize_ / intraLocalRankSize_) * interLocalRankSize_ * intraLocalRankSize_;
@@ -363,7 +363,7 @@ void InsBroadcastParallelAiCpuExecutor<
     u64 finalSliceCount = dataCount_ - (loopTimes - 1) * sliceCount;
     u64 finalTailCount = finalSliceCount % (interLocalRankSize_ * intraLocalRankSize_);
     u64 finalSliceCountPart1 = static_cast<u64>(finalSliceCount * splitDataSize.at(1));
-    //  刷新slicecout0 和slicecout1确保是interLocalRankSize_ * intraLocalRankSize_整倍数
+    //  刷新sliceCountPart0 和sliceCountPart1确保是interLocalRankSize_ * intraLocalRankSize_整倍数
     finalSliceCountPart1 = (finalSliceCountPart1 / interLocalRankSize_ / intraLocalRankSize_) * interLocalRankSize_
                            * intraLocalRankSize_;
     u64 finalSliceCountPart0 = finalSliceCount - finalSliceCountPart1 - finalTailCount;

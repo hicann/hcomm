@@ -1550,7 +1550,7 @@ HcclResult OpUnfoldCacheEntry::UpdateMemcpySqeForAlltoallv(
         bool saveSrcAddr = false;
         if (srcMemType == RefreshAddrInfo::HCCL_INPUT_MEMTYPE
             && dstMemType == RefreshAddrInfo::USER_OUTPUT_MEMTYPE) { // RemoteCopy
-            // 保留src addr (remote hccl intput)
+            // 保留src addr (remote hccl input)
             // 注意: 非RemoteCopy case下, src addr为local user input, 会动态计算, 无需保留在placeholder中
             srcAddrHigh = memcpyAsyncSqePtr->src_addr_high;
             srcAddrLow = memcpyAsyncSqePtr->src_addr_low;

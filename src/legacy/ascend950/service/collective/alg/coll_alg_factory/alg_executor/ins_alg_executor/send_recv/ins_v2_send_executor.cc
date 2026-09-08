@@ -198,7 +198,7 @@ HcclResult InsV2SendExecutor::ExecAiv(
         aivSendArgs.rankSize = rankSize_;
         aivSendArgs.count = currDataCount; // 需要传输的数据量
         aivSendArgs.dataType = op.dataType;
-        aivSendArgs.aivTag = sliceId_; // 传入aivTag，Lauch时重新组装为aivTag
+        aivSendArgs.aivTag = sliceId_; // 传入aivTag，Launch时重新组装为aivTag
         aivSendArgs.isOpBase = (opMode_ == OpMode::OPBASE);
         aivSendArgs.xRankSize = rankSize_;
         aivSendArgs.yRankSize = 0;

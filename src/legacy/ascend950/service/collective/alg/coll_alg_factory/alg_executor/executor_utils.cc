@@ -101,7 +101,7 @@ HcclResult PrepResLinks(
                     resReqIter->first),
                 HcclResult::HCCL_E_INTERNAL);
             LinkData requiredLinkData(tmpPaths[0]); // 当前只取第一条path
-            // updata res
+            // update res
             CHK_PRT_RET(
                 AddToResLinks(resReqIter->first, requiredLinkData, resLinks) != HcclResult::HCCL_SUCCESS,
                 HCCL_ERROR("[CollAlgFactory] Rank [%d], Fail to prepare links.", myRank), HcclResult::HCCL_E_INTERNAL);
@@ -113,7 +113,7 @@ HcclResult PrepResLinks(
             // 从所有path中选择前resReqIter->second条
             for (u32 linkNum = 0; linkNum < resReqIter->second; linkNum++) {
                 LinkData requiredLinkData(tmpPaths[linkNum]);
-                // updata res
+                // update res
                 CHK_PRT_RET(
                     AddToResLinks(resReqIter->first, requiredLinkData, resLinks) != HcclResult::HCCL_SUCCESS,
                     HCCL_ERROR("[CollAlgFactory] Rank [%d], Fail to prepare links.", myRank),
@@ -137,14 +137,14 @@ HcclResult PrepResLinks(const RankId myRank, const LinkReq& linkReq, ConnectedLi
                 links.size() == 0, HCCL_ERROR("[PrepResLinks] Rank [%d], Fail to get peer links.", myRank),
                 HcclResult::HCCL_E_INTERNAL);
             LinkData requiredLinkData = links[0];
-            // updata res
+            // update res
             CHK_PRT_RET(
                 AddToResLinks(resReqIter->first, requiredLinkData, resLinks) != HcclResult::HCCL_SUCCESS,
                 HCCL_ERROR("[CollAlgFactory] Rank [%d], Fail to prepare links.", myRank), HcclResult::HCCL_E_INTERNAL);
         } else {
             for (u32 linkNum = 0; linkNum < resReqIter->second; linkNum++) {
                 LinkData requiredLinkData = linkMgr->GetLinks(resReqIter->first)[linkNum];
-                // updata res
+                // update res
                 CHK_PRT_RET(
                     AddToResLinks(resReqIter->first, requiredLinkData, resLinks) != HcclResult::HCCL_SUCCESS,
                     HCCL_ERROR("[CollAlgFactory] Rank [%d], Fail to prepare links.", myRank),
@@ -169,7 +169,7 @@ HcclResult CalcResLinks(
                     "[CollAlgFactory] Unable to obtain valid link, srcRank [%d], dstRank [%d].", myRank,
                     resReqIter->first),
                 HcclResult::HCCL_E_INTERNAL);
-            // updata res
+            // update res
             links.emplace_back(tmpPaths[0]);
         } else {
             CHK_PRT_RET(
@@ -177,7 +177,7 @@ HcclResult CalcResLinks(
                 HCCL_ERROR("[CollAlgFactory] Rank [%d], available linkNum smaller than required.", myRank),
                 HcclResult::HCCL_E_INTERNAL);
             for (u32 linkNum = 0; linkNum < resReqIter->second; linkNum++) {
-                // updata res
+                // update res
                 links.emplace_back(tmpPaths[linkNum]);
             }
         }

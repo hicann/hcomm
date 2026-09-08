@@ -302,16 +302,16 @@ void AicpuInsPreprocessor::AllocAlltoallVOpMem()
     size_t size = static_cast<size_t>(comm->GetRankSize() * sizeof(u64)); // counts内存大小
     if (!isCountMemInited) {
         for (u32 i = 0; i < MAX_ALLTOALLV_MEM_NUM; i++) {                 // 64: 初始化countMem
-            shared_ptr<DevBuffer> sendMem = make_shared<DevBuffer>(size); // 申请senddevice内存
+            shared_ptr<DevBuffer> sendMem = make_shared<DevBuffer>(size); // 申请send device内存
             sendCountsMem.push_back(sendMem);
 
-            shared_ptr<DevBuffer> recvMem = make_shared<DevBuffer>(size); // 申请recvdevice内存
+            shared_ptr<DevBuffer> recvMem = make_shared<DevBuffer>(size); // 申请recv device内存
             recvCountsMem.push_back(recvMem);
 
-            shared_ptr<DevBuffer> sdisplMem = make_shared<DevBuffer>(size); // 申请sdisplsdevice内存
+            shared_ptr<DevBuffer> sdisplMem = make_shared<DevBuffer>(size); // 申请sdispls device内存
             sdisplsMem.push_back(sdisplMem);
 
-            shared_ptr<DevBuffer> rdisplMem = make_shared<DevBuffer>(size); // 申请rdisplsdevice内存
+            shared_ptr<DevBuffer> rdisplMem = make_shared<DevBuffer>(size); // 申请rdispls device内存
             rdisplsMem.push_back(rdisplMem);
         }
         isCountMemInited = true;

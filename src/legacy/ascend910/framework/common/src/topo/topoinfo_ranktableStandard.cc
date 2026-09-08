@@ -616,7 +616,7 @@ HcclResult TopoinfoRanktableStandard::GetDevList(
 
         RankInfo_t rankinfo;
         // 1.非cloud场景下，网卡挂载在device侧2.cloud场景
-        // 推荐网络场景，单servere需要使用RDMA网卡
+        // 推荐网络场景，单server需要使用RDMA网卡
         HcclIpAddress ipAddr;
         if (rankTable.nicDeploy == NICDeployment::NIC_DEPLOYMENT_DEVICE && (rankTable.serverNum > 0)) {
             std::string deviceIp;

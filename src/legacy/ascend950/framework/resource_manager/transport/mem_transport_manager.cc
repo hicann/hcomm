@@ -733,7 +733,7 @@ BaseMemTransport* MemTransportManager::RecoverOffloadMemTransport(const std::str
     return opTagOffloadMap[opTag][linkData].get();
 }
 
-// 功能说明：根据输入的CommID和LinkData信息，恢复单算子Tansport对象，并将通信域一致信息改为RecoverInfo
+// 功能说明：根据输入的CommID和LinkData信息，恢复单算子Transport对象，并将通信域一致信息改为RecoverInfo
 // 输入说明：vector<LinkData> &links：linkData数据
 void MemTransportManager::BatchRecoverOpbasedTransports(const vector<LinkData>& links)
 {
@@ -749,7 +749,7 @@ void MemTransportManager::BatchRecoverOpbasedTransports(const vector<LinkData>& 
     }
 }
 
-// 功能说明：根据输入的CommID和LinkData信息，恢复图模式Tansport对象，并将通信域一致信息改为RecoverInfo
+// 功能说明：根据输入的CommID和LinkData信息，恢复图模式Transport对象，并将通信域一致信息改为RecoverInfo
 // 输入说明：vector<LinkData> &links：linkData数据
 //          std::string &opTag：commId，通信域标记
 void MemTransportManager::BatchRecoverOffloadTransports(const std::string& opTag, const vector<LinkData>& links)

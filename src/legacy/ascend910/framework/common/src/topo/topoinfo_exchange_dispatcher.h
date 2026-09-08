@@ -35,11 +35,11 @@ public:
         u32 header;
         u32 identify = UINT_MAX;          // 默认UINT_MAX时，不发送identify
         size_t headerLen = sizeof(u32);   // the header need to send
-        size_t headerSended = 0;          // the header have sended length
+        size_t headerSended = 0;          // the header have sent length
         size_t bodyLen = 0;               // the whole data length
-        size_t bodySended = 0;            // the data have sended
+        size_t bodySended = 0;            // the data have sent
         size_t identifyLen = sizeof(u32); // the identify need to send (MasterInfo mode)
-        size_t identifySended = 0;        // the identify have sended
+        size_t identifySended = 0;        // the identify have sent
         void* data;                       // data pointer
         bool firstSendFlag_ = true;
 

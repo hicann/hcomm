@@ -67,7 +67,7 @@ HcclResult AivTempReduceMesh1D::GenExtIns(
     aivReduceArgs.dataType = dataType_;
     aivReduceArgs.op = reduceOp_;
     aivReduceArgs.root = root_;
-    aivReduceArgs.aivTag = sliceId_; // 传入aivTag，Lauch时重新组装为aivTag
+    aivReduceArgs.aivTag = sliceId_; // 传入aivTag，Launch时重新组装为aivTag
     aivReduceArgs.isOpBase = (tempFuncs.opMode == OpMode::OPBASE);
     aivReduceArgs.xRankSize = tempVTopo_[0].size();
     aivReduceArgs.yRankSize = 0;

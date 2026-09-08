@@ -471,7 +471,7 @@ CcuResBatchAllocator::AllocConsecutiveRes(const CcuResReq& resReq, std::unique_p
                     __func__, devLogicId, i, std::get<0>(req).Describe().c_str(), std::get<1>(req));
                 return ret;
             }
-            std::get<2>(req) = resInfos; // 2: resRepotPtr to resource
+            std::get<2>(req) = resInfos; // 2: resRepoPtr to resource
         }
     }
 
@@ -513,7 +513,7 @@ CcuResBatchAllocator::AllocDiscreteRes(const CcuResReq& resReq, std::unique_ptr<
                     __func__, devLogicId, i, std::get<0>(req).Describe().c_str(), std::get<1>(req));
                 return ret;
             }
-            std::get<2>(req) = resInfos; // 2: resRepotPtr to resource
+            std::get<2>(req) = resInfos; // 2: resRepoPtr to resource
         }
     }
 

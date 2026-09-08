@@ -124,7 +124,7 @@ typedef enum tag_ts_error {
     TS_INVLD_CPY_DIR = 0x85,                        /**< invalid copy dir */
     TS_PCIE_DMA_INVLD_CQ_DES = 0x86,                /**< pcie dma invalid cq des */
     TS_PCIE_DMA_CPY_ERR = 0x87,                     /**< pcie dma copy error */
-    TS_PCIE_DMA_LNK_CHN_BUSY = 0x88,                /**< pcie dima link channal busy */
+    TS_PCIE_DMA_LNK_CHN_BUSY = 0x88,                /**< pcie dma link channel busy */
     TS_ERROR_PROFILE_BUFF_FULL = 0x89,              /**< profile buff full */
     TS_ERROR_PROFILE_MODE_CONFLICT = 0x8A,          /**< profile mode conflict */
     TS_ERROR_PROFILE_OTHER_PID_ON = 0x8B,           /**< profile other pid on */

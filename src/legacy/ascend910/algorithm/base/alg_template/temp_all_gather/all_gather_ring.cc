@@ -405,7 +405,7 @@ HcclResult AllGatherRing::AllGatherSlicesPrep(u32 rankSize, u32 nicSize)
         for (u32 nicDis = 0; nicDis <= rankSize - 2; nicDis++) { // 递减从当前rank遍历至(rank+2+ranksize)%ranksize的位置
             u32 nicIdx = (rankIdx + rankSize - nicDis) % rankSize;
             std::vector<u32>::iterator iterNic = std::find(nicRankList_.begin(), nicRankList_.end(), nicIdx);
-            if (iterNic != nicRankList_.end()) { // 当前rank为网口所在位置，将网口对应的chunksize份silce放入sliceList
+            if (iterNic != nicRankList_.end()) { // 当前rank为网口所在位置，将网口对应的chunksize份slice放入sliceList
                 u32 nicListIdx = distance(nicRankList_.begin(), iterNic);
                 for (u32 chunkIdx = 0; chunkIdx < chunkSize; chunkIdx++) {
                     sliceList.push_back(chunkSize * nicListIdx + chunkIdx);
