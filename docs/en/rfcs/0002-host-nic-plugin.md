@@ -387,14 +387,14 @@ typedef struct {
 | `readNbiOnThread`                        | `HcommReadNbiOnThread`                           |   |
 | `readOnThread`                           | `HcommReadOnThread`                              |   |
 | `readReduceOnThread`                     | `HcommReadReduceOnThread`                        |   |
-| `notifyRecord`                           | `HcommNotifyRecord`                              |   |
-| `notifyRecordOnThread`                   | `HcommNotifyRecordOnThread`                      |   |
-| `notifyWait`                             | `HcommNotifyWait`                                |   |
-| `notifyWaitOnThread`                     | `HcommNotifyWaitOnThread`                        |   |
-| `notifyWaitOnThreadWithDefaultTimeout`   | `HcommNotifyWaitOnThreadWithDefaultTimeout`      |   |
+| `notifyRecord`                           | `HcommChannelNotifyRecord`                              |   |
+| `notifyRecordOnThread`                   | `HcommChannelNotifyRecordOnThread`                      |   |
+| `notifyWait`                             | `HcommChannelNotifyWait`                                |   |
+| `notifyWaitOnThread`                     | `HcommChannelNotifyWaitOnThread`                        |   |
+| `notifyWaitOnThreadWithDefaultTimeout`   | `HcommChannelNotifyWaitOnThreadWithDefaultTimeout`      |   |
 | `batchTransferOnThread`                  | `HcommBatchTransferOnThread`                     |   |
-| `fence`                                  | `HcommFence`                                     |   |
-| `fenceOnThread`                          | `HcommFenceOnThread`                             |   |
+| `fence`                                  | `HcommChannelFence`                                     |   |
+| `fenceOnThread`                          | `HcommChannelFenceOnThread`                             |   |
 | `drainOnThread`                          | `HcommChannelDrainOnThread`                      |   |
 
 ##### Endpoint Ops Table
@@ -1110,26 +1110,32 @@ static HcommNicChannelOps kMyChannelOps = {
 
 ### 7.4 Build and Deployment
 
+A plugin depends only on HCOMM's SDK ABI header `hcomm_nic_plugin.h` (`src/base_comm/primitives/api_c_adpt/nic_plugin/hcomm_nic_plugin.h`) and does not link `libhcomm.so`.
+
+When writing a new plugin, refer to the self-contained example `experimental/base_comm/nic_plugin/example_plugin/`, which implements the 3 exported symbols and two empty ops tables and can be compiled independently of the top-level build:
+
 ```bash
-# 1. Build
-cd experimental/base_comm/nic_plugin/<my_plugin>
+# 1. Build (run independently in the example plugin directory)
+cd experimental/base_comm/nic_plugin/example_plugin
 mkdir build && cd build
 cmake .. && make -j
+# Output: build/libexample_plugin.so
 
-# CMakeLists.txt key points:
-# - Do not link libhcomm.so
-# - Align compilation options with the hcomm_nic_plugin.h header file path
-# - Generate a .so file (e.g., libmy_plugin.so)
-
-# 2. Deploy
-cp build/libmy_plugin.so ${ASCEND_HOME_PATH}/hcomm_plugin/
+# 2. Deploy (manual debugging)
+cp build/libexample_plugin.so ${ASCEND_HOME_PATH}/hcomm_plugin/
 
 # 3. Verify
-# Restart the process and check for the "[NicPlugin] protocol[X] is handled by plugin[my_plugin]" message in the log
+# Restart the process and check for the "[NicPlugin] protocol[X] is handled by plugin[example_plugin]" message in the log
 
-# 4. Debug (alternative path)
-export HCOMM_NIC_PLUGIN_SO=/path/to/build/libmy_plugin.so
+# 4. Debug (alternative path; takes effect when ASCEND_HOME_PATH is empty)
+export HCOMM_NIC_PLUGIN_SO=/path/to/build/libexample_plugin.so
 ```
+
+Example CMakeLists.txt key points:
+
+- `#include "hcomm_nic_plugin.h"` and configure its transitive include paths (the public headers under `include/` plus the securec/acl headers)
+- Do not link `libhcomm.so`
+- Export only the 3 dlsym entry points (`--version-script` symbol whitelist, optional)
 
 ### 7.5 Protocol Number Selection
 
