@@ -19,17 +19,17 @@
 
 namespace hcomm {
 
-CcuChannelCtxMgrV2::CcuChannelCtxMgrV2(const int32_t devLogicId, const uint8_t dieId, const uint32_t devPhyId)
-    : CcuChannelCtxMgr(devLogicId, dieId, devPhyId),
-      jettyCtxMgr_(devLogicId, dieId, devPhyId)
+CcuChannelCtxMgrV2::CcuChannelCtxMgrV2(const int32_t userDevId, const uint8_t dieId, const uint32_t devPhyId)
+    : CcuChannelCtxMgr(userDevId, dieId, devPhyId),
+      jettyCtxMgr_(userDevId, dieId, devPhyId)
 {
-    (void)CcuResSpecifications::GetInstance(devLogicId).GetChannelJettyMap(dieId, channelJettyMap_);
+    (void)CcuResSpecifications::GetInstance(userDevId).GetChannelJettyMap(dieId, channelJettyMap_);
 }
 
 HcclResult CcuChannelCtxMgrV2::Init()
 {
     uint32_t strategy = 0; // 获取失败或为0场景，分配将按资源不足操作
-    (void)CcuResSpecifications::GetInstance(devLogicId_).GetChannelNum(dieId_, strategy);
+    (void)CcuResSpecifications::GetInstance(userDevId_).GetChannelNum(dieId_, strategy);
     channelResInfos_.resize(strategy);
     CHK_RET(jettyCtxMgr_.Init());
     return HcclResult::HCCL_SUCCESS;
@@ -107,8 +107,8 @@ HcclResult CcuChannelCtxMgrV2::Alloc(const ChannelPara& channelPara, std::vector
         ret != HcclResult::HCCL_SUCCESS,
         HCCL_WARNING(
             "[CcuChannelCtxMgrV2][%s] failed to allocate jetty contexts of feId[%u], "
-            "devLogicId[%d], dieId[%u].",
-            __func__, feId, devLogicId_, dieId_),
+            "userDevId[%d], dieId[%u].",
+            __func__, feId, userDevId_, dieId_),
         ret);
 
     const uint32_t channelGroupSize = channelJettyMap_.channelNum;
@@ -158,8 +158,8 @@ void CcuChannelCtxMgrV2::AllocateChannelResources(
 
     HCCL_INFO(
         "[CcuChannelCtxMgrV2][%s] allocated channels[%u, %u) successfully, "
-        "devLogicId[%d], ioDie[%u], channelNum[%u].",
-        __func__, startChannelId, startChannelId + channelGroupSize, devLogicId_, dieId_, channelGroupSize);
+        "userDevId[%d], ioDie[%u], channelNum[%u].",
+        __func__, startChannelId, startChannelId + channelGroupSize, userDevId_, dieId_, channelGroupSize);
     // 只打印首channel，避免刷屏，分配成功保证数量不为0
     HCCL_INFO("[CcuChannelCtxMgrV2][%s] the start channel: ", __func__);
     DumpChannelResInfo(feId, channelInfos[0]);
@@ -193,7 +193,7 @@ static void DumpChannelDataV2(struct ChannelDataV2& tmp)
 }
 
 static HcclResult ConfigChannelCtxDataV2(
-    int32_t devLogicId, const uint32_t devPhyId, const uint8_t dieId, const uint32_t channelId,
+    int32_t userDevId, const uint32_t devPhyId, const uint8_t dieId, const uint32_t channelId,
     ChannelDataV2& channelData)
 {
     CustomChannelInfoIn inBuff{};
@@ -215,12 +215,12 @@ static HcclResult ConfigChannelCtxDataV2(
     (void)memcpy_s(
         inBuff.data.dataInfo.dataArray, sizeof(struct ChannelDataV2), &channelData, sizeof(struct ChannelDataV2));
 
-    auto ret = HccpRaTlvCcuCustomChannel(devLogicId, static_cast<void*>(&inBuff), static_cast<void*>(&outBuff));
+    auto ret = HccpRaTlvCcuCustomChannel(userDevId, static_cast<void*>(&inBuff), static_cast<void*>(&outBuff));
     if (ret != 0) {
         HCCL_ERROR(
             "[CcuChannelCtxMgrV2][%s] failed to call ccu driver, "
-            "devLogicId[%d] devPhyId[%u] dieId[%d] op[%s] ret[%d].",
-            __func__, devLogicId, devPhyId, dieId, "SET_CHANNEL", ret);
+            "userDevId[%d] devPhyId[%u] dieId[%d] op[%s] ret[%d].",
+            __func__, userDevId, devPhyId, dieId, "SET_CHANNEL", ret);
         return ret;
     }
     return HcclResult::HCCL_SUCCESS;
@@ -242,12 +242,12 @@ HcclResult CcuChannelCtxMgrV2::Config(const ChannelCfg& channelCfg)
         ret != HcclResult::HCCL_SUCCESS,
         HCCL_ERROR(
             "[CcuChannelCtxMgrV2][%s] failed to config jetty contexts of channelId[%u], "
-            "feId[%u], devLogicId[%d], dieId[%u].",
-            __func__, channelId, feId, devLogicId_, static_cast<uint32_t>(dieId_)),
+            "feId[%u], userDevId[%d], dieId[%u].",
+            __func__, channelId, feId, userDevId_, static_cast<uint32_t>(dieId_)),
         ret);
 
     ChannelDataV2 data = BuildChannelDataV2(channelCfg, dieId_);
-    CHK_RET(ConfigChannelCtxDataV2(devLogicId_, devPhyId_, dieId_, channelId, data));
+    CHK_RET(ConfigChannelCtxDataV2(userDevId_, devPhyId_, dieId_, channelId, data));
     return HcclResult::HCCL_SUCCESS;
 }
 
@@ -264,14 +264,14 @@ HcclResult CcuChannelCtxMgrV2::Release(const uint32_t channelId)
         ret != HcclResult::HCCL_SUCCESS,
         HCCL_WARNING(
             "[CcuChannelCtxMgrV2][%s] failed to release jetty contexts "
-            "of channelId[%u], feId[%u], devLogicId[%d], dieId[%u].",
-            __func__, channelId, channelResInfos_[channelId].feId, devLogicId_, dieId_),
+            "of channelId[%u], feId[%u], userDevId[%d], dieId[%u].",
+            __func__, channelId, channelResInfos_[channelId].feId, userDevId_, dieId_),
         ret);
 
     channelResInfos_[channelId] = ChannelResInfo{};
     // V2 验证阶段未启用动态channel，保持重置Channel配置表，避免错误复用
     ChannelDataV2 data = {};
-    CHK_RET(ConfigChannelCtxDataV2(devLogicId_, devPhyId_, dieId_, channelId, data));
+    CHK_RET(ConfigChannelCtxDataV2(userDevId_, devPhyId_, dieId_, channelId, data));
     return HcclResult::HCCL_SUCCESS;
 }
 

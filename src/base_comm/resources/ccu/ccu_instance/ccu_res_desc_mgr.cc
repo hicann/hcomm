@@ -94,7 +94,7 @@ CcuResult CcuResDescMgr::QueryDieId(HcommCcuResDescHandle handle, uint32_t& dieI
     return CcuResult::CCU_SUCCESS;
 }
 
-CcuResult CcuResDescMgr::QueryRemainRes(HcommCcuResDescHandle handle, int32_t devLogicId) const
+CcuResult CcuResDescMgr::QueryRemainRes(HcommCcuResDescHandle handle, int32_t userDevId) const
 {
     std::unique_lock<std::shared_timed_mutex> lock(descMapMutex_);
     auto it = descMap_.cend();
@@ -110,23 +110,23 @@ CcuResult CcuResDescMgr::QueryRemainRes(HcommCcuResDescHandle handle, int32_t de
     uint32_t remainNum = 0;
     for (auto internalType : kResTypes) {
         // 查询最大连续剩余
-        if (CcuDevMgrImp::QueryRemainRes(devLogicId, dieId, internalType, remainNum) != HCCL_SUCCESS) {
+        if (CcuDevMgrImp::QueryRemainRes(userDevId, dieId, internalType, remainNum) != HCCL_SUCCESS) {
             HCCL_ERROR(
-                "[CcuResDescMgr][%s] devLogicId[%d] dieId[%u] resType[%s] query failed", __func__, devLogicId, dieId,
+                "[CcuResDescMgr][%s] userDevId[%d] dieId[%u] resType[%s] query failed", __func__, userDevId, dieId,
                 internalType.Describe().c_str());
             return CcuResult::CCU_E_INTERNAL;
         }
         HCCL_INFO(
-            "[CcuResDescMgr][%s] devLogicId[%d] dieId[%u] resType[%s] remainNum[%u]", __func__, devLogicId, dieId,
+            "[CcuResDescMgr][%s] userDevId[%d] dieId[%u] resType[%s] remainNum[%u]", __func__, userDevId, dieId,
             internalType.Describe().c_str(), remainNum);
         // 写入最大连续剩余
         CCU_CHK_RET(desc.SetResNum(internalType, remainNum));
     }
 
     // 单独处理 INSTRUCTION: 从 CcuComponent 查询实际剩余量
-    uint32_t insFreeSize = CcuDevMgrImp::GetInsConsecutiveRemainSize(devLogicId, dieId);
+    uint32_t insFreeSize = CcuDevMgrImp::GetInsConsecutiveRemainSize(userDevId, dieId);
     HCCL_INFO(
-        "[CcuResDescMgr][%s] devLogicId[%d] dieId[%u] resType[ResType::INS] remainNum[%u]", __func__, devLogicId, dieId,
+        "[CcuResDescMgr][%s] userDevId[%d] dieId[%u] resType[ResType::INS] remainNum[%u]", __func__, userDevId, dieId,
         insFreeSize);
     CCU_CHK_RET(desc.SetResNum(ResType::INS, insFreeSize));
 

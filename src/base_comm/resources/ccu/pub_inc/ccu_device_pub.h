@@ -86,172 +86,172 @@ using CcuChannelInfo = Hccl::CcuChannelInfo;
 /**
  * @brief 启用CCU特性，初始化CCU平台层
  *
- * @param deviceLogicId 设备逻辑ID
+ * @param userDevId 用户设备ID
  * @param ccuDrvHandle CCU驱动句柄
  * @return HcclResult 返回HcclResult类型的结果
  * @note 资源不足时返回HCCL_E_UNAVIL，其余非HCCL_SUCCESS结果属于错误
  */
-CcuResult CcuInitFeature(const int32_t devLogicId, std::shared_ptr<CcuDrvHandle>& ccuDrvHandle);
+CcuResult CcuInitFeature(const int32_t userDevId, std::shared_ptr<CcuDrvHandle>& ccuDrvHandle);
 
 /**
  * @brief 关闭CCU特性，解初始化CCU平台层
  *
- * @param deviceLogicId 设备逻辑ID
+ * @param userDevId 用户设备ID
  * @return HcclResult 返回HcclResult类型的结果
  * @note 资源不足时返回HCCL_E_UNAVIL，其余非HCCL_SUCCESS结果属于错误
  */
-CcuResult CcuDeinitFeature(const int32_t devLogicId);
+CcuResult CcuDeinitFeature(const int32_t userDevId);
 
 /**
  * @brief 获取指定die是否启用
  *
- * @param deviceLogicId device逻辑ID
+ * @param userDevId 用户设备ID
  * @param dieId ccu channel 所属的 IO Die 编号
  * @param enableFlag 出参，表示该die是否启用
  * @return HcclResult 返回HcclResult类型的结果
  * @note dieId越界时返回HCCL_E_PARA
  */
-CcuResult CcuGetDieEnableInfo(int32_t deviceLogicId, uint8_t dieId, bool& enableFlag);
+CcuResult CcuGetDieEnableInfo(int32_t userDevId, uint8_t dieId, bool& enableFlag);
 
 /**
  * @brief 查询指定 ioDie
  * 上各类资源总量，按block分的资源类型（LoopEngine、Ms、Cke）查询的是可以分配的总量（块大小*块总数）
  *
- * @param deviceLogicId 设备逻辑ID
+ * @param userDevId 用户设备ID
  * @param dieId ioDie ID
  * @param num 出参，返回该 die 上对应资源类型的总量
  * @return CcuResult
  * @note dieId 越界或 die 未启用时返回错误
  */
-CcuResult CcuGetLoopEngineNum(int32_t deviceLogicId, uint8_t dieId, uint32_t& num);
-CcuResult CcuGetMsNum(int32_t deviceLogicId, uint8_t dieId, uint32_t& num);
-CcuResult CcuGetCkeNum(int32_t deviceLogicId, uint8_t dieId, uint32_t& num);
-CcuResult CcuGetXnNum(int32_t deviceLogicId, uint8_t dieId, uint32_t& num);
-CcuResult CcuGetGsaNum(int32_t deviceLogicId, uint8_t dieId, uint32_t& num);
-CcuResult CcuGetInstructionNum(int32_t deviceLogicId, uint8_t dieId, uint32_t& num);
-CcuResult CcuGetMissionNum(int32_t deviceLogicId, uint8_t dieId, uint32_t& num);
+CcuResult CcuGetLoopEngineNum(int32_t userDevId, uint8_t dieId, uint32_t& num);
+CcuResult CcuGetMsNum(int32_t userDevId, uint8_t dieId, uint32_t& num);
+CcuResult CcuGetCkeNum(int32_t userDevId, uint8_t dieId, uint32_t& num);
+CcuResult CcuGetXnNum(int32_t userDevId, uint8_t dieId, uint32_t& num);
+CcuResult CcuGetGsaNum(int32_t userDevId, uint8_t dieId, uint32_t& num);
+CcuResult CcuGetInstructionNum(int32_t userDevId, uint8_t dieId, uint32_t& num);
+CcuResult CcuGetMissionNum(int32_t userDevId, uint8_t dieId, uint32_t& num);
 
 /**
  * @brief 获取指定device的主板类型
  *
- * @param deviceLogicId device逻辑ID
+ * @param userDevId 用户设备ID
  * @param hcclMainboardId 出参，返回该device的主板类型
  * @return HcclResult 返回HcclResult类型的结果
  */
-HcclResult CcuGetMainboardType(uint32_t deviceLogicId, Hccl::HcclMainboardId& hcclMainboardId);
+HcclResult CcuGetMainboardType(uint32_t userDevId, Hccl::HcclMainboardId& hcclMainboardId);
 
 /**
  * @brief 基于资源描述符数组申请批量资源
  *
- * @param deviceLogicId 设备逻辑ID
+ * @param userDevId 用户设备ID
  * @param descs 资源描述符指针数组（每个描述符携带 dieId 及各资源数量）
  * @param descNum 资源描述符数量
  * @param resHandle 返回的CCU批量资源句柄
  * @return HcclResult 返回HcclResult类型的结果
  * @note 资源不足时返回HCCL_E_UNAVIL，其余非HCCL_SUCCESS结果属于错误
  */
-CcuResult CcuAllocResHandleByResDescs(
-    int32_t deviceLogicId, const CcuResDesc* descs[], uint32_t descNum, CcuResHandle& resHandle);
+CcuResult
+CcuAllocResHandleByResDescs(int32_t userDevId, const CcuResDesc* descs[], uint32_t descNum, CcuResHandle& resHandle);
 
 /**
  * @brief 按加速引擎模式申请批量资源
  *
- * @param deviceLogicId 设备逻辑ID
+ * @param userDevId 用户设备ID
  * @param ccuEngine CCU通信引擎类型
  * @param resHandle 返回的CCU批量资源句柄
  * @return HcclResult 返回HcclResult类型的结果
  * @note 资源不足时返回HCCL_E_UNAVIL，其余非HCCL_SUCCESS结果属于错误
  */
-CcuResult CcuAllocResHandleByInsType(int32_t deviceLogicId, CcuInstanceType ccuInsType, CcuResHandle& resHandle);
+CcuResult CcuAllocResHandleByInsType(int32_t userDevId, CcuInstanceType ccuInsType, CcuResHandle& resHandle);
 
 /**
  * @brief 根据资源句柄查看对应资源信息
  *
- * @param deviceLogicId 设备逻辑ID
+ * @param userDevId 用户设备ID
  * @param resHandle 查询的CCU批量资源句柄
  * @param resRepo 返回的CCU批量资源信息
  * @return HcclResult 返回HcclResult类型的结果
  * @note 资源句柄无法查找到时返回HCCL_E_NOT_FOUND，其余非HCCL_SUCCESS结果属于错误
  */
-CcuResult CcuCheckResource(const int32_t deviceLogicId, const CcuResHandle resHandle, CcuResRepository& resRepo);
+CcuResult CcuCheckResource(const int32_t userDevId, const CcuResHandle resHandle, CcuResRepository& resRepo);
 
 /**
  * @brief 根据资源句柄释放对应资源信息
  *
- * @param deviceLogicId 设备逻辑ID
+ * @param userDevId 用户设备ID
  * @param resHandle 查询的CCU批量资源句柄
  * @note 资源句柄无法查找到时返回HCCL_E_NOT_FOUND，其余非HCCL_SUCCESS结果属于错误
  * @note 返回批量的channel资源总数可能超过申请数量，jettyNum为0时由平台层决定分配数量
  */
-HcclResult CcuReleaseResHandle(const int32_t deviceLogicId, const CcuResHandle handle);
+HcclResult CcuReleaseResHandle(const int32_t userDevId, const CcuResHandle handle);
 
 /**
  * @brief 申请批量ccu channel资源
  *
- * @param deviceLogicId device逻辑ID
+ * @param userDevId 用户设备ID
  * @param ccuChannelPara ccu channel 申请参数
  * @param ccuChannelInfos 返回的channel资源信息
  * @return HcclResult 返回HcclResult类型的结果
  * @note 返回批量的channel资源总数可能超过申请数量，jettyNum为0时由平台层决定分配数量
  */
 HcclResult CcuAllocChannels(
-    const int32_t deviceLogicId, const CcuChannelPara& ccuChannelPara, std::vector<CcuChannelInfo>& ccuChannelInfos);
+    const int32_t userDevId, const CcuChannelPara& ccuChannelPara, std::vector<CcuChannelInfo>& ccuChannelInfos);
 
 /**
  * @brief 释放ccu channel资源
  *
- * @param deviceLogicId device逻辑ID
+ * @param userDevId 用户设备ID
  * @param dieId ccu channel 所属的 IO Die 编号
  * @param ccuChannelId ccu channel 编号
  * @return HcclResult 返回HcclResult类型的结果
  * @note 无
  */
-HcclResult CcuReleaseChannel(const int32_t deviceLogicId, const uint8_t dieId, const uint32_t ccuChannelId);
+HcclResult CcuReleaseChannel(const int32_t userDevId, const uint8_t dieId, const uint32_t ccuChannelId);
 
 /**
  * @brief 查询CCU设备是否已完成初始化
  *
- * @param deviceLogicId 设备逻辑ID
+ * @param userDevId 用户设备ID
  * @return bool true表示已初始化，false表示未初始化或入参非法
  * @note 无
  */
-bool CcuIsInited(const int32_t deviceLogicId);
+bool CcuIsInited(const int32_t userDevId);
 
 /**
  * @brief 触发CCU Task Kill
  *
- * @param deviceLogicId device逻辑ID
+ * @param userDevId 用户设备ID
  * @return HcclResult 返回HcclResult类型的结果
  * @note 该接口会处理全部die，未启用die将跳过
  */
-HcclResult CcuSetTaskKill(const int32_t deviceLogicId);
+HcclResult CcuSetTaskKill(const int32_t userDevId);
 
 /**
  * @brief 配置CCU Task Kill完成状态
  *
- * @param deviceLogicId device逻辑ID
+ * @param userDevId 用户设备ID
  * @return HcclResult 返回HcclResult类型的结果
  * @note 该接口会处理全部die，未启用die将跳过
  */
-HcclResult CcuSetTaskKillDone(const int32_t deviceLogicId);
+HcclResult CcuSetTaskKillDone(const int32_t userDevId);
 
 /**
  * @brief 清空CCU Task Kill状态
  *
- * @param deviceLogicId device逻辑ID
+ * @param userDevId 用户设备ID
  * @return HcclResult 返回HcclResult类型的结果
  * @note 该接口会处理全部die，未启用die将跳过
  */
-HcclResult CcuCleanTaskKillState(const int32_t deviceLogicId);
+HcclResult CcuCleanTaskKillState(const int32_t userDevId);
 
 /**
  * @brief 清理指定ioDie CCU的全部CKE资源，重置为0
  *
- * @param deviceLogicId device逻辑ID
+ * @param userDevId 用户设备ID
  * @return HcclResult 返回HcclResult类型的结果
  * @note 未启用die无需清理将视为成功
  */
-HcclResult CcuCleanDieCkes(const int32_t deviceLogicId, const uint8_t dieId);
+HcclResult CcuCleanDieCkes(const int32_t userDevId, const uint8_t dieId);
 
 }; // namespace hcomm
 #endif // CCU_DEVICE_PUB_H

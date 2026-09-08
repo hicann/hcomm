@@ -24,21 +24,21 @@ CcuInstanceMgr::~CcuInstanceMgr()
     (void)Deinit();
 }
 
-CcuInstanceMgr& CcuInstanceMgr::GetInstance(const int32_t deviceLogicId)
+CcuInstanceMgr& CcuInstanceMgr::GetInstance(const int32_t userDevId)
 {
     static CcuInstanceMgr instanceMgrs[MAX_MODULE_DEVICE_NUM + 1];
 
-    int32_t devLogicId = deviceLogicId;
-    if (devLogicId < 0 || static_cast<uint32_t>(devLogicId) >= MAX_MODULE_DEVICE_NUM) {
+    int32_t validUserDevId = userDevId;
+    if (validUserDevId < 0 || static_cast<uint32_t>(validUserDevId) >= MAX_MODULE_DEVICE_NUM) {
         HCCL_WARNING(
-            "[CcuInstanceMgr][%s] use the backup device, devLogicId[%d] should be "
+            "[CcuInstanceMgr][%s] use the backup device, userDevId[%d] should be "
             "less than %u.",
-            __func__, devLogicId, MAX_MODULE_DEVICE_NUM);
-        devLogicId = MAX_MODULE_DEVICE_NUM; // 使用备份设备
+            __func__, validUserDevId, MAX_MODULE_DEVICE_NUM);
+        validUserDevId = MAX_MODULE_DEVICE_NUM; // 使用备份设备
     }
 
-    instanceMgrs[devLogicId].devLogicId_ = devLogicId;
-    return instanceMgrs[devLogicId];
+    instanceMgrs[validUserDevId].userDevId_ = validUserDevId;
+    return instanceMgrs[validUserDevId];
 }
 
 CcuResult CcuInstanceMgr::Init()

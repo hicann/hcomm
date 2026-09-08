@@ -30,18 +30,18 @@ CcuInstance::~CcuInstance()
     // 主动释放资源保证时序，不得随意调整顺序
     for (auto& kernelHandle : kernelHandles_) {
         if (kernelHandle != 0) {
-            (void)CcuKernelMgr::GetInstance(devLogicId_).UnRegister(kernelHandle);
+            (void)CcuKernelMgr::GetInstance(userDevId_).UnRegister(kernelHandle);
             kernelHandle = 0;
         }
     }
     kernelHandles_.clear();
 
-    (void)CcuVarEventResMgr::GetInstance(devLogicId_).ReleaseByInstance(insHandle_);
+    (void)CcuVarEventResMgr::GetInstance(userDevId_).ReleaseByInstance(insHandle_);
 
     resPack_ = nullptr; // 释放instance持有的CCU资源
     if (ccuDrvHandle_) {
         ccuDrvHandle_ = nullptr; // 先减少引用计数，再尝试关闭
-        (void)CcuDeinitFeature(devLogicId_);
+        (void)CcuDeinitFeature(userDevId_);
         // 尝试关闭CCU功能，最后一个调用时会关闭CCU驱动
     }
 }
@@ -53,10 +53,10 @@ CcuResult CcuInstance::InitByInsType(const CcuInstanceType insType)
         return CcuResult::CCU_E_PARA;
     }
 
-    devLogicId_ = HcclGetThreadDeviceId();
+    userDevId_ = HcclGetThreadDeviceId();
 
     if (!ccuDrvHandle_) {
-        CCU_CHK_RET(CcuInitFeature(devLogicId_, ccuDrvHandle_));
+        CCU_CHK_RET(CcuInitFeature(userDevId_, ccuDrvHandle_));
     }
 
     if (!resPack_) {
@@ -77,10 +77,10 @@ CcuResult CcuInstance::InitByResDescs(const CcuResDesc* descs[], uint32_t descNu
         return CcuResult::CCU_E_PARA;
     }
 
-    devLogicId_ = HcclGetThreadDeviceId();
+    userDevId_ = HcclGetThreadDeviceId();
 
     if (!ccuDrvHandle_) {
-        CCU_CHK_RET(CcuInitFeature(devLogicId_, ccuDrvHandle_));
+        CCU_CHK_RET(CcuInitFeature(userDevId_, ccuDrvHandle_));
     }
 
     if (!resPack_) {
@@ -95,10 +95,10 @@ CcuResult CcuInstance::InitByResDescs(const CcuResDesc* descs[], uint32_t descNu
 
 CcuResult CcuInstance::InitByAllRes()
 {
-    devLogicId_ = HcclGetThreadDeviceId();
+    userDevId_ = HcclGetThreadDeviceId();
 
     if (!ccuDrvHandle_) {
-        CCU_CHK_RET(CcuInitFeature(devLogicId_, ccuDrvHandle_));
+        CCU_CHK_RET(CcuInitFeature(userDevId_, ccuDrvHandle_));
     }
 
     // 申请当前 Device 上所有已使能 ioDie 的全部资源：
@@ -113,26 +113,26 @@ CcuResult CcuInstance::InitByAllRes()
 
     for (uint8_t dieId = 0; dieId < hcomm::CCU_MAX_IODIE_NUM; dieId++) {
         bool dieEnable = false;
-        CCU_CHK_RET(CcuGetDieEnableInfo(devLogicId_, dieId, dieEnable));
+        CCU_CHK_RET(CcuGetDieEnableInfo(userDevId_, dieId, dieEnable));
         if (!dieEnable) {
             continue; // 未启用的 die，resNum 保持 0
         }
 
         uint32_t num = 0;
         // 各资源类型总量查询（per-die），按块分的资源查的是块大小*块总数
-        CCU_CHK_RET(CcuGetLoopEngineNum(devLogicId_, dieId, num));
+        CCU_CHK_RET(CcuGetLoopEngineNum(userDevId_, dieId, num));
         CCU_CHK_RET(descs[dieId].SetResNum(ResType::LOOP, num));
-        CCU_CHK_RET(CcuGetMsNum(devLogicId_, dieId, num));
+        CCU_CHK_RET(CcuGetMsNum(userDevId_, dieId, num));
         CCU_CHK_RET(descs[dieId].SetResNum(ResType::MS, num));
-        CCU_CHK_RET(CcuGetCkeNum(devLogicId_, dieId, num));
+        CCU_CHK_RET(CcuGetCkeNum(userDevId_, dieId, num));
         CCU_CHK_RET(descs[dieId].SetResNum(ResType::CKE, num));
-        CCU_CHK_RET(CcuGetXnNum(devLogicId_, dieId, num));
+        CCU_CHK_RET(CcuGetXnNum(userDevId_, dieId, num));
         CCU_CHK_RET(descs[dieId].SetResNum(ResType::XN, num));
-        CCU_CHK_RET(CcuGetGsaNum(devLogicId_, dieId, num));
+        CCU_CHK_RET(CcuGetGsaNum(userDevId_, dieId, num));
         CCU_CHK_RET(descs[dieId].SetResNum(ResType::GSA, num));
-        CCU_CHK_RET(CcuGetInstructionNum(devLogicId_, dieId, num));
+        CCU_CHK_RET(CcuGetInstructionNum(userDevId_, dieId, num));
         CCU_CHK_RET(descs[dieId].SetResNum(ResType::INS, num));
-        CCU_CHK_RET(CcuGetMissionNum(devLogicId_, dieId, num));
+        CCU_CHK_RET(CcuGetMissionNum(userDevId_, dieId, num));
         CCU_CHK_RET(descs[dieId].SetResNum(ResType::MISSION, num));
     }
 
@@ -155,7 +155,7 @@ CcuResult CcuInstance::Reset()
     untranslatedKernelHandles_.clear();
     CCU_CHK_RET(resPack_->Reset());
 
-    CCU_CHK_RET(CcuVarEventResMgr::GetInstance(devLogicId_).ExcludeAllocatedFromRepo(insHandle_));
+    CCU_CHK_RET(CcuVarEventResMgr::GetInstance(userDevId_).ExcludeAllocatedFromRepo(insHandle_));
     return CcuResult::CCU_SUCCESS;
 }
 
@@ -265,7 +265,7 @@ void CcuInstance::AbortRegister()
         if (kernelHandle == 0) {
             continue;
         }
-        (void)CcuKernelMgr::GetInstance(devLogicId_).UnRegister(kernelHandle);
+        (void)CcuKernelMgr::GetInstance(userDevId_).UnRegister(kernelHandle);
         auto it = std::find(kernelHandles_.begin(), kernelHandles_.end(), kernelHandle);
         if (it != kernelHandles_.end()) {
             kernelHandles_.erase(it);

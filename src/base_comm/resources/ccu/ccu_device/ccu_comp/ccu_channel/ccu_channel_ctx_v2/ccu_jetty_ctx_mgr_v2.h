@@ -28,7 +28,7 @@ struct JettyCtxGroup {
 
 class CcuJettyCtxMgrV2 : public CcuJettyCtxMgr {
 public:
-    CcuJettyCtxMgrV2(const int32_t devLogicId, const uint8_t dieId, const uint32_t devPhyId);
+    CcuJettyCtxMgrV2(const int32_t userDevId, const uint8_t dieId, const uint32_t devPhyId);
 
     CcuJettyCtxMgrV2() = default;
     ~CcuJettyCtxMgrV2() final = default;

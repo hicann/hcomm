@@ -50,7 +50,7 @@ TEST_F(CcuComponentTest, Ut_CcuComponent_Init_When_Mock_Is_Fine_Expect_Return_Ok
     EXPECT_EQ(MockCcuResourcesDefault(fakeDevLogicId, fakeCcuVersion), HcclResult::HCCL_SUCCESS);
 
     hcomm::CcuComponent ccuComponent{};
-    ccuComponent.devLogicId_ = fakeDevLogicId;
+    ccuComponent.userDevId_ = fakeDevLogicId;
 
     EXPECT_EQ(ccuComponent.Init(), HcclResult::HCCL_SUCCESS);
 }
@@ -63,7 +63,7 @@ TEST_F(CcuComponentTest, Ut_CcuComponent_CleanDieCkes_InvalidDieId)
     MockCcuResourcesDefault(devLogicId, ccuVersion);
 
     hcomm::CcuComponent ccuComponent{};
-    ccuComponent.devLogicId_ = devLogicId;
+    ccuComponent.userDevId_ = devLogicId;
 
     // 使用非法的 dieId（等于上限），期望参数错误返回
     const uint8_t badDieId = static_cast<uint8_t>(hcomm::CCU_MAX_IODIE_NUM);
@@ -78,7 +78,7 @@ TEST_F(CcuComponentTest, Ut_CcuComponent_CleanDieCkes_DieDisabled_NoOp)
     MockCcuResourcesDefault(devLogicId, ccuVersion);
 
     hcomm::CcuComponent ccuComponent{};
-    ccuComponent.devLogicId_ = devLogicId;
+    ccuComponent.userDevId_ = devLogicId;
 
     // 确保 die 被标记为不可用，CleanDieCkes 应直接返回成功且不调用外部驱动
     ccuComponent.dieEnableFlags_.fill(false);
@@ -93,7 +93,7 @@ TEST_F(CcuComponentTest, Ut_CcuComponent_SetTaskKill_Transitions)
     MockCcuResourcesDefault(devLogicId, ccuVersion);
 
     hcomm::CcuComponent ccuComponent{};
-    ccuComponent.devLogicId_ = devLogicId;
+    ccuComponent.userDevId_ = devLogicId;
 
     // 保证所有 die 为不可用，以避免 SetProcess 内部调用真实驱动函数
     ccuComponent.dieEnableFlags_.fill(false);
@@ -119,7 +119,7 @@ TEST_F(CcuComponentTest, Ut_CcuComponent_GetLoopTpAttr_Cached_ReturnsCachedValue
 {
     const int32_t devLogicId = MAX_MODULE_DEVICE_NUM - 1;
     hcomm::CcuComponent ccuComponent{};
-    ccuComponent.devLogicId_ = devLogicId;
+    ccuComponent.userDevId_ = devLogicId;
 
     hcomm::TpAttrInfo cachedTpAttrInfo{};
     cachedTpAttrInfo.tpAttr.at = 2;
@@ -139,7 +139,7 @@ TEST_F(CcuComponentTest, Ut_CcuComponent_GetLoopTpAttr_TpInfoNotFound_ReturnsErr
 {
     const int32_t devLogicId = MAX_MODULE_DEVICE_NUM - 1;
     hcomm::CcuComponent ccuComponent{};
-    ccuComponent.devLogicId_ = devLogicId;
+    ccuComponent.userDevId_ = devLogicId;
     ccuComponent.devPhyId_ = 0;
 
     CommAddr commAddr{};

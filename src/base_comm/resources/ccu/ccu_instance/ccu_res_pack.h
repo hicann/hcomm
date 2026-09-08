@@ -35,7 +35,7 @@ private:
     CcuResPack(CcuResPack&& that) = delete;
     CcuResPack& operator=(CcuResPack&& that) = delete;
 
-    int32_t devLogicId_{0};
+    int32_t userDevId_{0};
     CcuResHandle resHandle_{nullptr};
     CcuResRepository resRepo_{};
 };

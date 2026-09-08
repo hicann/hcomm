@@ -29,13 +29,13 @@ namespace CcuRep {
     class CcuRepTranslator {
     public:
         CcuRepTranslator(
-            int32_t deviceLogicId, uint8_t dieId, std::shared_ptr<CcuRepReferenceManager> refManager,
+            int32_t userDevId, uint8_t dieId, std::shared_ptr<CcuRepReferenceManager> refManager,
             std::array<uint16_t, CCU_MAX_IODIE_NUM>& reserverChannalId, std::pair<uint64_t, uint64_t>& ccuTokenInfo,
             uint64_t hbmTokenInfo);
 
         CcuRepTranslator(std::shared_ptr<CcuRepReferenceManager> refManager, const TransDep& transDep);
-        static uint32_t GetInstrNum(const int32_t devLogicId);
-        static CcuResReq GetResReq(const int32_t devLogicId, uint8_t dieId);
+        static uint32_t GetInstrNum(const int32_t userDevId);
+        static CcuResReq GetResReq(const int32_t userDevId, uint8_t dieId);
         void GetRes(CcuRepResource& res);
         CcuInstrInfo Translate(
             CcuKernel* ccuKernel, const std::vector<std::shared_ptr<CcuRepBase>>& repVec, uint16_t startInstrId,

@@ -74,8 +74,8 @@ static HcclResult HccpRaTlvRequest(const TlvHandle tlvHandle, const u32 tlvModul
 
 CcuResult CcuDrvHandle::Init()
 {
-    HCCL_RUN_INFO("[CcuDrvHandle][%s], deviceLogicId: %d", __func__, devLogicId_);
-    CCU_CHK_RET(hrtGetDevicePhyIdByIndex(static_cast<uint32_t>(devLogicId_), devPhyId_));
+    HCCL_RUN_INFO("[CcuDrvHandle][%s], userDevId: %d", __func__, userDevId_);
+    CCU_CHK_RET(hrtGetDevicePhyIdByIndex(static_cast<uint32_t>(userDevId_), devPhyId_));
     // 支持ccu新老通信域混跑
     CCU_EXCEPTION_HANDLE_BEGIN
     // 初始化CCU平台层能力，有时序要求
@@ -86,13 +86,12 @@ CcuResult CcuDrvHandle::Init()
      * tlvHandle_ = tlvHdcMgr.GetHandle();
      */
 
-    tlvHandle_ = Hccl::HccpTlvHdcManager::GetInstance().GetTlvHandle(devLogicId_);
+    tlvHandle_ = Hccl::HccpTlvHdcManager::GetInstance().GetTlvHandle(userDevId_);
     CCU_CHK_PTR_NULL(tlvHandle_);
     // 拉起CCU驱动如果因其他进程占用重复拉起时，返回EAGAIN，日志检查返回值打印warning
     auto ret = HccpRaTlvRequest(tlvHandle_, TLV_MODULE_TYPE_CCU, MSG_TYPE_CCU_INIT);
     if (ret == HcclResult::HCCL_E_AGAIN) {
-        HCCL_RUN_WARNING(
-            "[%s] HccpRaTlvRequest ret[%d], repeat init ccu, deviceLogicId[%d].", __func__, ret, devLogicId_);
+        HCCL_RUN_WARNING("[%s] HccpRaTlvRequest ret[%d], repeat init ccu, userDevId[%d].", __func__, ret, userDevId_);
         return CcuResult::CCU_E_DRV_BUSY;
     }
     if (ret != HcclResult::HCCL_SUCCESS) {
@@ -101,32 +100,32 @@ CcuResult CcuDrvHandle::Init()
     }
 
     if (!CheckCcuOpenSourceEnable()) {
-        Hccl::CcuResSpecifications::GetInstance(devLogicId_).Init();
-        Hccl::CcuComponent::GetInstance(devLogicId_).Init();
-        Hccl::CcuResBatchAllocator::GetInstance(devLogicId_).Init();
-        Hccl::CtxMgrImp::GetInstance(devLogicId_).Init();
+        Hccl::CcuResSpecifications::GetInstance(userDevId_).Init();
+        Hccl::CcuComponent::GetInstance(userDevId_).Init();
+        Hccl::CcuResBatchAllocator::GetInstance(userDevId_).Init();
+        Hccl::CtxMgrImp::GetInstance(userDevId_).Init();
     } else {
-        CCU_CHK_RET(CcuResSpecifications::GetInstance(devLogicId_).Init());
-        CCU_CHK_RET(CcuPfeCfgMgr::GetInstance(devLogicId_).Init());
-        CCU_CHK_RET(CcuComponent::GetInstance(devLogicId_).Init());
-        CCU_CHK_RET(CcuResBatchAllocator::GetInstance(devLogicId_).Init());
+        CCU_CHK_RET(CcuResSpecifications::GetInstance(userDevId_).Init());
+        CCU_CHK_RET(CcuPfeCfgMgr::GetInstance(userDevId_).Init());
+        CCU_CHK_RET(CcuComponent::GetInstance(userDevId_).Init());
+        CCU_CHK_RET(CcuResBatchAllocator::GetInstance(userDevId_).Init());
     }
 
-    CCU_CHK_RET(CcuKernelMgr::GetInstance(devLogicId_).Init());
+    CCU_CHK_RET(CcuKernelMgr::GetInstance(userDevId_).Init());
 
     CCU_EXCEPTION_HANDLE_END
 
     return CcuResult::CCU_SUCCESS;
 }
 
-static HcclResult CcuLegacyMgrDeinit(int32_t devLogicId)
+static HcclResult CcuLegacyMgrDeinit(int32_t userDevId)
 {
     // 释放有时序要求
     EXCEPTION_HANDLE_BEGIN
-    Hccl::CtxMgrImp::GetInstance(devLogicId).Deinit();
-    Hccl::CcuResBatchAllocator::GetInstance(devLogicId).Deinit();
-    Hccl::CcuComponent::GetInstance(devLogicId).Deinit();
-    Hccl::CcuResSpecifications::GetInstance(devLogicId).Deinit();
+    Hccl::CtxMgrImp::GetInstance(userDevId).Deinit();
+    Hccl::CcuResBatchAllocator::GetInstance(userDevId).Deinit();
+    Hccl::CcuComponent::GetInstance(userDevId).Deinit();
+    Hccl::CcuResSpecifications::GetInstance(userDevId).Deinit();
     EXCEPTION_HANDLE_END
 
     return HcclResult::HCCL_SUCCESS;
@@ -136,16 +135,16 @@ CcuResult CcuDrvHandle::Deinit()
 {
     // 释放流程不打断，不抛异常，尽量尝试释放所有资源
     // 释放有时序要求
-    HCCL_RUN_INFO("[CcuDrvHandle] start to deinit ccu driver, deviceLogicId[%d].", devLogicId_);
-    (void)CcuKernelMgr::GetInstance(devLogicId_).Deinit();
+    HCCL_RUN_INFO("[CcuDrvHandle] start to deinit ccu driver, userDevId[%d].", userDevId_);
+    (void)CcuKernelMgr::GetInstance(userDevId_).Deinit();
 
     if (!CheckCcuOpenSourceEnable()) {
-        (void)CcuLegacyMgrDeinit(devLogicId_);
+        (void)CcuLegacyMgrDeinit(userDevId_);
     } else {
-        (void)CcuResBatchAllocator::GetInstance(devLogicId_).Deinit();
-        (void)CcuComponent::GetInstance(devLogicId_).Deinit();
-        (void)CcuPfeCfgMgr::GetInstance(devLogicId_).Deinit();
-        (void)CcuResSpecifications::GetInstance(devLogicId_).Deinit();
+        (void)CcuResBatchAllocator::GetInstance(userDevId_).Deinit();
+        (void)CcuComponent::GetInstance(userDevId_).Deinit();
+        (void)CcuPfeCfgMgr::GetInstance(userDevId_).Deinit();
+        (void)CcuResSpecifications::GetInstance(userDevId_).Deinit();
     }
 
     if (tlvHandle_ != nullptr) {

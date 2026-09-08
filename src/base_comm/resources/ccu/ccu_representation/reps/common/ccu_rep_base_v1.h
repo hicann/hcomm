@@ -29,7 +29,7 @@ namespace CcuRep {
     class CcuInsGeneratorV2;
 
     struct TransDep {
-        int32_t logicalId;
+        int32_t userDevId;
         uint16_t dieId;
         uint16_t reserveXnId;
         uint16_t reserveGsaId;

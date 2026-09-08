@@ -23,7 +23,7 @@ namespace hcomm {
 
 class CcuInstanceMgr {
 public:
-    static CcuInstanceMgr& GetInstance(const int32_t deviceLogicId);
+    static CcuInstanceMgr& GetInstance(const int32_t userDevId);
 
     CcuResult Init();
     CcuResult Deinit();
@@ -49,7 +49,7 @@ private:
 
 private:
     bool initializedFlag_{false};
-    int32_t devLogicId_{-1};
+    int32_t userDevId_{-1};
     CcuInsHandle instanceId_{0};
     mutable std::shared_timed_mutex insMapMutex_;
     std::unordered_map<CcuInsHandle, std::unique_ptr<CcuInstance>> insMap_{};

@@ -220,7 +220,7 @@ private:
     };
 
     uint32_t dieId_{0};
-    int32_t devLogicId_{0};
+    int32_t userDevId_{0};
     Attribution attr_{};
     std::vector<char> rmtHandshakeMsg_{0}; // 远端握手消息
     Hccl::Socket* socket_{nullptr};

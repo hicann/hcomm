@@ -16,22 +16,22 @@
 
 namespace hcomm {
 
-CcuResSpecifications& CcuResSpecifications::GetInstance(const int32_t deviceLogicId)
+CcuResSpecifications& CcuResSpecifications::GetInstance(const int32_t userDevId)
 {
     static CcuResSpecifications ccuResSpecifications[MAX_MODULE_DEVICE_NUM + 1];
-    int32_t devLogicId = deviceLogicId;
-    if (devLogicId < 0 || static_cast<uint32_t>(devLogicId) >= MAX_MODULE_DEVICE_NUM) {
+    int32_t validUserDevId = userDevId;
+    if (validUserDevId < 0 || static_cast<uint32_t>(validUserDevId) >= MAX_MODULE_DEVICE_NUM) {
         HCCL_WARNING(
-            "[CcuResSpecifications][%s] use the backup device, devLogicId[%d] "
+            "[CcuResSpecifications][%s] use the backup device, userDevId[%d] "
             "should be less than %u.",
-            __func__, devLogicId, MAX_MODULE_DEVICE_NUM);
-        devLogicId = MAX_MODULE_DEVICE_NUM; // 使用备份设备
+            __func__, validUserDevId, MAX_MODULE_DEVICE_NUM);
+        validUserDevId = MAX_MODULE_DEVICE_NUM; // 使用备份设备
     }
-    ccuResSpecifications[devLogicId].devLogicId_ = devLogicId;
-    return ccuResSpecifications[devLogicId];
+    ccuResSpecifications[validUserDevId].userDevId_ = validUserDevId;
+    return ccuResSpecifications[validUserDevId];
 }
 
-static CcuVersion CheckCcuVersion(int32_t devLogicId)
+static CcuVersion CheckCcuVersion(int32_t userDevId)
 {
     CustomChannelInfoIn inBuff{};
     CustomChannelInfoOut outBuff{};
@@ -39,12 +39,12 @@ static CcuVersion CheckCcuVersion(int32_t devLogicId)
     inBuff.offsetStartIdx = 0;
     inBuff.data.dataInfo.udieIdx = 0; // 查询版本访问任意die均可
 
-    auto ret = HccpRaTlvCcuCustomChannel(devLogicId, static_cast<void*>(&inBuff), static_cast<void*>(&outBuff));
+    auto ret = HccpRaTlvCcuCustomChannel(userDevId, static_cast<void*>(&inBuff), static_cast<void*>(&outBuff));
     if (ret != 0) {
         HCCL_ERROR(
             "[%s] failed to call ccu driver, "
-            "devLogicId[%d], op[%s].",
-            __func__, devLogicId, "GET_CCU_VERSION");
+            "userDevId[%d], op[%s].",
+            __func__, userDevId, "GET_CCU_VERSION");
         return CcuVersion::CCU_INVALID;
     }
     const CcuVersionEnum ccuVersionEnum = outBuff.data.dataInfo.dataArray[0].ccuVersion;
@@ -57,15 +57,15 @@ static CcuVersion CheckCcuVersion(int32_t devLogicId)
     if (iter == ccuVersionMap.end()) {
         HCCL_ERROR(
             "[CcuResSpecifications][%s] failed, ccu driver version[%d] "
-            "is invalid, devLogicId[%d].",
-            __func__, static_cast<int>(ccuVersionEnum), devLogicId);
+            "is invalid, userDevId[%d].",
+            __func__, static_cast<int>(ccuVersionEnum), userDevId);
         return CcuVersion::CCU_INVALID;
     }
 
     return iter->second;
 }
 
-static bool CheckDieEnable(const uint32_t devLogicId, const uint8_t dieId)
+static bool CheckDieEnable(const uint32_t userDevId, const uint8_t dieId)
 {
     CustomChannelInfoIn inBuff{};
     CustomChannelInfoOut outBuff{};
@@ -73,12 +73,12 @@ static bool CheckDieEnable(const uint32_t devLogicId, const uint8_t dieId)
     inBuff.offsetStartIdx = 0;
     inBuff.data.dataInfo.udieIdx = dieId;
 
-    auto ret = HccpRaTlvCcuCustomChannel(devLogicId, static_cast<void*>(&inBuff), static_cast<void*>(&outBuff));
+    auto ret = HccpRaTlvCcuCustomChannel(userDevId, static_cast<void*>(&inBuff), static_cast<void*>(&outBuff));
     if (ret != HCCL_SUCCESS) {
         HCCL_ERROR(
             "[CcuResSpecifications][%s] failed to call ccu driver, "
-            "devLogicId[%d] dieId[%d] op[%s] ret[%d].",
-            __func__, devLogicId, dieId, "GET_DIE_WORKING", ret);
+            "userDevId[%d] dieId[%d] op[%s] ret[%d].",
+            __func__, userDevId, dieId, "GET_DIE_WORKING", ret);
         return false;
     }
 
@@ -164,7 +164,7 @@ static CcuResSpecInfo ParseOutBuffToResSpecInfo(const CcuVersion ccuVersion, con
 }
 
 static HcclResult CheckResSpecifications(
-    const int32_t devLogicId, const uint8_t dieId, const CcuVersion ccuVersion, CcuResSpecInfo& resSpecs)
+    const int32_t userDevId, const uint8_t dieId, const CcuVersion ccuVersion, CcuResSpecInfo& resSpecs)
 {
     CustomChannelInfoIn inBuff{};
     CustomChannelInfoOut outBuff{};
@@ -172,12 +172,12 @@ static HcclResult CheckResSpecifications(
     inBuff.offsetStartIdx = 0;
     inBuff.data.dataInfo.udieIdx = dieId;
 
-    auto ret = HccpRaTlvCcuCustomChannel(devLogicId, static_cast<void*>(&inBuff), static_cast<void*>(&outBuff));
+    auto ret = HccpRaTlvCcuCustomChannel(userDevId, static_cast<void*>(&inBuff), static_cast<void*>(&outBuff));
     if (ret != HCCL_SUCCESS) {
         HCCL_ERROR(
             "[CcuResSpecifications][%s] failed to call ccu driver, "
-            "devLogicId[%d] dieId[%d] op[%s] ret[%d].",
-            __func__, devLogicId, dieId, "GET_BASIC_INFO", ret);
+            "userDevId[%d] dieId[%d] op[%s] ret[%d].",
+            __func__, userDevId, dieId, "GET_BASIC_INFO", ret);
         return ret;
     }
     resSpecs = ParseOutBuffToResSpecInfo(ccuVersion, outBuff);
@@ -226,22 +226,22 @@ const std::unordered_map<uint64_t, Hccl::HcclMainboardId> rtMainboardIdToHcclMai
        {EQUIP_MAINBOARD, Hccl::HcclMainboardId::MAINBOARD_EQUIPMENT},
        {EVB_MAINBOARD, Hccl::HcclMainboardId::MAINBOARD_EVB}};
 
-HcclResult CcuGetMainboardId(uint32_t deviceLogicId, Hccl::HcclMainboardId& hcclMainboardId)
+HcclResult CcuGetMainboardId(uint32_t userDevId, Hccl::HcclMainboardId& hcclMainboardId)
 {
     constexpr aclrtDevAttr devAttr = aclrtDevAttr::ACL_DEV_ATTR_MAINBOARD_ID;
     constexpr uint64_t BITS_5 = 5;
     constexpr uint64_t MASK_7 = 0x7;
     int64_t val = 0;
-    auto ret = aclrtGetDeviceInfo(deviceLogicId, devAttr, &val);
+    auto ret = aclrtGetDeviceInfo(userDevId, devAttr, &val);
     if (ret != RT_ERROR_NONE) {
         HCCL_ERROR(
             "[%s]errNo[0x%016llx] rt get device info failed, "
-            "deviceLogicId=%u, devAttr=%d",
-            __func__, HCCL_ERROR_CODE(HcclResult::HCCL_E_RUNTIME), deviceLogicId, devAttr);
+            "userDevId=%u, devAttr=%d",
+            __func__, HCCL_ERROR_CODE(HcclResult::HCCL_E_RUNTIME), userDevId, devAttr);
         return HcclResult::HCCL_E_RUNTIME;
     }
 
-    HCCL_INFO("[%s] deviceLogicId[%u] val[%lld].", __func__, deviceLogicId, static_cast<long long>(val));
+    HCCL_INFO("[%s] userDevId[%u] val[%lld].", __func__, userDevId, static_cast<long long>(val));
     uint64_t mainboardId = (static_cast<uint64_t>(val) >> BITS_5) & MASK_7; // 提取val的5-7位，判断整机形态
     hcclMainboardId = Hccl::HcclMainboardId::MAINBOARD_OTHERS;
     auto it = rtMainboardIdToHcclMainboardId.find(mainboardId);
@@ -249,15 +249,15 @@ HcclResult CcuGetMainboardId(uint32_t deviceLogicId, Hccl::HcclMainboardId& hccl
         hcclMainboardId = it->second;
     }
     HCCL_INFO(
-        "[%s] deviceLogicId[%u] mainboardId[%llu] hcclMainboardId[%s].", __func__, deviceLogicId,
+        "[%s] userDevId[%u] mainboardId[%llu] hcclMainboardId[%s].", __func__, userDevId,
         static_cast<unsigned long long>(mainboardId), hcclMainboardId.Describe().c_str());
     return HcclResult::HCCL_SUCCESS;
 }
 
-static HcclResult CheckServeMode(int32_t devLogicId, ServeMode& serveMode)
+static HcclResult CheckServeMode(int32_t userDevId, ServeMode& serveMode)
 {
     Hccl::HcclMainboardId hcclMainboardId{Hccl::HcclMainboardId::MAINBOARD_RSV};
-    CHK_RET(CcuGetMainboardId(devLogicId, hcclMainboardId));
+    CHK_RET(CcuGetMainboardId(userDevId, hcclMainboardId));
     if (hcclMainboardId == Hccl::HcclMainboardId::MAINBOARD_A_X_SERVER
         || hcclMainboardId == Hccl::HcclMainboardId::MAINBOARD_PCIE_STD) {
         serveMode = ServeMode::ARMX86;
@@ -265,9 +265,9 @@ static HcclResult CheckServeMode(int32_t devLogicId, ServeMode& serveMode)
         serveMode = ServeMode::NORMAL;
     }
     HCCL_INFO(
-        "[CcuResSpecifications][%s] devLogicId[%d] "
+        "[CcuResSpecifications][%s] userDevId[%d] "
         "hcclMainboardId[%s] serveMode_[%d].",
-        __func__, devLogicId, hcclMainboardId.Describe().c_str(), static_cast<int>(serveMode));
+        __func__, userDevId, hcclMainboardId.Describe().c_str(), static_cast<int>(serveMode));
     return HcclResult::HCCL_SUCCESS;
 }
 
@@ -277,21 +277,21 @@ HcclResult CcuResSpecifications::Init()
         return HcclResult::HCCL_SUCCESS;
     }
 
-    CHK_RET(hrtGetDevicePhyIdByIndex(static_cast<uint32_t>(devLogicId_), devPhyId_));
-    CHK_RET(CheckServeMode(devLogicId_, serveMode_));
-    ccuVersion_ = CheckCcuVersion(devLogicId_);
+    CHK_RET(hrtGetDevicePhyIdByIndex(static_cast<uint32_t>(userDevId_), devPhyId_));
+    CHK_RET(CheckServeMode(userDevId_, serveMode_));
+    ccuVersion_ = CheckCcuVersion(userDevId_);
     if (ccuVersion_ == CcuVersion::CCU_INVALID) {
         HCCL_WARNING("[CcuResSpecifications][%s] check ccu version failed.", __func__);
         return HcclResult::HCCL_E_UNAVAIL;
     }
     for (uint8_t dieId = 0; dieId < CCU_MAX_IODIE_NUM; dieId++) {
-        dieEnableFlags_[dieId] = CheckDieEnable(devLogicId_, dieId);
+        dieEnableFlags_[dieId] = CheckDieEnable(userDevId_, dieId);
         if (!dieEnableFlags_[dieId]) {
             resSpecs_[dieId] = CcuResSpecInfo{};
             continue;
         }
 
-        CHK_RET(CheckResSpecifications(devLogicId_, dieId, ccuVersion_, resSpecs_[dieId]));
+        CHK_RET(CheckResSpecifications(userDevId_, dieId, ccuVersion_, resSpecs_[dieId]));
     }
 
     initFlag_ = true;
@@ -313,19 +313,19 @@ HcclResult CcuResSpecifications::Deinit()
 CcuVersion CcuResSpecifications::GetCcuVersion() const { return ccuVersion_; }
 
 HcclResult CcuResSpecifications::CheckDieValid(
-    const std::string& funcName, const int32_t devLogicId, const uint8_t dieId,
+    const std::string& funcName, const int32_t userDevId, const uint8_t dieId,
     const std::array<bool, CCU_MAX_IODIE_NUM>& dieEnableFlags) const
 {
     CHK_PRT_RET(
         dieId >= CCU_MAX_IODIE_NUM,
         HCCL_ERROR(
-            "[%s] failed, dieId[%u] is invalid, should be in [0-%u), devLogicId[%d].", funcName.c_str(), dieId,
-            CCU_MAX_IODIE_NUM, devLogicId),
+            "[%s] failed, dieId[%u] is invalid, should be in [0-%u), userDevId[%d].", funcName.c_str(), dieId,
+            CCU_MAX_IODIE_NUM, userDevId),
         HcclResult::HCCL_E_PARA);
 
     CHK_PRT_RET(
         !dieEnableFlags[dieId],
-        HCCL_WARNING("[%s] failed, dieId[%u] is disable, devLogicId[%d].", funcName.c_str(), dieId, devLogicId),
+        HCCL_WARNING("[%s] failed, dieId[%u] is disable, userDevId[%d].", funcName.c_str(), dieId, userDevId),
         HcclResult::HCCL_E_PARA);
 
     return HcclResult::HCCL_SUCCESS;
@@ -334,7 +334,7 @@ HcclResult CcuResSpecifications::CheckDieValid(
 HcclResult CcuResSpecifications::GetDieEnableFlag(const uint8_t dieId, bool& dieEnableFlag) const
 {
     // 只校验dieId合法性，不校验die是否使能
-    CHK_RET(CheckDieValid(__func__, devLogicId_, dieId, {true, true}));
+    CHK_RET(CheckDieValid(__func__, userDevId_, dieId, {true, true}));
     dieEnableFlag = dieEnableFlags_[dieId];
     return HcclResult::HCCL_SUCCESS;
 }
@@ -343,7 +343,7 @@ ServeMode CcuResSpecifications::GetServeMode() const { return serveMode_; }
 
 HcclResult CcuResSpecifications::GetResourceAddr(const uint8_t dieId, uint64_t& resourceAddr) const
 {
-    CHK_RET(CheckDieValid(__func__, devLogicId_, dieId, dieEnableFlags_));
+    CHK_RET(CheckDieValid(__func__, userDevId_, dieId, dieEnableFlags_));
     resourceAddr = resSpecs_[dieId].resourceAddr;
     return HcclResult::HCCL_SUCCESS;
 }
@@ -354,13 +354,13 @@ HcclResult CcuResSpecifications::GetXnBaseAddr(const uint8_t dieId, uint64_t& xn
     constexpr uint64_t instrRevserveSize = CCU_RESOURCE_INS_RESERVE_SIZE;
     constexpr uint64_t gsaReserveSize = CCU_V1_RESOURCE_GSA_RESERVE_SIZE;
 
-    CHK_RET(CheckDieValid(__func__, devLogicId_, dieId, dieEnableFlags_));
+    CHK_RET(CheckDieValid(__func__, userDevId_, dieId, dieEnableFlags_));
     const uint64_t ccuResAddr = resSpecs_[dieId].resourceAddr;
     if (ccuResAddr == 0) {
         HCCL_ERROR(
             "[CcuResSpecifications][%s] failed, CCU resource base address is 0, "
-            "devLogicId[%d] dieId[%u].",
-            __func__, devLogicId_, dieId);
+            "userDevId[%d] dieId[%u].",
+            __func__, userDevId_, dieId);
         return HcclResult::HCCL_E_INTERNAL;
     }
 
@@ -398,13 +398,13 @@ HcclResult CcuResSpecifications::GetCkeBaseAddr(const uint8_t dieId, uint64_t& c
     constexpr uint64_t xnReserveSizeV1 = CCU_RESOURCE_XN_V1_RESERVE_SIZE;
     constexpr uint64_t xnReserveSizeV2 = CCU_RESOURCE_XN_V2_RESERVE_SIZE;
 
-    CHK_RET(CheckDieValid(__func__, devLogicId_, dieId, dieEnableFlags_));
+    CHK_RET(CheckDieValid(__func__, userDevId_, dieId, dieEnableFlags_));
     const uint64_t ccuResAddr = resSpecs_[dieId].resourceAddr;
     if (ccuResAddr == 0) {
         HCCL_ERROR(
             "[CcuResSpecifications][%s] failed, CCU resource base address is 0, "
-            "devLogicId[%d] dieId[%u].",
-            __func__, devLogicId_, dieId);
+            "userDevId[%d] dieId[%u].",
+            __func__, userDevId_, dieId);
         return HcclResult::HCCL_E_INTERNAL;
     }
 
@@ -432,7 +432,7 @@ HcclResult CcuResSpecifications::GetCkeBaseAddr(const uint8_t dieId, uint64_t& c
     }
     ckeBaseAddr = ccuResAddr + ccuCkeOffset;
     HCCL_DEBUG(
-        "[CcuResSpecifications][%s] devLogicId[%d], dieId[%u], ckeBaseAddr[0x%llx]", __func__, devLogicId_, dieId,
+        "[CcuResSpecifications][%s] userDevId[%d], dieId[%u], ckeBaseAddr[0x%llx]", __func__, userDevId_, dieId,
         ckeBaseAddr);
     return HcclResult::HCCL_SUCCESS;
 }
@@ -441,7 +441,7 @@ uint64_t CcuResSpecifications::GetXnOffsetCcumBaseAddr(const uint8_t dieId) cons
 {
     CHK_PRT_RET(
         dieId >= CCU_MAX_IODIE_NUM || !dieEnableFlags_[dieId],
-        HCCL_ERROR("[CcuResSpecifications][GetCcuMBaseAddr] devLogicId[%d], dieId[%u] is invalid.", devLogicId_, dieId),
+        HCCL_ERROR("[CcuResSpecifications][GetCcuMBaseAddr] userDevId[%d], dieId[%u] is invalid.", userDevId_, dieId),
         INVALID_ADDR);
     uint64_t xnOffsetCcumBaseAddr{0};
     if (ccuVersion_ == CcuVersion::CCU_V1) {
@@ -453,7 +453,7 @@ uint64_t CcuResSpecifications::GetXnOffsetCcumBaseAddr(const uint8_t dieId) cons
         xnOffsetCcumBaseAddr = 0;
     }
     HCCL_DEBUG(
-        "[CcuResSpecifications][%s] devLogicId[%d], dieId[%u], xnOffsetCcumBaseAddr[0x%llx]", __func__, devLogicId_,
+        "[CcuResSpecifications][%s] userDevId[%d], dieId[%u], xnOffsetCcumBaseAddr[0x%llx]", __func__, userDevId_,
         dieId, xnOffsetCcumBaseAddr);
     return xnOffsetCcumBaseAddr;
 }
@@ -480,8 +480,8 @@ HcclResult CcuResSpecifications::GetXnOffsetCcumAddrById(const uint8_t dieId, ui
 
     xnAddr = xnBaseAddr + id * CCU_RESOURCE_XN_PER_SIZE;
     HCCL_DEBUG(
-        "[CcuResSpecifications][%s] devLogicId[%d], dieId[%u], xnBaseAddr[0x%llx], xn[%d][0x%llx]", __func__,
-        devLogicId_, dieId, xnBaseAddr, id, xnAddr);
+        "[CcuResSpecifications][%s] userDevId[%d], dieId[%u], xnBaseAddr[0x%llx], xn[%d][0x%llx]", __func__, userDevId_,
+        dieId, xnBaseAddr, id, xnAddr);
     return HcclResult::HCCL_SUCCESS;
 }
 
@@ -489,7 +489,7 @@ uint64_t CcuResSpecifications::GetCkeOffsetCcumBaseAddr(const uint8_t dieId) con
 {
     CHK_PRT_RET(
         dieId >= CCU_MAX_IODIE_NUM || !dieEnableFlags_[dieId],
-        HCCL_ERROR("[CcuResSpecifications][GetCcuMBaseAddr] devLogicId[%d], dieId[%u] is invalid.", devLogicId_, dieId),
+        HCCL_ERROR("[CcuResSpecifications][GetCcuMBaseAddr] userDevId[%d], dieId[%u] is invalid.", userDevId_, dieId),
         INVALID_ADDR);
 
     uint64_t ckeBaseAddr{0};
@@ -503,7 +503,7 @@ uint64_t CcuResSpecifications::GetCkeOffsetCcumBaseAddr(const uint8_t dieId) con
         ckeBaseAddr = INVALID_ADDR;
     }
     HCCL_DEBUG(
-        "[CcuResSpecifications][%s] devLogicId[%d], dieId[%u], ckeBaseAddr[0x%llx]", __func__, devLogicId_, dieId,
+        "[CcuResSpecifications][%s] userDevId[%d], dieId[%u], ckeBaseAddr[0x%llx]", __func__, userDevId_, dieId,
         ckeBaseAddr);
     return ckeBaseAddr;
 }
@@ -515,105 +515,105 @@ HcclResult CcuResSpecifications::GetCkeOffsetCcumAddrById(const uint8_t dieId, u
 
     ckeAddr = ckeBaseAddr + id * CCU_RESOURCE_CKE_PER_SIZE;
     HCCL_DEBUG(
-        "[CcuResSpecifications][%s] devLogicId[%d], dieId[%u], ckeBaseAddr[0x%llx], ckeAddr[%d][0x%llx]", __func__,
-        devLogicId_, dieId, ckeBaseAddr, id, ckeAddr);
+        "[CcuResSpecifications][%s] userDevId[%d], dieId[%u], ckeBaseAddr[0x%llx], ckeAddr[%d][0x%llx]", __func__,
+        userDevId_, dieId, ckeBaseAddr, id, ckeAddr);
     return HcclResult::HCCL_SUCCESS;
 }
 
 HcclResult CcuResSpecifications::GetMsId(const uint8_t dieId, uint32_t& msId) const
 {
-    CHK_RET(CheckDieValid(__func__, devLogicId_, dieId, dieEnableFlags_));
+    CHK_RET(CheckDieValid(__func__, userDevId_, dieId, dieEnableFlags_));
     msId = resSpecs_[dieId].msId;
     return HcclResult::HCCL_SUCCESS;
 }
 
 HcclResult CcuResSpecifications::GetMissionKey(const uint8_t dieId, uint32_t& missionKey) const
 {
-    CHK_RET(CheckDieValid(__func__, devLogicId_, dieId, dieEnableFlags_));
+    CHK_RET(CheckDieValid(__func__, userDevId_, dieId, dieEnableFlags_));
     missionKey = resSpecs_[dieId].missionKey;
     return HcclResult::HCCL_SUCCESS;
 }
 
 HcclResult CcuResSpecifications::GetInstructionNum(const uint8_t dieId, uint32_t& instrNum) const
 {
-    CHK_RET(CheckDieValid(__func__, devLogicId_, dieId, dieEnableFlags_));
+    CHK_RET(CheckDieValid(__func__, userDevId_, dieId, dieEnableFlags_));
     instrNum = resSpecs_[dieId].instructionNum;
     return HcclResult::HCCL_SUCCESS;
 }
 
 HcclResult CcuResSpecifications::GetMissionNum(const uint8_t dieId, uint32_t& missionNum) const
 {
-    CHK_RET(CheckDieValid(__func__, devLogicId_, dieId, dieEnableFlags_));
+    CHK_RET(CheckDieValid(__func__, userDevId_, dieId, dieEnableFlags_));
     missionNum = resSpecs_[dieId].missionNum;
     return HcclResult::HCCL_SUCCESS;
 }
 
 HcclResult CcuResSpecifications::GetLoopEngineNum(const uint8_t dieId, uint32_t& loopNum) const
 {
-    CHK_RET(CheckDieValid(__func__, devLogicId_, dieId, dieEnableFlags_));
+    CHK_RET(CheckDieValid(__func__, userDevId_, dieId, dieEnableFlags_));
     loopNum = resSpecs_[dieId].loopEngineNum;
     return HcclResult::HCCL_SUCCESS;
 }
 
 HcclResult CcuResSpecifications::GetGsaNum(const uint8_t dieId, uint32_t& gsaNum) const
 {
-    CHK_RET(CheckDieValid(__func__, devLogicId_, dieId, dieEnableFlags_));
+    CHK_RET(CheckDieValid(__func__, userDevId_, dieId, dieEnableFlags_));
     gsaNum = resSpecs_[dieId].gsaNum;
     return HcclResult::HCCL_SUCCESS;
 }
 
 HcclResult CcuResSpecifications::GetXnNum(const uint8_t dieId, uint32_t& xnNum) const
 {
-    CHK_RET(CheckDieValid(__func__, devLogicId_, dieId, dieEnableFlags_));
+    CHK_RET(CheckDieValid(__func__, userDevId_, dieId, dieEnableFlags_));
     xnNum = resSpecs_[dieId].xnNum;
     return HcclResult::HCCL_SUCCESS;
 }
 
 HcclResult CcuResSpecifications::GetCountXnNum(const uint8_t dieId, uint32_t& countXnNum) const
 {
-    CHK_RET(CheckDieValid(__func__, devLogicId_, dieId, dieEnableFlags_));
+    CHK_RET(CheckDieValid(__func__, userDevId_, dieId, dieEnableFlags_));
     countXnNum = resSpecs_[dieId].countXnNum;
     return HcclResult::HCCL_SUCCESS;
 }
 
 HcclResult CcuResSpecifications::GetCkeNum(const uint8_t dieId, uint32_t& ckeNum) const
 {
-    CHK_RET(CheckDieValid(__func__, devLogicId_, dieId, dieEnableFlags_));
+    CHK_RET(CheckDieValid(__func__, userDevId_, dieId, dieEnableFlags_));
     ckeNum = resSpecs_[dieId].ckeNum;
     return HcclResult::HCCL_SUCCESS;
 }
 
 HcclResult CcuResSpecifications::GetLoopCkeNum(const uint8_t dieId, uint32_t& loopCkeNum) const
 {
-    CHK_RET(CheckDieValid(__func__, devLogicId_, dieId, dieEnableFlags_));
+    CHK_RET(CheckDieValid(__func__, userDevId_, dieId, dieEnableFlags_));
     loopCkeNum = resSpecs_[dieId].loopCkeNum;
     return HcclResult::HCCL_SUCCESS;
 }
 
 HcclResult CcuResSpecifications::GetMsNum(const uint8_t dieId, uint32_t& msNum) const
 {
-    CHK_RET(CheckDieValid(__func__, devLogicId_, dieId, dieEnableFlags_));
+    CHK_RET(CheckDieValid(__func__, userDevId_, dieId, dieEnableFlags_));
     msNum = resSpecs_[dieId].msNum;
     return HcclResult::HCCL_SUCCESS;
 }
 
 HcclResult CcuResSpecifications::GetChannelNum(const uint8_t dieId, uint32_t& channelNum) const
 {
-    CHK_RET(CheckDieValid(__func__, devLogicId_, dieId, dieEnableFlags_));
+    CHK_RET(CheckDieValid(__func__, userDevId_, dieId, dieEnableFlags_));
     channelNum = resSpecs_[dieId].channelNum;
     return HcclResult::HCCL_SUCCESS;
 }
 
 HcclResult CcuResSpecifications::GetJettyNum(const uint8_t dieId, uint32_t& jettyNum) const
 {
-    CHK_RET(CheckDieValid(__func__, devLogicId_, dieId, dieEnableFlags_));
+    CHK_RET(CheckDieValid(__func__, userDevId_, dieId, dieEnableFlags_));
     jettyNum = resSpecs_[dieId].jettyNum;
     return HcclResult::HCCL_SUCCESS;
 }
 
 HcclResult CcuResSpecifications::GetPfeReservedNum(const uint8_t dieId, uint32_t& pfeNum) const
 {
-    CHK_RET(CheckDieValid(__func__, devLogicId_, dieId, dieEnableFlags_));
+    CHK_RET(CheckDieValid(__func__, userDevId_, dieId, dieEnableFlags_));
     if (ccuVersion_ == CcuVersion::CCU_V1) {
         pfeNum = CCU_V1_PER_DIE_PFE_RESERVED_NUM;
         return HcclResult::HCCL_SUCCESS;
@@ -624,21 +624,21 @@ HcclResult CcuResSpecifications::GetPfeReservedNum(const uint8_t dieId, uint32_t
 
 HcclResult CcuResSpecifications::GetPfeNum(const uint8_t dieId, uint32_t& pfeNum) const
 {
-    CHK_RET(CheckDieValid(__func__, devLogicId_, dieId, dieEnableFlags_));
+    CHK_RET(CheckDieValid(__func__, userDevId_, dieId, dieEnableFlags_));
     pfeNum = resSpecs_[dieId].pfeNum;
     return HcclResult::HCCL_SUCCESS;
 }
 
 HcclResult CcuResSpecifications::GetWqeBBNum(const uint8_t dieId, uint32_t& wqeBBNum) const
 {
-    CHK_RET(CheckDieValid(__func__, devLogicId_, dieId, dieEnableFlags_));
+    CHK_RET(CheckDieValid(__func__, userDevId_, dieId, dieEnableFlags_));
     wqeBBNum = resSpecs_[dieId].wqeBBNum;
     return HcclResult::HCCL_SUCCESS;
 }
 
 HcclResult CcuResSpecifications::GetChannelJettyMap(const uint8_t dieId, CcuChannelJettyMap& channelJettyMap) const
 {
-    CHK_RET(CheckDieValid(__func__, devLogicId_, dieId, dieEnableFlags_));
+    CHK_RET(CheckDieValid(__func__, userDevId_, dieId, dieEnableFlags_));
     channelJettyMap = resSpecs_[dieId].channelJettyMap;
     return HcclResult::HCCL_SUCCESS;
 }

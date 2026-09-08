@@ -218,7 +218,7 @@ void PrepareLoopJettyTestFixture(
     CcuComponent& comp, const uint8_t dieId, const CommAddr& commAddr, const uint32_t mappedJettyPriority)
 {
     comp.devPhyId_ = 0U;
-    comp.devLogicId_ = 0;
+    comp.userDevId_ = 0;
 
     const std::pair<Hccl::TokenIdHandle, uint32_t> fakeTokenInfo
         = std::make_pair(reinterpret_cast<Hccl::TokenIdHandle>(0x88888888ULL), 1U);
@@ -291,7 +291,7 @@ TEST_F(CcuCompPubTest, Ut_RequestNewLoopTpInfo_When_Called_Expect_LoopGetTpInfoP
     gCapturedLoopTpParam = GetTpInfoParam{};
     CcuComponent comp{};
     comp.devPhyId_ = 0U;
-    comp.devLogicId_ = 0;
+    comp.userDevId_ = 0;
 
     MOCKER_CPP(&TpMgr::GetTpInfo).stubs().will(invoke(StubTpMgrGetLoopTpInfo));
 

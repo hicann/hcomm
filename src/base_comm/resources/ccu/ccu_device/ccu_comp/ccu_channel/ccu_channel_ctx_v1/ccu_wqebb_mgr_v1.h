@@ -21,7 +21,7 @@ namespace hcomm {
 
 class CcuWqeBBMgrV1 : public CcuWqeBBMgr {
 public:
-    CcuWqeBBMgrV1(const int32_t devLogicId, const uint8_t dieId) : CcuWqeBBMgr(devLogicId, dieId) {}
+    CcuWqeBBMgrV1(const int32_t userDevId, const uint8_t dieId) : CcuWqeBBMgr(userDevId, dieId) {}
     CcuWqeBBMgrV1() = default;
     ~CcuWqeBBMgrV1() final = default;
 

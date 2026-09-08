@@ -104,17 +104,17 @@ static HcclResult GetDieIdByChannel(const ChannelHandle channel, uint32_t& dieId
 static HcclResult GetDieIdByChannels(const std::unordered_set<ChannelHandle>& channels, uint32_t& dieId)
 {
     if (channels.empty()) {
-        int32_t devLogicId = HcclGetThreadDeviceId();
+        int32_t userDevId = HcclGetThreadDeviceId();
         for (uint32_t die = 0; die < CCU_MAX_IODIE_NUM; die++) {
             bool enableFlag = false;
-            CHK_RET(static_cast<HcclResult>(CcuGetDieEnableInfo(devLogicId, die, enableFlag)));
+            CHK_RET(static_cast<HcclResult>(CcuGetDieEnableInfo(userDevId, die, enableFlag)));
             if (enableFlag) {
                 dieId = die;
                 return HcclResult::HCCL_SUCCESS;
             }
         }
 
-        HCCL_ERROR("[CcuKernel][%s] failed, all dies are disable, devLogicId[%d].", __func__, devLogicId);
+        HCCL_ERROR("[CcuKernel][%s] failed, all dies are disable, userDevId[%d].", __func__, userDevId);
         return HcclResult::HCCL_E_INTERNAL;
     }
 
@@ -239,13 +239,13 @@ HcclResult CcuKernel::ValidateAndApplyDie(uint32_t targetDieId)
             "[CcuKernel][%s] failed, dieId[%u] should be less than [%u].", __func__, targetDieId, CCU_MAX_IODIE_NUM),
         HcclResult::HCCL_E_PARA);
 
-    const int32_t devLogicId = HcclGetThreadDeviceId();
+    const int32_t userDevId = HcclGetThreadDeviceId();
     bool enableFlag = false;
-    CHK_RET(static_cast<HcclResult>(CcuGetDieEnableInfo(devLogicId, static_cast<uint8_t>(targetDieId), enableFlag)));
+    CHK_RET(static_cast<HcclResult>(CcuGetDieEnableInfo(userDevId, static_cast<uint8_t>(targetDieId), enableFlag)));
     CHK_PRT_RET(
         !enableFlag,
         HCCL_ERROR(
-            "[CcuKernel][%s] failed, target dieId[%u] is disabled, devLogicId[%d].", __func__, targetDieId, devLogicId),
+            "[CcuKernel][%s] failed, target dieId[%u] is disabled, userDevId[%d].", __func__, targetDieId, userDevId),
         HcclResult::HCCL_E_PARA);
     CHK_RET(CheckChannelsDie(channels_, targetDieId));
 

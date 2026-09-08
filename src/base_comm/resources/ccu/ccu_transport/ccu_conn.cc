@@ -54,8 +54,8 @@ CcuCtpConnection::CcuCtpConnection(
 
 HcclResult CcuConnection::Init()
 {
-    devLogicId_ = HcclGetThreadDeviceId();
-    CHK_RET(hrtGetDevicePhyIdByIndex(static_cast<uint32_t>(devLogicId_), devPhyId_));
+    userDevId_ = HcclGetThreadDeviceId();
+    CHK_RET(hrtGetDevicePhyIdByIndex(static_cast<uint32_t>(userDevId_), devPhyId_));
 
     EXCEPTION_HANDLE_BEGIN
     auto& rdmaHandleMgr = Hccl::RdmaHandleManager::GetInstance();
@@ -107,11 +107,11 @@ CcuConnStatus CcuConnection::GetStatus()
 HcclResult CcuConnection::GetLocalCcuRmaBufferInfo()
 {
     uint64_t ccuBufSize = 0; // 暂未使用
-    CHK_RET(CcuDevMgrImp::GetCcuResourceSpaceBufInfo(devLogicId_, dieId_, ccuBufAddr_, ccuBufSize));
+    CHK_RET(CcuDevMgrImp::GetCcuResourceSpaceBufInfo(userDevId_, dieId_, ccuBufAddr_, ccuBufSize));
 
     uint64_t tokenId = 0;
     uint64_t tokenValue = 0;
-    CHK_RET(CcuDevMgrImp::GetCcuResourceSpaceTokenInfo(devLogicId_, dieId_, tokenId, tokenValue));
+    CHK_RET(CcuDevMgrImp::GetCcuResourceSpaceTokenInfo(userDevId_, dieId_, tokenId, tokenValue));
     ccuBufTokenId_ = static_cast<uint32_t>(tokenId);
     ccuBufTokenValue_ = static_cast<uint32_t>(tokenValue);
     return HcclResult::HCCL_SUCCESS;
@@ -518,7 +518,7 @@ HcclResult CcuConnection::ConfigChannel()
             inParam.tokenValue}); // 安全问题，禁止打印token相关信息
     }
 
-    CHK_RET(CcuDevMgrImp::ConfigChannel(devLogicId_, dieId_, cfg));
+    CHK_RET(CcuDevMgrImp::ConfigChannel(userDevId_, dieId_, cfg));
     return HcclResult::HCCL_SUCCESS;
 }
 
@@ -543,8 +543,8 @@ HcclResult CcuConnection::ReleaseConnRes()
             if (ret != 0) {
                 HCCL_ERROR(
                     "[CcuComponent][%s] failed but passed, ctxHandle[%p] "
-                    "remoteJettyHandle[%p], devLogicId[%d].",
-                    __func__, ctxHandle_, item.outParam.handle, devLogicId_);
+                    "remoteJettyHandle[%p], userDevId[%d].",
+                    __func__, ctxHandle_, item.outParam.handle, userDevId_);
                 status_ = CcuConnStatus::CONN_INVALID;
                 innerStatus_ = InnerStatus::CONN_INVALID;
             }
@@ -631,7 +631,7 @@ HcclResult CcuConnection::Describe(std::string& dfxMsg)
     std::string dfxStr = Hccl::StringFormat(
         "chip id[%u] die id[%u] func_id[%u] jetty id[%s] "
         "local %s remote %s udp sport[%u]",
-        devLogicId_, dieId_, funcId_, jettyIds.c_str(), locEid.Describe().c_str(), rmtEid.Describe().c_str(), udpSport);
+        userDevId_, dieId_, funcId_, jettyIds.c_str(), locEid.Describe().c_str(), rmtEid.Describe().c_str(), udpSport);
     dfxMsg += dfxStr;
     HCCL_INFO("[CcuConnection::%s] %s", __func__, dfxStr.c_str());
     return HcclResult::HCCL_SUCCESS;
@@ -641,7 +641,7 @@ uint32_t CcuConnection::GetDieId() const { return dieId_; }
 
 uint32_t CcuConnection::GetChannelId() const { return channelInfo_.channelId; }
 
-int32_t CcuConnection::GetDevLogicId() const { return devLogicId_; }
+int32_t CcuConnection::GetUserDevId() const { return userDevId_; }
 
 uint64_t CcuConnection::GetRmtCcuBufAddr() const { return rmtCcuBufAddr_; }
 

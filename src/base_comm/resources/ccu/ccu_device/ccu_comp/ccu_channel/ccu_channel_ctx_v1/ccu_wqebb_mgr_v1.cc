@@ -59,7 +59,7 @@ static uint32_t GetWqeBBReqSizeBySqSize(uint32_t sqSize)
 HcclResult CcuWqeBBMgrV1::Init()
 {
     uint32_t wqeBBNum = 0; // 获取失败或为0场景，分配将按资源不足操作
-    (void)CcuResSpecifications::GetInstance(devLogicId_).GetWqeBBNum(dieId_, wqeBBNum);
+    (void)CcuResSpecifications::GetInstance(userDevId_).GetWqeBBNum(dieId_, wqeBBNum);
     idAllocator_.reset(new (std::nothrow) CcuResIdAllocator(wqeBBNum));
     CHK_PTR_NULL(idAllocator_);
     return HcclResult::HCCL_SUCCESS;

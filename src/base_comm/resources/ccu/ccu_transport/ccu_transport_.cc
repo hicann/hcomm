@@ -96,7 +96,7 @@ CcuTransport::CcuTransport(
 HcclResult CcuTransport::Init()
 {
     dieId_ = ccuConnection_->GetDieId();
-    devLogicId_ = ccuConnection_->GetDevLogicId();
+    userDevId_ = ccuConnection_->GetUserDevId();
     auto ret = AppendCkes(INIT_CKE_NUM);
     if (ret == HcclResult::HCCL_E_UNAVAIL) {
         return ret;
@@ -134,7 +134,7 @@ CcuTransport::TransStatus CcuTransport::GetStatus()
 HcclResult CcuTransport::AppendCkes(uint32_t ckesNum)
 {
     std::vector<ResInfo> resInfo;
-    auto ret = CcuDevMgrImp::AllocCke(devLogicId_, dieId_, ckesNum, resInfo);
+    auto ret = CcuDevMgrImp::AllocCke(userDevId_, dieId_, ckesNum, resInfo);
     CHK_PRT_RET(
         ret == HcclResult::HCCL_E_UNAVAIL,
         HCCL_WARNING("[CcuTransport][%s] failed, the resource is not enough.", __func__), ret);
@@ -155,7 +155,7 @@ HcclResult CcuTransport::AppendCkes(uint32_t ckesNum)
 HcclResult CcuTransport::AppendXns(uint32_t xnsNum)
 {
     std::vector<ResInfo> resInfo;
-    auto ret = CcuDevMgrImp::AllocXn(devLogicId_, dieId_, xnsNum, resInfo);
+    auto ret = CcuDevMgrImp::AllocXn(userDevId_, dieId_, xnsNum, resInfo);
     CHK_PRT_RET(
         ret == HcclResult::HCCL_E_UNAVAIL,
         HCCL_WARNING("[CcuTransport][%s] failed, the resource is not enough.", __func__), ret);
@@ -178,7 +178,7 @@ HcclResult CcuTransport::AppendCntXns()
     for (auto& cntXns : locRes_.cntXns) {
         if (cntXns.second == INVALID_UINT) {
             uint32_t wishCntXnId = 0;
-            auto ret = CcuDevMgrImp::AllocWishCntXn(devLogicId_, dieId_, cntXns.first, wishCntXnId);
+            auto ret = CcuDevMgrImp::AllocWishCntXn(userDevId_, dieId_, cntXns.first, wishCntXnId);
             CHK_PRT_RET(
                 ret == HcclResult::HCCL_E_UNAVAIL,
                 HCCL_ERROR("[CcuTransport][%s] failed, the resource is not enough.", __func__), ret);
@@ -623,12 +623,12 @@ HcclResult CcuTransport::ReleaseTransRes()
         if (ckesRes_[i].empty()) {
             continue;
         }
-        auto ret = CcuDevMgrImp::ReleaseCke(devLogicId_, dieId_, ckesRes_[i]);
+        auto ret = CcuDevMgrImp::ReleaseCke(userDevId_, dieId_, ckesRes_[i]);
         if (ret != HcclResult::HCCL_SUCCESS) {
             HCCL_ERROR(
                 "[CcuTransport][%s] release ckes failed but passed, "
-                "devLogicId[%d] dieId[%u].",
-                __func__, devLogicId_, dieId_);
+                "userDevId[%d] dieId[%u].",
+                __func__, userDevId_, dieId_);
         }
     }
     ckesRes_.clear();
@@ -637,12 +637,12 @@ HcclResult CcuTransport::ReleaseTransRes()
         if (xnsRes_[i].empty()) {
             continue;
         }
-        auto ret = CcuDevMgrImp::ReleaseXn(devLogicId_, dieId_, xnsRes_[i]);
+        auto ret = CcuDevMgrImp::ReleaseXn(userDevId_, dieId_, xnsRes_[i]);
         if (ret != HcclResult::HCCL_SUCCESS) {
             HCCL_ERROR(
                 "[CcuTransport][%s] release xns failed but passed, "
-                "devLogicId[%d] dieId[%u].",
-                __func__, devLogicId_, dieId_);
+                "userDevId[%d] dieId[%u].",
+                __func__, userDevId_, dieId_);
         }
     }
     xnsRes_.clear();
@@ -767,9 +767,9 @@ HcclResult CcuTransport::GetRmtSignalAddrByIndex(uint32_t index, uint64_t& rmtCk
     uint64_t ckeOffsetCcumAddr{0};
     CHK_RET(GetRmtCkeByIndex(index, rmtCkeId));
     CHK_PRT_RET(
-        CcuDevMgrImp::GetCkeOffsetCcumAddrById(devLogicId_, dieId_, rmtCkeId, ckeOffsetCcumAddr),
+        CcuDevMgrImp::GetCkeOffsetCcumAddrById(userDevId_, dieId_, rmtCkeId, ckeOffsetCcumAddr),
         HCCL_ERROR(
-            "[CcuTransport][%s] Failed to get cke offset address. devLogicId = %d, dieId = %u.", __func__, devLogicId_,
+            "[CcuTransport][%s] Failed to get cke offset address. userDevId = %d, dieId = %u.", __func__, userDevId_,
             dieId_),
         HCCL_E_INTERNAL);
     uint64_t rmtResourceAddr = ccuConnection_->GetRmtCcuBufAddr();
@@ -799,9 +799,9 @@ HcclResult CcuTransport::GetRmtVarAddrByXnId(const uint32_t rmtXnId, uint64_t& r
 {
     uint64_t xnOffsetCcumAddr = 0;
     CHK_PRT_RET(
-        CcuDevMgrImp::GetXnOffsetCcumAddrById(devLogicId_, dieId_, rmtXnId, xnOffsetCcumAddr),
+        CcuDevMgrImp::GetXnOffsetCcumAddrById(userDevId_, dieId_, rmtXnId, xnOffsetCcumAddr),
         HCCL_ERROR(
-            "[CcuTransport][%s] Failed to get xn offset address. devLogicId = %d, dieId = %u.", __func__, devLogicId_,
+            "[CcuTransport][%s] Failed to get xn offset address. userDevId = %d, dieId = %u.", __func__, userDevId_,
             dieId_),
         HCCL_E_INTERNAL);
     const uint64_t rmtResourceAddr = ccuConnection_->GetRmtCcuBufAddr();

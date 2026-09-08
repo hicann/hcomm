@@ -43,7 +43,7 @@ struct CcuResBlockNums {
 
 class CcuResBatchAllocator {
 public:
-    static CcuResBatchAllocator& GetInstance(const int32_t deviceLogicId);
+    static CcuResBatchAllocator& GetInstance(const int32_t userDevId);
     HcclResult Init();
     HcclResult Deinit();
 
@@ -63,7 +63,7 @@ private:
 
         void Reset();
         HcclResult PreAlloc(
-            const int32_t devLogicId, const uint32_t blockSize, const std::array<bool, CCU_MAX_IODIE_NUM>& dieFlags);
+            const int32_t userDevId, const uint32_t blockSize, const std::array<bool, CCU_MAX_IODIE_NUM>& dieFlags);
         HcclResult Alloc(const uintptr_t handleKey, const MissionReq& missionReq, MissionResInfo& missionInfos);
         void Release(MissionResInfo& missionInfos);
         const std::vector<BlockInfo>& GetBlocks() const { return blocks_; }
@@ -95,7 +95,7 @@ private:
 
 private:
     mutable std::mutex innerMutex_;
-    int32_t devLogicId_{0};
+    int32_t userDevId_{0};
     bool initFlag_{false};
     std::array<bool, CCU_MAX_IODIE_NUM> dieEnableFlags_{};
     std::array<CcuBlockResStrategy, CCU_MAX_IODIE_NUM> resStrategies_{};

@@ -25,7 +25,7 @@ namespace hcomm {
 // 管理着有限的硬件资源：ChannelCtx与jetty
 class CcuChannelCtxPool final {
 public:
-    explicit CcuChannelCtxPool(int32_t devLogicId);
+    explicit CcuChannelCtxPool(int32_t userDevId);
     ~CcuChannelCtxPool();
 
     HcclResult PrepareCreate(const std::vector<Hccl::LinkData>& links, uint32_t sqSize = 0);
@@ -78,7 +78,7 @@ private:
     void RemoveBatch(ResourceBatch* batch);
 
 private:
-    int32_t devLogicId_{0};
+    int32_t userDevId_{0};
     bool isReleased_{true};
 
     // 保护以下所有 map/batch，PrepareCreate/GetChannelCtx/ReleaseChannel 并发安全

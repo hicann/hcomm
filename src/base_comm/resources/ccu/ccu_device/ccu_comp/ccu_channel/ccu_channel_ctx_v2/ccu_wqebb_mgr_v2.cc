@@ -19,8 +19,8 @@ HcclResult CcuWqeBBMgrV2::Init()
     uint32_t wqeBBNum = 0; // 获取失败或为0场景，分配将按资源不足操作
     uint32_t jettyNum = 0;
     uint32_t blockNum = 0;
-    (void)CcuResSpecifications::GetInstance(devLogicId_).GetWqeBBNum(dieId_, wqeBBNum);
-    (void)CcuResSpecifications::GetInstance(devLogicId_).GetJettyNum(dieId_, jettyNum);
+    (void)CcuResSpecifications::GetInstance(userDevId_).GetWqeBBNum(dieId_, wqeBBNum);
+    (void)CcuResSpecifications::GetInstance(userDevId_).GetJettyNum(dieId_, jettyNum);
     if (jettyNum == 0) {
         HCCL_WARNING("[CcuWqeBBMgrV2][%s] failed, jettyNum is [%u].", __func__, jettyNum);
         return HcclResult::HCCL_E_UNAVAIL;

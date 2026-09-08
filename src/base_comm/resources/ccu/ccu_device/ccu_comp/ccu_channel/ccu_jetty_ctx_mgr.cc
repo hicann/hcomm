@@ -18,11 +18,11 @@
 
 namespace hcomm {
 
-CcuJettyCtxMgr::CcuJettyCtxMgr(const int32_t devLogicId, const uint8_t dieId, const uint32_t devPhyId)
-    : devLogicId_(devLogicId),
+CcuJettyCtxMgr::CcuJettyCtxMgr(const int32_t userDevId, const uint8_t dieId, const uint32_t devPhyId)
+    : userDevId_(userDevId),
       dieId_(dieId),
       devPhyId_(devPhyId),
-      pfeMgr_(devLogicId, dieId, devPhyId)
+      pfeMgr_(userDevId, dieId, devPhyId)
 {}
 
 // 对一个数求以2为底的对数，num已保证不为0
@@ -105,7 +105,7 @@ void DumpJettyCtxData(const LocalJettyCtxData& tmp)
 }
 
 HcclResult ConfigJettyCtxData(
-    const int32_t devLogicId, const uint8_t dieId, const uint32_t devPhyId, const uint16_t startJettyCtxId,
+    const int32_t userDevId, const uint8_t dieId, const uint32_t devPhyId, const uint16_t startJettyCtxId,
     std::vector<LocalJettyCtxData>& jettyCtxData)
 {
     const uint32_t jettyNum = jettyCtxData.size(); // 分配与配置前校验已保证不为0
@@ -134,12 +134,12 @@ HcclResult ConfigJettyCtxData(
             sizeof(struct LocalJettyCtxData));
     }
 
-    auto ret = HccpRaTlvCcuCustomChannel(devLogicId, static_cast<void*>(&inBuff), static_cast<void*>(&outBuff));
+    auto ret = HccpRaTlvCcuCustomChannel(userDevId, static_cast<void*>(&inBuff), static_cast<void*>(&outBuff));
     if (ret != HCCL_SUCCESS) {
         HCCL_ERROR(
             "[CcuJettyCtxMgr][%s] failed to call ccu driver, "
-            "devLogicId[%d] devPhyId[%u] dieId[%d] op[%s] ret[%d].",
-            __func__, devLogicId, devPhyId, dieId, "SET_JETTY_CTX", ret);
+            "userDevId[%d] devPhyId[%u] dieId[%d] op[%s] ret[%d].",
+            __func__, userDevId, devPhyId, dieId, "SET_JETTY_CTX", ret);
         return ret;
     }
 
@@ -181,16 +181,16 @@ HcclResult CcuJettyCtxMgr::TryAllocWqeBBResource(
     if (jettyNum == 0) {
         HCCL_ERROR(
             "[CcuJettyCtxMgr][%s] failed, jettyInfos size is 0, "
-            "devLogicId[%d], dieId[%u].",
-            __func__, devLogicId_, dieId_);
+            "userDevId[%d], dieId[%u].",
+            __func__, userDevId_, dieId_);
         return HcclResult::HCCL_E_PARA;
     }
 
     if (UNLIKELY(ccuResBaseVa_ == 0)) { // 直接终止，避免访问非法地址
         HCCL_ERROR(
             "[CcuJettyCtxMgr] init failed, ccu resource base addr is 0, "
-            "devLogicId[%d] dieId[%u].",
-            devLogicId_, dieId_);
+            "userDevId[%d] dieId[%u].",
+            userDevId_, dieId_);
         return HcclResult::HCCL_E_INTERNAL;
     }
 
@@ -203,8 +203,8 @@ HcclResult CcuJettyCtxMgr::TryAllocWqeBBResource(
         if (ret == HcclResult::HCCL_E_UNAVAIL) {
             HCCL_WARNING(
                 "[CcuJettyCtxMgr][%s] failed to alloc wqe basic block resource, "
-                "left resources are not enough, devLogicId[%d], dieId[%u].",
-                __func__, devLogicId_, dieId_);
+                "left resources are not enough, userDevId[%d], dieId[%u].",
+                __func__, userDevId_, dieId_);
             return ret;
         }
         CHK_RET(ret);
@@ -253,16 +253,16 @@ HcclResult CcuJettyCtxMgr::CheckIfJettyCfgsValid(
         jettyCfgNum != jettyNum,
         HCCL_ERROR(
             "[CcuJettyCtxMgr][%s] failed, jettyCfgs size[%u] is not expected, "
-            "which should be equal to jettyInfo size[%u], devLogicId[%d], dieId[%u].",
-            __func__, jettyCfgNum, jettyNum, devLogicId_, dieId_),
+            "which should be equal to jettyInfo size[%u], userDevId[%d], dieId[%u].",
+            __func__, jettyCfgNum, jettyNum, userDevId_, dieId_),
         HcclResult::HCCL_E_PARA);
 
     for (uint32_t i = 0; i < jettyNum; i++) {
         if (jettyInfos[i].jettyCtxId != jettyCfgs[i].jettyCtxId) {
             HCCL_ERROR(
                 "[CcuJettyCtxMgr][%s] failed, jettyCtxId of jettyInfo[%u] and "
-                "jettyCfg[%u] are not same, devLogicId[%d], dieId[%u].",
-                __func__, jettyInfos[i].jettyCtxId, jettyCfgs[i].jettyCtxId, devLogicId_, dieId_);
+                "jettyCfg[%u] are not same, userDevId[%d], dieId[%u].",
+                __func__, jettyInfos[i].jettyCtxId, jettyCfgs[i].jettyCtxId, userDevId_, dieId_);
             return HcclResult::HCCL_E_PARA;
         }
     }

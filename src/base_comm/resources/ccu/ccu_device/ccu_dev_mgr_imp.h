@@ -275,63 +275,60 @@ public:
     CcuDevMgrImp() = delete;
     ~CcuDevMgrImp() = delete;
 
-    static HcclResult GetCcuVersion(const int32_t deviceLogicId, CcuVersion& ccuVersion);
+    static HcclResult GetCcuVersion(const int32_t userDevId, CcuVersion& ccuVersion);
 
     static HcclResult
-    GetCcuResourceSpaceBufInfo(const int32_t deviceLogicId, const uint8_t dieId, uint64_t& addr, uint64_t& size);
-    static HcclResult GetCcuResourceSpaceTokenInfo(
-        const int32_t deviceLogicId, const uint8_t dieId, uint64_t& tokenId, uint64_t& tokenValue);
+    GetCcuResourceSpaceBufInfo(const int32_t userDevId, const uint8_t dieId, uint64_t& addr, uint64_t& size);
+    static HcclResult
+    GetCcuResourceSpaceTokenInfo(const int32_t userDevId, const uint8_t dieId, uint64_t& tokenId, uint64_t& tokenValue);
 
-    static HcclResult ConfigChannel(const int32_t deviceLogicId, const uint8_t dieId, ChannelCfg& cfg);
+    static HcclResult ConfigChannel(const int32_t userDevId, const uint8_t dieId, ChannelCfg& cfg);
     static HcclResult
-    GetLoopChannelId(const int32_t deviceLogicId, const uint8_t srcDieId, const uint8_t dstDieId, uint32_t& channIdx);
+    GetLoopChannelId(const int32_t userDevId, const uint8_t srcDieId, const uint8_t dstDieId, uint32_t& channIdx);
 
+    static HcclResult GetResource(const int32_t userDevId, const CcuResHandle resHandle, CcuResRepository& ccuResRepo);
+    static HcclResult AllocResHandle(const int32_t userDevId, const CcuResReq resReq, CcuResHandle& resHandle);
+    static HcclResult ReleaseResHandle(const int32_t userDevId, const CcuResHandle resHandle);
     static HcclResult
-    GetResource(const int32_t deviceLogicId, const CcuResHandle resHandle, CcuResRepository& ccuResRepo);
-    static HcclResult AllocResHandle(const int32_t deviceLogicId, const CcuResReq resReq, CcuResHandle& resHandle);
-    static HcclResult ReleaseResHandle(const int32_t deviceLogicId, const CcuResHandle resHandle);
-    static HcclResult
-    QueryRemainRes(const int32_t deviceLogicId, const uint8_t dieId, const ResType& internalType, uint32_t& remainNum);
+    QueryRemainRes(const int32_t userDevId, const uint8_t dieId, const ResType& internalType, uint32_t& remainNum);
 
-    static HcclResult AllocIns(const int32_t deviceLogicId, const uint8_t dieId, const uint32_t num, ResInfo& insInfo);
-    static HcclResult ReleaseIns(const int32_t deviceLogicId, const uint8_t dieId, const ResInfo& insInfo);
-    static uint32_t GetInsConsecutiveRemainSize(const int32_t deviceLogicId, const uint8_t dieId);
+    static HcclResult AllocIns(const int32_t userDevId, const uint8_t dieId, const uint32_t num, ResInfo& insInfo);
+    static HcclResult ReleaseIns(const int32_t userDevId, const uint8_t dieId, const ResInfo& insInfo);
+    static uint32_t GetInsConsecutiveRemainSize(const int32_t userDevId, const uint8_t dieId);
     static HcclResult
-    AllocCke(const int32_t deviceLogicId, const uint8_t dieId, const uint32_t num, std::vector<ResInfo>& ckeInfos);
+    AllocCke(const int32_t userDevId, const uint8_t dieId, const uint32_t num, std::vector<ResInfo>& ckeInfos);
+    static HcclResult ReleaseCke(const int32_t userDevId, const uint8_t dieId, const std::vector<ResInfo>& ckeInfos);
     static HcclResult
-    ReleaseCke(const int32_t deviceLogicId, const uint8_t dieId, const std::vector<ResInfo>& ckeInfos);
+    AllocXn(const int32_t userDevId, const uint8_t dieId, const uint32_t num, std::vector<ResInfo>& xnInfos);
+    static HcclResult ReleaseXn(const int32_t userDevId, const uint8_t dieId, const std::vector<ResInfo>& xnInfos);
     static HcclResult
-    AllocXn(const int32_t deviceLogicId, const uint8_t dieId, const uint32_t num, std::vector<ResInfo>& xnInfos);
-    static HcclResult ReleaseXn(const int32_t deviceLogicId, const uint8_t dieId, const std::vector<ResInfo>& xnInfos);
-    static HcclResult AllocWishCntXn(
-        const int32_t deviceLogicId, const uint8_t dieId, const std::string& resGroupTag, uint32_t& wishCntXn);
-    static HcclResult ReleaseWishCntXn(
-        const int32_t deviceLogicId, const uint8_t dieId, const std::string& resGroupTag, uint32_t wishCntXn);
+    AllocWishCntXn(const int32_t userDevId, const uint8_t dieId, const std::string& resGroupTag, uint32_t& wishCntXn);
+    static HcclResult
+    ReleaseWishCntXn(const int32_t userDevId, const uint8_t dieId, const std::string& resGroupTag, uint32_t wishCntXn);
     static HcclResult GetCntXnBlock(
-        const int32_t deviceLogicId, const uint8_t dieId, const std::string& resGroupTag,
+        const int32_t userDevId, const uint8_t dieId, const std::string& resGroupTag,
         std::pair<uint32_t, uint32_t>& cntXnPair);
-    static HcclResult GetTotalCntXn(
-        const int32_t deviceLogicId, const uint8_t dieId, const std::string& resGroupTag, uint32_t& totalCntXn);
+    static HcclResult
+    GetTotalCntXn(const int32_t userDevId, const uint8_t dieId, const std::string& resGroupTag, uint32_t& totalCntXn);
 
-    static HcclResult GetMissionKey(const int32_t deviceLogicId, const uint8_t dieId, uint32_t& missionKey);
-    static HcclResult GetResSpecsInstructionNum(const int32_t deviceLogicId, const uint8_t dieId, uint32_t& instrNum);
+    static HcclResult GetMissionKey(const int32_t userDevId, const uint8_t dieId, uint32_t& missionKey);
+    static HcclResult GetResSpecsInstructionNum(const int32_t userDevId, const uint8_t dieId, uint32_t& instrNum);
+    static HcclResult GetAllocatableMaxLoopEngineNum(const int32_t userDevId, const uint8_t dieId, uint32_t& loopNum);
+    static HcclResult GetAllocatableMaxMsNum(const int32_t userDevId, const uint8_t dieId, uint32_t& msNum);
+    static HcclResult GetAllocatableMaxCkeNum(const int32_t userDevId, const uint8_t dieId, uint32_t& ckeNum);
+    static HcclResult GetAllocatableMaxXnNum(const int32_t userDevId, const uint8_t dieId, uint32_t& xnNum);
+    static HcclResult GetAllocatableMaxGsaNum(const int32_t userDevId, const uint8_t dieId, uint32_t& gsaNum);
+    static HcclResult GetResSpecsMissionNum(const int32_t userDevId, const uint8_t dieId, uint32_t& missionNum);
+    static HcclResult GetXnBaseAddr(const int32_t userDevId, const uint8_t dieId, uint64_t& xnBaseAddr);
+    static HcclResult GetCkeBaseAddr(const int32_t userDevId, const uint8_t dieId, uint64_t& ckeBaseAddr);
     static HcclResult
-    GetAllocatableMaxLoopEngineNum(const int32_t deviceLogicId, const uint8_t dieId, uint32_t& loopNum);
-    static HcclResult GetAllocatableMaxMsNum(const int32_t deviceLogicId, const uint8_t dieId, uint32_t& msNum);
-    static HcclResult GetAllocatableMaxCkeNum(const int32_t deviceLogicId, const uint8_t dieId, uint32_t& ckeNum);
-    static HcclResult GetAllocatableMaxXnNum(const int32_t deviceLogicId, const uint8_t dieId, uint32_t& xnNum);
-    static HcclResult GetAllocatableMaxGsaNum(const int32_t deviceLogicId, const uint8_t dieId, uint32_t& gsaNum);
-    static HcclResult GetResSpecsMissionNum(const int32_t deviceLogicId, const uint8_t dieId, uint32_t& missionNum);
-    static HcclResult GetXnBaseAddr(const int32_t devLogicId, const uint8_t dieId, uint64_t& xnBaseAddr);
-    static HcclResult GetCkeBaseAddr(const int32_t devLogicId, const uint8_t dieId, uint64_t& ckeBaseAddr);
+    GetXnOffsetCcumAddrById(const int32_t userDevId, const uint8_t dieId, uint16_t id, uint64_t& xnAddr);
     static HcclResult
-    GetXnOffsetCcumAddrById(const int32_t devLogicId, const uint8_t dieId, uint16_t id, uint64_t& xnAddr);
-    static HcclResult
-    GetCkeOffsetCcumAddrById(const int32_t devLogicId, const uint8_t dieId, uint16_t id, uint64_t& ckeAddr);
+    GetCkeOffsetCcumAddrById(const int32_t userDevId, const uint8_t dieId, uint16_t id, uint64_t& ckeAddr);
 };
 
 HcclResult CheckDieValid(
-    const char* funcName, const int32_t devLogicId, const uint8_t dieId,
+    const char* funcName, const int32_t userDevId, const uint8_t dieId,
     const std::array<bool, CCU_MAX_IODIE_NUM>& dieEnableFlags);
 
 } // namespace hcomm

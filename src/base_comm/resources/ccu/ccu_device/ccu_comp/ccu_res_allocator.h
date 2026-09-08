@@ -47,7 +47,7 @@ private:
 
 class CcuResAllocator {
 public:
-    CcuResAllocator(const int32_t devLogicId, const uint8_t dieId) : devLogicId_(devLogicId), dieId_(dieId) {};
+    CcuResAllocator(const int32_t userDevId, const uint8_t dieId) : userDevId_(userDevId), dieId_(dieId) {};
     CcuResAllocator() = default;
 
     HcclResult Init();
@@ -62,7 +62,7 @@ public:
     std::string Describe() const;
 
 private:
-    int32_t devLogicId_{0};
+    int32_t userDevId_{0};
     uint8_t dieId_{0};
 
     // ccu v2新增countXn管理

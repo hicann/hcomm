@@ -35,18 +35,18 @@ CcuResult HcommCcuInsResDescCreate(uint32_t dieId, HcommCcuResDescHandle* resDes
 
     CCU_CHK_PTR_NULL(resDesc);
 
-    int32_t devLogicId = INVALID_INT;
-    CCU_CHK_RET(HcclDeviceRefresh(devLogicId));
-    CCU_CHK_RET(hcomm::CcuInstanceMgr::GetInstance(devLogicId).GetResDescMgr().Create(dieId, *resDesc));
+    int32_t userDevId = INVALID_INT;
+    CCU_CHK_RET(HcclDeviceRefresh(userDevId));
+    CCU_CHK_RET(hcomm::CcuInstanceMgr::GetInstance(userDevId).GetResDescMgr().Create(dieId, *resDesc));
     HCCL_INFO("[%s] success, handle[0x%llx] dieId[%u]", __func__, *resDesc, dieId);
     return CcuResult::CCU_SUCCESS;
 }
 
 CcuResult HcommCcuInsResDescDestroy(HcommCcuResDescHandle resDesc)
 {
-    int32_t devLogicId = INVALID_INT;
-    CCU_CHK_RET(HcclDeviceRefresh(devLogicId));
-    CCU_CHK_RET(hcomm::CcuInstanceMgr::GetInstance(devLogicId).GetResDescMgr().Destroy(resDesc));
+    int32_t userDevId = INVALID_INT;
+    CCU_CHK_RET(HcclDeviceRefresh(userDevId));
+    CCU_CHK_RET(hcomm::CcuInstanceMgr::GetInstance(userDevId).GetResDescMgr().Destroy(resDesc));
     HCCL_INFO("[%s] success, handle[0x%llx]", __func__, resDesc);
     return CcuResult::CCU_SUCCESS;
 }
@@ -56,9 +56,9 @@ CcuResult HcommCcuInsResDescSetNum(HcommCcuResDescHandle resDesc, HcommCcuResTyp
     hcomm::ResType ccuResType{hcomm::ResType::INVALID};
     CCU_CHK_RET(hcomm::ConvertHcommCcuResTypeToHcclResType(resType, ccuResType));
 
-    int32_t devLogicId = INVALID_INT;
-    CCU_CHK_RET(HcclDeviceRefresh(devLogicId));
-    CCU_CHK_RET(hcomm::CcuInstanceMgr::GetInstance(devLogicId).GetResDescMgr().SetResNum(resDesc, ccuResType, resNum));
+    int32_t userDevId = INVALID_INT;
+    CCU_CHK_RET(HcclDeviceRefresh(userDevId));
+    CCU_CHK_RET(hcomm::CcuInstanceMgr::GetInstance(userDevId).GetResDescMgr().SetResNum(resDesc, ccuResType, resNum));
     HCCL_INFO("[%s] success, handle[0x%llx] resType[%d] resNum[%u]", __func__, resDesc, resType, resNum);
     return CcuResult::CCU_SUCCESS;
 }
@@ -69,10 +69,10 @@ CcuResult HcommCcuInsResDescQueryNum(HcommCcuResDescHandle resDesc, HcommCcuResT
     hcomm::ResType ccuResType{hcomm::ResType::INVALID};
     CCU_CHK_RET(hcomm::ConvertHcommCcuResTypeToHcclResType(resType, ccuResType));
 
-    int32_t devLogicId = INVALID_INT;
-    CCU_CHK_RET(HcclDeviceRefresh(devLogicId));
+    int32_t userDevId = INVALID_INT;
+    CCU_CHK_RET(HcclDeviceRefresh(userDevId));
     CCU_CHK_RET(
-        hcomm::CcuInstanceMgr::GetInstance(devLogicId).GetResDescMgr().QueryResNum(resDesc, ccuResType, *resNum));
+        hcomm::CcuInstanceMgr::GetInstance(userDevId).GetResDescMgr().QueryResNum(resDesc, ccuResType, *resNum));
     HCCL_INFO("[%s] success, handle[0x%llx] resType[%d] resNum[%u]", __func__, resDesc, resType, *resNum);
     return CcuResult::CCU_SUCCESS;
 }
@@ -80,39 +80,39 @@ CcuResult HcommCcuInsResDescQueryNum(HcommCcuResDescHandle resDesc, HcommCcuResT
 CcuResult HcommCcuInsResDescQueryDieId(HcommCcuResDescHandle resDesc, uint32_t* dieId)
 {
     CCU_CHK_PTR_NULL(dieId);
-    int32_t devLogicId = INVALID_INT;
-    CCU_CHK_RET(HcclDeviceRefresh(devLogicId));
-    CCU_CHK_RET(hcomm::CcuInstanceMgr::GetInstance(devLogicId).GetResDescMgr().QueryDieId(resDesc, *dieId));
+    int32_t userDevId = INVALID_INT;
+    CCU_CHK_RET(HcclDeviceRefresh(userDevId));
+    CCU_CHK_RET(hcomm::CcuInstanceMgr::GetInstance(userDevId).GetResDescMgr().QueryDieId(resDesc, *dieId));
     HCCL_INFO("[%s] success, handle[0x%llx] dieId[%u]", __func__, resDesc, *dieId);
     return CcuResult::CCU_SUCCESS;
 }
 
 CcuResult HcommCcuQueryRemainResDesc(HcommCcuResDescHandle resDesc)
 {
-    int32_t devLogicId = INVALID_INT;
-    CCU_CHK_RET(HcclDeviceRefresh(devLogicId));
+    int32_t userDevId = INVALID_INT;
+    CCU_CHK_RET(HcclDeviceRefresh(userDevId));
 
     // CCU 驱动未拉起时无法查询硬件资源, 提前返回
-    if (!hcomm::CcuIsInited(devLogicId)) {
-        HCCL_WARNING("[%s] failed, CCU feature is not inited, devLogicId[%d].", __func__, devLogicId);
+    if (!hcomm::CcuIsInited(userDevId)) {
+        HCCL_WARNING("[%s] failed, CCU feature is not inited, userDevId[%d].", __func__, userDevId);
         return CcuResult::CCU_E_UNAVAIL;
     }
 
-    auto& resDescMgr = hcomm::CcuInstanceMgr::GetInstance(devLogicId).GetResDescMgr();
+    auto& resDescMgr = hcomm::CcuInstanceMgr::GetInstance(userDevId).GetResDescMgr();
 
     // die 合法性前置校验
     uint32_t dieId = 0;
     CCU_CHK_RET(resDescMgr.QueryDieId(resDesc, dieId));
     bool enableFlag = false;
     // CcuGetDieEnableInfo 中会做dieId合法性校验以及查询是否使能
-    CCU_CHK_RET(hcomm::CcuGetDieEnableInfo(devLogicId, static_cast<uint8_t>(dieId), enableFlag));
+    CCU_CHK_RET(hcomm::CcuGetDieEnableInfo(userDevId, static_cast<uint8_t>(dieId), enableFlag));
     if (!enableFlag) {
         HCCL_WARNING("[%s] failed, dieId[%u] is not enabled.", __func__, dieId);
         return CcuResult::CCU_E_UNAVAIL;
     }
 
     // 委托 CcuResDescMgr 在锁内查询剩余资源，防止 Get→Destroy 的 use-after-free
-    CCU_CHK_RET(resDescMgr.QueryRemainRes(resDesc, devLogicId));
+    CCU_CHK_RET(resDescMgr.QueryRemainRes(resDesc, userDevId));
 
     HCCL_INFO("[%s] success, handle[0x%llx] dieId[%u]", __func__, resDesc, dieId);
     return CcuResult::CCU_SUCCESS;
@@ -167,9 +167,9 @@ CcuResult HcommCcuKernelQueryResReq(
             CcuResult::CCU_E_PTR);
     }
 
-    int32_t devLogicId = INVALID_INT;
-    CCU_CHK_RET(HcclDeviceRefresh(devLogicId));
-    auto& resDescMgr = hcomm::CcuInstanceMgr::GetInstance(devLogicId).GetResDescMgr();
+    int32_t userDevId = INVALID_INT;
+    CCU_CHK_RET(HcclDeviceRefresh(userDevId));
+    auto& resDescMgr = hcomm::CcuInstanceMgr::GetInstance(userDevId).GetResDescMgr();
     uint32_t descriptorDieId = hcomm::CCU_MAX_IODIE_NUM;
     CCU_CHK_RET(resDescMgr.QueryDieId(resDesc, descriptorDieId));
     HCCL_INFO(
@@ -183,7 +183,7 @@ CcuResult HcommCcuKernelQueryResReq(
     CCU_EXCEPTION_HANDLE_BEGIN
     hcomm::CcuResReq resReq{};
     uint32_t instrCount = 0;
-    auto& kernelMgr = hcomm::CcuKernelMgr::GetInstance(devLogicId);
+    auto& kernelMgr = hcomm::CcuKernelMgr::GetInstance(userDevId);
     CCU_CHK_RET(kernelMgr.GetKernelResourceRequest(
         descriptorDieId, "KernelForHcommCcuKernelQueryResReq", kernelFunc, kernelArgs, argNum, resReq, instrCount));
     CCU_CHK_RET(ConvertCcuResReqToResDesc(resDescMgr, resDesc, resReq, instrCount, descriptorDieId));
@@ -197,9 +197,9 @@ CcuResult HcommCcuInsCreateLegacy(const CcuInstanceType insType, CcuInsHandle* c
 {
     CCU_CHK_PTR_NULL(ccuInsHandle);
 
-    int32_t devLogicId = INVALID_INT;
-    CCU_CHK_RET(HcclDeviceRefresh(devLogicId));
-    auto& insMgr = hcomm::CcuInstanceMgr::GetInstance(devLogicId);
+    int32_t userDevId = INVALID_INT;
+    CCU_CHK_RET(HcclDeviceRefresh(userDevId));
+    auto& insMgr = hcomm::CcuInstanceMgr::GetInstance(userDevId);
 
     CCU_CHK_RET(insMgr.CreateByInsType(insType, *ccuInsHandle));
 
@@ -217,9 +217,9 @@ CcuResult HcommCcuInsCreate(const HcommCcuResDescHandle* resDescs, uint32_t resD
         return CcuResult::CCU_E_PARA;
     }
 
-    int32_t devLogicId = INVALID_INT;
-    CCU_CHK_RET(HcclDeviceRefresh(devLogicId));
-    auto& insMgr = hcomm::CcuInstanceMgr::GetInstance(devLogicId);
+    int32_t userDevId = INVALID_INT;
+    CCU_CHK_RET(HcclDeviceRefresh(userDevId));
+    auto& insMgr = hcomm::CcuInstanceMgr::GetInstance(userDevId);
 
     // 从 CcuResDescMgr 中用 resDesc 数组里的 Handle Get 获得 CcuResDesc，构造指针数组
     std::array<const hcomm::CcuResDesc*, hcomm::CCU_MAX_IODIE_NUM> descPtrs{};
@@ -245,9 +245,9 @@ CcuResult HcommCcuInsCreateDefault(const uint32_t* dieIds, uint32_t dieNum, CcuI
     // dieIds/dieNum 为保留参数，当前版本申请当前 Device 上所有已使能 ioDie 的全部资源
     CCU_CHK_PTR_NULL(ccuInsHandle);
 
-    int32_t devLogicId = INVALID_INT;
-    CCU_CHK_RET(HcclDeviceRefresh(devLogicId));
-    CCU_CHK_RET(hcomm::CcuInstanceMgr::GetInstance(devLogicId).CreateByAllRes(*ccuInsHandle));
+    int32_t userDevId = INVALID_INT;
+    CCU_CHK_RET(HcclDeviceRefresh(userDevId));
+    CCU_CHK_RET(hcomm::CcuInstanceMgr::GetInstance(userDevId).CreateByAllRes(*ccuInsHandle));
     return CcuResult::CCU_SUCCESS;
 }
 
@@ -258,9 +258,9 @@ CcuResult HcommCcuInsQueryResDesc(CcuInsHandle ccuInsHandle, HcommCcuResDescHand
         return CcuResult::CCU_E_PARA;
     }
 
-    int32_t devLogicId = INVALID_INT;
-    CCU_CHK_RET(HcclDeviceRefresh(devLogicId));
-    auto& insMgr = hcomm::CcuInstanceMgr::GetInstance(devLogicId);
+    int32_t userDevId = INVALID_INT;
+    CCU_CHK_RET(HcclDeviceRefresh(userDevId));
+    auto& insMgr = hcomm::CcuInstanceMgr::GetInstance(userDevId);
 
     auto& resDescMgr = insMgr.GetResDescMgr();
     uint32_t descriptorDieId = hcomm::CCU_MAX_IODIE_NUM;
@@ -278,9 +278,9 @@ CcuResult HcommCcuInsQueryResDesc(CcuInsHandle ccuInsHandle, HcommCcuResDescHand
 
 CcuResult HcommCcuInsDestroy(CcuInsHandle ccuInsHandle)
 {
-    int32_t devLogicId = INVALID_INT;
-    CCU_CHK_RET(HcclDeviceRefresh(devLogicId));
-    CCU_CHK_RET(hcomm::CcuInstanceMgr::GetInstance(devLogicId).Destroy(ccuInsHandle));
+    int32_t userDevId = INVALID_INT;
+    CCU_CHK_RET(HcclDeviceRefresh(userDevId));
+    CCU_CHK_RET(hcomm::CcuInstanceMgr::GetInstance(userDevId).Destroy(ccuInsHandle));
 
     return CcuResult::CCU_SUCCESS;
 }

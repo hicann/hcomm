@@ -57,16 +57,16 @@ bool CcuChannelCtxMgr::CheckIfChannelAllocated(const uint32_t channelId) const
     if (channelId >= strategy) {
         HCCL_ERROR(
             "[CcuChannelCtxMgr][%s] failed, channelId[%u] is invalid, "
-            "should be less than the channel strategy[%u], devLogicId[%d], dieId[%u].",
-            __func__, channelId, strategy, devLogicId_, dieId_);
+            "should be less than the channel strategy[%u], userDevId[%d], dieId[%u].",
+            __func__, channelId, strategy, userDevId_, dieId_);
         return false;
     }
 
     if (!channelResInfos_[channelId].allocated) {
         HCCL_ERROR(
             "[CcuChannelCtxMgr][%s] failed, channelId[%u] has not been "
-            "allocated yet, devLogicId[%d], dieId[%u].",
-            __func__, channelId, devLogicId_, dieId_);
+            "allocated yet, userDevId[%d], dieId[%u].",
+            __func__, channelId, userDevId_, dieId_);
         return false;
     }
 

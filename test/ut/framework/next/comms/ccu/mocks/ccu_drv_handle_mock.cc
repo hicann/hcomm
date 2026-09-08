@@ -69,8 +69,8 @@ static HcclResult HccpRaTlvRequest(const TlvHandle tlvHandle, const u32 tlvModul
 
 static CcuResult MockCcuDrvHandleInit(hcomm::CcuDrvHandle* This)
 {
-    HCCL_RUN_INFO("[CcuDrvHandle][%s], deviceLogicId: %d", __func__, This->devLogicId_);
-    CCU_CHK_RET(hrtGetDevicePhyIdByIndex(static_cast<uint32_t>(This->devLogicId_), This->devPhyId_));
+    HCCL_RUN_INFO("[CcuDrvHandle][%s], userDevId: %d", __func__, This->userDevId_);
+    CCU_CHK_RET(hrtGetDevicePhyIdByIndex(static_cast<uint32_t>(This->userDevId_), This->devPhyId_));
     auto& tlvHdcMgr = HccpTlvHdcMgr::GetInstance(This->devPhyId_);
     CCU_CHK_RET(tlvHdcMgr.Init());
     This->tlvHandle_ = tlvHdcMgr.GetHandle();
@@ -79,7 +79,7 @@ static CcuResult MockCcuDrvHandleInit(hcomm::CcuDrvHandle* This)
     auto ret = HccpRaTlvRequest(This->tlvHandle_, TLV_MODULE_TYPE_CCU, MSG_TYPE_CCU_INIT);
     if (ret == HcclResult::HCCL_E_AGAIN) {
         HCCL_RUN_WARNING(
-            "[%s] HccpRaTlvRequest ret[%d], repeat init ccu, deviceLogicId[%d].", __func__, ret, This->devLogicId_);
+            "[%s] HccpRaTlvRequest ret[%d], repeat init ccu, userDevId[%d].", __func__, ret, This->userDevId_);
         return CcuResult::CCU_E_DRV_BUSY;
     }
     if (ret != HcclResult::HCCL_SUCCESS) {
@@ -87,11 +87,11 @@ static CcuResult MockCcuDrvHandleInit(hcomm::CcuDrvHandle* This)
         return CcuResult::CCU_E_DRV_INIT_FAILED;
     }
 
-    CCU_CHK_RET(CcuResSpecifications::GetInstance(This->devLogicId_).Init());
-    CCU_CHK_RET(CcuPfeCfgMgr::GetInstance(This->devLogicId_).Init());
-    CCU_CHK_RET(CcuComponent::GetInstance(This->devLogicId_).Init());
-    CCU_CHK_RET(CcuResBatchAllocator::GetInstance(This->devLogicId_).Init());
-    CCU_CHK_RET(CcuKernelMgr::GetInstance(This->devLogicId_).Init());
+    CCU_CHK_RET(CcuResSpecifications::GetInstance(This->userDevId_).Init());
+    CCU_CHK_RET(CcuPfeCfgMgr::GetInstance(This->userDevId_).Init());
+    CCU_CHK_RET(CcuComponent::GetInstance(This->userDevId_).Init());
+    CCU_CHK_RET(CcuResBatchAllocator::GetInstance(This->userDevId_).Init());
+    CCU_CHK_RET(CcuKernelMgr::GetInstance(This->userDevId_).Init());
 
     return CcuResult::CCU_SUCCESS;
 }
@@ -100,12 +100,12 @@ static CcuResult MockCcuDrvHandleDeinit(hcomm::CcuDrvHandle* This)
 {
     // 释放流程不打断，不抛异常，尽量尝试释放所有资源
     // 释放有时序要求
-    HCCL_RUN_INFO("[CcuDrvHandle] start to deinit ccu driver, deviceLogicId[%d].", This->devLogicId_);
-    (void)CcuKernelMgr::GetInstance(This->devLogicId_).Deinit();
-    (void)CcuResBatchAllocator::GetInstance(This->devLogicId_).Deinit();
-    (void)CcuComponent::GetInstance(This->devLogicId_).Deinit();
-    (void)CcuPfeCfgMgr::GetInstance(This->devLogicId_).Deinit();
-    (void)CcuResSpecifications::GetInstance(This->devLogicId_).Deinit();
+    HCCL_RUN_INFO("[CcuDrvHandle] start to deinit ccu driver, userDevId[%d].", This->userDevId_);
+    (void)CcuKernelMgr::GetInstance(This->userDevId_).Deinit();
+    (void)CcuResBatchAllocator::GetInstance(This->userDevId_).Deinit();
+    (void)CcuComponent::GetInstance(This->userDevId_).Deinit();
+    (void)CcuPfeCfgMgr::GetInstance(This->userDevId_).Deinit();
+    (void)CcuResSpecifications::GetInstance(This->userDevId_).Deinit();
 
     if (This->tlvHandle_ != 0) {
         (void)HccpRaTlvRequest(This->tlvHandle_, TLV_MODULE_TYPE_CCU, MSG_TYPE_CCU_UNINIT);

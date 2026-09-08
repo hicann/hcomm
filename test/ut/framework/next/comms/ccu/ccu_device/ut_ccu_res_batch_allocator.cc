@@ -83,7 +83,7 @@ TEST_F(CcuResBatchAllocatorTest, Ut_QueryRemainRes_When_NoAllocations_Expect_Max
 {
     CcuResBatchAllocator allocator;
     allocator.dieEnableFlags_[0] = true;
-    allocator.devLogicId_ = 0;
+    allocator.userDevId_ = 0;
 
     allocator.resStrategies_[0].loopNum = 8;
     allocator.maxResBlockNums_.loopNum = 4; // poolSize = 4 * 8 = 32
@@ -105,7 +105,7 @@ TEST_F(CcuResBatchAllocatorTest, Ut_QueryRemainRes_When_WithAllocations_Expect_M
 {
     CcuResBatchAllocator allocator;
     allocator.dieEnableFlags_[0] = true;
-    allocator.devLogicId_ = 0;
+    allocator.userDevId_ = 0;
 
     allocator.maxResBlockNums_.loopNum = 8; // poolSize = 8 * 8 = 64
     allocator.resBlocks_[0][ResType::LOOP] = {
@@ -131,7 +131,7 @@ TEST_F(CcuResBatchAllocatorTest, Ut_QueryRemainRes_When_AllAllocated_Expect_Zero
 {
     CcuResBatchAllocator allocator;
     allocator.dieEnableFlags_[0] = true;
-    allocator.devLogicId_ = 0;
+    allocator.userDevId_ = 0;
 
     allocator.maxResBlockNums_.loopNum = 4; // poolSize = 4 * 8 = 32
     allocator.resBlocks_[0][ResType::LOOP] = {
@@ -152,7 +152,7 @@ TEST_F(CcuResBatchAllocatorTest, Ut_QueryRemainRes_When_HoleAtStart_Expect_Initi
 {
     CcuResBatchAllocator allocator;
     allocator.dieEnableFlags_[0] = true;
-    allocator.devLogicId_ = 0;
+    allocator.userDevId_ = 0;
 
     allocator.maxResBlockNums_.loopNum = 6;
     allocator.resBlocks_[0][ResType::LOOP] = {
@@ -172,7 +172,7 @@ TEST_F(CcuResBatchAllocatorTest, Ut_QueryRemainRes_When_HoleAtEnd_Expect_TailGap
 {
     CcuResBatchAllocator allocator;
     allocator.dieEnableFlags_[0] = true;
-    allocator.devLogicId_ = 0;
+    allocator.userDevId_ = 0;
 
     allocator.maxResBlockNums_.loopNum = 6;
     allocator.resBlocks_[0][ResType::LOOP] = {
@@ -192,7 +192,7 @@ TEST_F(CcuResBatchAllocatorTest, Ut_QueryRemainRes_When_PreReservedMSBlocks_Expe
 {
     CcuResBatchAllocator allocator;
     allocator.dieEnableFlags_[0] = true;
-    allocator.devLogicId_ = 0;
+    allocator.userDevId_ = 0;
 
     allocator.resStrategies_[0].msNum = 64;
     allocator.maxResBlockNums_.msNum = 4; // poolSize = 4 * 64 = 256
@@ -217,7 +217,7 @@ TEST_F(CcuResBatchAllocatorTest, Ut_QueryRemainRes_When_PoolStartsAtNonZero_Expe
 {
     CcuResBatchAllocator allocator;
     allocator.dieEnableFlags_[0] = true;
-    allocator.devLogicId_ = 0;
+    allocator.userDevId_ = 0;
 
     // 模拟 mission 预分配池 [100, 356), 4 blocks of 64
     allocator.missionMgr_.blocks_ = {

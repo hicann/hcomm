@@ -45,7 +45,7 @@ public:
 
     uint32_t GetChannelId() const;
     uint32_t GetDieId() const;
-    int32_t GetDevLogicId() const;
+    int32_t GetUserDevId() const;
     uint64_t GetRmtCcuBufAddr() const;
     uint32_t GetRmtCcuBufTokenId() const;
     uint32_t GetRmtCcuBufTokenValue() const;
@@ -98,7 +98,7 @@ private:
     std::vector<CcuJetty*> ccuJettys_;
     uint32_t qos_{EnvConfig::UB_QOS_DEFAULT};
 
-    int32_t devLogicId_{0};
+    int32_t userDevId_{0};
     uint32_t devPhyId_{0};
     uint32_t dieId_{0};
     uint32_t funcId_{0};

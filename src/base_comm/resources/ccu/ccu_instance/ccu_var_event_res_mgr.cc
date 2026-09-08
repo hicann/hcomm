@@ -23,21 +23,21 @@
 
 namespace hcomm {
 
-CcuVarEventResMgr& CcuVarEventResMgr::GetInstance(const int32_t deviceLogicId)
+CcuVarEventResMgr& CcuVarEventResMgr::GetInstance(const int32_t userDevId)
 {
     static CcuVarEventResMgr resMgrs[MAX_MODULE_DEVICE_NUM + 1];
 
-    int32_t devLogicId = deviceLogicId;
-    if (devLogicId < 0 || static_cast<uint32_t>(devLogicId) >= MAX_MODULE_DEVICE_NUM) {
+    int32_t validUserDevId = userDevId;
+    if (validUserDevId < 0 || static_cast<uint32_t>(validUserDevId) >= MAX_MODULE_DEVICE_NUM) {
         HCCL_WARNING(
-            "[CcuVarEventResMgr][%s] use the backup device, devLogicId[%d] should be "
+            "[CcuVarEventResMgr][%s] use the backup device, userDevId[%d] should be "
             "less than %u.",
-            __func__, devLogicId, MAX_MODULE_DEVICE_NUM);
-        devLogicId = MAX_MODULE_DEVICE_NUM;
+            __func__, validUserDevId, MAX_MODULE_DEVICE_NUM);
+        validUserDevId = MAX_MODULE_DEVICE_NUM;
     }
 
-    resMgrs[devLogicId].devLogicId_ = devLogicId;
-    return resMgrs[devLogicId];
+    resMgrs[validUserDevId].userDevId_ = validUserDevId;
+    return resMgrs[validUserDevId];
 }
 
 CcuResult CcuVarEventResMgr::AllocFromPool(std::vector<ResInfo>& pool, uint32_t num, std::vector<ResInfo>& out)
@@ -251,7 +251,7 @@ CcuResult CcuVarEventResMgr::AllocAndRecord(
 
     CcuVarEventRes res{};
     res.insHandle = insHandle;
-    res.devLogicId = devLogicId_;
+    res.userDevId = userDevId_;
     res.dieId = dieId;
     res.type = type;
     res.resInfos = std::move(resInfos);
@@ -287,9 +287,9 @@ CcuResult CcuVarEventResMgr::Acquire(
 
     handle = newHandle;
     HCCL_RUN_INFO(
-        "[CcuVarEventResMgr][%s] success, devLogicId[%d] insHandle[0x%llx] dieId[%u] "
+        "[CcuVarEventResMgr][%s] success, userDevId[%d] insHandle[0x%llx] dieId[%u] "
         "type[%d] num[%u] handle[0x%llx].",
-        __func__, devLogicId_, insHandle, dieId, static_cast<int32_t>(type), num, handle);
+        __func__, userDevId_, insHandle, dieId, static_cast<int32_t>(type), num, handle);
     return CCU_SUCCESS;
 }
 

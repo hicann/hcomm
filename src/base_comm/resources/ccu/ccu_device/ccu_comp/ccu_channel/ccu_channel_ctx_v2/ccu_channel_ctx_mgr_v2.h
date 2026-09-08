@@ -41,7 +41,7 @@ struct ChannelDataV2 {
 
 class CcuChannelCtxMgrV2 : public CcuChannelCtxMgr {
 public:
-    CcuChannelCtxMgrV2(const int32_t devLogicId, const uint8_t dieId, const uint32_t devPhyId);
+    CcuChannelCtxMgrV2(const int32_t userDevId, const uint8_t dieId, const uint32_t devPhyId);
 
     CcuChannelCtxMgrV2() = default;
     ~CcuChannelCtxMgrV2() final = default;

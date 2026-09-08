@@ -106,9 +106,9 @@ struct ChannelCtxDataV1 {
 
 class CcuChannelCtxMgrV1 : public CcuChannelCtxMgr {
 public:
-    CcuChannelCtxMgrV1(const int32_t devLogicId, const uint8_t dieId, const uint32_t devPhyId)
-        : CcuChannelCtxMgr(devLogicId, dieId, devPhyId),
-          jettyCtxMgr_(devLogicId, dieId, devPhyId) {};
+    CcuChannelCtxMgrV1(const int32_t userDevId, const uint8_t dieId, const uint32_t devPhyId)
+        : CcuChannelCtxMgr(userDevId, dieId, devPhyId),
+          jettyCtxMgr_(userDevId, dieId, devPhyId) {};
 
     CcuChannelCtxMgrV1() = default;
     ~CcuChannelCtxMgrV1() final = default;

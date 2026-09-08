@@ -28,7 +28,7 @@ enum class CcuVarEventType {
 
 struct CcuVarEventRes {
     CcuInsHandle insHandle{0};
-    int32_t devLogicId{-1};
+    int32_t userDevId{-1};
     uint8_t dieId{0};
     CcuVarEventType type{CcuVarEventType::VARIABLE};
     std::vector<ResInfo> resInfos{};
@@ -63,7 +63,7 @@ struct CcuVarEventRes {
 // 因此 ExcludeAllocatedFromRepo 取 shared_lock 是为遍历 resMap_，而非保护池。
 class CcuVarEventResMgr {
 public:
-    static CcuVarEventResMgr& GetInstance(const int32_t deviceLogicId);
+    static CcuVarEventResMgr& GetInstance(const int32_t userDevId);
 
     // 预约一段连续资源并在申请期完成地址映射；任一阶段失败均整笔回滚，仅全程成功才写 handle
     CcuResult Acquire(
@@ -100,7 +100,7 @@ private:
     // 返回首个 unmap 失败的错误码，失败不中断，其余资源继续 unmap
     static CcuResult UnmapSavedAddrs(const CcuVarEventRes& res);
 
-    int32_t devLogicId_{-1};
+    int32_t userDevId_{-1};
     uint64_t handleSeed_{0};
     mutable std::shared_timed_mutex mapMutex_;
     std::unordered_map<uint64_t, CcuVarEventRes> resMap_{};

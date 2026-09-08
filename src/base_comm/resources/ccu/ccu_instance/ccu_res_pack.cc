@@ -21,9 +21,9 @@ CcuResPack::~CcuResPack()
         return;
     }
 
-    auto ret = CcuReleaseResHandle(devLogicId_, resHandle_);
+    auto ret = CcuReleaseResHandle(userDevId_, resHandle_);
     if (ret != HcclResult::HCCL_SUCCESS) {
-        HCCL_ERROR("[CcuResPack][%s] failed, resHandle[%p] devLogicId[%d].", __func__, resHandle_, devLogicId_);
+        HCCL_ERROR("[CcuResPack][%s] failed, resHandle[%p] userDevId[%d].", __func__, resHandle_, userDevId_);
     }
     resHandle_ = 0;
 }
@@ -34,13 +34,13 @@ CcuResult CcuResPack::Reset()
         return CcuResult::CCU_SUCCESS;
     }
 
-    CCU_CHK_RET(CcuCheckResource(devLogicId_, resHandle_, resRepo_));
+    CCU_CHK_RET(CcuCheckResource(userDevId_, resHandle_, resRepo_));
     return CcuResult::CCU_SUCCESS;
 }
 
 CcuResult CcuResPack::InitByInsType(const CcuInstanceType insType)
 {
-    devLogicId_ = HcclGetThreadDeviceId();
+    userDevId_ = HcclGetThreadDeviceId();
     if (insType == CcuInstanceType::CCU_UNUSED) {
         HCCL_ERROR("[CcuResPack][%s] failed, error ccu instance type[%d].", __func__, static_cast<int32_t>(insType));
         return CcuResult::CCU_E_PARA;
@@ -48,12 +48,12 @@ CcuResult CcuResPack::InitByInsType(const CcuInstanceType insType)
 
     // 根据通信域算子展开模式申请资源
     // 如果资源不足，返回HCCL_E_UNAVAIL，表示需要回退
-    auto ret = CcuAllocResHandleByInsType(devLogicId_, insType, resHandle_);
+    auto ret = CcuAllocResHandleByInsType(userDevId_, insType, resHandle_);
     if (ret == CcuResult::CCU_E_UNAVAIL) {
         HCCL_RUN_WARNING(
             "[%s] failed but passed, resource is not enough, "
-            "devLogicId[%d], ccuInsType[%d].",
-            __func__, devLogicId_, insType);
+            "userDevId[%d], ccuInsType[%d].",
+            __func__, userDevId_, insType);
         return ret;
     }
     CCU_CHK_RET(ret);
@@ -63,16 +63,16 @@ CcuResult CcuResPack::InitByInsType(const CcuInstanceType insType)
 
 CcuResult CcuResPack::InitByResDescs(const CcuResDesc* descs[], uint32_t descNum)
 {
-    devLogicId_ = HcclGetThreadDeviceId();
+    userDevId_ = HcclGetThreadDeviceId();
 
     // 基于 resDesc 驱动的资源数量申请资源
     // 如果资源不足，返回CCU_E_UNAVAIL，表示需要回退
-    auto ret = CcuAllocResHandleByResDescs(devLogicId_, descs, descNum, resHandle_);
+    auto ret = CcuAllocResHandleByResDescs(userDevId_, descs, descNum, resHandle_);
     if (ret == CcuResult::CCU_E_UNAVAIL) {
         HCCL_RUN_WARNING(
             "[%s] failed but passed, resource is not enough, "
-            "devLogicId[%d], descNum[%u].",
-            __func__, devLogicId_, descNum);
+            "userDevId[%d], descNum[%u].",
+            __func__, userDevId_, descNum);
         return ret;
     }
     CCU_CHK_RET(ret);

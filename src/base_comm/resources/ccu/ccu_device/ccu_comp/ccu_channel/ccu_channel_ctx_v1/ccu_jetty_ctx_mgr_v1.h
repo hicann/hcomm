@@ -23,8 +23,8 @@ namespace hcomm {
 
 class CcuJettyCtxMgrV1 : public CcuJettyCtxMgr {
 public:
-    CcuJettyCtxMgrV1(const int32_t devLogicId, const uint8_t dieId, const uint32_t devPhyId)
-        : CcuJettyCtxMgr(devLogicId, dieId, devPhyId) {};
+    CcuJettyCtxMgrV1(const int32_t userDevId, const uint8_t dieId, const uint32_t devPhyId)
+        : CcuJettyCtxMgr(userDevId, dieId, devPhyId) {};
 
     CcuJettyCtxMgrV1() = default;
     ~CcuJettyCtxMgrV1() final = default;

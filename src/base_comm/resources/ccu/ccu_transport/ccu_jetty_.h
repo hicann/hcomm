@@ -46,7 +46,7 @@ private:
     CcuJetty& operator=(CcuJetty&& that) = delete;
 
 private:
-    int32_t devLogicId_{0};
+    int32_t userDevId_{0};
     Hccl::IpAddress ipAddr_{};
     CcuJettyInfo jettyInfo_{};
 

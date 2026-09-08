@@ -19,7 +19,7 @@ constexpr uint32_t CCU_DEFAULT_REQUEST_SQ_SIZE = 128;
 constexpr uint32_t CCU_DEFAULT_REQUEST_CHANNEL_NUM = 1;
 constexpr uint32_t CCU_DEFAULT_REQUEST_JETTY_NUM = 0; // 申请数量为0时，由平台层决定提供数量
 
-CcuChannelCtxPool::CcuChannelCtxPool(int32_t devLogicId) : devLogicId_(devLogicId) {}
+CcuChannelCtxPool::CcuChannelCtxPool(int32_t userDevId) : userDevId_(userDevId) {}
 
 CcuChannelCtxPool::~CcuChannelCtxPool()
 {
@@ -61,7 +61,7 @@ HcclResult CcuChannelCtxPool::PrepareCreate(const std::vector<Hccl::LinkData>& l
 
     CHK_PRT_RET(
         links.empty(),
-        HCCL_INFO("[CcuChannelCtxPool][%s] passed, links is empty, devLogicId[%d].", __func__, devLogicId_),
+        HCCL_INFO("[CcuChannelCtxPool][%s] passed, links is empty, userDevId[%d].", __func__, userDevId_),
         HcclResult::HCCL_SUCCESS);
 
     for (const auto& link : links) {
@@ -69,8 +69,8 @@ HcclResult CcuChannelCtxPool::PrepareCreate(const std::vector<Hccl::LinkData>& l
         if (it != allocatedChannelIdMap_.end()) {
             HCCL_INFO(
                 "[CcuChannelCtxPool][%s] passed, link[%s] is already allocated, "
-                "devLogicId[%d].",
-                __func__, link.Describe().c_str(), devLogicId_);
+                "userDevId[%d].",
+                __func__, link.Describe().c_str(), userDevId_);
             continue;
         }
 
@@ -81,8 +81,8 @@ HcclResult CcuChannelCtxPool::PrepareCreate(const std::vector<Hccl::LinkData>& l
             ret == HcclResult::HCCL_E_UNAVAIL,
             HCCL_WARNING(
                 "[CcuChannelCtxPool][%s] failed to alloc ccu channels, ccu resources "
-                "are unavailable, locAddr[%s], devLogicId[%d], sqSize[%u].",
-                __func__, locAddr.Describe().c_str(), devLogicId_, sqSize),
+                "are unavailable, locAddr[%s], userDevId[%d], sqSize[%u].",
+                __func__, locAddr.Describe().c_str(), userDevId_, sqSize),
             ret);
         CHK_RET(ret);
 
@@ -94,8 +94,8 @@ HcclResult CcuChannelCtxPool::PrepareCreate(const std::vector<Hccl::LinkData>& l
 
         HCCL_INFO(
             "[CcuChannelCtxPool][%s] allocated new channelId[%u] of die[%u] to link[%s], "
-            "devLogicId[%d], sqSize[%u].",
-            __func__, channelIdKey.second, channelIdKey.first, link.Describe().c_str(), devLogicId_, sqSize);
+            "userDevId[%d], sqSize[%u].",
+            __func__, channelIdKey.second, channelIdKey.first, link.Describe().c_str(), userDevId_, sqSize);
     }
 
     isReleased_ = false;
@@ -117,13 +117,13 @@ HcclResult CcuChannelCtxPool::GetAvailableBatch(const BatchKey& batchKey, Resour
     const CcuChannelPara channelPara{
         commAddr, CCU_DEFAULT_REQUEST_CHANNEL_NUM, CCU_DEFAULT_REQUEST_JETTY_NUM, actualSqSize};
     std::vector<CcuChannelInfo> channelInfos;
-    auto ret = CcuAllocChannels(devLogicId_, channelPara, channelInfos);
+    auto ret = CcuAllocChannels(userDevId_, channelPara, channelInfos);
     CHK_PRT_RET(
         ret == HcclResult::HCCL_E_UNAVAIL,
         HCCL_WARNING(
             "[CcuChannelCtxPool][%s] failed to alloc ccu channels, ccu resources "
-            "are unavailable, locAddr[%s] devLogicId[%d].",
-            __func__, batchKey.Describe().c_str(), devLogicId_),
+            "are unavailable, locAddr[%s] userDevId[%d].",
+            __func__, batchKey.Describe().c_str(), userDevId_),
         ret);
     CHK_RET(ret);
     // 如果新增资源保存失败，手动释放避免泄露
@@ -131,12 +131,12 @@ HcclResult CcuChannelCtxPool::GetAvailableBatch(const BatchKey& batchKey, Resour
     if (ret != HcclResult::HCCL_SUCCESS) {
         HCCL_ERROR(
             "[CcuChannelCtxPool][%s] failed, try to release temp ccu resources, locAddr[%s], "
-            "devLogicId[%d], .",
-            __func__, batchKey.Describe().c_str(), devLogicId_);
+            "userDevId[%d], .",
+            __func__, batchKey.Describe().c_str(), userDevId_);
         for (const auto& channelInfo : channelInfos) {
             const auto dieId = channelInfo.dieId;
             const auto channelId = channelInfo.channelId;
-            CHK_RET(CcuReleaseChannel(devLogicId_, dieId, channelId));
+            CHK_RET(CcuReleaseChannel(userDevId_, dieId, channelId));
         }
         return ret;
     }
@@ -202,8 +202,8 @@ CcuChannelCtxPool::GetChannelCtx(const Hccl::LinkData& link, CcuChannelCtxPool::
     CHK_PRT_RET(
         it == allocatedChannelIdMap_.end(),
         HCCL_ERROR(
-            "[CcuChannelCtxPool][%s] failed to find allocated channelId of link[%s], devLogicId[%d].", __func__,
-            link.Describe().c_str(), devLogicId_),
+            "[CcuChannelCtxPool][%s] failed to find allocated channelId of link[%s], userDevId[%d].", __func__,
+            link.Describe().c_str(), userDevId_),
         HcclResult::HCCL_E_NOT_FOUND);
     // 内部维护数据保证channelJettyInfoMap_记录的资源存在
     channelCtx = channelJettyInfoMap_.at(it->second);
@@ -219,7 +219,7 @@ HcclResult CcuChannelCtxPool::ReleaseConfirmedChannelRes()
         const auto& channelIdKey = infoEntry.first;
         const auto dieId = channelIdKey.first;
         const auto channelId = channelIdKey.second;
-        CHK_RET(CcuReleaseChannel(devLogicId_, dieId, channelId));
+        CHK_RET(CcuReleaseChannel(userDevId_, dieId, channelId));
     }
     channelJettyInfoMap_.clear();
     channelToBatch_.clear();
@@ -248,7 +248,7 @@ HcclResult CcuChannelCtxPool::ReleaseChannel(const Hccl::LinkData& link)
     if (UNLIKELY(it == allocatedChannelIdMap_.end())) {
         // 未分配或已释放的 link 直接返回成功：msg-only(资源不足)等未实际分配资源的
         // channel 销毁路径属正常场景，静默返回即可
-        HCCL_DEBUG("[CcuChannelCtxPool][%s] link not allocated, devLogicId[%d], skip release.", __func__, devLogicId_);
+        HCCL_DEBUG("[CcuChannelCtxPool][%s] link not allocated, userDevId[%d], skip release.", __func__, userDevId_);
         return HcclResult::HCCL_SUCCESS;
     }
     const auto channelIdKey = it->second;
@@ -266,8 +266,8 @@ HcclResult CcuChannelCtxPool::ReleaseChannel(const Hccl::LinkData& link)
     if (batch == nullptr) {
         HCCL_ERROR(
             "[CcuChannelCtxPool][%s] failed to find batch of channelId[%u] die[%u], "
-            "devLogicId[%d].",
-            __func__, channelIdKey.second, channelIdKey.first, devLogicId_);
+            "userDevId[%d].",
+            __func__, channelIdKey.second, channelIdKey.first, userDevId_);
         return HcclResult::HCCL_E_INTERNAL;
     }
     // 槽位压回可复用列表：V2 组内其他 channel 仍活跃时，设备层占用保持不变，
@@ -301,12 +301,12 @@ HcclResult CcuChannelCtxPool::ReleaseBatchIfIdle(CcuChannelCtxPool::ResourceBatc
     // 任一失败则保留 batch（channelJettyInfoMap_/channelToBatch_ 条目仍在，host 对象不被销毁），
     // 返回错误供上层感知；通信域销毁时的 ReleaseConfirmedChannelRes 会再次尝试整体归还。
     for (const auto& channelIdKey : batch->channelIdKeys) {
-        auto ret = CcuReleaseChannel(devLogicId_, channelIdKey.first, channelIdKey.second);
+        auto ret = CcuReleaseChannel(userDevId_, channelIdKey.first, channelIdKey.second);
         if (ret != HcclResult::HCCL_SUCCESS) {
             HCCL_ERROR(
                 "[CcuChannelCtxPool][%s] failed to release channel[die%u, id%u] to device, "
-                "ret[%d], devLogicId[%d], keep batch for retry.",
-                __func__, channelIdKey.first, channelIdKey.second, ret, devLogicId_);
+                "ret[%d], userDevId[%d], keep batch for retry.",
+                __func__, channelIdKey.first, channelIdKey.second, ret, userDevId_);
             return ret;
         }
     }

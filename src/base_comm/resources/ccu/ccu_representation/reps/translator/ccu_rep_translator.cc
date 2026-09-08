@@ -87,12 +87,12 @@ namespace CcuRep {
     }
 
     CcuRepTranslator::CcuRepTranslator(
-        int32_t deviceLogicId, uint8_t dieId, std::shared_ptr<CcuRepReferenceManager> refManager,
+        int32_t userDevId, uint8_t dieId, std::shared_ptr<CcuRepReferenceManager> refManager,
         std::array<uint16_t, CCU_MAX_IODIE_NUM>& reserverChannalId, std::pair<uint64_t, uint64_t>& ccuTokenInfo,
         uint64_t hbmTokenInfo)
         : refManager(refManager)
     {
-        transDep.logicalId = deviceLogicId;
+        transDep.userDevId = userDevId;
         transDep.dieId = dieId;
         s32 result = memcpy_s(
             transDep.reserveChannalId, sizeof(transDep.reserveChannalId), reserverChannalId.data(),
@@ -102,33 +102,33 @@ namespace CcuRep {
                 "[NsRecovery] CcuRepTranslator::CcuRepTranslator: memcpy_s failed, ret = %d", result));
         }
 
-        HcclResult ret = CcuDevMgrImp::GetCcuVersion(transDep.logicalId, ccuVersion);
+        HcclResult ret = CcuDevMgrImp::GetCcuVersion(transDep.userDevId, ccuVersion);
         if (ret != HcclResult::HCCL_SUCCESS || ccuVersion == CcuVersion::CCU_INVALID) {
             Hccl::THROW<Hccl::CcuApiException>("[CcuRepTranslator] Constructor: Invalid CCU Type!");
         }
 
         // 获取本die的xn起始地址
-        ret = CcuDevMgrImp::GetXnBaseAddr(deviceLogicId, dieId, transDep.xnBaseAddr[dieId]);
+        ret = CcuDevMgrImp::GetXnBaseAddr(userDevId, dieId, transDep.xnBaseAddr[dieId]);
         if (ret != HcclResult::HCCL_SUCCESS) {
             Hccl::THROW<Hccl::CcuApiException>(
-                "Failed to get xn base address. deviceLogicId = %d, dieId = %u, ret = %d", deviceLogicId, dieId, ret);
+                "Failed to get xn base address. userDevId = %d, dieId = %u, ret = %d", userDevId, dieId, ret);
         }
 
         // 若另一die使能，在A6场景下获得其xn起始地址
         uint8_t anotherDieId = dieId == 0 ? 1 : 0;
         bool anotherDieEnable = false;
-        if (static_cast<HcclResult>(CcuGetDieEnableInfo(deviceLogicId, anotherDieId, anotherDieEnable))
+        if (static_cast<HcclResult>(CcuGetDieEnableInfo(userDevId, anotherDieId, anotherDieEnable))
             != HcclResult::HCCL_SUCCESS) {
             Hccl::THROW<Hccl::CcuApiException>(
-                "Failed to get CcuGetDieEnableInfo. deviceLogicId = %d, dieId = %u", deviceLogicId, dieId);
+                "Failed to get CcuGetDieEnableInfo. userDevId = %d, dieId = %u", userDevId, dieId);
         }
         if (ccuVersion == CcuVersion::CCU_V2 && anotherDieEnable == true) {
-            ret = CcuDevMgrImp::GetXnBaseAddr(deviceLogicId, anotherDieId, transDep.xnBaseAddr[anotherDieId]);
+            ret = CcuDevMgrImp::GetXnBaseAddr(userDevId, anotherDieId, transDep.xnBaseAddr[anotherDieId]);
             if (ret != HcclResult::HCCL_SUCCESS) {
                 Hccl::THROW<Hccl::CcuApiException>(
-                    "Failed to get xn base address. deviceLogicId = %d, dieId = %u, "
+                    "Failed to get xn base address. userDevId = %d, dieId = %u, "
                     "ret = %d",
-                    deviceLogicId, anotherDieId, ret);
+                    userDevId, anotherDieId, ret);
             }
         }
 
@@ -141,16 +141,16 @@ namespace CcuRep {
         : refManager(refManager),
           transDep(transDep)
     {
-        HcclResult ret = CcuDevMgrImp::GetCcuVersion(transDep.logicalId, ccuVersion);
+        HcclResult ret = CcuDevMgrImp::GetCcuVersion(transDep.userDevId, ccuVersion);
         if (ret != HcclResult::HCCL_SUCCESS || ccuVersion == CcuVersion::CCU_INVALID) {
             Hccl::THROW<Hccl::CcuApiException>("[CcuRepTranslator] Constructor: Invalid CCU Type!");
         }
     }
 
-    uint32_t CcuRepTranslator::GetInstrNum(const int32_t devLogicId)
+    uint32_t CcuRepTranslator::GetInstrNum(const int32_t userDevId)
     {
         CcuVersion tempCcuVersion = CcuVersion::CCU_INVALID;
-        HcclResult ret = CcuDevMgrImp::GetCcuVersion(devLogicId, tempCcuVersion);
+        HcclResult ret = CcuDevMgrImp::GetCcuVersion(userDevId, tempCcuVersion);
         if (ret != HcclResult::HCCL_SUCCESS || tempCcuVersion == CcuVersion::CCU_INVALID) {
             Hccl::THROW<Hccl::CcuApiException>("[CcuRepTranslator] GetInstrNum: Invalid CCU Type!");
         }
@@ -161,12 +161,12 @@ namespace CcuRep {
                    13; // 13:翻译器翻译过程中额外需要的指令空间大小(插入3条通用操作指令+1条终止指令+9条repJump)
     }
 
-    CcuResReq CcuRepTranslator::GetResReq(const int32_t devLogicId, uint8_t dieId)
+    CcuResReq CcuRepTranslator::GetResReq(const int32_t userDevId, uint8_t dieId)
     {
         // 申请离散 xn 资源
         // 需要申请若干xn、gsa、cke设置为固定值用于通用操作
         CcuVersion tempCcuVersion = CcuVersion::CCU_INVALID;
-        HcclResult ret = CcuDevMgrImp::GetCcuVersion(devLogicId, tempCcuVersion);
+        HcclResult ret = CcuDevMgrImp::GetCcuVersion(userDevId, tempCcuVersion);
         if (ret != HcclResult::HCCL_SUCCESS || tempCcuVersion == CcuVersion::CCU_INVALID) {
             Hccl::THROW<Hccl::CcuApiException>("[CcuRepTranslator] GetResReq: Invalid CCU Type!");
         }
@@ -503,9 +503,9 @@ namespace CcuRep {
         transDep.commSignal = signal[1].Id();
         transDep.isFuncBlock = isFuncBlock;
         HCCL_INFO(
-            "TransDep info: logicalId = %d, dieId = %u, reserveXnId = %u, reserveGsaId = %u, reserveCkeId = %u, "
+            "TransDep info: userDevId = %d, dieId = %u, reserveXnId = %u, reserveGsaId = %u, reserveCkeId = %u, "
             "innerDieChannelId = %u, interDieChannelId = %u",
-            transDep.logicalId, transDep.dieId, transDep.reserveXnId, transDep.reserveGsaId, transDep.reserveCkeId,
+            transDep.userDevId, transDep.dieId, transDep.reserveXnId, transDep.reserveGsaId, transDep.reserveCkeId,
             transDep.reserveChannalId[0], transDep.reserveChannalId[1]);
     }
 }; // namespace CcuRep

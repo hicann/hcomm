@@ -29,7 +29,7 @@ using namespace CcuRep;
 
 class CcuKernelMgr {
 public:
-    static CcuKernelMgr& GetInstance(const s32 deviceLogicId);
+    static CcuKernelMgr& GetInstance(const s32 userDevId);
 
     HcclResult Init();
     HcclResult Deinit();
@@ -78,7 +78,7 @@ private:
 
 private:
     bool initializedFlag_{false};
-    int32_t devLogicId_{-1};
+    int32_t userDevId_{-1};
     std::mutex kernelMapMutex_{};
     std::mutex translateMutex_{};
     CcuKernelHandle kernelId_ = 0;

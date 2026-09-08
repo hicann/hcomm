@@ -218,7 +218,7 @@ void CcuResIdAllocator::ReleaseResInfo(const size_t resIndex, const uint32_t sta
 
 HcclResult CcuResAllocator::Init()
 {
-    auto& ccuResSpecs = CcuResSpecifications::GetInstance(devLogicId_);
+    auto& ccuResSpecs = CcuResSpecifications::GetInstance(userDevId_);
     // 获取静态定义的资源规格查询函数列表，遍历构造
     uint32_t capacity = 0;
     for (const auto& pair : CcuResSpecifications::GET_RES_SPEC_FUNC_ARRAY) {
@@ -295,9 +295,9 @@ uint32_t CcuResAllocator::GetConsecutiveRemainSize(const ResType resType) const
 std::string CcuResAllocator::Describe() const
 {
     return Hccl::StringFormat(
-        "CcuResAllocator[devLogicId=%u, dieId=%u, "
+        "CcuResAllocator[userDevId=%u, dieId=%u, "
         "idAllocatorSize=[%u]]",
-        devLogicId_, dieId_, idAllocatorMap_.size());
+        userDevId_, dieId_, idAllocatorMap_.size());
 }
 
 HcclResult CcuResAllocator::AllocCountXn(const uint32_t num, ResInfo& resInfo)
@@ -314,7 +314,7 @@ HcclResult CcuResAllocator::AllocCountXn(const uint32_t num, ResInfo& resInfo)
     if (ret == HcclResult::HCCL_E_UNAVAIL) {
         HCCL_WARNING(
             "[CcuResAllocator][%s] failed, count xn resources are unavailable, ",
-            "retry to allocate with normal xn resources, num[%u], devLogicId[%d].", __func__, num, devLogicId_);
+            "retry to allocate with normal xn resources, num[%u], userDevId[%d].", __func__, num, userDevId_);
         ret = Alloc(ResType::XN, num, true, resInfos);
         if (ret == HcclResult::HCCL_SUCCESS) {
             resInfo = resInfos[0]; // 连续分配成功时，一定只有一个元素

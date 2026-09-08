@@ -22,7 +22,7 @@ struct WqeBBReq {
 
 class CcuWqeBBMgr {
 public:
-    CcuWqeBBMgr(const int32_t devLogicId, const uint8_t dieId) : devLogicId_(devLogicId), dieId_(dieId) {};
+    CcuWqeBBMgr(const int32_t userDevId, const uint8_t dieId) : userDevId_(userDevId), dieId_(dieId) {};
     CcuWqeBBMgr() = default;
     virtual ~CcuWqeBBMgr() = default;
 
@@ -31,7 +31,7 @@ public:
     virtual HcclResult Release(const ResInfo& wqeBBInfo) = 0;
 
 protected:
-    int32_t devLogicId_{0};
+    int32_t userDevId_{0};
     uint8_t dieId_{0};
 };
 

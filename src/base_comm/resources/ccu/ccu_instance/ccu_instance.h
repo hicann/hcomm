@@ -58,7 +58,7 @@ private:
 
     enum class RegisterState { IDLE, REGISTERING, REGISTER_ABORTED };
     RegisterState registerState_{RegisterState::IDLE};
-    int32_t devLogicId_{INT32_MAX};
+    int32_t userDevId_{INT32_MAX};
     CcuInsHandle insHandle_{0};
     std::shared_ptr<hcomm::CcuDrvHandle> ccuDrvHandle_{};
     std::unique_ptr<CcuResPack> resPack_{};

@@ -100,14 +100,14 @@ LocalJettyCtxData
 BuildJettyCtxData(const uint8_t dieId, const uint32_t pfeId, const JettyInfo& jettyInfo, const JettyCfg& jettyCfg);
 
 HcclResult ConfigJettyCtxData(
-    const int32_t devLogicId, const uint8_t dieId, const uint32_t devPhyId, const uint16_t startJettyCtxId,
+    const int32_t userDevId, const uint8_t dieId, const uint32_t devPhyId, const uint16_t startJettyCtxId,
     std::vector<LocalJettyCtxData>& jettyCtxData);
 
 void DumpJettyCtxData(const LocalJettyCtxData& tmp);
 
 class CcuJettyCtxMgr {
 public:
-    CcuJettyCtxMgr(const int32_t devLogicId, const uint8_t dieId, const uint32_t devPhyId);
+    CcuJettyCtxMgr(const int32_t userDevId, const uint8_t dieId, const uint32_t devPhyId);
     CcuJettyCtxMgr() = default;
     virtual ~CcuJettyCtxMgr() = default;
     virtual HcclResult Init() = 0;
@@ -121,7 +121,7 @@ public:
     virtual HcclResult Release(const uint32_t feId, const std::vector<JettyInfo>& jettyInfos) = 0;
 
 protected:
-    int32_t devLogicId_{0};
+    int32_t userDevId_{0};
     uint8_t dieId_{0};
     uint32_t devPhyId_{0};
 

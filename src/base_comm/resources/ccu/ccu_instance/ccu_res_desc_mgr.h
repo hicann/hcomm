@@ -36,7 +36,7 @@ public:
     CcuResult Deinit();
 
     // 在锁内遍历资源类型 → 查询容量 → 收集区间 → 扫描最大连续 → 写入 desc
-    CcuResult QueryRemainRes(HcommCcuResDescHandle handle, int32_t devLogicId) const;
+    CcuResult QueryRemainRes(HcommCcuResDescHandle handle, int32_t userDevId) const;
 
 private:
     using DescMap = std::unordered_map<HcommCcuResDescHandle, std::unique_ptr<CcuResDesc>>;

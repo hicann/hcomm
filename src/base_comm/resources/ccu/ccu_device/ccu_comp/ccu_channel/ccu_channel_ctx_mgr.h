@@ -34,8 +34,8 @@ bool IsEidEmpty(const uint8_t (&eidRaw)[URMA_EID_LEN]);
 
 class CcuChannelCtxMgr {
 public:
-    CcuChannelCtxMgr(const int32_t devLogicId, const uint8_t dieId, const uint32_t devPhyId)
-        : devLogicId_(devLogicId),
+    CcuChannelCtxMgr(const int32_t userDevId, const uint8_t dieId, const uint32_t devPhyId)
+        : userDevId_(userDevId),
           dieId_(dieId),
           devPhyId_(devPhyId) {};
     CcuChannelCtxMgr() = default;
@@ -52,7 +52,7 @@ protected:
 
 protected:
     std::mutex innerMutex_{};
-    int32_t devLogicId_{0};
+    int32_t userDevId_{0};
     uint8_t dieId_{0};
     uint32_t devPhyId_{0};
 

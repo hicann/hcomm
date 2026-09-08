@@ -45,7 +45,7 @@ HcclResult GetHcclVersionForCcuKernelMgr(int& hcclVersion)
 
 constexpr int MAX_HCCL_VERSION_USING_CCU_RES_STATIC_ALLOC = 90100000;
 
-static uint32_t ComputeKernelInstrRegionSize(CcuKernel* kernel, const int32_t devLogicId);
+static uint32_t ComputeKernelInstrRegionSize(CcuKernel* kernel, const int32_t userDevId);
 
 CcuKernelMgr::~CcuKernelMgr()
 {
@@ -55,7 +55,7 @@ CcuKernelMgr::~CcuKernelMgr()
 
     if (instructionLoadDevMem_) {
         HCCL_RUN_INFO(
-            "[CcuKernelMgr][~CcuKernelMgr]: deviceLogicId[%d], free addr[%p]", devLogicId_, instructionLoadDevMem_);
+            "[CcuKernelMgr][~CcuKernelMgr]: userDevId[%d], free addr[%p]", userDevId_, instructionLoadDevMem_);
         (void)hrtFree(instructionLoadDevMem_);
         instructionLoadDevMem_ = nullptr;
     }
@@ -63,21 +63,21 @@ CcuKernelMgr::~CcuKernelMgr()
     (void)Deinit();
 }
 
-CcuKernelMgr& CcuKernelMgr::GetInstance(const int32_t deviceLogicId)
+CcuKernelMgr& CcuKernelMgr::GetInstance(const int32_t userDevId)
 {
     static CcuKernelMgr kernelManager[MAX_MODULE_DEVICE_NUM + 1];
 
-    int32_t devLogicId = deviceLogicId;
-    if (devLogicId < 0 || static_cast<uint32_t>(devLogicId) >= MAX_MODULE_DEVICE_NUM) {
+    int32_t validUserDevId = userDevId;
+    if (validUserDevId < 0 || static_cast<uint32_t>(validUserDevId) >= MAX_MODULE_DEVICE_NUM) {
         HCCL_WARNING(
-            "[CcuKernelMgr][%s] use the backup device, devLogicId[%d] should be "
+            "[CcuKernelMgr][%s] use the backup device, userDevId[%d] should be "
             "less than %u.",
-            __func__, devLogicId, MAX_MODULE_DEVICE_NUM);
-        devLogicId = MAX_MODULE_DEVICE_NUM; // 使用备份设备
+            __func__, validUserDevId, MAX_MODULE_DEVICE_NUM);
+        validUserDevId = MAX_MODULE_DEVICE_NUM; // 使用备份设备
     }
 
-    kernelManager[devLogicId].devLogicId_ = devLogicId;
-    return kernelManager[devLogicId];
+    kernelManager[validUserDevId].userDevId_ = validUserDevId;
+    return kernelManager[validUserDevId];
 }
 
 HcclResult CcuKernelMgr::Init()
@@ -89,7 +89,7 @@ HcclResult CcuKernelMgr::Init()
 
     for (uint8_t dieId = 0; dieId < CCU_MAX_IODIE_NUM; dieId++) {
         bool enableFlag = false;
-        CHK_RET(static_cast<HcclResult>(CcuGetDieEnableInfo(devLogicId_, dieId, enableFlag)));
+        CHK_RET(static_cast<HcclResult>(CcuGetDieEnableInfo(userDevId_, dieId, enableFlag)));
         if (!enableFlag) {
             continue;
         }
@@ -100,7 +100,7 @@ HcclResult CcuKernelMgr::Init()
     initializedFlag_ = true;
     kernelMap_.clear();
 
-    CHK_RET(CcuDevMgrImp::GetCcuVersion(devLogicId_, ccuVersion_));
+    CHK_RET(CcuDevMgrImp::GetCcuVersion(userDevId_, ccuVersion_));
     HCCL_INFO("[CcuKernelMgr] Get CcuVersion[%d](0: CcuV1, 1: CcuV2, 2: Invalid)", ccuVersion_);
     if (ccuVersion_ == CcuVersion::INVALID) {
         HCCL_ERROR("[CcuKernelMgr][%s] Invalid chip type, abort Init.", __func__);
@@ -222,11 +222,11 @@ CcuResult CcuKernelMgr::GetKernelResourceRequest(
     CCU_CHK_RET(BuildKernel(dieId, kernelFuncName, kernelFunc, kernelArgs, argNum, nullptr));
     resReq = currKernel_->GetResourceRequest();
     const uint32_t kernelInstrCount = currKernel_->GetInstrCount();
-    const uint32_t translatorInstrCount = CcuRepTranslator::GetInstrNum(devLogicId_);
+    const uint32_t translatorInstrCount = CcuRepTranslator::GetInstrNum(userDevId_);
     const uint32_t constInstrCount = currKernel_->GetConstValue2VarMap().size();
     const uint32_t ckeReserveInstrCount = currKernel_->GetRepNeedToAddLatency() * CcuRep::CCU_CKE_RAW_LATENCY;
     // 总数统一走 ComputeKernelInstrRegionSize, 与申请/释放口径保持结构一致; 分项仅用于日志观测
-    instrCount = ComputeKernelInstrRegionSize(currKernel_.get(), devLogicId_);
+    instrCount = ComputeKernelInstrRegionSize(currKernel_.get(), userDevId_);
     HCCL_INFO(
         "[HcommCcuKernelQueryResReq][%s] resource request instruction count, kernelInstrCount[%u], "
         "translatorInstrCount[%u], constInstrCount[%u], ckeReserveInstrCount[%u], totalInstrCount[%u].",
@@ -391,21 +391,21 @@ static void LoadRes(std::unique_ptr<CcuKernel>& kernel, CcuResPack& resPack)
 // 后端优化 cke-only 档只会为 CKE 写后读补 NOP, 每个此类 rep 最多补 (latency-1) 条,
 // 故此预留可从构造上保证优化后指令数不超过申请区. 申请 / 查询 / 释放三处必须走本函数,
 // 保证口径一致 (尤其申请与释放必须完全相等).
-static uint32_t ComputeKernelInstrRegionSize(CcuKernel* kernel, const int32_t devLogicId)
+static uint32_t ComputeKernelInstrRegionSize(CcuKernel* kernel, const int32_t userDevId)
 {
-    return kernel->GetInstrCount() + CcuRep::CcuRepTranslator::GetInstrNum(devLogicId)
+    return kernel->GetInstrCount() + CcuRep::CcuRepTranslator::GetInstrNum(userDevId)
            + static_cast<uint32_t>(kernel->GetConstValue2VarMap().size())
            + kernel->GetRepNeedToAddLatency() * CcuRep::CCU_CKE_RAW_LATENCY;
 }
 
-static CcuResult AllocInstrRes(std::unique_ptr<CcuKernel>& kernel, const int32_t devLogicId)
+static CcuResult AllocInstrRes(std::unique_ptr<CcuKernel>& kernel, const int32_t userDevId)
 {
-    const uint32_t instrCount = ComputeKernelInstrRegionSize(kernel.get(), devLogicId);
+    const uint32_t instrCount = ComputeKernelInstrRegionSize(kernel.get(), userDevId);
     const uint32_t dieId = kernel->GetDieId();
     ResInfo insInfo(0, 0);
-    CCU_CHK_RET(CcuDevMgrImp::AllocIns(devLogicId, dieId, instrCount, insInfo));
+    CCU_CHK_RET(CcuDevMgrImp::AllocIns(userDevId, dieId, instrCount, insInfo));
     HCCL_INFO(
-        "[CcuKernelMgr][%s]: devLogicId[%d], dieId[%u], startId[%u], count[%u]", __func__, devLogicId, dieId,
+        "[CcuKernelMgr][%s]: userDevId[%d], dieId[%u], startId[%u], count[%u]", __func__, userDevId, dieId,
         insInfo.startId, insInfo.num);
     kernel->SetInstrId(insInfo.startId);
 
@@ -455,7 +455,7 @@ CcuResult CcuKernelMgr::AllocRes(CcuResPack& resPack)
     }
 
     // 申请指令空间资源
-    CCU_CHK_RET(AllocInstrRes(currKernel_, devLogicId_));
+    CCU_CHK_RET(AllocInstrRes(currKernel_, userDevId_));
 
     // 资源从respack转移至kernel
     LoadRes(currKernel_, resPack);
@@ -505,18 +505,18 @@ ResetRepResourceToResRepository(CcuRepResource& totalRepRes, const CcuResReposit
 }
 
 using DieResInfos = std::array<std::vector<ResInfo>, CCU_MAX_IODIE_NUM>;
-static HcclResult SaveKernelMissionInfo(CcuKernel* kernel, const DieResInfos& missionId, const int32_t devLogicId)
+static HcclResult SaveKernelMissionInfo(CcuKernel* kernel, const DieResInfos& missionId, const int32_t userDevId)
 {
     const uint32_t dieId = kernel->GetDieId();
     uint32_t missionKey{0};
-    CHK_RET(CcuDevMgrImp::GetMissionKey(devLogicId, dieId, missionKey));
+    CHK_RET(CcuDevMgrImp::GetMissionKey(userDevId, dieId, missionKey));
 
-    HCCL_INFO("[CcuKernelMgr][%s] deviceLogicId[%d] dieId[%u]", __func__, devLogicId, dieId);
+    HCCL_INFO("[CcuKernelMgr][%s] userDevId[%d] dieId[%u]", __func__, userDevId, dieId);
 
     kernel->SetMissionKey(missionKey);
     // 从missionId中获取一个元素并从missionId中删除，当前应只有一个元素，且无需删除
     if (missionId[dieId].empty()) {
-        HCCL_ERROR("[%s] failed, devLogicId[%d] dieId[%u] do not have missions.", __func__, devLogicId, dieId);
+        HCCL_ERROR("[%s] failed, userDevId[%d] dieId[%u] do not have missions.", __func__, userDevId, dieId);
         return HcclResult::HCCL_E_INTERNAL;
     }
 
@@ -628,7 +628,7 @@ static HcclResult ProcessInterCtxRes(const std::vector<CcuKernel*>& kernels)
     return HcclResult::HCCL_SUCCESS;
 }
 
-static HcclResult TransRepResToPhyRes(const std::vector<CcuKernel*>& kernels, const int32_t devLogicId)
+static HcclResult TransRepResToPhyRes(const std::vector<CcuKernel*>& kernels, const int32_t userDevId)
 {
     for (auto kernel : kernels) {
         const auto& totalResRepository = kernel->GetResRepository();
@@ -639,7 +639,7 @@ static HcclResult TransRepResToPhyRes(const std::vector<CcuKernel*>& kernels, co
         ExpandResRepo(expandedResRepo, totalResRepository);
         CHK_RET(ResetRepResourceToResRepository(totalRepRes, expandedResRepo));
 
-        CHK_RET(SaveKernelMissionInfo(kernel, totalResRepository.mission.mission, devLogicId));
+        CHK_RET(SaveKernelMissionInfo(kernel, totalResRepository.mission.mission, userDevId));
     }
 
     CHK_RET(ProcessInterCtxRes(kernels));
@@ -671,7 +671,7 @@ CcuResult CcuKernelMgr::Translate(const std::vector<CcuKernelHandle>& kernelHand
     constexpr bool isFuncBlock = false; // 当前不支持MC2
 
     std::unique_lock<std::mutex> translateLock(translateMutex_);
-    CCU_CHK_RET(TransRepResToPhyRes(kernels, devLogicId_));
+    CCU_CHK_RET(TransRepResToPhyRes(kernels, userDevId_));
     CCU_CHK_RET(TransRepSequenceToMicrocode(kernels, isFuncBlock));
 
     for (auto& referenceMgrMap : referenceMgrs) {
@@ -682,15 +682,15 @@ CcuResult CcuKernelMgr::Translate(const std::vector<CcuKernelHandle>& kernelHand
     return CcuResult::CCU_SUCCESS;
 }
 
-static HcclResult ReleaseInstrRes(CcuKernel* kernel, const int32_t devLogicId)
+static HcclResult ReleaseInstrRes(CcuKernel* kernel, const int32_t userDevId)
 {
-    const uint32_t instrCount = ComputeKernelInstrRegionSize(kernel, devLogicId);
+    const uint32_t instrCount = ComputeKernelInstrRegionSize(kernel, userDevId);
     const ResInfo insInfo{kernel->GetInstrId(), instrCount};
     const uint8_t dieId = static_cast<uint8_t>(kernel->GetDieId());
     HCCL_INFO(
-        "[CcuKernelMgr][%s] devLogicId[%d], dieId[%u], startId[%u], count[%u]", __func__, devLogicId, dieId,
+        "[CcuKernelMgr][%s] userDevId[%d], dieId[%u], startId[%u], count[%u]", __func__, userDevId, dieId,
         insInfo.startId, insInfo.num);
-    CHK_RET(CcuDevMgrImp::ReleaseIns(devLogicId, dieId, insInfo));
+    CHK_RET(CcuDevMgrImp::ReleaseIns(userDevId, dieId, insInfo));
 
     return HcclResult::HCCL_SUCCESS;
 }
@@ -707,7 +707,7 @@ CcuResult CcuKernelMgr::UnRegister(CcuKernelHandle kernelHandle)
         CcuResult::CCU_E_NOT_FOUND);
 
     auto kernel = it->second.get();
-    CCU_CHK_RET(ReleaseInstrRes(kernel, devLogicId_));
+    CCU_CHK_RET(ReleaseInstrRes(kernel, userDevId_));
     kernelMap_.erase(kernelHandle);
     return CcuResult::CCU_SUCCESS;
 }
@@ -718,9 +718,9 @@ HcclResult CcuKernelMgr::GetResPackTotalResRepository(
     CcuResRepository tmpResRepository{};
     // 获取通信域当前所持有的资源
     for (CcuResHandle resHandle : resPack.handles) {
-        CHK_RET(CcuDevMgrImp::GetResource(devLogicId_, resHandle, tmpResRepository));
+        CHK_RET(CcuDevMgrImp::GetResource(userDevId_, resHandle, tmpResRepository));
         ExpandResRepo(totalRes, tmpResRepository);
-        HCCL_INFO("[%s] succeed, deviceLogicId[%d] resHandle[%p].", __func__, devLogicId_, resHandle);
+        HCCL_INFO("[%s] succeed, userDevId[%d] resHandle[%p].", __func__, userDevId_, resHandle);
     }
     return HcclResult::HCCL_SUCCESS;
 }
@@ -756,19 +756,19 @@ HcclResult CcuKernelMgr::InstantiationTranslator(const uint16_t dieId)
     std::array<uint16_t, CCU_MAX_IODIE_NUM> tmpChannelId{};
     uint32_t channelId = 0;
     // 获取innerDieChannelId
-    auto ret = CcuDevMgrImp::GetLoopChannelId(devLogicId_, dieId, dieId, channelId);
+    auto ret = CcuDevMgrImp::GetLoopChannelId(userDevId_, dieId, dieId, channelId);
     CHK_RET(ret);
 
     tmpChannelId[0] = channelId;
     // 获取interDieChannelId
     uint8_t dstDieId = ((dieId == 0) ? 1 : 0);
-    ret = CcuDevMgrImp::GetLoopChannelId(devLogicId_, dieId, dstDieId, channelId);
+    ret = CcuDevMgrImp::GetLoopChannelId(userDevId_, dieId, dstDieId, channelId);
     CHK_RET(ret);
     tmpChannelId[1] = channelId;
 
     uint64_t tokenId = 0;
     uint64_t tokenValue = 0;
-    ret = CcuDevMgrImp::GetCcuResourceSpaceTokenInfo(devLogicId_, dieId, tokenId, tokenValue);
+    ret = CcuDevMgrImp::GetCcuResourceSpaceTokenInfo(userDevId_, dieId, tokenId, tokenValue);
     CHK_RET(ret);
 
     std::pair<uint64_t, uint64_t> ccuTokenInfo(tokenId, tokenValue);
@@ -780,11 +780,11 @@ HcclResult CcuKernelMgr::InstantiationTranslator(const uint16_t dieId)
     for (uint32_t i = 0; i < 16; i++) { // mgr有16个
         referenceMgrs[dieId][i] = std::make_shared<hcomm::CcuRep::CcuRepReferenceManager>(dieId);
         translators[dieId][i] = std::make_shared<hcomm::CcuRep::CcuRepTranslator>(
-            devLogicId_, dieId, referenceMgrs[dieId][i], tmpChannelId, ccuTokenInfo, hbmTokenInfo);
+            userDevId_, dieId, referenceMgrs[dieId][i], tmpChannelId, ccuTokenInfo, hbmTokenInfo);
 
         // 统计&合并refManager和translator所有资源REQ
         auto refMangerResReq = CcuRep::CcuRepReferenceManager::GetResReq(dieId);
-        auto transLatorResReq = CcuRep::CcuRepTranslator::GetResReq(devLogicId_, dieId);
+        auto transLatorResReq = CcuRep::CcuRepTranslator::GetResReq(userDevId_, dieId);
         MergeCcuResReq(totalResReq, refMangerResReq);
         MergeCcuResReq(totalResReq, transLatorResReq);
     }
@@ -792,7 +792,7 @@ HcclResult CcuKernelMgr::InstantiationTranslator(const uint16_t dieId)
 
     // 为refManager和translator申请物理资源
     CcuResHandle handle;
-    CHK_RET(CcuDevMgrImp::AllocResHandle(devLogicId_, totalResReq, handle));
+    CHK_RET(CcuDevMgrImp::AllocResHandle(userDevId_, totalResReq, handle));
     translatorResPack.handles.push_back(handle);
 
     CcuRepResource translatorRepRes;
@@ -814,8 +814,8 @@ HcclResult CcuKernelMgr::LoadInstruction(const CcuRep::CcuInstrInfo& instrInfo, 
 
     if (!instructionLoadDevMem_) {
         uint32_t instrNum = 0;
-        CHK_RET(CcuDevMgrImp::GetResSpecsInstructionNum(devLogicId_, 0, instrNum));
-        HCCL_INFO("[CcuKernelMgr]LoadInstruction: deviceLogicId[%d], instrNum[%u]", devLogicId_, instrNum);
+        CHK_RET(CcuDevMgrImp::GetResSpecsInstructionNum(userDevId_, 0, instrNum));
+        HCCL_INFO("[CcuKernelMgr]LoadInstruction: userDevId[%d], instrNum[%u]", userDevId_, instrNum);
         CHK_RET(hrtMalloc(&instructionLoadDevMem_, instrNum * sizeof(hcomm::CcuRep::CcuInstr)));
     }
 
@@ -824,7 +824,7 @@ HcclResult CcuKernelMgr::LoadInstruction(const CcuRep::CcuInstrInfo& instrInfo, 
         HcclRtMemcpyKind::HCCL_RT_MEMCPY_KIND_HOST_TO_DEVICE));
 
     uint32_t devPhyId = 0;
-    CHK_RET(hrtGetDevicePhyIdByIndex(static_cast<uint32_t>(devLogicId_), devPhyId));
+    CHK_RET(hrtGetDevicePhyIdByIndex(static_cast<uint32_t>(userDevId_), devPhyId));
 
     CustomChannelInfoIn inBuff{};
     CustomChannelInfoOut outBuff{};
@@ -840,12 +840,12 @@ HcclResult CcuKernelMgr::LoadInstruction(const CcuRep::CcuInstrInfo& instrInfo, 
     tmp.insinfo.resourceAddr = reinterpret_cast<uint64_t>(instructionLoadDevMem_);
     (void)memcpy_s(inBuff.data.dataInfo.dataArray, sizeof(CcuDataTypeUnion), &tmp, sizeof(CcuDataTypeUnion));
 
-    auto ret = HccpRaTlvCcuCustomChannel(devLogicId_, static_cast<void*>(&inBuff), static_cast<void*>(&outBuff));
+    auto ret = HccpRaTlvCcuCustomChannel(userDevId_, static_cast<void*>(&inBuff), static_cast<void*>(&outBuff));
     if (ret != HCCL_SUCCESS) {
         HCCL_ERROR(
             "[CcuResSpecifications][%s] failed to call ccu driver, "
-            "devLogicId[%d] devPhyId[%u] dieId[%d] op[%s] ret[%d].",
-            __func__, devLogicId_, devPhyId, dieId, "SET_INSTRUCTION", ret);
+            "userDevId[%d] devPhyId[%u] dieId[%d] op[%s] ret[%d].",
+            __func__, userDevId_, devPhyId, dieId, "SET_INSTRUCTION", ret);
         return ret;
     }
 
@@ -863,7 +863,7 @@ HcclResult CcuKernelMgr::TransRepSequenceToMicrocode(const std::vector<CcuKernel
             kernel, kernel->GetRepSequence(), kernel->GetInstrId(), isFuncBlock);
 
         // 后端优化会插 NOP 改变指令数; 按与申请同一口径校验不越界, 把静默越界变成快速失败.
-        const uint32_t regionSize = ComputeKernelInstrRegionSize(kernel, devLogicId_);
+        const uint32_t regionSize = ComputeKernelInstrRegionSize(kernel, userDevId_);
         CHK_PRT_RET(
             instrInfo.instrVec.size() > regionSize,
             HCCL_ERROR(

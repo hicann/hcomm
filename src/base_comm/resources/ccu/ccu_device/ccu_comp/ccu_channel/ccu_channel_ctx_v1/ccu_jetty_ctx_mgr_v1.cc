@@ -19,11 +19,11 @@ namespace hcomm {
 HcclResult CcuJettyCtxMgrV1::Init()
 {
     // 获取失败或为0场景，分配将按资源不足操作
-    (void)CcuResSpecifications::GetInstance(devLogicId_).GetJettyNum(dieId_, jettySpecNum_);
+    (void)CcuResSpecifications::GetInstance(userDevId_).GetJettyNum(dieId_, jettySpecNum_);
     // 获取地址为0在使用处校验
-    (void)CcuResSpecifications::GetInstance(devLogicId_).GetResourceAddr(dieId_, ccuResBaseVa_);
+    (void)CcuResSpecifications::GetInstance(userDevId_).GetResourceAddr(dieId_, ccuResBaseVa_);
 
-    wqeBBMgr_.reset(new (std::nothrow) CcuWqeBBMgrV1(devLogicId_, dieId_));
+    wqeBBMgr_.reset(new (std::nothrow) CcuWqeBBMgrV1(userDevId_, dieId_));
     CHK_PTR_NULL(wqeBBMgr_);
     CHK_RET(wqeBBMgr_->Init());
     CHK_RET(pfeMgr_.Init());
@@ -39,8 +39,8 @@ HcclResult CcuJettyCtxMgrV1::Alloc(
         ret != HcclResult::HCCL_SUCCESS,
         HCCL_WARNING(
             "[CcuJettyCtxMgrV1][%s] failed, failed to get jetty allocator handle, "
-            "devLogicId[%d], dieId[%u], feId[%u].",
-            __func__, devLogicId_, dieId_, feId),
+            "userDevId[%d], dieId[%u], feId[%u].",
+            __func__, userDevId_, dieId_, feId),
         HcclResult::HCCL_E_INTERNAL);
 
     std::vector<ResInfo> jettyResInfos; // jettys分配必须要求连续，故返回一个元素
@@ -49,8 +49,8 @@ HcclResult CcuJettyCtxMgrV1::Alloc(
         ret != HcclResult::HCCL_SUCCESS,
         HCCL_WARNING(
             "[CcuJettyCtxMgrV1][%s] failed, allocator failed to allocate, "
-            "devLogicId[%d], dieId[%u], feId[%u].",
-            __func__, devLogicId_, dieId_, feId),
+            "userDevId[%d], dieId[%u], feId[%u].",
+            __func__, userDevId_, dieId_, feId),
         ret);
 
     const auto& strategy = allocatorHandle->strategy;
@@ -61,8 +61,8 @@ HcclResult CcuJettyCtxMgrV1::Alloc(
         jettyCtxStartId > jettySpecNum_ - jettyNum,
         HCCL_WARNING(
             "[CcuJettyCtxMgrV1][%s] jetty resource is not enough, allocated "
-            "jettyCtxId[%u] should be less than %u, devLogicId[%d], dieId[%u], feId[%u].",
-            __func__, jettyCtxStartId, jettySpecNum_, devLogicId_, dieId_, feId),
+            "jettyCtxId[%u] should be less than %u, userDevId[%d], dieId[%u], feId[%u].",
+            __func__, jettyCtxStartId, jettySpecNum_, userDevId_, dieId_, feId),
         HcclResult::HCCL_E_UNAVAIL);
 
     constexpr CcuJettyType type_ = CcuJettyType::CCUM_CACHED_JETTY;
@@ -71,8 +71,8 @@ HcclResult CcuJettyCtxMgrV1::Alloc(
     if (ret != HcclResult::HCCL_SUCCESS) {
         HCCL_WARNING(
             "[CcuJettyCtxMgrV1][%s] failed, try to release temp resource, "
-            "devLogicId[%d], dieId[%u], feId[%u].",
-            __func__, devLogicId_, dieId_, feId);
+            "userDevId[%d], dieId[%u], feId[%u].",
+            __func__, userDevId_, dieId_, feId);
         CHK_RET(ReleaseWqeBBResource(jettyInfos)); // jettyInfos已分配的wqeBB资源信息
         jettyInfos.clear();                        // 清理wqebb资源信息
         CHK_RET(allocatorHandle->idAllocator->Release(jettyResStartId, jettyNum));
@@ -106,7 +106,7 @@ HcclResult CcuJettyCtxMgrV1::Config(
     }
 
     const uint32_t startJettyCtxId = jettyInfos[0].jettyCtxId;
-    CHK_RET(ConfigJettyCtxData(devLogicId_, dieId_, devPhyId_, startJettyCtxId, jettyCtxData));
+    CHK_RET(ConfigJettyCtxData(userDevId_, dieId_, devPhyId_, startJettyCtxId, jettyCtxData));
     return HcclResult::HCCL_SUCCESS;
 }
 
@@ -115,7 +115,7 @@ HcclResult CcuJettyCtxMgrV1::Release(const uint32_t feId, const std::vector<Jett
     if (jettyInfos.empty()) {
         HCCL_INFO(
             "[CcuJettyCtxMgrV1][%s] passed, jettyInfos is empty, no need to release, ",
-            "devLogicId[%d], dieId[%u], feId[%u].", __func__, devLogicId_, dieId_, feId);
+            "userDevId[%d], dieId[%u], feId[%u].", __func__, userDevId_, dieId_, feId);
         return HcclResult::HCCL_SUCCESS;
     }
     JettyAllocator* allocatorHandle = nullptr;

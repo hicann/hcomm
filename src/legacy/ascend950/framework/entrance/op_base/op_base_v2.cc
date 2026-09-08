@@ -76,10 +76,10 @@ static HcclResult HcclGetDeviceId(void)
     CHK_PRT_RET(
         static_cast<u32>(g_hcclDeviceId) >= MAX_MODULE_DEVICE_NUM,
         HCCL_WARNING(
-            "[HcclGetDeviceId]deviceLogicId[%d] is bigger than HCCL_AISERVER_DEVICE_NUM_MAX:[%u]", g_hcclDeviceId,
+            "[HcclGetDeviceId]userDevId[%d] is bigger than HCCL_AISERVER_DEVICE_NUM_MAX:[%u]", g_hcclDeviceId,
             MAX_MODULE_DEVICE_NUM),
         HCCL_E_INTERNAL);
-    HCCL_INFO("[HcclGetDeviceId] deviceLogicId[%d] ", g_hcclDeviceId);
+    HCCL_INFO("[HcclGetDeviceId] userDevId[%d] ", g_hcclDeviceId);
     return HCCL_SUCCESS;
 }
 
@@ -87,7 +87,7 @@ static s32 HcclGetThreadDeviceId()
 {
     CHK_PRT_RET(
         HcclGetDeviceId() != HCCL_SUCCESS,
-        HCCL_WARNING("[HcclGetThreadDeviceId] get fail deviceLogicId[%d]", g_hcclDeviceId), INVALID_INT);
+        HCCL_WARNING("[HcclGetThreadDeviceId] get fail userDevId[%d]", g_hcclDeviceId), INVALID_INT);
     return g_hcclDeviceId;
 }
 
@@ -184,10 +184,9 @@ HcclResult CreateCommConfig(uint32_t rank, HcclCommConfig* config, HcclComm* com
                 "[CreateCommConfig]opbasedCommInfoV2.pComm->Init failed, errNo[0x%016llx]", HCCL_ERROR_CODE(ret)),
             errorFlag = true);
         opbasedCommInfoV2.pComm->RegisterAcceStateCallBack(CommunicatorCallback());
-        s32 logicDevId = HrtGetDevice();
-        ret = CommManager::GetInstance(logicDevId)
-                  .SetCommAcceleratorV2(
-                      opbasedCommInfoV2.pComm.get(), config->hcclOpExpansionMode); // 通信域创建，设置默认accelerator
+        s32 userDevId = HrtGetDevice();
+        ret = CommManager::GetInstance(userDevId).SetCommAcceleratorV2(
+            opbasedCommInfoV2.pComm.get(), config->hcclOpExpansionMode); // 通信域创建，设置默认accelerator
         CHK_PRT_BREAK(
             ret != HcclResult::HCCL_SUCCESS,
             HCCL_ERROR("[CreateCommConfig]SetCommAcceleratorV2 failed, errNo[0x%016llx]", HCCL_ERROR_CODE(ret)),
@@ -203,7 +202,7 @@ HcclResult CreateCommConfig(uint32_t rank, HcclCommConfig* config, HcclComm* com
         opbasedCommInfoV2.hcclGroupMap[commId] = params;
 
         opbasedCommInfoV2.pComm->RegisterPrintChannelInfoCallback(
-            CommManager::GetInstance(logicDevId).GetPrintChannelInfoCallback());
+            CommManager::GetInstance(userDevId).GetPrintChannelInfoCallback());
     } while (0);
 
     if (errorFlag) {
@@ -276,10 +275,9 @@ HcclResult CreateCommConfigRootInfo(
             HCCL_ERROR("[%s]opbasedCommInfoV2.pComm->Init failed, errNo[0x%016llx]", __func__, HCCL_ERROR_CODE(ret)),
             errorFlag = true);
         opbasedCommInfoV2.pComm->RegisterAcceStateCallBack(CommunicatorCallback());
-        s32 logicDevId = HrtGetDevice();
-        ret = CommManager::GetInstance(logicDevId)
-                  .SetCommAcceleratorV2(
-                      opbasedCommInfoV2.pComm.get(), config->hcclOpExpansionMode); // 通信域创建，设置默认accelerator
+        s32 userDevId = HrtGetDevice();
+        ret = CommManager::GetInstance(userDevId).SetCommAcceleratorV2(
+            opbasedCommInfoV2.pComm.get(), config->hcclOpExpansionMode); // 通信域创建，设置默认accelerator
         CHK_PRT_BREAK(
             ret != HcclResult::HCCL_SUCCESS,
             HCCL_ERROR("[%s]SetCommAcceleratorV2 failed, errNo[0x%016llx]", __func__, HCCL_ERROR_CODE(ret)),
@@ -296,7 +294,7 @@ HcclResult CreateCommConfigRootInfo(
         opbasedCommInfoV2.hcclGroupMap[identifier] = params;
 
         opbasedCommInfoV2.pComm->RegisterPrintChannelInfoCallback(
-            CommManager::GetInstance(logicDevId).GetPrintChannelInfoCallback());
+            CommManager::GetInstance(userDevId).GetPrintChannelInfoCallback());
     } while (0);
 
     if (errorFlag) {
@@ -384,9 +382,9 @@ HcclResult HcclCommInitClusterInfoV2(const char* clusterInfo, uint32_t rank, Hcc
             HCCL_ERROR("[%s]opbasedCommInfoV2.pComm->Init failed, errNo[0x%016llx]", __func__, HCCL_ERROR_CODE(ret)),
             errorFlag = true);
         opbasedCommInfoV2.pComm->RegisterAcceStateCallBack(CommunicatorCallback());
-        s32 logicDevId = HrtGetDevice();
-        ret = CommManager::GetInstance(logicDevId)
-                  .SetCommAcceleratorV2(opbasedCommInfoV2.pComm.get(), 0); // 通信域创建，设置默认accelerator
+        s32 userDevId = HrtGetDevice();
+        ret = CommManager::GetInstance(userDevId).SetCommAcceleratorV2(
+            opbasedCommInfoV2.pComm.get(), 0); // 通信域创建，设置默认accelerator
         CHK_PRT_BREAK(
             ret != HcclResult::HCCL_SUCCESS,
             HCCL_ERROR("[%s]SetCommAcceleratorV2 failed, errNo[0x%016llx]", __func__, HCCL_ERROR_CODE(ret)),
@@ -403,7 +401,7 @@ HcclResult HcclCommInitClusterInfoV2(const char* clusterInfo, uint32_t rank, Hcc
         opbasedCommInfoV2.hcclGroupMap[commId] = params;
 
         opbasedCommInfoV2.pComm->RegisterPrintChannelInfoCallback(
-            CommManager::GetInstance(logicDevId).GetPrintChannelInfoCallback());
+            CommManager::GetInstance(userDevId).GetPrintChannelInfoCallback());
     } while (0);
 
     if (errorFlag) {
@@ -459,8 +457,8 @@ HcclResult
 HcclCommInitClusterInfoConfigV2(const char* clusterInfo, uint32_t rank, HcclCommConfig* config, HcclComm* comm)
 {
     HcclUs startut = TIME_NOW();
-    s32 deviceLogicId = HcclGetThreadDeviceId();
-    s32 devPhyId = HrtGetDevicePhyIdByUserDevId(deviceLogicId);
+    s32 userDevId = HcclGetThreadDeviceId();
+    s32 devPhyId = HrtGetDevicePhyIdByUserDevId(userDevId);
     HCCL_RUN_INFO(
         "Entry-HcclCommInitClusterInfoConfig V950, commEngine[%u], commId[%s]", config->hcclOpExpansionMode,
         config->hcclCommName);
@@ -510,9 +508,9 @@ HcclCommInitClusterInfoConfigV2(const char* clusterInfo, uint32_t rank, HcclComm
 
     /* 关键状态记录 */
     HCCL_RUN_INFO(
-        "[HCCL_TRACE]%s success, take time [%lld]us, clusterInfo[%s], rank[%u], deviceLogicId[%d], devPhyId[%d], "
+        "[HCCL_TRACE]%s success, take time [%lld]us, clusterInfo[%s], rank[%u], userDevId[%d], devPhyId[%d], "
         "commId[%s].",
-        __func__, DURATION_US(TIME_NOW() - startut), clusterInfo, rank, deviceLogicId, devPhyId, config->hcclCommName);
+        __func__, DURATION_US(TIME_NOW() - startut), clusterInfo, rank, userDevId, devPhyId, config->hcclCommName);
 
     return HCCL_SUCCESS;
 }

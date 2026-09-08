@@ -18,22 +18,22 @@
 
 namespace hcomm {
 
-CcuPfeCfgMgr& CcuPfeCfgMgr::GetInstance(const int32_t deviceLogicId)
+CcuPfeCfgMgr& CcuPfeCfgMgr::GetInstance(const int32_t userDevId)
 {
     static CcuPfeCfgMgr ccuPfeCfgMgr[MAX_MODULE_DEVICE_NUM + 1];
 
-    int32_t devLogicId = deviceLogicId;
-    if (devLogicId < 0 || static_cast<uint32_t>(devLogicId) >= MAX_MODULE_DEVICE_NUM) {
+    int32_t validUserDevId = userDevId;
+    if (validUserDevId < 0 || static_cast<uint32_t>(validUserDevId) >= MAX_MODULE_DEVICE_NUM) {
         HCCL_WARNING(
-            "[CcuPfeCfgMgr][%s] use the backup device, devLogicId[%d] should be "
+            "[CcuPfeCfgMgr][%s] use the backup device, userDevId[%d] should be "
             "less than %u.",
-            __func__, devLogicId, MAX_MODULE_DEVICE_NUM);
-        devLogicId = MAX_MODULE_DEVICE_NUM; // 使用备份设备
+            __func__, validUserDevId, MAX_MODULE_DEVICE_NUM);
+        validUserDevId = MAX_MODULE_DEVICE_NUM; // 使用备份设备
     }
 
-    ccuPfeCfgMgr[devLogicId].devLogicId_ = deviceLogicId;
+    ccuPfeCfgMgr[validUserDevId].userDevId_ = userDevId;
 
-    return ccuPfeCfgMgr[devLogicId];
+    return ccuPfeCfgMgr[validUserDevId];
 }
 
 HcclResult CcuPfeCfgMgr::Init()
@@ -42,14 +42,14 @@ HcclResult CcuPfeCfgMgr::Init()
         return HcclResult::HCCL_SUCCESS;
     }
 
-    CHK_RET(hrtGetDevicePhyIdByIndex(static_cast<uint32_t>(devLogicId_), devPhyId_));
+    CHK_RET(hrtGetDevicePhyIdByIndex(static_cast<uint32_t>(userDevId_), devPhyId_));
 
     std::vector<DevEidInfo> eidInfos;
     CHK_RET(EidInfoMgr::GetInstance(devPhyId_).GetEidInfos(eidInfos));
 
     bool dieEnableFlags[CCU_MAX_IODIE_NUM] = {false, false};
     for (uint8_t i = 0; i < CCU_MAX_IODIE_NUM; i++) {
-        const auto& ccuResSpecs = CcuResSpecifications::GetInstance(devLogicId_);
+        const auto& ccuResSpecs = CcuResSpecifications::GetInstance(userDevId_);
         (void)ccuResSpecs.GetDieEnableFlag(i, dieEnableFlags[i]);
     }
 

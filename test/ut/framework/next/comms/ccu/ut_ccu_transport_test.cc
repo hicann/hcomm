@@ -243,7 +243,7 @@ TEST_F(CcuTransportTest, Ut_ResUpdate_When_NewTags_Expect_InsertIntoCntXns)
 {
     transport->transStatus_ = CcuTransport::TransStatus::READY;
     transport->dieId_ = 0;
-    transport->devLogicId_ = 0;
+    transport->userDevId_ = 0;
     MOCKER(hcomm::CcuDevMgrImp::AllocWishCntXn).stubs().will(returnValue(HcclResult::HCCL_SUCCESS));
     std::vector<std::string> tags = {"group1", "group2"};
     EXPECT_EQ(transport->ResUpdate(tags), HcclResult::HCCL_SUCCESS);

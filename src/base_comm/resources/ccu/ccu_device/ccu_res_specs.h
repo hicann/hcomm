@@ -105,13 +105,13 @@ struct CcuResSpecInfo {
     CcuChannelJettyMap channelJettyMap{8, 1};
 };
 
-HcclResult CcuGetMainboardId(uint32_t deviceLogicId, Hccl::HcclMainboardId& hcclMainboardId);
+HcclResult CcuGetMainboardId(uint32_t userDevId, Hccl::HcclMainboardId& hcclMainboardId);
 
 MAKE_ENUM(ServeMode, ARMX86, NORMAL);
 
 class CcuResSpecifications {
 public:
-    static CcuResSpecifications& GetInstance(const int32_t deviceLogicId);
+    static CcuResSpecifications& GetInstance(const int32_t userDevId);
     HcclResult Init();
     HcclResult Deinit();
     ServeMode GetServeMode() const;
@@ -171,12 +171,12 @@ private:
     CcuResSpecifications& operator=(const CcuResSpecifications& that) = delete;
 
     HcclResult CheckDieValid(
-        const std::string& funcName, const int32_t devLogicId, const uint8_t dieId,
+        const std::string& funcName, const int32_t userDevId, const uint8_t dieId,
         const std::array<bool, CCU_MAX_IODIE_NUM>& dieEnableFlags) const;
 
 private:
     bool initFlag_{false};
-    int32_t devLogicId_{0};
+    int32_t userDevId_{0};
     uint32_t devPhyId_{0};
     ServeMode serveMode_{ServeMode::ARMX86}; // 默认按a+x模式，规避使用部分ccua
     CcuVersion ccuVersion_{CcuVersion::CCU_INVALID};

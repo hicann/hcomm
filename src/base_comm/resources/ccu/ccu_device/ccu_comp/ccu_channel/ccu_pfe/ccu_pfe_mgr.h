@@ -44,8 +44,8 @@ struct PfeCtx {
 
 class CcuPfeMgr {
 public:
-    CcuPfeMgr(const int32_t devLogicId, const uint8_t dieId, const uint32_t devPhyId)
-        : devLogicId_(devLogicId),
+    CcuPfeMgr(const int32_t userDevId, const uint8_t dieId, const uint32_t devPhyId)
+        : userDevId_(userDevId),
           dieId_(dieId),
           devPhyId_(devPhyId) {};
     CcuPfeMgr() = default;
@@ -55,7 +55,7 @@ public:
     HcclResult GetPfeStrategy(uint32_t feId, PfeJettyStrategy& pfeJettyStrategy) const;
 
 private:
-    int32_t devLogicId_{0};
+    int32_t userDevId_{0};
     uint8_t dieId_{0};
     uint32_t devPhyId_{0};
 

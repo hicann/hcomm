@@ -35,7 +35,7 @@ namespace hcomm {
 
 class CcuComponent {
 public:
-    static CcuComponent& GetInstance(const int32_t deviceLogicId);
+    static CcuComponent& GetInstance(const int32_t userDevId);
     HcclResult Init();
     HcclResult Deinit();
 
@@ -73,7 +73,7 @@ public:
 
     HcclResult CleanTaskKillState() const;
     HcclResult CleanDieCkes(const uint8_t dieId) const;
-    HcclResult CcuCleanTaskKillState(const int32_t deviceLogicId) const;
+    HcclResult CcuCleanTaskKillState(const int32_t userDevId) const;
     HcclResult SetTaskKillDone();
     HcclResult SetTaskKill();
 
@@ -105,7 +105,7 @@ private:
     HcclResult DestroyAllJettys();
 
     HcclResult SetProcess(CcuOpcodeType opCode) const;
-    HcclResult CcuSetTaskKillDone(const int32_t deviceLogicId) const;
+    HcclResult CcuSetTaskKillDone(const int32_t userDevId) const;
 
     // 0.5rtt专用接口
     HcclResult ConfirmCntXns(const uint8_t dieId, const std::string& resGroupTag, const ResInfo& cntXnInfos);
@@ -122,7 +122,7 @@ private:
     std::mutex taskKillMutex_;
     static constexpr uint32_t INVALID_DEV_ID = 0xFFFFFFFF;
     bool initFlag_{false};
-    int32_t devLogicId_{static_cast<int32_t>(INVALID_DEV_ID)};
+    int32_t userDevId_{static_cast<int32_t>(INVALID_DEV_ID)};
     uint32_t devPhyId_{INVALID_DEV_ID};
     CcuVersion ccuVersion_{CcuVersion::CCU_INVALID};
 

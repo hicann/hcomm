@@ -44,15 +44,15 @@ inline PfeJettyStrategy BuildStrategy(const PfeJettyCtxCfg& cfg)
 }
 
 static HcclResult ConfigPfeTable(
-    const int32_t devLogicId, const uint32_t devPhyId, const uint8_t dieId, const uint32_t feId,
+    const int32_t userDevId, const uint32_t devPhyId, const uint8_t dieId, const uint32_t feId,
     const uint32_t pfeReservedNum, const PfeCtx& pfeCtx)
 {
     if (UNLIKELY(feId > UINT32_MAX - static_cast<uint32_t>(dieId) * pfeReservedNum)) {
         HCCL_ERROR(
             "[CcuPfeMgr][%s] failed, feId[%u] is greater than expected, "
-            "pfeReservedNum[%u], will exceed the range of uint32_t, devLogicId[%d] devPhyId[%u], "
+            "pfeReservedNum[%u], will exceed the range of uint32_t, userDevId[%d] devPhyId[%u], "
             "dieId[%u].",
-            __func__, feId, pfeReservedNum, devLogicId, devPhyId, dieId);
+            __func__, feId, pfeReservedNum, userDevId, devPhyId, dieId);
         return HcclResult::HCCL_E_INTERNAL;
     }
     // die1 使用后半部分pfe表项，故根据pfe预留数量偏移
@@ -68,12 +68,12 @@ static HcclResult ConfigPfeTable(
 
     (void)memcpy_s(inBuff.data.dataInfo.dataArray, inBuff.data.dataInfo.dataLen, &pfeCtx, inBuff.data.dataInfo.dataLen);
 
-    auto ret = HccpRaTlvCcuCustomChannel(devLogicId, static_cast<void*>(&inBuff), static_cast<void*>(&outBuff));
+    auto ret = HccpRaTlvCcuCustomChannel(userDevId, static_cast<void*>(&inBuff), static_cast<void*>(&outBuff));
     if (ret != HCCL_SUCCESS) {
         HCCL_ERROR(
             "[CcuPfeMgr][%s] failed to call ccu driver, "
-            "devLogicId[%d] devPhyId[%u] dieId[%d] op[%s] ret[%d].",
-            __func__, devLogicId, devPhyId, dieId, "SET_PFE", ret);
+            "userDevId[%d] devPhyId[%u] dieId[%d] op[%s] ret[%d].",
+            __func__, userDevId, devPhyId, dieId, "SET_PFE", ret);
         return ret;
     }
 
@@ -82,22 +82,22 @@ static HcclResult ConfigPfeTable(
 
 HcclResult CcuPfeMgr::Init()
 {
-    std::vector<PfeJettyCtxCfg> cfgs = CcuPfeCfgMgr::GetInstance(devLogicId_).GetPfeJettyCtxCfg(dieId_);
+    std::vector<PfeJettyCtxCfg> cfgs = CcuPfeCfgMgr::GetInstance(userDevId_).GetPfeJettyCtxCfg(dieId_);
     if (UNLIKELY(cfgs.empty())) { // 此处不中断流程，后续jettyCtx分配时会因无pfe配置报错停止
         HCCL_WARNING(
             "[CcuJettyCtxMgr] config pfe table passed, pfe cfgs size is 0, "
-            "devLogicId[%d], dieId[%u].",
-            devLogicId_, dieId_);
+            "userDevId[%d], dieId[%u].",
+            userDevId_, dieId_);
         return HcclResult::HCCL_SUCCESS;
     }
 
     uint32_t pfeReservedNum = 0;
-    (void)CcuResSpecifications::GetInstance(devLogicId_).GetPfeReservedNum(dieId_, pfeReservedNum);
+    (void)CcuResSpecifications::GetInstance(userDevId_).GetPfeReservedNum(dieId_, pfeReservedNum);
     if (UNLIKELY(pfeReservedNum == 0)) { // 此处不中断流程，后续jettyCtx分配时会因无pfe配置报错停止
         HCCL_WARNING(
             "[CcuPfeMgr] config pfe table passed, pfe reserved num is 0, "
-            "devLogicId[%d], dieId[%u].",
-            devLogicId_, dieId_);
+            "userDevId[%d], dieId[%u].",
+            userDevId_, dieId_);
         return HcclResult::HCCL_SUCCESS;
     }
 
@@ -111,7 +111,7 @@ HcclResult CcuPfeMgr::Init()
         pfeJettyMap_[feId] = BuildStrategy(cfg);
 
         const auto& pfeCtx = BuildPfeCtx(dieId_, cfg);
-        CHK_RET(ConfigPfeTable(devLogicId_, devPhyId_, dieId_, feId, pfeReservedNum, pfeCtx));
+        CHK_RET(ConfigPfeTable(userDevId_, devPhyId_, dieId_, feId, pfeReservedNum, pfeCtx));
     }
 
     return HcclResult::HCCL_SUCCESS;
@@ -123,8 +123,8 @@ HcclResult CcuPfeMgr::GetPfeStrategy(uint32_t feId, PfeJettyStrategy& pfeJettySt
     if (iter == pfeJettyMap_.end()) {
         HCCL_ERROR(
             "[CcuPfeMgr][%s] failed, feId[%u] is not found, "
-            "devLogicId[%d], dieId[%u].",
-            __func__, feId, devLogicId_, dieId_);
+            "userDevId[%d], dieId[%u].",
+            __func__, feId, userDevId_, dieId_);
         return HCCL_E_NOT_FOUND;
     }
 

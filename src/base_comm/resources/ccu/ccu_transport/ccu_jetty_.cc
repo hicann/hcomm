@@ -43,10 +43,10 @@ CcuJetty::CcuJetty(const Hccl::IpAddress& ipAddr, const CcuJettyInfo& jettyInfo)
 HcclResult CcuJetty::Init()
 {
     EXCEPTION_HANDLE_BEGIN
-    devLogicId_ = HcclGetThreadDeviceId();
+    userDevId_ = HcclGetThreadDeviceId();
     uint32_t devPhyId{0};
     Hccl::CqCreateInfo cqInfo{};
-    CHK_RET(hrtGetDevicePhyIdByIndex(static_cast<uint32_t>(devLogicId_), devPhyId));
+    CHK_RET(hrtGetDevicePhyIdByIndex(static_cast<uint32_t>(userDevId_), devPhyId));
     auto& rdmaHandleMgr = Hccl::RdmaHandleManager::GetInstance();
     ctxHandle_ = rdmaHandleMgr.GetByIp(devPhyId, ipAddr_);
     CHK_PRT_RET(
