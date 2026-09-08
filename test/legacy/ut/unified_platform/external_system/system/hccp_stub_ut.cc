@@ -475,6 +475,7 @@ int RaCtxQpCreateAsync(
     void* ctx_handle, struct QpCreateAttr* attr, struct QpCreateInfo* info, void** qp_handle, void** req_handle)
 {
     *req_handle = reinterpret_cast<void*>(0x12345678);
+    info->key.size = DEV_QP_KEY_SIZE;
     return 0;
 }
 

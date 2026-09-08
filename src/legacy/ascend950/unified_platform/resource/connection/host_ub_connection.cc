@@ -214,8 +214,15 @@ void HostUbConnection::ParseRmtExchangeDto(const Serializable& rmtDto)
 {
     auto dto = dynamic_cast<const ExchangeUbConnDto&>(rmtDto);
     HCCL_INFO("[HostUbConnection][%s] remoteConnDto[%s]", __func__, dto.Describe().c_str());
+    if (dto.qpKeySize == 0 || dto.qpKeySize > HRT_UB_QP_KEY_MAX_LEN) {
+        HCCL_ERROR(
+            "[HostUbConnection][%s] invalid remote qpKeySize[%u], max[%u].", __func__, dto.qpKeySize,
+            HRT_UB_QP_KEY_MAX_LEN);
+        ThrowAbnormalStatus(std::string(__func__));
+    }
     remoteTokenValue = dto.tokenValue;
-    errno_t ret = memcpy_s(remoteQpKey, HRT_UB_QP_KEY_MAX_LEN, dto.qpKey, HRT_UB_QP_KEY_MAX_LEN);
+    remoteKeySize = dto.qpKeySize;
+    errno_t ret = memcpy_s(remoteQpKey, HRT_UB_QP_KEY_MAX_LEN, dto.qpKey, remoteKeySize);
     if (ret != EOK) {
         HCCL_ERROR("[HostUbConnection][%s] memcpy_s failed, ret=%d", __func__, ret);
         ThrowAbnormalStatus(std::string(__func__));
@@ -353,7 +360,7 @@ void HostUbConnection::ImportJetty()
 {
     HrtRaUbJettyImportedInParam in{};
     in.key = remoteQpKey;
-    in.keyLen = keySize;
+    in.keyLen = remoteKeySize;
     in.tokenValue = remoteTokenValue;
     in.jettyImportCfg = jettyImportCfg;
     in.jettyImportCfg.protocol = tpProtocol;

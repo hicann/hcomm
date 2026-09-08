@@ -60,7 +60,9 @@ protected:
         MOCKER_CPP(&RdmaHandleManager::GetTokenIdInfo).stubs().will(returnValue(std::pair<u64, u32>(0, 0)));
 
         // Mock HrtRaUbCreateJetty
-        MOCKER(HrtRaUbCreateJetty).stubs().will(returnValue(HrtRaUbJettyCreatedOutParam{}));
+        HrtRaUbJettyCreatedOutParam jettyOutParam{};
+        jettyOutParam.keySize = HRT_UB_QP_KEY_MAX_LEN;
+        MOCKER(HrtRaUbCreateJetty).stubs().will(returnValue(jettyOutParam));
 
         // Mock TpManager Init
         MOCKER(HrtGetDevice).stubs().will(returnValue(0));

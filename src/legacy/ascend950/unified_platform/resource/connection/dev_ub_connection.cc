@@ -284,7 +284,7 @@ void DevUbConnection::AdvanceUbConnFromJettyImporting()
         if (publishRemoteCb_ == nullptr) {
             THROW<InternalException>("[DevUbConnection][%s] publish callback is null.", __func__);
         }
-        HcclResult ret = publishRemoteCb_(remoteQpKey, keySize, remoteJettyHandle, remoteJettyHandlePtr, tpn);
+        HcclResult ret = publishRemoteCb_(remoteQpKey, remoteKeySize, remoteJettyHandle, remoteJettyHandlePtr, tpn);
         if (ret != HCCL_SUCCESS) {
             THROW<InternalException>(
                 "[DevUbConnection][%s] publish shared remote jetty failed, ret[%d].", __func__, ret);
@@ -418,8 +418,14 @@ void DevUbConnection::ParseRmtExchangeDto(const Serializable& rmtDto)
 {
     auto dto = dynamic_cast<const ExchangeUbConnDto&>(rmtDto);
     HCCL_INFO("[DevUbConnection][%s] remoteConnDto[%s]", __func__, dto.Describe().c_str());
+    if (dto.qpKeySize == 0 || dto.qpKeySize > HRT_UB_QP_KEY_MAX_LEN) {
+        THROW<InvalidParamsException>(
+            "[DevUbConnection][%s] invalid remote qpKeySize[%u], max[%u].", __func__, dto.qpKeySize,
+            HRT_UB_QP_KEY_MAX_LEN);
+    }
     remoteTokenValue = dto.tokenValue;
-    (void)memcpy_s(remoteQpKey, HRT_UB_QP_KEY_MAX_LEN, dto.qpKey, HRT_UB_QP_KEY_MAX_LEN);
+    remoteKeySize = dto.qpKeySize;
+    (void)memcpy_s(remoteQpKey, HRT_UB_QP_KEY_MAX_LEN, dto.qpKey, remoteKeySize);
 
     if (tpProtocol != TpProtocol::INVALID) {
         jettyImportCfg.remoteTpHandle = dto.tpHandle;
@@ -670,6 +676,14 @@ bool DevUbConnection::GetTpInfo()
                     "reuse injected localPsn[%u].",
                     __func__, static_cast<unsigned long long>(tpInfo.tpHandle), rmtAddr.Describe().c_str(),
                     jettyImportCfg.localPsn);
+            } else if (tpProtocol == TpProtocol::UB_RTP) {
+                GenerateLocalPsn();
+                const HcclResult psnRet
+                    = TpManager::GetInstance(devLogicId).GetOrSetLocalPsn(p, tpInfo, jettyImportCfg.localPsn);
+                if (psnRet != HcclResult::HCCL_SUCCESS) {
+                    HCCL_ERROR("[DevUbConnection][%s] get UB_RTP local PSN failed, ret[%d].", __func__, psnRet);
+                    ThrowAbnormalStatus(std::string(__func__));
+                }
             } else {
                 GenerateLocalPsn();
             }
@@ -691,7 +705,7 @@ void DevUbConnection::ImportJetty()
 {
     HrtRaUbJettyImportedInParam in{};
     in.key = remoteQpKey;
-    in.keyLen = keySize;
+    in.keyLen = remoteKeySize;
     in.tokenValue = remoteTokenValue;
     in.jettyImportCfg = jettyImportCfg;
     in.jettyImportCfg.protocol = tpProtocol;
@@ -736,7 +750,7 @@ void DevUbConnection::AcquireOrWaitSharedRemoteJetty()
     TargetJettyHandle cachedHandle = 0;
     void* cachedHandlePtr = nullptr;
     uint32_t cachedTpn = 0;
-    HcclResult ret = acquireRemoteCb_(remoteQpKey, keySize, needImport, cachedHandle, cachedHandlePtr, cachedTpn);
+    HcclResult ret = acquireRemoteCb_(remoteQpKey, remoteKeySize, needImport, cachedHandle, cachedHandlePtr, cachedTpn);
     if (ret != HCCL_SUCCESS) {
         THROW<InternalException>("[DevUbConnection][%s] acquire shared remote jetty failed, ret[%d].", __func__, ret);
     }

@@ -575,6 +575,51 @@ HcclResult TpManager::GetTpInfo(const RaUbGetTpInfoParam& param, TpInfo& tpInfo,
     return RunAsyncGetTpInfo(param, tpInfo);
 }
 
+HcclResult TpManager::GetOrSetLocalPsn(const RaUbGetTpInfoParam& param, const TpInfo& tpInfo, uint32_t& localPsn)
+{
+    CHK_RET(CheckTpProtocol(param.tpProtocol));
+    const QosKey qosKey = QosMapKey(param.qos);
+    std::lock_guard<std::mutex> lock(GetInfoCtxMutex(param.tpProtocol));
+    auto& infoMap = GetInfoCtxMap(param.tpProtocol);
+    const auto locIt = infoMap.find(param.locAddr);
+    if (locIt == infoMap.end()) {
+        HCCL_INFO(
+            "[TpManager][%s] local PSN cache miss, locAddr not found, param[%s].", __func__, param.Describe().c_str());
+        return HcclResult::HCCL_SUCCESS;
+    }
+    const auto rmtIt = locIt->second.find(param.rmtAddr);
+    if (rmtIt == locIt->second.end()) {
+        HCCL_INFO(
+            "[TpManager][%s] local PSN cache miss, rmtAddr not found, param[%s].", __func__, param.Describe().c_str());
+        return HcclResult::HCCL_SUCCESS;
+    }
+    const auto qosIt = rmtIt->second.find(qosKey);
+    if (qosIt == rmtIt->second.end()) {
+        HCCL_INFO(
+            "[TpManager][%s] local PSN cache miss, qos not found, param[%s].", __func__, param.Describe().c_str());
+        return HcclResult::HCCL_SUCCESS;
+    }
+
+    TpInfoCtx& infoCtx = qosIt->second;
+    if (infoCtx.tpInfo.tpHandle != tpInfo.tpHandle) {
+        // 并发首次申请可能返回不同 TP，StoreTpInfoResult 会保留先写入者、让后完成者使用自己的 TP。
+        // 这种情况下不能错误复用缓存 TP 的 PSN，也不能把原有可用路径改成失败。
+        HCCL_WARNING(
+            "[TpManager][%s] skip PSN reuse, cached tpHandle[0x%llx] != current tpHandle[0x%llx], param[%s].", __func__,
+            static_cast<unsigned long long>(infoCtx.tpInfo.tpHandle), static_cast<unsigned long long>(tpInfo.tpHandle),
+            param.Describe().c_str());
+        return HcclResult::HCCL_SUCCESS;
+    }
+
+    const bool reuse = infoCtx.hasLocalPsn;
+    if (!reuse) {
+        infoCtx.localPsn = localPsn;
+        infoCtx.hasLocalPsn = true;
+    }
+    localPsn = infoCtx.localPsn;
+    return HcclResult::HCCL_SUCCESS;
+}
+
 HcclResult TpManager::FindAndGetTpAttr(const TpHandle tpHandle, TpAttrInfo& tpAttrInfo)
 {
     std::lock_guard<std::mutex> lock(tpAttrCtxMutex);

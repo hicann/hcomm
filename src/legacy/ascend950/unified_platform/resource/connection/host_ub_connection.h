@@ -111,6 +111,7 @@ private:
 
     u8 remoteQpKey[HRT_UB_QP_KEY_MAX_LEN] = {0};
     u32 keySize{0};
+    u32 remoteKeySize{0};
     u32 remoteTokenValue{0};
     JettyImportCfg jettyImportCfg{};
 
