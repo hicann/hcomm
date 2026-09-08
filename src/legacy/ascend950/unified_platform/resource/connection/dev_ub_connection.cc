@@ -976,14 +976,14 @@ void DevUbConnection::ProcessSlices(
         sliceSize = UB_MAX_TRANS_SIZE / dataTypeSize * dataTypeSize;
     }
 
-    u32 locBufSize = loc.size;
-    u32 sliceNum = locBufSize / sliceSize;
-    u32 lastSliceSize = locBufSize % sliceSize;
-    u64 totalSize = static_cast<u64>(sliceNum) * static_cast<u64>(sliceSize);
+    u64 locBufSize = loc.size;
+    u64 sliceNum = locBufSize / sliceSize;
+    u64 lastSliceSize = locBufSize % sliceSize;
+    u64 totalSize = sliceNum * sliceSize;
     if (loc.addr > UINT64_MAX - totalSize || rmt.addr > UINT64_MAX - totalSize) {
         THROW<InternalException>("integer overflow occurs");
     }
-    for (u32 sliceIdx = 0; sliceIdx < sliceNum; sliceIdx++) {
+    for (u64 sliceIdx = 0; sliceIdx < sliceNum; sliceIdx++) {
         MemoryBuffer locSlice(loc.addr + sliceIdx * sliceSize, sliceSize, loc.memHandle);
         MemoryBuffer rmtSlice(rmt.addr + sliceIdx * sliceSize, sliceSize, rmt.memHandle);
         // 当前是最后一片，且没有lastSlice时，启用cqe
@@ -999,7 +999,7 @@ void DevUbConnection::ProcessSlices(
     }
 
     HCCL_INFO(
-        "[DevUbConnection::%s] end, locBufSize[%u], sliceNum[%u], sliceSize[%u], lastSliceSize[%u]", __func__,
+        "[DevUbConnection::%s] end, locBufSize[%llu], sliceNum[%llu], sliceSize[%u], lastSliceSize[%llu]", __func__,
         locBufSize, sliceNum, sliceSize, lastSliceSize);
 }
 
@@ -1017,15 +1017,19 @@ void DevUbConnection::ProcessSlicesWithNotify(
         sliceSize = UB_MAX_TRANS_SIZE / dataTypeSize * dataTypeSize;
     }
 
-    u32 locBufSize = loc.size;
-    u32 sliceNum = locBufSize / sliceSize;
-    u32 lastSliceSize = locBufSize % sliceSize;
+    u64 locBufSize = loc.size;
+    u64 sliceNum = locBufSize / sliceSize;
+    u64 lastSliceSize = locBufSize % sliceSize;
     if (sliceNum > 0 && lastSliceSize == 0) {
         sliceNum--;
         lastSliceSize = sliceSize;
     }
+    u64 totalSize = sliceNum * sliceSize;
+    if (loc.addr > UINT64_MAX - totalSize || rmt.addr > UINT64_MAX - totalSize) {
+        THROW<InternalException>("integer overflow occurs");
+    }
 
-    for (u32 sliceIdx = 0; sliceIdx < sliceNum; sliceIdx++) {
+    for (u64 sliceIdx = 0; sliceIdx < sliceNum; sliceIdx++) {
         MemoryBuffer locSlice(loc.addr + sliceIdx * sliceSize, sliceSize, loc.memHandle);
         MemoryBuffer rmtSlice(rmt.addr + sliceIdx * sliceSize, sliceSize, rmt.memHandle);
         // 固定会有lastSlice，则前面的cqe都不启用
@@ -1040,7 +1044,7 @@ void DevUbConnection::ProcessSlicesWithNotify(
     }
 
     HCCL_INFO(
-        "[DevUbConnection::%s] end, locBufSize[%u], sliceNum[%u], sliceSize[%u], lastSliceSize[%u]", __func__,
+        "[DevUbConnection::%s] end, locBufSize[%llu], sliceNum[%llu], sliceSize[%u], lastSliceSize[%llu]", __func__,
         locBufSize, sliceNum, sliceSize, lastSliceSize);
 }
 
