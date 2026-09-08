@@ -105,18 +105,11 @@ function(pack_built_in)
       ${COMMON_FILES}
       ${CANN_CMAKE_DIR}/scripts/install/multi_version.inc
   )
-  set(CONF_FILES
-      ${CANN_CMAKE_DIR}/scripts/package/cfg/path.cfg
-  )
 
   install(FILES ${CMAKE_BINARY_DIR}/version.hcomm.info
       DESTINATION share/info/hcomm
       RENAME version.info
       ${INSTALL_OPTIONAL}
-      COMPONENT hcomm
-  )
-  install(FILES ${CONF_FILES}
-      DESTINATION ${CMAKE_SYSTEM_PROCESSOR}-linux/conf
       COMPONENT hcomm
   )
   install(FILES ${PACKAGE_FILES}

@@ -83,9 +83,6 @@ remove_compiler_atc_fwkacllib_softlink() {
         if [ -e "${install_path}/${pkg}/include" ]; then
             chmod u+w "${install_path}/${pkg}/include"
             remove_dir "${install_path}/${pkg}/include/hcomm"
-            if [ "$pkg" = "compiler" ]; then
-                chmod u-w "${install_path}/${pkg}/include"
-            fi
         fi
 
         if [ -e "${install_path}/${pkg}/lib64" ]; then
@@ -101,18 +98,8 @@ remove_compiler_atc_fwkacllib_softlink() {
             chmod u+w "${install_path}/${pkg}"
         fi
         remove_dir_if_empty "${install_path}/${pkg}/lib64"
-        if [ -e "${install_path}/${pkg}/lib64" ]; then
-            if [ "$pkg" = "compiler" ]; then
-                chmod u-w "${install_path}/${pkg}/lib64"
-            fi
-        fi
         remove_dir_if_empty "${install_path}/${pkg}/include"
         remove_dir_if_empty "${install_path}/${pkg}"
-        if [ -e "${install_path}/${pkg}" ]; then
-            if [ "$pkg" = "compiler" ]; then
-                chmod u-w "${install_path}/${pkg}"
-            fi
-        fi
     done
 }
 

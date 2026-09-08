@@ -197,7 +197,7 @@ set(HCOMM_FRAMEWORK_INCLUDE_LIST
     ${HCOMM_CODE_ROOT}/include/ccu
     ${HCOMM_CODE_ROOT}/src/base_comm/resources/ccu/southbound_adpt/
     ${HCOMM_CODE_ROOT}/src/base_comm/common/
- 
+
     ${HCOMM_CODE_ROOT}/src/base_comm/resources/ccu/pub_inc/
     ${HCOMM_CODE_ROOT}/src/base_comm/resources/ccu/ccu_device/
     ${HCOMM_CODE_ROOT}/src/base_comm/resources/ccu/ccu_device/ccu_comp/
@@ -270,7 +270,7 @@ set(HCOMM_LEGACY_INCLUDE_LIST
     ${HCOMM_CODE_LEGACY}/framework/resource_manager/stream
 
     ${HCCL_CODE_ROOT}/src/common
-    
+
 )
 
 add_subdirectory(testcase)
