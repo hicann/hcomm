@@ -10,6 +10,7 @@
 #include "dfx_profiling_reporter.h"
 #include "dfx_dlprof_function.h"
 #include "comm_engine_utils.h"
+#include "workflow_pub.h"
 
 namespace Hccl {
 constexpr size_t TASK_INFO_BATCH_RESERVE_SIZE = 128;
@@ -79,8 +80,8 @@ void DfxProfilingReporter::ReportOp(uint64_t beginTime, bool cachedReq, bool opb
     opInfo->endTime_ = endTime;
     profilingHandler_->ReportHcclOp(*opInfo, cachedReq);
 
-    // 单算子模式涉及HOST API信息上报 注意这个地方
-    if (opbased) {
+    // 单算子模式涉及HOST API信息上报，GE下发场景(LaunchKernelMode)不上报
+    if (opbased && !IsLaunchKernelMode()) {
         profilingHandler_->ReportHostApi(opType, beginTime, endTime, cachedReq, isAiCpu);
     }
 }
