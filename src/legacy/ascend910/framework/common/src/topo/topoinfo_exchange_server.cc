@@ -12,6 +12,7 @@
 #include <thread>
 #include <fstream>
 #include <iostream>
+#include "adapter_rts_common.h"
 #include "externalinput_pub.h"
 #include "config.h"
 #include "hccl_socket.h"
@@ -138,6 +139,427 @@ HcclResult TopoInfoExchangeServer::Setup()
 
     HCCL_INFO("cluster topo exchange server completed, exit[%u].", error);
     return error;
+}
+
+HcclResult TopoInfoExchangeServer::SetScalableInfo(const ScalableServerInfo& info)
+{
+    nRoot_ = info.nRoot;
+    rootIndex_ = info.rootIndex;
+    groupSize_ = info.groupSize;
+    deviceLogicId_ = info.deviceLogicId;
+    meshInfos_ = info.meshInfos;
+    meshListenSocket_ = info.meshListenSocket;
+    HCCL_INFO(
+        "[TopoInfoExchangeServer][SetScalableInfo] nRoot[%u], rootIndex[%u], groupSize[%u], deviceLogicId[%d]", nRoot_,
+        rootIndex_, groupSize_, deviceLogicId_);
+    return HCCL_SUCCESS;
+}
+
+// 多root建链：本root作为server，接受本组groupSize个rank上报子ranktable，
+// 收齐后通过root间全互联广播合并出全局ranktable，再广播给本组rank。
+HcclResult TopoInfoExchangeServer::SetupScalable()
+{
+    HcclResult error = SetupScalableCore();
+    if (error != HCCL_SUCCESS) {
+        CHK_RET(Disconnect(connectSockets_));
+        CHK_RET(StopNetwork(whitelist_, hostPort_));
+    }
+
+    HCCL_INFO("cluster topo exchange server(scalable) completed, exit[%u].", error);
+    return error;
+}
+
+// 通过dispatcher把ranktable广播给各rank，并更新/唤醒广播阶段状态
+HcclResult TopoInfoExchangeServer::BroadcastRankTableAndStatus(
+    const std::map<std::string, std::shared_ptr<HcclSocket>>& connectSockets, const RankTable_t& rankTable,
+    const std::string& failedAgentIdList)
+{
+    g_broadcastStage.store(BroadcastStage::Started, std::memory_order_release);
+    TopoInfoExchangeDispather dispatcher(this);
+    HcclResult ret = dispatcher.BroadcastRankTable(connectSockets, rankTable, failedAgentIdList);
+    {
+        g_broadcastStage.store(BroadcastStage::Completed, std::memory_order_release);
+        std::lock_guard<std::mutex> lock(g_broadcast_stage_mutex);
+        g_broadcast_stage_cv.notify_all();
+    }
+    return ret;
+}
+
+// 多root建链的流程主体：连接本组rank → 收集组内子表 → root间合并 → 广播全局表 → 停止监听
+HcclResult TopoInfoExchangeServer::SetupScalableCore()
+{
+    HcclResult ret;
+    HcclResult error = HCCL_SUCCESS;
+
+    do {
+        u32 expectRankSize = 0;
+        std::string failedAgentIdList;
+        HcclResult connectRet = ScalableConnect(connectSockets_, expectRankSize);
+        if (connectRet != HCCL_SUCCESS) {
+            HcclResult result = FailedConnectionAgentIdString(expectRankSize, failedAgentIdList);
+            CHK_PRT_CONT(
+                result == HCCL_SUCCESS,
+                HCCL_ERROR("[TopoInfoExchangeServer]failed to connect rankList:[%s]", failedAgentIdList.c_str()));
+        }
+
+        // 收集本组所有rank上报的子ranktable
+        RankTable_t groupRankTable;
+        ret = GetRanksBasicInfo(connectSockets_, groupRankTable);
+        CHK_PRT_BREAK(
+            ret != HCCL_SUCCESS, HCCL_ERROR("[TopoInfoExchangeServer][SetupScalable]GetRanksBasicInfo failed"),
+            error = ret);
+        HCCL_INFO("topo exchange server(scalable) get group rank basic info success, groupSize[%u].", groupSize_);
+
+        // root间全互联广播：收齐所有root的组内子表并合并出全局ranktable
+        ret = RootMeshAllGatherAndMerge(groupRankTable);
+        CHK_PRT_BREAK(
+            ret != HCCL_SUCCESS, HCCL_ERROR("[TopoInfoExchangeServer][SetupScalable]RootMeshAllGatherAndMerge failed"),
+            error = ret);
+        HCCL_INFO("topo exchange server(scalable) root mesh allgather and merge success.");
+
+        // 广播全局ranktable给本组rank
+        ret = BroadcastRankTableAndStatus(connectSockets_, rankTable_, failedAgentIdList);
+        CHK_PRT_BREAK(
+            ret != HCCL_SUCCESS,
+            HCCL_ERROR(
+                "[TopoInfoExchangeServer][SetupScalable]Broadcast Rank Basic Infos failed, "
+                "connectFailedAgentIdList[%s]",
+                failedAgentIdList.c_str()),
+            error = ret);
+        HCCL_INFO("topo exchange server(scalable) send rank basic info to all group agent success.");
+        CHK_PRT_BREAK(
+            connectRet != HCCL_SUCCESS,
+            HCCL_ERROR("[TopoInfoExchangeServer][SetupScalable]topo exchange server connect client failed"),
+            error = connectRet);
+
+        ret = StopSocketListen(whitelist_, hostPort_);
+        CHK_PRT_BREAK(
+            ret != HCCL_SUCCESS,
+            HCCL_ERROR(
+                "[TopoInfoExchangeServer][SetupScalable]topo exchange server stop socket listen port[%u] failed.",
+                hostPort_),
+            error = ret);
+    } while (0);
+
+    return error;
+}
+
+HcclResult TopoInfoExchangeServer::ScalableConnect(
+    std::map<std::string, std::shared_ptr<HcclSocket>>& connectSockets, u32& rankSize)
+{
+    // 多root场景下，仅accept本组的groupSize个rank（含root自身），不依赖agent上报的rankNum
+    return AcceptLoop(connectSockets, rankSize, groupSize_, true);
+}
+
+// accept循环每轮的状态：剩余时间不足1s则跳过本轮，整体超时返回ACCEPT_TIMEOUT
+TopoInfoExchangeServer::SocketAcceptStatus TopoInfoExchangeServer::GetSocketAcceptStatus(
+    const std::chrono::steady_clock::time_point& startTime, const std::chrono::seconds& timeout, u32& waitTime)
+{
+    auto topoExUsedTime = std::chrono::steady_clock::now() - startTime;
+    if (topoExUsedTime >= timeout) {
+        return SocketAcceptStatus::ACCEPT_TIMEOUT;
+    }
+    auto topoExResTime = timeout - topoExUsedTime;
+    u32 topoExRes_i = std::chrono::duration_cast<std::chrono::seconds>(topoExResTime).count();
+    if (topoExRes_i == 0) {
+        return SocketAcceptStatus::ACCEPT_SKIP;
+    }
+    waitTime = topoExRes_i > SOCKET_ACCEPT_TIMEOUT ? SOCKET_ACCEPT_TIMEOUT : topoExRes_i;
+    return SocketAcceptStatus::ACCEPT_WAIT;
+}
+
+void TopoInfoExchangeServer::LogAcceptTimeout(bool isScalable) const
+{
+    HCCL_ERROR(
+        "[%s][%s]topo exchange server%s get socket timeout! timeout[%d s]", LOG_KEYWORDS_INIT_GROUP.c_str(),
+        LOG_KEYWORDS_RANKTABLE_DETECT.c_str(), isScalable ? "(scalable)" : "", GetExternalInputHcclLinkTimeOut());
+}
+
+// 每轮计算剩余等待时间后accept一个连接，收满expectSocketNumInit个连接即完成。
+HcclResult TopoInfoExchangeServer::AcceptLoop(
+    std::map<std::string, std::shared_ptr<HcclSocket>>& connectSockets, u32& rankSize, u32 expectSocketNumInit,
+    bool isScalable)
+{
+    auto startTime = std::chrono::steady_clock::now();
+    auto timeout = std::chrono::seconds(GetExternalInputHcclLinkTimeOut());
+    u32 expectSocketNum = expectSocketNumInit;
+    u32 previousRankNum = 0;
+    bool isFirstAcceptTimeOut = false;
+
+    while (expectSocketNum > 0) {
+        u32 waitTime = SOCKET_ACCEPT_TIMEOUT;
+        SocketAcceptStatus status = GetSocketAcceptStatus(startTime, timeout, waitTime);
+        if (status == SocketAcceptStatus::ACCEPT_TIMEOUT) {
+            LogAcceptTimeout(isScalable);
+            DisplayConnectedRank(connectSockets, rankSize);
+            return HCCL_E_TIMEOUT;
+        }
+        if (status == SocketAcceptStatus::ACCEPT_SKIP) {
+            continue;
+        }
+        CHK_RET(AcceptSocket(
+            connectSockets, rankSize, waitTime, expectSocketNum, previousRankNum, isFirstAcceptTimeOut, isScalable));
+    }
+    return HCCL_SUCCESS;
+}
+
+// 单次accept并处理建链结果：成功则记录rankNum并校验一致性，超时/连接错误则相应处理
+HcclResult TopoInfoExchangeServer::AcceptSocket(
+    std::map<std::string, std::shared_ptr<HcclSocket>>& connectSockets, u32& rankSize, u32 waitTime,
+    u32& expectSocketNum, u32& previousRankNum, bool& isFirstAcceptTimeOut, bool isScalable)
+{
+    std::shared_ptr<HcclSocket> socket;
+    std::string tag = TOPO_DETECT_TAG + "_" + identifier_ + "_" + std::to_string(hostPort_);
+    HcclResult ret = listenSocket_->Accept(tag, socket, waitTime);
+    if (ret == HCCL_SUCCESS) {
+        HCCL_INFO("listenSocket_->Accept completed.");
+        // server获取socket之后进行一次数据收发用于判断是否都成功获取到了socket
+        CHK_RET(socket->Send(TOPO_EXCHANGE_CHECK_MESSAGE, sizeof(TOPO_EXCHANGE_CHECK_MESSAGE)));
+        u32 rankNum = 0;
+        CHK_RET(GetRemoteFdAndRankSize(socket, connectSockets, rankNum));
+        rankSize = rankNum;
+        if (!isScalable) {
+            expectSocketNum = (previousRankNum == 0) ? rankNum : expectSocketNum;
+        }
+        // 仍校验所有agent上报的rankNum一致（scalable场景为全局nRanks），但不作为accept数量
+        CHK_RET(VerifyRemoteRankNum(previousRankNum, rankNum));
+        expectSocketNum -= 1;
+        isFirstAcceptTimeOut = false;
+    } else if (ret == HCCL_E_TIMEOUT) {
+        HCCL_INFO("listenSocket_->Accept TimeOut[%lld s]", waitTime);
+        if (isFirstAcceptTimeOut) {
+            return HCCL_SUCCESS;
+        }
+        isFirstAcceptTimeOut = true;
+        DisplayConnectingStatus(previousRankNum, expectSocketNum, connectSockets);
+    } else if (ret == HCCL_E_TCP_CONNECT) {
+        HCCL_INFO("listenSocket_->Accept E_TCP_CONNECT");
+        DisplayConnectedRank(connectSockets, rankSize);
+        return HCCL_E_TCP_CONNECT;
+    }
+    return HCCL_SUCCESS;
+}
+
+// root间全互联广播：
+//  1. 每个root收齐本组子表后，将子表直接发送给其余所有root（小index主动connect大index，大index
+//  accept，避免双向connect死锁）
+//  2. 每个root按rootIndex落槽维护 partials_，收齐 nRoot-1 个对端子表后合并出全局ranktable
+// 由于每条partial按源rootIndex独立落槽，且每对root只互发一条，不存在跨连接乱序问题。
+HcclResult TopoInfoExchangeServer::RootMeshAllGatherAndMerge(const RankTable_t& groupRankTable)
+{
+    if (nRoot_ <= 1) {
+        // 单root退化为本组即全局
+        partials_.clear();
+        partials_.push_back(groupRankTable);
+        return MergeRankTables(rankTable_);
+    }
+
+    partials_.clear();
+    partials_.resize(nRoot_);
+    partials_[rootIndex_] = groupRankTable;
+    meshRecvCount_.store(0);
+
+    HcclResult acceptRet = HCCL_SUCCESS;
+    std::thread acceptThread;
+    if (rootIndex_ > 0) {
+        acceptThread = std::thread([this, &acceptRet]() {
+            acceptRet = MeshAcceptWorker();
+        });
+    }
+
+    HcclResult connectRet = MeshConnectToLargerRoots();
+
+    if (acceptThread.joinable()) {
+        acceptThread.join();
+    }
+
+    if (connectRet != HCCL_SUCCESS) {
+        HCCL_ERROR(
+            "[TopoInfoExchangeServer][RootMeshAllGatherAndMerge]mesh connect to larger roots failed, ret[%u]",
+            connectRet);
+        return connectRet;
+    }
+    if (acceptRet != HCCL_SUCCESS) {
+        HCCL_ERROR(
+            "[TopoInfoExchangeServer][RootMeshAllGatherAndMerge]mesh accept smaller roots failed, ret[%u]", acceptRet);
+        return acceptRet;
+    }
+    if (meshRecvCount_.load() != nRoot_ - 1) {
+        HCCL_ERROR(
+            "[TopoInfoExchangeServer][RootMeshAllGatherAndMerge]recv partial count[%u] mismatch expect[%u]",
+            meshRecvCount_.load(), nRoot_ - 1);
+        return HCCL_E_INTERNAL;
+    }
+    return MergeRankTables(rankTable_);
+}
+
+// HcclSocket::Connect() 仅发起异步连接，fdHandle_ 在连接建立（GetStatus==SOCKET_OK）后才填充，
+// 因此 mesh 客户端在 Send/Recv 前必须轮询等待连接建立，与 agent 侧 GetConnection 逻辑一致
+HcclResult TopoInfoExchangeServer::WaitMeshConnectionEstablished(const std::shared_ptr<HcclSocket>& socket) const
+{
+    const auto startTime = std::chrono::steady_clock::now();
+    const auto timeout = std::chrono::seconds(GetExternalInputHcclLinkTimeOut());
+    while (true) {
+        HcclSocketStatus status = socket->GetStatus();
+        if (status == HcclSocketStatus::SOCKET_OK) {
+            return HCCL_SUCCESS;
+        }
+        if (status == HcclSocketStatus::SOCKET_CONNECTING) {
+            if (std::chrono::steady_clock::now() - startTime >= timeout) {
+                HCCL_ERROR(
+                    "[TopoInfoExchangeServer][WaitMeshConnectionEstablished]wait mesh connect timeout[%lld s]",
+                    GetExternalInputHcclLinkTimeOut());
+                return HCCL_E_TIMEOUT;
+            }
+            SaluSleep(ONE_MILLISECOND_OF_USLEEP);
+            continue;
+        }
+        HCCL_ERROR(
+            "[TopoInfoExchangeServer][WaitMeshConnectionEstablished]mesh socket establish failed, status[%d]",
+            static_cast<int>(status));
+        return HCCL_E_TCP_CONNECT;
+    }
+}
+
+// 构建root间mesh连接tag：各root的identifier互不相同不能用于tag，
+// 改用有序对<较小root, 较大root> + 较大root的meshPort（双方均可从meshInfos_算出一致的值），
+// 保证连接/接受双方tag一致且每对root唯一
+std::string TopoInfoExchangeServer::BuildMeshTag(u32 smallerRoot, u32 largerRoot) const
+{
+    // 复用公共构造，与 mesh 白名单下发/删除的 tag 严格一致
+    return TopoInfoExchangeBase::BuildMeshTag(smallerRoot, largerRoot, meshInfos_[largerRoot].meshPort);
+}
+
+// 主动connect所有 index > 本root 的root（连接方先发后收，配合对方先收后发，单条消息不互锁）
+HcclResult TopoInfoExchangeServer::MeshConnectToLargerRoots()
+{
+    for (u32 peer = rootIndex_ + 1; peer < nRoot_; ++peer) {
+        HcclIpAddress peerIp(meshInfos_[peer].ip);
+        CHK_PRT_RET(
+            peerIp.IsInvalid() || meshInfos_[peer].meshPort == HCCL_INVALID_PORT,
+            HCCL_ERROR(
+                "[TopoInfoExchangeServer][MeshConnectToLargerRoots]invalid peer[%u] ip[%s] port[%u]", peer,
+                meshInfos_[peer].ip, meshInfos_[peer].meshPort),
+            HCCL_E_PARA);
+        // 连接方只连接更大的root，tag 与 MeshAcceptWorker 的 accept tag 保持一致，RA socket才能配对
+        std::string tag = BuildMeshTag(rootIndex_, peer);
+        std::shared_ptr<HcclSocket> socket;
+        EXCEPTION_CATCH(
+            (socket = std::make_shared<HcclSocket>(
+                 tag, netDevCtx_, peerIp, meshInfos_[peer].meshPort, HcclSocketRole::SOCKET_ROLE_CLIENT)),
+            return HCCL_E_PTR);
+        CHK_SMART_PTR_NULL(socket);
+        CHK_RET(socket->Init());
+        CHK_RET(socket->Connect()); // 发起异步连接，等待对端root accept并建立连接
+        // 连接建立（fdHandle可用）后才能收发
+        CHK_RET(WaitMeshConnectionEstablished(socket));
+        HCCL_INFO(
+            "[TopoInfoExchangeServer][MeshConnectToLargerRoots]connect root[%u] ip[%s] port[%u] success.", peer,
+            meshInfos_[peer].ip, meshInfos_[peer].meshPort);
+
+        // 连接方：先发自己的rootIndex和组内子表，再收对端子表
+        u32 srcIndex = rootIndex_;
+        CHK_RET(socket->Send(&srcIndex, sizeof(srcIndex)));
+        CHK_RET(MeshSendPartial(socket, partials_[rootIndex_]));
+        CHK_RET(RecvClusterInfoMsg(socket, partials_[peer]));
+        meshRecvCount_++;
+        CHK_RET(DisconnectSocket(socket));
+        HCCL_INFO("[TopoInfoExchangeServer][MeshConnectToLargerRoots]exchange partial with root[%u] success.", peer);
+    }
+    return HCCL_SUCCESS;
+}
+
+// 被动accept所有 index < 本root 的root（接受方先收后发，避免与连接方同时Connect导致死锁）。
+// MeshAcceptWorker 运行在 RootMeshAllGatherAndMerge 新建的独立线程上，该线程未设置device上下文；
+// 而 RecvClusterInfoMsg 内部 HostMem::alloc（hrtMallocHost）依赖当前线程的device，必须先设置，
+// 否则内存分配失败返回HCCL_E_PTR。
+HcclResult TopoInfoExchangeServer::MeshAcceptWorker()
+{
+    CHK_RET(hrtSetDevice(deviceLogicId_));
+    HcclResult ret = MeshAcceptWorkerCore();
+    (void)hrtResetDevice(deviceLogicId_);
+    return ret;
+}
+
+HcclResult TopoInfoExchangeServer::MeshAcceptWorkerCore()
+{
+    for (u32 peer = 0; peer < rootIndex_; ++peer) {
+        std::shared_ptr<HcclSocket> socket;
+        // 接受方只接受更小的root，对端peer即该连接的较小端；
+        // tag 用有序对<peer较小, rootIndex_较大>，与MeshConnectToLargerRoots的connect tag保持一致，RA socket才能配对
+        std::string tag = BuildMeshTag(peer, rootIndex_);
+        HcclResult ret = meshListenSocket_->Accept(tag, socket, SOCKET_ACCEPT_TIMEOUT);
+        CHK_PRT_RET(
+            ret != HCCL_SUCCESS,
+            HCCL_ERROR("[TopoInfoExchangeServer][MeshAcceptWorker]mesh accept failed, ret[%u]", ret), ret);
+
+        // 先收对端的rootIndex与组内子表
+        u32 srcIndex = INVALID_UINT;
+        CHK_RET(socket->Recv(&srcIndex, sizeof(srcIndex)));
+        CHK_PRT_RET(
+            srcIndex >= nRoot_ || srcIndex >= rootIndex_,
+            HCCL_ERROR(
+                "[TopoInfoExchangeServer][MeshAcceptWorker]invalid src rootIndex[%u], nRoot[%u]", srcIndex, nRoot_),
+            HCCL_E_INTERNAL);
+        CHK_RET(RecvClusterInfoMsg(socket, partials_[srcIndex]));
+        meshRecvCount_++;
+
+        // 再把自己的组内子表发回给对端
+        CHK_RET(MeshSendPartial(socket, partials_[rootIndex_]));
+        CHK_RET(DisconnectSocket(socket));
+        HCCL_INFO("[TopoInfoExchangeServer][MeshAcceptWorker]exchange partial with root[%u] success.", srcIndex);
+    }
+    return HCCL_SUCCESS;
+}
+
+HcclResult TopoInfoExchangeServer::MeshSendPartial(std::shared_ptr<HcclSocket> socket, const RankTable_t& partial)
+{
+    nlohmann::json basicJson;
+    CHK_RET(Struct2Json(partial, basicJson));
+    basicJson[PROP_STEP] = currentStep_; // 与其他root保持相同step校验
+    std::string buffer = basicJson.dump();
+    u32 msgLen = buffer.length();
+    CHK_RET(SendClusterInfoMsg(socket, partial, buffer, msgLen));
+    return HCCL_SUCCESS;
+}
+
+// 按rootIndex顺序合并所有partial为全局ranktable（rankId全局有序，无需再排序）
+HcclResult TopoInfoExchangeServer::MergeRankTables(RankTable_t& mergedTable)
+{
+    RankTable_t result;
+    bool isFirst = true;
+    for (u32 i = 0; i < nRoot_; ++i) {
+        if (partials_[i].rankList.empty()) {
+            HCCL_ERROR("[TopoInfoExchangeServer][MergeRankTables]partial of root[%u] is empty, nRoot[%u].", i, nRoot_);
+            return HCCL_E_INTERNAL;
+        }
+        if (isFirst) {
+            result.nicDeploy = partials_[i].nicDeploy;
+            isFirst = false;
+        } else if (result.nicDeploy != partials_[i].nicDeploy) {
+            HCCL_ERROR(
+                "[TopoInfoExchangeServer][MergeRankTables]nicDeploy mismatch, root[%u] nicDeploy[%u], expect[%u].", i,
+                partials_[i].nicDeploy, result.nicDeploy);
+            return HCCL_E_INTERNAL;
+        }
+        for (auto& rank : partials_[i].rankList) {
+            result.rankList.push_back(rank);
+        }
+        for (auto& server : partials_[i].serverList) {
+            if (!DoServerIdExist(result, server.serverId)) {
+                result.serverList.push_back(server);
+            }
+        }
+    }
+    // 重新统计serverNum/rankNum/deviceNum/superPodNum，并校验nicDeploy。
+    // 此处以 partials_[0] 为 nicDeploy 基准：循环内已保证其非空且与其余 partial 一致（isFirst 分支校验）
+    CHK_RET(GetCommonTopoInfo(result, partials_[0]));
+    CHK_RET(SortRankList(result));
+    mergedTable = result;
+    HCCL_INFO(
+        "[TopoInfoExchangeServer][MergeRankTables]merge success, rankNum[%u], serverNum[%u], nRoot[%u].",
+        result.rankNum, result.serverNum, nRoot_);
+    return HCCL_SUCCESS;
 }
 
 HcclResult TopoInfoExchangeServer::HierarchicalSendRecv()
@@ -319,59 +741,7 @@ HcclResult TopoInfoExchangeServer::SetupByMasterInfo()
 HcclResult
 TopoInfoExchangeServer::Connect(std::map<std::string, std::shared_ptr<HcclSocket>>& connectSockets, u32& rankSize)
 {
-    auto startTime = std::chrono::steady_clock::now();
-    auto timeout = std::chrono::seconds(GetExternalInputHcclLinkTimeOut());
-    u32 expectSocketNum = 1;
-    u32 previousRankNum = 0;
-    bool isFirstAcceptTimeOut = false;
-
-    while (expectSocketNum > 0) {
-        auto topoExUsedTime = std::chrono::steady_clock::now() - startTime;
-        if (topoExUsedTime >= timeout) {
-            HCCL_ERROR(
-                "[%s][%s]topo exchange server get socket timeout! timeout[%d s]", LOG_KEYWORDS_INIT_GROUP.c_str(),
-                LOG_KEYWORDS_RANKTABLE_DETECT.c_str(), GetExternalInputHcclLinkTimeOut());
-            DisplayConnectedRank(connectSockets, rankSize);
-            return HCCL_E_TIMEOUT;
-        }
-        auto topoExResTime = timeout - topoExUsedTime;
-        u32 topoExRes_i = std::chrono::duration_cast<std::chrono::seconds>(topoExResTime).count();
-        u32 socketWaitTime = SOCKET_ACCEPT_TIMEOUT;
-        if (topoExRes_i != 0) {
-            socketWaitTime = topoExRes_i > SOCKET_ACCEPT_TIMEOUT ? SOCKET_ACCEPT_TIMEOUT : topoExRes_i;
-        } else {
-            continue;
-        }
-        std::shared_ptr<HcclSocket> socket;
-        std::string tag = TOPO_DETECT_TAG + "_" + identifier_ + "_" + std::to_string(hostPort_);
-        HcclResult ret = listenSocket_->Accept(tag, socket, socketWaitTime);
-        if (ret == HCCL_SUCCESS) {
-            HCCL_INFO("listenSocket_->Accept completed.");
-            // server获取socket之后进行一次数据收发用于判断是否都成功获取到了socket
-            CHK_RET(socket->Send(TOPO_EXCHANGE_CHECK_MESSAGE, sizeof(TOPO_EXCHANGE_CHECK_MESSAGE)));
-            u32 rankNum = 0;
-            CHK_RET(GetRemoteFdAndRankSize(socket, connectSockets, rankNum));
-            rankSize = rankNum;
-            expectSocketNum = (previousRankNum == 0) ? rankNum : expectSocketNum;
-            CHK_RET(VerifyRemoteRankNum(previousRankNum, rankNum));
-
-            expectSocketNum -= 1;
-            isFirstAcceptTimeOut = false;
-        } else if (ret == HCCL_E_TIMEOUT) {
-            HCCL_INFO("listenSocket_->Accept TimeOut[%lld s]", socketWaitTime);
-            if (isFirstAcceptTimeOut) {
-                continue;
-            }
-            isFirstAcceptTimeOut = true;
-
-            DisplayConnectingStatus(previousRankNum, expectSocketNum, connectSockets);
-        } else if (ret == HCCL_E_TCP_CONNECT) {
-            HCCL_INFO("listenSocket_->Accept E_TCP_CONNECT");
-            DisplayConnectedRank(connectSockets, rankSize);
-            return HCCL_E_TCP_CONNECT;
-        }
-    }
-    return HCCL_SUCCESS;
+    return AcceptLoop(connectSockets, rankSize, 1, false);
 }
 
 HcclResult

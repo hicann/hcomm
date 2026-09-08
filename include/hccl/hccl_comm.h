@@ -102,6 +102,33 @@ extern HcclResult HcclCommInitRootInfoConfig(
     HcclComm* comm) HCOMM_WEAK_SYMBOL;
 
 /**
+ * @brief Get scalable root info.
+ *
+ * @param rootInfo A pointer identifying the hccl root info.
+ * @return HcclResult
+ */
+extern HcclResult HcclGetRootInfoScalable(HcclRootInfo* rootInfo);
+
+/**
+ * @brief Initialize HCCL with scalable root info list.
+ *
+ * @param nRanks An integer identifying the rank size of the cluster.
+ * @param nRoot An integer identifying the number of roots, must be greater than 0.
+ * @param rootInfoList The list of rootInfo for lower_root, length = nRoot; all ranks must pass the same content and
+ * order.
+ * @param rank An integer identifying the identifier for the rank.
+ * @param nExtRoot Reserved parameter, currently unused, for future two-level root extension capability; currently
+ * only 0 is supported.
+ * @param config A pointer identifying config parameters about the current comm.
+ * @param comm A pointer identifying the initialized communication resource.
+ * @return HcclResult
+ * @see HcclCommDestroy()
+ */
+extern HcclResult HcclCommInitRootInfoScalable(
+    uint32_t nRanks, uint32_t nRoot, const HcclRootInfo* rootInfoList, uint32_t rank, uint32_t nExtRoot,
+    const HcclCommConfig* config, HcclComm* comm);
+
+/**
  * @brief Set deterministic calculate
  *
  * @param config A struct identifying the Config

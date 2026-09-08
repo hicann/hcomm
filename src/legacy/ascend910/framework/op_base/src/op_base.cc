@@ -23,6 +23,7 @@
 #include "env_config.h"
 #include "env_config/env_config_v2.h"
 #include "../common/src/topo/topoinfo_detect.h"
+#include "../common/src/topo/topoinfo_detect_scalable.h"
 #include "../common/src/topo/topoinfo_ranktable_partition.h"
 #include "../common/src/state_guard.h"
 #include "sal_pub.h"
@@ -1376,6 +1377,17 @@ HcclResult HcclCreateSubCommConfig(
     return HCCL_SUCCESS;
 }
 
+// 校验 root handle 可装入 HCCL_ROOT_INFO_BYTES（Get 与 Init 侧共用，防止溢出/越界读取）
+HcclResult CheckRootHandleSize(const char* tag, size_t handleSize)
+{
+    if (handleSize > HCCL_ROOT_INFO_BYTES) {
+        HCCL_ERROR("[%s]hccl root info overflow. max length: %u, actual:%zu", tag, HCCL_ROOT_INFO_BYTES, handleSize);
+        return HCCL_E_INTERNAL;
+    }
+    return HCCL_SUCCESS;
+}
+
+// 单root root 侧建链：生成 HcclRootHandle 并登记 server，供各 rank 通过 HcclCommInitRootInfo 建链
 HcclResult HcclGetRootInfo([[maybe_unused]] HcclRootInfo* rootInfo)
 {
 #if (!defined(HCCD)) && (!defined(CCL_KERNEL_AICPU))
@@ -1428,6 +1440,56 @@ HcclResult HcclGetRootInfo([[maybe_unused]] HcclRootInfo* rootInfo)
     HCCL_RUN_INFO(
         "[HCCL_TRACE]HcclGetRootInfo success, take time [%lld]us, identifier[%s]", DURATION_US(TIME_NOW() - startut),
         rootHandle.identifier);
+#endif
+    return HCCL_SUCCESS;
+}
+
+// 多root(scalable) root 侧建链：
+// 建立 agent 服务监听 + root间 mesh 全互联监听，产出 HcclScalableRootHandle 并登记 server。
+HcclResult HcclGetRootInfoScalable([[maybe_unused]] HcclRootInfo* rootInfo)
+{
+#if (!defined(HCCD)) && (!defined(CCL_KERNEL_AICPU))
+    HcclUs startut = TIME_NOW();
+    s32 deviceLogicId = 0;
+    CHK_RET(HcclDeviceRefresh(deviceLogicId));
+
+    // input check
+    CHK_PTR_NULL(rootInfo);
+    HCCL_RUN_INFO("Entry-HcclGetRootInfoScalable:rootInfo[%p], deviceLogicId[%d] ", rootInfo, deviceLogicId);
+
+    // get commId from env
+    CHK_RET(InitExternalInput());
+    CHK_RET(InitEnvConfig());
+
+    HcclScalableRootHandle scalableRootHandle{};
+    std::shared_ptr<TopoInfoDetectScalable> scalableServer;
+    EXCEPTION_CATCH((scalableServer = std::make_shared<TopoInfoDetectScalable>()), return HCCL_E_MEMORY);
+    HcclResult ret = scalableServer->SetupScalableRoot(scalableRootHandle);
+    CHK_PRT_RET(
+        ret != HCCL_SUCCESS,
+        HCCL_ERROR(
+            "[%s][%s]%s failed, ret[%u]", LOG_KEYWORDS_INIT_GROUP.c_str(), LOG_KEYWORDS_RANKTABLE_DETECT.c_str(),
+            __func__, ret),
+        ret);
+
+    CHK_RET(CheckRootHandleSize("[Get][RootInfoScalable]", sizeof(HcclScalableRootHandle)));
+    s32 sRet = memcpy_s(rootInfo->internal, HCCL_ROOT_INFO_BYTES, &scalableRootHandle, sizeof(HcclScalableRootHandle));
+    CHK_PRT_RET(
+        sRet != EOK,
+        HCCL_ERROR(
+            "[Get][RootInfoScalable]memcpy scalable root info fail. errorno[%d] "
+            "params:destMaxSize[%u], count[%zu]",
+            sRet, HCCL_ROOT_INFO_BYTES, sizeof(HcclScalableRootHandle)),
+        HCCL_E_MEMORY);
+
+    HcclOpInfoCtx& opBaseInfo = CollCommMgr::GetInstance().LegacyGetHcclOpInfoCtx(g_hcclDeviceId);
+    EXCEPTION_CATCH(
+        opBaseInfo.hcclCommTopoInfoDetectServer.insert({scalableRootHandle.rootHandle.identifier, scalableServer}),
+        return HCCL_E_MEMORY);
+    /* 首节点诊断信息记录 */
+    HCCL_RUN_INFO(
+        "[HCCL_TRACE]HcclGetRootInfoScalable success, take time [%lld]us, identifier[%s], meshPort[%u]",
+        DURATION_US(TIME_NOW() - startut), scalableRootHandle.rootHandle.identifier, scalableRootHandle.meshPort);
 #endif
     return HCCL_SUCCESS;
 }
@@ -1737,7 +1799,7 @@ HcclResult GetTopoDetectInfo(
 HcclResult InitCommRootInfo(
     [[maybe_unused]] const u32 nRanks, [[maybe_unused]] const u32 rank,
     [[maybe_unused]] const HcclRootHandle& rootHandle, [[maybe_unused]] const CommConfig& commConfig,
-    [[maybe_unused]] HcclComm* comm)
+    [[maybe_unused]] HcclComm* comm, [[maybe_unused]] bool isScalable = false)
 {
 #if (!defined(HCCD)) && (!defined(CCL_KERNEL_AICPU))
     HcclResult ret = HCCL_SUCCESS;
@@ -1773,8 +1835,8 @@ HcclResult InitCommRootInfo(
         std::shared_ptr<TopoInfoDetect> topoDetectAgent;
         EXCEPTION_CATCH((topoDetectAgent = std::make_shared<TopoInfoDetect>()), return HCCL_E_MEMORY);
         topoDetectAgent->SetIsInterSuperPodRetryEnable(commConfig.GetConfigInterSuperPodRetryEnable());
-        // 32k 作为agent开启阈值
-        if (nRanks > TOPO_HIERARCHICAL_ENABLE_THRESHOLD) {
+        // 32k 作为agent开启阈值；scalable 建链按 root 分组后组内规模必然小于 nRanks，始终走 flat 路径
+        if (nRanks > TOPO_HIERARCHICAL_ENABLE_THRESHOLD && !isScalable) {
             HCCL_RUN_INFO("[Init][CommRootInfo][Hierarchical]nRanks[%u] entry hierarchical topo detect.", nRanks);
 
             std::shared_ptr<TopoInfoDetect> topoDetectMember;
@@ -1802,7 +1864,7 @@ HcclResult InitCommRootInfo(
         } else {
             HCCL_RUN_INFO("[Init][CommRootInfo][Flat]nRanks[%u] entry flat topo detect.", nRanks);
 
-            ret = topoDetectAgent->SetupAgent(nRanks, rank, rootHandle, rootHandle, commConfig);
+            ret = topoDetectAgent->SetupAgent(nRanks, rank, rootHandle, rootHandle, commConfig, isScalable);
             CHK_PRT_BREAK(
                 ret != HCCL_SUCCESS,
                 HCCL_ERROR(
@@ -2295,6 +2357,244 @@ HcclResult HcclCommInitRootInfoConfig(
         return ret;
     }
     ret = HcclCommInitRootInfoConfigInner(nRanks, rootInfo, rank, config, comm);
+    return ret;
+}
+
+// 参数校验 + 环境初始化
+HcclResult ValidateAndInitRootInfoScalable(
+    uint32_t nRanks, uint32_t nRoot, uint32_t rank, uint32_t nExtRoot, const HcclCommConfig* config, HcclComm* comm,
+    const HcclRootInfo* rootInfoList)
+{
+    CHK_PRT_RET(
+        (nRanks == 0),
+        HCCL_ERROR(
+            "[Init][CommRootInfoScalableInner]errNo[0x%016llx] nRanks[%u] should be greater than 0.",
+            HCCL_ERROR_CODE(HCCL_E_PARA), nRanks),
+        HCCL_E_PARA);
+    CHK_PRT_RET(
+        (nRoot == 0 || nRoot > nRanks),
+        HCCL_ERROR(
+            "[Init][CommRootInfoScalableInner]errNo[0x%016llx] nRoot[%u] should be in range (0, nRanks[%u]].",
+            HCCL_ERROR_CODE(HCCL_E_PARA), nRoot, nRanks),
+        HCCL_E_PARA);
+    CHK_PRT_RET(
+        (rank >= nRanks),
+        HCCL_ERROR(
+            "[Init][CommRootInfoScalableInner]errNo[0x%016llx] rank[%u] should be less than nRanks[%u].",
+            HCCL_ERROR_CODE(HCCL_E_PARA), rank, nRanks),
+        HCCL_E_PARA);
+    CHK_PRT_RET(
+        (nExtRoot != 0),
+        HCCL_ERROR(
+            "[Init][CommRootInfoScalableInner]errNo[0x%016llx] nExtRoot[%u] only supports 0 currently.",
+            HCCL_ERROR_CODE(HCCL_E_PARA), nExtRoot),
+        HCCL_E_PARA);
+    CHK_PTR_NULL(comm);
+    CHK_SMART_PTR_NULL(rootInfoList);
+    CHK_PTR_NULL(config);
+
+    HcclResult ret = InitExternalInput();
+    CHK_PRT_RET(
+        ret != HCCL_SUCCESS,
+        HCCL_ERROR(
+            "[Init][CommRootInfoScalableInner]errNo[0x%016llx] init external input error",
+            HCCL_ERROR_CODE(HCCL_E_PARA)),
+        HCCL_E_PARA);
+    ret = InitEnvConfig();
+    CHK_PRT_RET(
+        ret != HCCL_SUCCESS,
+        HCCL_ERROR(
+            "[Init][CommRootInfoScalableInner]errNo[0x%016llx] init environment config error",
+            HCCL_ERROR_CODE(HCCL_E_PARA)),
+        HCCL_E_PARA);
+    return HCCL_SUCCESS;
+}
+
+// scalable 建链为 host 侧特性：设备侧（HCCD/CCL_KERNEL_AICPU）不支持，不编译该部分
+#if (!defined(HCCD)) && (!defined(CCL_KERNEL_AICPU))
+// 解析 nRoot 个 HcclScalableRootHandle（rootInfoList[i].internal 由 HcclGetRootInfoScalable 填充）
+HcclResult
+ParseScalableRootHandles(const HcclRootInfo* rootInfoList, u32 nRoot, std::vector<HcclScalableRootHandle>& rootHandles)
+{
+    CHK_RET(CheckRootHandleSize("[Init][RootInfoScalable]", sizeof(HcclScalableRootHandle)));
+    for (u32 i = 0; i < nRoot; ++i) {
+        s32 sRet = memcpy_s(
+            &rootHandles[i], sizeof(HcclScalableRootHandle), rootInfoList[i].internal, sizeof(HcclScalableRootHandle));
+        CHK_PRT_RET(
+            sRet != EOK, HCCL_ERROR("[Init][RootInfoScalable]memcpy scalable root info[%u] fail. errorno[%d]", i, sRet),
+            HCCL_E_MEMORY);
+        rootHandles[i].rootHandle.identifier[ROOTINFO_INDENTIFIER_MAX_LENGTH - 1] = '\0';
+    }
+    return HCCL_SUCCESS;
+}
+
+// 组装 root 间 mesh 全互联信息：所有 root 的 ip + meshPort，下标 = rootIndex
+HcclResult BuildScalableMeshInfo(
+    u32 nRoot, u32 rootIndex, u32 groupSize, const std::vector<HcclScalableRootHandle>& rootHandles,
+    ScalableServerInfo& scalableInfo)
+{
+    scalableInfo.nRoot = nRoot;
+    scalableInfo.rootIndex = rootIndex;
+    scalableInfo.groupSize = groupSize;
+    scalableInfo.meshInfos.resize(nRoot);
+    for (u32 i = 0; i < nRoot; ++i) {
+        s32 sRet = memcpy_s(
+            scalableInfo.meshInfos[i].ip, sizeof(scalableInfo.meshInfos[i].ip), rootHandles[i].rootHandle.ip,
+            sizeof(scalableInfo.meshInfos[i].ip));
+        CHK_PRT_RET(
+            sRet != EOK, HCCL_ERROR("[Init][RootInfoScalable]memcpy mesh ip[%u] fail. errorno[%d]", i, sRet),
+            HCCL_E_MEMORY);
+        scalableInfo.meshInfos[i].meshPort = rootHandles[i].meshPort;
+    }
+    return HCCL_SUCCESS;
+}
+
+// root 侧：先注入 root 间 mesh 全互联信息，server 线程才能继续 accept 并做 root 间合并
+HcclResult InjectScalableRootMeshInfo(
+    const HcclRootHandle& groupRootHandle, bool isRootRank, const ScalableServerInfo& scalableInfo)
+{
+    HcclOpInfoCtx& opBaseHcom = CollCommMgr::GetInstance().LegacyGetHcclOpInfoCtx(g_hcclDeviceId);
+    auto iter = opBaseHcom.hcclCommTopoInfoDetectServer.find(groupRootHandle.identifier);
+    CHK_PRT_RET(
+        iter == opBaseHcom.hcclCommTopoInfoDetectServer.end(),
+        HCCL_ERROR(
+            "[Init][CommRootInfoScalableInner]scalable root server[%s] not found. isRootRank[%d]",
+            groupRootHandle.identifier, isRootRank),
+        HCCL_E_INTERNAL);
+    auto topoDetectServer = std::dynamic_pointer_cast<TopoInfoDetectScalable>(iter->second);
+    CHK_PRT_RET(
+        topoDetectServer == nullptr,
+        HCCL_ERROR(
+            "[Init][CommRootInfoScalableInner]scalable root server[%s] is not TopoInfoDetectScalable.",
+            groupRootHandle.identifier),
+        HCCL_E_INTERNAL);
+    // 拿到全部 root 的 mesh 信息后，按与 connect/accept 一致的 tag 下发 root 间 mesh 白名单
+    CHK_RET(topoDetectServer->AddMeshSocketWhiteList(scalableInfo));
+    CHK_RET(topoDetectServer->SetScalableServerInfo(scalableInfo));
+    return HCCL_SUCCESS;
+}
+
+// 基于组root信息初始化comm，并处理NSLB全局通信表下发
+HcclResult InitScalableComm(
+    u32 nRanks, u32 rank, const HcclRootHandle& groupRootHandle, const CommConfig& commConfig, HcclComm* comm)
+{
+    HcclResult ret = InitCommRootInfo(nRanks, rank, groupRootHandle, commConfig, comm, true);
+    CHK_PRT_RET(
+        ret != HCCL_SUCCESS,
+        HCCL_ERROR(
+            "[Init][CommRootInfoScalableInner]errNo[0x%016llx] HcclCommInitRootInfoScalable failed.",
+            HCCL_ERROR_CODE(ret)),
+        ret);
+
+    if (hcclNslbDp::GetInstance().GetGlobalCommTaskId() != 0) {
+        /* NSLB 发送 */
+        HCCL_INFO("hcclNslbDp-sendTable 5 rank[%u]", rank);
+        hcclNslbDp::GetInstance().SendGlobalDisRankTable();
+    }
+    return HCCL_SUCCESS;
+}
+#endif
+
+HcclResult HcclCommInitRootInfoScalableInner(
+    uint32_t nRanks, uint32_t nRoot, const HcclRootInfo* rootInfoList, uint32_t rank, uint32_t nExtRoot,
+    const HcclCommConfig* config, HcclComm* comm)
+{
+    [[maybe_unused]] HcclUs startut = TIME_NOW();
+    [[maybe_unused]] s32 deviceLogicId = 0;
+    CHK_RET(HcclDeviceRefresh(deviceLogicId));
+
+    // 参数校验 + 环境初始化
+    CHK_RET(ValidateAndInitRootInfoScalable(nRanks, nRoot, rank, nExtRoot, config, comm, rootInfoList));
+
+#if (!defined(HCCD)) && (!defined(CCL_KERNEL_AICPU))
+    // 解析 nRoot 个 HcclScalableRootHandle（rootInfoList[i].internal 由 HcclGetRootInfoScalable 填充）
+    std::vector<HcclScalableRootHandle> rootHandles(nRoot);
+    CHK_RET(ParseScalableRootHandles(rootInfoList, nRoot, rootHandles));
+
+    // 分组信息：rank 落入哪个 root 分组、组内规模、以及当前 rank 是否为本组 root
+    const u32 rootIndex = TopoInfoDetectScalable::RootIdFromRank(nRanks, nRoot, rank);
+    const u32 groupSize = TopoInfoDetectScalable::NRankFromRoot(rootIndex, nRanks, nRoot);
+    const bool isRootRank = TopoInfoDetectScalable::RankHasRoot(rank, nRanks, nRoot);
+    const HcclRootHandle& groupRootHandle = rootHandles[rootIndex].rootHandle;
+
+    // 组装 root 间 mesh 全互联信息：所有 root 的 ip + meshPort，下标 = rootIndex
+    ScalableServerInfo scalableInfo;
+    CHK_RET(BuildScalableMeshInfo(nRoot, rootIndex, groupSize, rootHandles, scalableInfo));
+
+    // 统一以 root[0] 的 identifier 作为整个 scalable comm 的标识，保证跨 root 组数据面 tag 一致
+    CommConfig commConfig(rootHandles[0].rootHandle.identifier);
+    HcclResult ret = commConfig.Load(config);
+    CHK_PRT_RET(
+        ret != HCCL_SUCCESS,
+        HCCL_ERROR(
+            "[Init][CommRootInfoScalableInner]errNo[0x%016llx] load comm config failed.", HCCL_ERROR_CODE(HCCL_E_PARA)),
+        HCCL_E_PARA);
+
+    // root 侧：先注入 root 间 mesh 全互联信息，server 线程才能继续 accept 并做 root 间合并
+    if (isRootRank) {
+        CHK_RET(InjectScalableRootMeshInfo(groupRootHandle, isRootRank, scalableInfo));
+    }
+
+    /* 接口交互信息日志 */
+    HCCL_RUN_INFO(
+        "Entry-HcclCommInitRootInfoScalableInner:nRanks[%u], nRoot[%u], rank[%u], rootIndex[%u], groupSize[%u], "
+        "isRootRank[%d], groupRoot: host ip[%s] port[%u] identifier[%s], deviceLogicId[%d]",
+        nRanks, nRoot, rank, rootIndex, groupSize, isRootRank, groupRootHandle.ip, groupRootHandle.port,
+        groupRootHandle.identifier, deviceLogicId);
+
+    /* --------------初始化------------------------- */
+    CHK_RET(InitScalableComm(nRanks, rank, groupRootHandle, commConfig, comm));
+
+    // 记录groupName和UDI的映射
+    HCCL_PROFILER_ADD_GROUP_UDI(commConfig.GetConfigCommName(), commConfig.GetConfigUdi());
+
+    HCCL_RUN_INFO(
+        "[HCCL_TRACE]HcclCommInitRootInfoScalableInner success, take time [%lld]us, rankNum[%u], nRoot[%u], rank[%u]",
+        DURATION_US(TIME_NOW() - startut), nRanks, nRoot, rank);
+#endif
+
+    return HCCL_SUCCESS;
+}
+
+// Wrapper：异步job线程中设置设备上下文并进入scalable建链Inner
+HcclResult HcclCommInitRootInfoScalableInnerWrapper(struct hcclAsyncJob* job_)
+{
+    struct hcclCommInitScalableAsyncJob* job = static_cast<hcclCommInitScalableAsyncJob*>(job_);
+    s32 devId = job->devId;
+    HCCL_DEBUG("[HcclCommInitRootInfoScalableInnerWrapper] Set device devId: %d", devId);
+    CHK_PRT_RET(
+        hrtSetDevice(devId) != HCCL_SUCCESS,
+        HCCL_ERROR("[HcclCommInitRootInfoScalableInnerWrapper] set fail device[%d]", devId), HCCL_E_INTERNAL);
+
+    HcclResult ret = HCCL_SUCCESS;
+    ret = HcclCommInitRootInfoScalableInner(
+        job->nRanks, job->nRoot, job->rootInfoList, job->rank, job->nExtRoot, job->config, job->initComm);
+    return ret;
+}
+
+HcclResult HcclCommInitRootInfoScalable(
+    uint32_t nRanks, uint32_t nRoot, const HcclRootInfo* rootInfoList, uint32_t rank, uint32_t nExtRoot,
+    const HcclCommConfig* config, HcclComm* comm)
+{
+    HCCL_INFO("hcclGroupDepth=[%d]", hcclGroupDepth);
+    HcclResult ret = HCCL_SUCCESS;
+    if (hcclGroupDepth > 0) {
+        std::shared_ptr<struct hcclCommInitScalableAsyncJob> job;
+        EXCEPTION_CATCH((job = std::make_shared<struct hcclCommInitScalableAsyncJob>()), return HCCL_E_PARA);
+        job->nRanks = nRanks;
+        job->nRoot = nRoot;
+        job->rootInfoList = rootInfoList;
+        job->rank = rank;
+        job->nExtRoot = nExtRoot;
+        job->initComm = comm;
+        job->config = config;
+        s32 devId = 0;
+        CHK_RET(HcclDeviceRefresh(devId));
+        job->devId = devId;
+        ret = commInitTaskAppend(job, HcclCommInitRootInfoScalableInnerWrapper, comm);
+        return ret;
+    }
+    ret = HcclCommInitRootInfoScalableInner(nRanks, nRoot, rootInfoList, rank, nExtRoot, config, comm);
     return ret;
 }
 

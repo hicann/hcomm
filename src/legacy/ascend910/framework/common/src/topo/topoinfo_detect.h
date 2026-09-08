@@ -26,11 +26,11 @@ namespace hccl {
 class TopoInfoDetect {
 public:
     explicit TopoInfoDetect();
-    ~TopoInfoDetect();
+    virtual ~TopoInfoDetect();
     HcclResult SetupGroupMember(u32 rankSize, u32 myrank, const HcclRootHandle& rootInfo); // Group内成员rank
     HcclResult SetupAgent(
         u32 rankSize, u32 myrank, const HcclRootHandle& rootInfo, const HcclRankHandle& rankHandle,
-        const CommConfig& commConfig); // 分层建链时使用的SetupAgent
+        const CommConfig& commConfig, bool isScalable = false); // 分层建链时使用的SetupAgent，isScalable压制分层分支
     HcclResult CheckHostNicLinkUp(const HcclIpAddress& hostIP) const;
     HcclResult PrepareHandle(HcclRankHandle& rankHandle, std::vector<HcclIpAddress>& whitelist); // 准备要发送的agent
     HcclResult SetupRank(std::shared_ptr<HcclSocket>& agentConnRoot); // 分层建链时获得每个GroupLeader的监听端口
@@ -57,6 +57,22 @@ public:
     HcclResult SetIsInterSuperPodRetryEnable(bool isRetry);
 
 protected:
+    HcclResult StartListenNetwork(
+        std::shared_ptr<HcclSocket>& listenSocket, HcclNetDevCtx netDevCtx, const HcclIpAddress& hostIP, u32& usePort,
+        const std::vector<HcclSocketPortRange>& portRanges);
+    HcclResult SetupRootServerNetwork(
+        HcclIpAddress& hostIP, u32& hostPort, std::vector<HcclSocketPortRange>& portRanges,
+        std::vector<HcclIpAddress>& whitelist);
+    s32 deviceLogicID_;
+    HcclIpAddress bootstrapHostIP_{};
+    HcclNetDevCtx serverPortCtx_{nullptr};
+    u32 devicePhysicID_{INVALID_UINT};
+    std::shared_ptr<HcclSocket> listenSocket_{nullptr};
+    HcclRootHandle rootInfo_;
+    std::shared_ptr<TopoInfoExchangeServer> pTopoExchangeServer_{nullptr};
+    std::unique_ptr<std::thread> exchangeServerThreadPtr_{nullptr};
+    static UniversalConcurrentMap<u32, volatile u32> g_topoExchangeServerStatus_;
+
 private:
     HcclResult TeardownAgent();
     HcclResult TeardownServer();
@@ -101,22 +117,13 @@ private:
         u32& usePort);
     HcclResult PreemptDeviceVnicPort(HcclBasicRankInfo& localRankInfo);
     HcclResult GetDeviceBackupNicInfo(HcclBasicRankInfo& localRankInfo);
-    s32 deviceLogicID_;
     HcclBasicRankInfo localRankInfo_;
     RankTable_t clusterTopoInfo_;
     u32 identifierNum_;
-    static UniversalConcurrentMap<u32, volatile u32> g_topoExchangeServerStatus_;
-    HcclIpAddress bootstrapHostIP_{};
-    HcclNetDevCtx serverPortCtx_{nullptr};
     HcclNetDevCtx agentPortCtx_{nullptr};
     HcclNetDevCtx devNicCtx_{nullptr};
-    u32 devicePhysicID_{INVALID_UINT};
-    std::shared_ptr<HcclSocket> listenSocket_{nullptr};
     HcclSocketPortConfig commPortConfig_;
-    HcclRootHandle rootInfo_;
     std::shared_ptr<hccl::TopoInfoExchangeAgent> pTopoExchangeAgent_{nullptr};
-    std::shared_ptr<TopoInfoExchangeServer> pTopoExchangeServer_{nullptr};
-    std::unique_ptr<std::thread> exchangeServerThreadPtr_{nullptr};
     HcclRankHandle grpLeader_;
     bool isInterSuperPodRetryEnable_;
     CommConfig commConfig_;

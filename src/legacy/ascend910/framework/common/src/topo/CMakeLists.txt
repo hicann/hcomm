@@ -15,6 +15,7 @@ set(src_list
     ${CMAKE_CURRENT_SOURCE_DIR}/topoinfo_ranktableHeterog.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/topoinfo_roletableParser.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/topoinfo_detect.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/topoinfo_detect_scalable.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/topoinfo_exchange_agent.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/topoinfo_exchange_server.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/topoinfo_exchange_base.cc

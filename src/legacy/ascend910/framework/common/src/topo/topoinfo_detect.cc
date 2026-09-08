@@ -25,9 +25,6 @@
 
 using namespace std;
 namespace hccl {
-const u32 TOPO_EXCHANGE_SERVER_STATUS_IDLE = 0;
-const u32 TOPO_EXCHANGE_SERVER_STATUS_RUNING = 1;
-const u32 TOPO_EXCHANGE_SERVER_STATUS_ERROR = 2;
 constexpr u32 HOST_CONTROL_PORT_RANGE_SIZE = 31;
 UniversalConcurrentMap<u32, volatile u32> TopoInfoDetect::g_topoExchangeServerStatus_;
 
@@ -212,19 +209,42 @@ TopoInfoDetect::SetupServerByMasterInfo(const HcclIpAddress& masterIP, u32 maste
 
 HcclResult TopoInfoDetect::SetupServer(HcclRootHandle& rootInfo)
 {
+    HcclIpAddress hostIP;
+    u32 hostPort = HCCL_INVALID_PORT;
+    std::vector<HcclSocketPortRange> portRanges;
+    std::vector<HcclIpAddress> whitelist;
+    CHK_RET(SetupRootServerNetwork(hostIP, hostPort, portRanges, whitelist));
+
+    g_topoExchangeServerStatus_.EmplaceAndUpdate(hostPort, [](volatile u32& status) {
+        status = TOPO_EXCHANGE_SERVER_STATUS_RUNING;
+    });
+    exchangeServerThreadPtr_.reset(new (nothrow) thread(
+        &TopoInfoDetect::SetupTopoExchangeServer, this, devicePhysicID_, deviceLogicID_, hostIP, hostPort, whitelist,
+        serverPortCtx_, listenSocket_, false));
+    CHK_SMART_PTR_NULL(exchangeServerThreadPtr_);
+
+    rootInfo = rootInfo_;
+    HCCL_INFO("setup topo exchange server complete, identifier[%s]", rootInfo.identifier);
+    return HCCL_SUCCESS;
+}
+
+// root侧网络初始化：
+// 设备/网卡初始化、监听端口选择（固定端口或端口range抢占）、启动agent监听、生成rootInfo、下发白名单。
+HcclResult TopoInfoDetect::SetupRootServerNetwork(
+    HcclIpAddress& hostIP, u32& hostPort, std::vector<HcclSocketPortRange>& portRanges,
+    std::vector<HcclIpAddress>& whitelist)
+{
     CHK_RET(hrtGetDevice(&deviceLogicID_));
 
-    vector<HcclIpAddress> whitelist;
     if (GetExternalInputHcclEnableWhitelist() == HCCL_WHITELIST_ON) {
         CHK_RET(ReadHostSocketWhitelist(whitelist));
     }
-    HcclIpAddress hostIP = GetBootstrapHostIP();
+    hostIP = GetBootstrapHostIP();
     CHK_RET(hrtGetDevicePhyIdByIndex(deviceLogicID_, devicePhysicID_, true));
     HCCL_INFO("[Setup][hcclIfBasePort]deviceLogicID_[%u], devicePhysicID_[%u]", deviceLogicID_, devicePhysicID_);
 
     // true代表感知白名单disable配置
     CHK_RET(HcclNetInit(NICDeployment::NIC_DEPLOYMENT_HOST, devicePhysicID_, deviceLogicID_, true));
-
     CHK_RET(GetRootHostIP(whitelist, hostIP, devicePhysicID_));
     SetBootstrapHostIP(hostIP);
 
@@ -248,8 +268,7 @@ HcclResult TopoInfoDetect::SetupServer(HcclRootHandle& rootInfo)
         HCCL_ERROR("[Setup][Server]deviceLogicID[%d] is invalid,deviceNum[%d].", deviceLogicID_, deviceNum),
         HCCL_E_PARA);
 
-    u32 hostPort = HCCL_INVALID_PORT;
-    std::vector<HcclSocketPortRange> portRanges;
+    hostPort = HCCL_INVALID_PORT;
     if (!GetExternalInputHostPortSwitch()) {
         if (GetExternalInputHcclIfBasePort() == HCCL_INVALID_PORT) {
             // 若没有设置HCCL_HOST_SOCKET_PORT_RANGE和HCCL_IF_BASE_PORT 使用自动调整监听端口range[60000,60031]
@@ -263,28 +282,11 @@ HcclResult TopoInfoDetect::SetupServer(HcclRootHandle& rootInfo)
     } else {
         portRanges = GetExternalInputHostSocketPortRange();
     }
-    ret = StartRootNetwork(hostIP, hostPort, portRanges);
-    CHK_PRT_RET(
-        ret != HCCL_SUCCESS,
-        HCCL_ERROR(
-            "[%s][%s]%s failed, hostIP[%s] and hostPort[%u] ret[%u]", LOG_KEYWORDS_INIT_GROUP.c_str(),
-            LOG_KEYWORDS_RANKTABLE_DETECT.c_str(), __func__, hostIP.GetReadableAddress(), hostPort, ret),
-        ret);
+    CHK_RET(StartRootNetwork(hostIP, hostPort, portRanges));
     CHK_RET(GenerateRootInfo(hostIP, hostPort, devicePhysicID_, rootInfo_));
     if (GetExternalInputHcclEnableWhitelist() == HCCL_WHITELIST_ON) {
         CHK_RET(AddSocketWhiteList(hostPort, whitelist));
     }
-
-    g_topoExchangeServerStatus_.EmplaceAndUpdate(hostPort, [](volatile u32& status) {
-        status = TOPO_EXCHANGE_SERVER_STATUS_RUNING;
-    });
-    exchangeServerThreadPtr_.reset(new (nothrow) thread(
-        &TopoInfoDetect::SetupTopoExchangeServer, this, devicePhysicID_, deviceLogicID_, hostIP, hostPort, whitelist,
-        serverPortCtx_, listenSocket_, false));
-    CHK_SMART_PTR_NULL(exchangeServerThreadPtr_);
-
-    rootInfo = rootInfo_;
-    HCCL_INFO("setup topo exchange server complete, identifier[%s]", rootInfo.identifier);
     return HCCL_SUCCESS;
 }
 
@@ -574,7 +576,7 @@ HcclResult TopoInfoDetect::CheckHostNicLinkUp(const HcclIpAddress& hostIP) const
 
 HcclResult TopoInfoDetect::SetupAgent(
     u32 rankSize, u32 myrank, const HcclRootHandle& rootInfo, const HcclRankHandle& rankHandle,
-    const CommConfig& commConfig)
+    const CommConfig& commConfig, bool isScalable)
 {
     commConfig_ = commConfig;
     CHK_PRT_RET(
@@ -617,7 +619,7 @@ HcclResult TopoInfoDetect::SetupAgent(
         ret != HCCL_SUCCESS, HCCL_ERROR("[Setup][Agent]topo detect generate local rank info failed! rank[%u]", myrank),
         ret);
 
-    if (rankSize > TOPO_HIERARCHICAL_ENABLE_THRESHOLD) {
+    if (rankSize > TOPO_HIERARCHICAL_ENABLE_THRESHOLD && !isScalable) {
         /* 首节点日志，建链失败属常见问题，在建链前记录相关信息 */
         HCCL_RUN_INFO(
             "[HCCL_TRACE][Hierarchical]SetupAgent rankNum[%u], rank[%u], rootInfo identifier[%s], server[%s], "
@@ -646,6 +648,7 @@ HcclResult TopoInfoDetect::SetupAgent(
             rootIP, rootInfo.port, rootInfo.identifier, agentPortCtx_, localRankInfo_));
         CHK_SMART_PTR_NULL(pTopoExchangeAgent_);
         CHK_RET(pTopoExchangeAgent_->SetIsInterSuperPodRetryEnable(isInterSuperPodRetryEnable_));
+        CHK_RET(pTopoExchangeAgent_->SetIsScalable(isScalable));
         CHK_RET(pTopoExchangeAgent_->Setup());
         CHK_RET(pTopoExchangeAgent_->GetClusterTopoInfo(clusterTopoInfo_));
     }
@@ -848,28 +851,36 @@ HcclResult TopoInfoDetect::StartRootNetwork(
 {
     CHK_RET(HcclNetOpenDev(&serverPortCtx_, NicType::HOST_NIC_TYPE, devicePhysicID_, deviceLogicID_, hostIP));
     CHK_PTR_NULL(serverPortCtx_);
+    return StartListenNetwork(listenSocket_, serverPortCtx_, hostIP, usePort, portRanges);
+}
 
+// 监听socket启动：未指定端口时通过抢占获得监听端口，否则使用固定端口监听。
+// Root节点agent监听（StartRootNetwork）与多root（scalable）的mesh全互联监听共用。
+HcclResult TopoInfoDetect::StartListenNetwork(
+    std::shared_ptr<HcclSocket>& listenSocket, HcclNetDevCtx netDevCtx, const HcclIpAddress& hostIP, u32& usePort,
+    const std::vector<HcclSocketPortRange>& portRanges)
+{
     if (usePort == HCCL_INVALID_PORT) {
-        // 通过抢占的方式获得Root节点监听的host端口
-        listenSocket_.reset(new (nothrow) HcclSocket(serverPortCtx_));
-        CHK_SMART_PTR_NULL(listenSocket_);
-        CHK_RET(listenSocket_->Init());
+        // 通过抢占的方式获得监听端口
+        listenSocket.reset(new (nothrow) HcclSocket(netDevCtx));
+        CHK_SMART_PTR_NULL(listenSocket);
+        CHK_RET(listenSocket->Init());
         HcclResult ret
-            = PreemptPortManager::GetInstance(deviceLogicID_).ListenPreempt(listenSocket_, portRanges, usePort);
+            = PreemptPortManager::GetInstance(deviceLogicID_).ListenPreempt(listenSocket, portRanges, usePort);
         CHK_PRT_RET(
             ret != HCCL_SUCCESS,
             HCCL_ERROR(
-                "[TopoInfoDetect][StartRootNetwork] devPhyId[%u], devLogicId[%u], host ip[%s], "
+                "[TopoInfoDetect][StartListenNetwork] devPhyId[%u], devLogicId[%u], host ip[%s], "
                 "try to preempt port on host nic fail.",
                 devicePhysicID_, deviceLogicID_, hostIP.GetReadableAddress()),
             ret);
     } else {
         // 1. 使用MasterInfo初始化时，不支持抢占master节点的监听端口
         // 2. 未配置port range时，不支持抢占监听端口
-        listenSocket_.reset(new (nothrow) HcclSocket(serverPortCtx_, usePort));
-        CHK_SMART_PTR_NULL(listenSocket_);
-        CHK_RET(listenSocket_->Init());
-        HcclResult ret = listenSocket_->Listen();
+        listenSocket.reset(new (nothrow) HcclSocket(netDevCtx, usePort));
+        CHK_SMART_PTR_NULL(listenSocket);
+        CHK_RET(listenSocket->Init());
+        HcclResult ret = listenSocket->Listen();
         CHK_PRT_RET(
             ret != HCCL_SUCCESS,
             HCCL_ERROR(
@@ -878,8 +889,7 @@ HcclResult TopoInfoDetect::StartRootNetwork(
             ret);
     }
 
-    HCCL_INFO("topo info exchange server start with host ip[%s] and port[%u]", hostIP.GetReadableAddress(), usePort);
-
+    HCCL_INFO("listen socket start with host ip[%s] and port[%u]", hostIP.GetReadableAddress(), usePort);
     return HCCL_SUCCESS;
 }
 

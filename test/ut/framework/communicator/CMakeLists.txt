@@ -25,6 +25,7 @@ set(src_to_test_list
     ut_HcclCommInitClusterInfo_API_test.cc
     ut_HcclCommInitRootInfoConfig_API_test.cc
     ut_HcclCommInitRootInfo_API_test.cc
+    ut_HcclCommInitRootInfoScalable_API_test.cc
     ut_HcclCommResume_API_test.cc
     ut_HcclCommSetMemoryRange_API_test.cc
     ut_HcclCommSuspend_API_test.cc

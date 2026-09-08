@@ -7,6 +7,8 @@
   - [HcclGetRootInfo](HcclGetRootInfo.md)
   - [HcclCommInitRootInfo](HcclCommInitRootInfo.md)
   - [HcclCommInitRootInfoConfig](HcclCommInitRootInfoConfig.md)
+  - [HcclGetRootInfoScalable](HcclGetRootInfoScalable.md)
+  - [HcclCommInitRootInfoScalable](HcclCommInitRootInfoScalable.md)
   - [HcclCommConfigInit](HcclCommConfigInit.md)
   - [HcclCommInitAll](HcclCommInitAll.md)
   - [HcclCommDestroy](HcclCommDestroy.md)

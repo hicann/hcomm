@@ -123,7 +123,8 @@ HcclResult TopoInfoDetect::PrepareHandle(
 
 HcclResult TopoInfoDetect::SetupAgent(
     [[maybe_unused]] u32 rankSize, [[maybe_unused]] u32 myrank, [[maybe_unused]] const HcclRootHandle& rootInfo,
-    [[maybe_unused]] const HcclRankHandle& rankHandle, [[maybe_unused]] const CommConfig& commConfig)
+    [[maybe_unused]] const HcclRankHandle& rankHandle, [[maybe_unused]] const CommConfig& commConfig,
+    [[maybe_unused]] bool isScalable)
 {
     return HCCL_E_NOT_SUPPORT;
 }
@@ -177,6 +178,22 @@ HcclResult TopoInfoDetect::SetIsInterSuperPodRetryEnable([[maybe_unused]] bool i
 HcclResult TopoInfoDetect::StartRootNetwork(
     [[maybe_unused]] const HcclIpAddress& hostIP, [[maybe_unused]] u32& usePort,
     [[maybe_unused]] const std::vector<HcclSocketPortRange>& portRanges)
+{
+    return HCCL_E_NOT_SUPPORT;
+}
+
+HcclResult TopoInfoDetect::StartListenNetwork(
+    [[maybe_unused]] std::shared_ptr<HcclSocket>& listenSocket, [[maybe_unused]] HcclNetDevCtx netDevCtx,
+    [[maybe_unused]] const HcclIpAddress& hostIP, [[maybe_unused]] u32& usePort,
+    [[maybe_unused]] const std::vector<HcclSocketPortRange>& portRanges)
+{
+    return HCCL_E_NOT_SUPPORT;
+}
+
+HcclResult TopoInfoDetect::SetupRootServerNetwork(
+    [[maybe_unused]] HcclIpAddress& hostIP, [[maybe_unused]] u32& hostPort,
+    [[maybe_unused]] std::vector<HcclSocketPortRange>& portRanges,
+    [[maybe_unused]] std::vector<HcclIpAddress>& whitelist)
 {
     return HCCL_E_NOT_SUPPORT;
 }

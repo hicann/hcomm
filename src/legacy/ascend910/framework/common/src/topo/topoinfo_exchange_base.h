@@ -23,8 +23,13 @@ namespace hccl {
 constexpr u32 MAX_AGENT_BUF_SIZE = 256; // masterInfo方式: superPodId(128) + hostIp + deviceId
 constexpr s32 TOPO_SERVERIP_OFFSET_OF_RANKID = 32;
 constexpr int BIT_NUM_PER_BYTE = 8;
-constexpr u32 TOPO_GROUPLEADER_PORT_OFFSET = 16;          // TopoDetect GroupLeader监听端口偏移值
+constexpr u32 TOPO_GROUPLEADER_PORT_OFFSET = 16; // TopoDetect GroupLeader监听端口偏移值
+constexpr u32 TOPO_MESH_PORT_OFFSET = 32; // scalable 多root建链时，root间mesh全互联监听端口偏移值
 constexpr u32 TOPO_HIERARCHICAL_ENABLE_THRESHOLD = 32768; // TopoDetect 分层阈值
+// topo exchange server 状态：跨 topoinfo_detect.cc / topoinfo_detect_scalable.cc 共享，取值必须严格一致
+constexpr u32 TOPO_EXCHANGE_SERVER_STATUS_IDLE = 0;
+constexpr u32 TOPO_EXCHANGE_SERVER_STATUS_RUNING = 1;
+constexpr u32 TOPO_EXCHANGE_SERVER_STATUS_ERROR = 2;
 constexpr u32 TOPO_MAX_GROUP_SIZE = 2048;
 constexpr char TOPO_EXCHANGE_CHECK_MESSAGE[] = "TopoExchangeCheckMessage";
 
@@ -45,6 +50,9 @@ class TopoInfoExchangeBase {
 public:
     TopoInfoExchangeBase();
     virtual ~TopoInfoExchangeBase();
+    // 构建root间mesh连接tag：以有序对<较小root, 较大root> + 较大root的meshPort构造，
+    // connect/accept/mesh白名单下发/删除 四方共用，保证tag严格一致
+    static std::string BuildMeshTag(u32 smallerRoot, u32 largerRoot, u32 largerRootMeshPort);
 
 protected:
     HcclResult DisconnectSocket(std::shared_ptr<HcclSocket> socket) const;
