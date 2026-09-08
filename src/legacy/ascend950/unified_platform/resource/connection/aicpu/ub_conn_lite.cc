@@ -163,8 +163,8 @@ void UbConnLite::ProcessSlices(
     }
 
     HCCL_INFO(
-        "[UbConnLite::%s] end, locBufSize[%u], sliceNum[%u], sliceSize[%u], lastSliceSize[%u]", __func__, locBufSize,
-        sliceNum, sliceSize, lastSliceSize);
+        "[UbConnLite::%s] end, locBufSize[%llu], sliceNum[%llu], sliceSize[%llu], lastSliceSize[%llu]", __func__,
+        locBufSize, sliceNum, sliceSize, lastSliceSize);
 }
 
 void UbConnLite::ProcessSlicesWithNotify(
@@ -182,18 +182,18 @@ void UbConnLite::ProcessSlicesWithNotify(
         sliceSize = maxSliceSize / dataTypeSize * dataTypeSize;
     }
 
-    u32 locBufSize = loc.GetSize();
-    u32 sliceNum = locBufSize / sliceSize;
-    u32 lastSliceSize = locBufSize % sliceSize;
+    u64 locBufSize = loc.GetSize();
+    u64 sliceNum = locBufSize / sliceSize;
+    u64 lastSliceSize = locBufSize % sliceSize;
     if (sliceNum > 0 && lastSliceSize == 0) {
         sliceNum--;
         lastSliceSize = sliceSize;
     }
-    u64 totalSize = static_cast<u64>(sliceNum) * static_cast<u64>(sliceSize);
+    u64 totalSize = sliceNum * sliceSize;
     if (UNLIKELY(loc.GetAddr() > UINT64_MAX - totalSize || rmt.GetAddr() > UINT64_MAX - totalSize)) {
         THROW<InternalException>("integer overflow occurs");
     }
-    for (u32 sliceIdx = 0; sliceIdx < sliceNum; sliceIdx++) {
+    for (u64 sliceIdx = 0; sliceIdx < sliceNum; sliceIdx++) {
         RmaBufSliceLite locSlice(loc.GetAddr() + sliceIdx * sliceSize, sliceSize, 0, loc.GetTokenId());
 
         RmtRmaBufSliceLite rmtSlice(
@@ -212,8 +212,8 @@ void UbConnLite::ProcessSlicesWithNotify(
     }
 
     HCCL_INFO(
-        "[UbConnLite::%s] end, locBufSize[%u], sliceNum[%u], sliceSize[%u], lastSliceSize[%u]", __func__, locBufSize,
-        sliceNum, sliceSize, lastSliceSize);
+        "[UbConnLite::%s] end, locBufSize[%llu], sliceNum[%llu], sliceSize[%u], lastSliceSize[%llu]", __func__,
+        locBufSize, sliceNum, sliceSize, lastSliceSize);
 }
 
 void UbConnLite::FillOneSqeWrite(
