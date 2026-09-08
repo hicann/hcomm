@@ -652,8 +652,11 @@ void RankInfoDetectClient::ReportTlsConfigurationError(
     const std::string& tlsDisableRankStr, const std::string& tlsUnknownRankStr) const
 {
     std::string expectMessage = "\"All ranks are consistent. Current status: rankList for enabled tls: "
-                                + tlsEnableRankStr + "; rankList for disabled tls: " + tlsDisableRankStr
-                                + "; rankList for query failure tls: " + tlsUnknownRankStr;
+                                + tlsEnableRankStr + "; rankList for disabled tls: " + tlsDisableRankStr;
+    if (!tlsUnknownRankStr.empty()) {
+        expectMessage += "; rankList for query failure tls: " + tlsUnknownRankStr;
+    }
+    expectMessage += "\"";
     std::string errormessage = "Value \"" + tlsInconsistentTlsType + "\" for config \"" + tlsType
                                + "\" is invalid. Expected: " + expectMessage;
 

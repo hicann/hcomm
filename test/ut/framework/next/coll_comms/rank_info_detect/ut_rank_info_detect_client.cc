@@ -867,10 +867,16 @@ TEST_F(RankInfoDetectClientTest, Ut_VerifyHostDpuTlsConsistency_When_AllRanksDis
 TEST_F(RankInfoDetectClientTest, Ut_VerifyHostDpuTlsConsistency_When_EnableAndDisableMixed_Expect_ReturnParaError)
 {
     BuildRankTableForHostDpuTls(rankInfoDetectClient_->rankTable_, {TlsStatus::ENABLE, TlsStatus::DISABLE});
+    g_reportedValues.clear();
+    MOCKER(RptInputErr).stubs().will(invoke(StubRptInputErr));
 
     HcclResult ret = rankInfoDetectClient_->VerifyHostDpuTlsConsistency();
 
     EXPECT_EQ(ret, HCCL_E_PARA);
+    ASSERT_EQ(g_reportedValues.size(), 3U);
+    EXPECT_EQ(
+        g_reportedValues[2], "\"All ranks are consistent. Current status: rankList for enabled tls: 0; "
+                             "rankList for disabled tls: 1\"");
 }
 
 TEST_F(RankInfoDetectClientTest, Ut_VerifyHostDpuTlsConsistency_When_KnownConsistentAndUnknownExists_Expect_Success)
@@ -918,9 +924,9 @@ TEST_F(RankInfoDetectClientTest, Ut_VerifyRankTable_When_HostDpuTlsInconsistent_
     ASSERT_EQ(g_reportedValues.size(), 3U);
     EXPECT_EQ(g_reportedValues[0], "Disable");
     EXPECT_EQ(g_reportedValues[1], "\"hostDpuTls\"");
-    EXPECT_NE(g_reportedValues[2].find("enabled tls: 0"), std::string::npos);
-    EXPECT_NE(g_reportedValues[2].find("disabled tls: 1"), std::string::npos);
-    EXPECT_NE(g_reportedValues[2].find("query failure tls: 2"), std::string::npos);
+    EXPECT_EQ(
+        g_reportedValues[2], "\"All ranks are consistent. Current status: rankList for enabled tls: 0; "
+                             "rankList for disabled tls: 1; rankList for query failure tls: 2\"");
 }
 
 TEST_F(RankInfoDetectClientTest, Ut_CheckStatus_When_Timeout_Expect_Throw)
