@@ -340,10 +340,6 @@ void NetInstance::Node::AddConnInterface(u32 layer, const shared_ptr<NetInstance
     }
 
     interfacesVec.emplace_back(interface);
-    interface->SetIpIndex(static_cast<u8>(interfacesVec.size() - 1)); // 插入interfacesVec时的索引作为ipIndex
-    HCCL_INFO(
-        "[ConnInterface] layer[%u] ipIndex[%u] addr[%s]", layer, interface->GetIpIndex(),
-        interface->GetAddr().GetIpStr().c_str());
 }
 
 void NetInstance::Node::AddConnInterfaces(
