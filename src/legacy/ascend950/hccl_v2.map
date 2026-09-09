@@ -82,6 +82,7 @@ global:
     HcclMemRegV2;
     HcclNetDevClose;
     HcclNetDevCloseV2;
+    HcclNetDevGetAddr; # symbol for business
     HcclNetDevGetAddrV2;
     HcclNetDevGetBusAddrV2;
     HcclNetDevGetNicAddrV2;
