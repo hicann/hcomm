@@ -62,8 +62,7 @@ void SetupServerSocketContextMocks(uint32_t listenRetPort = 60001, int32_t start
     // ServerSocketStopListen 不校验返回值，桩为 SUCCESS
     MOCKER_CPP(&ServerSocketManager::ServerSocketStopListen).stubs().will(returnValue(HCCL_SUCCESS));
 }
-// 统一监听地址（方法参数传入，构造签名保持单参/三参，ip 经方法参数注入）
-const Hccl::IpAddress kUtListenIp{"1.0.0.0"};
+// commAddr 在构造时传入 context（与迁移前一致，方法内经 CommAddrToIpAddress 转换，此处已统一 mock）
 } // namespace
 
 class ServerSocketContextTest : public testing::Test {
@@ -102,9 +101,9 @@ TEST_F(ServerSocketContextTest, Ut_HostListen_When_RdmaNormal_Expect_Success)
 {
     SetupServerSocketContextMocks();
     EndpointDesc desc = MakeHostRoceDesc();
-    HostServerSocketContext ctx(Hccl::ConnectProtoType::RDMA);
+    HostServerSocketContext ctx(Hccl::ConnectProtoType::RDMA, desc.commAddr);
 
-    HcclResult ret = ctx.ServerSocketListen(kUtListenIp, 60001);
+    HcclResult ret = ctx.ServerSocketListen(60001);
     EXPECT_EQ(ret, HCCL_SUCCESS);
 }
 
@@ -113,9 +112,9 @@ TEST_F(ServerSocketContextTest, Ut_HostListen_When_UbNormal_Expect_Success)
 {
     SetupServerSocketContextMocks();
     EndpointDesc desc = MakeHostRoceDesc();
-    HostServerSocketContext ctx(Hccl::ConnectProtoType::UB);
+    HostServerSocketContext ctx(Hccl::ConnectProtoType::UB, desc.commAddr);
 
-    HcclResult ret = ctx.ServerSocketListen(kUtListenIp, 60002);
+    HcclResult ret = ctx.ServerSocketListen(60002);
     EXPECT_EQ(ret, HCCL_SUCCESS);
 }
 
@@ -124,10 +123,10 @@ TEST_F(ServerSocketContextTest, Ut_HostGetListenPort_When_NotListened_Expect_Aut
 {
     SetupServerSocketContextMocks();
     EndpointDesc desc = MakeHostRoceDesc();
-    HostServerSocketContext ctx(Hccl::ConnectProtoType::RDMA);
+    HostServerSocketContext ctx(Hccl::ConnectProtoType::RDMA, desc.commAddr);
 
     uint32_t port = 0;
-    HcclResult ret = ctx.ServerSocketGetListenPort(kUtListenIp, &port);
+    HcclResult ret = ctx.ServerSocketGetListenPort(&port);
     EXPECT_EQ(ret, HCCL_SUCCESS);
     // dynamicPort_ 被设置（不等于初始无效端口）
     EXPECT_NE(ctx.dynamicPort_, HCCL_INVALID_PORT);
@@ -138,15 +137,18 @@ TEST_F(ServerSocketContextTest, Ut_HostGetListenPort_When_AlreadyListened_Expect
 {
     SetupServerSocketContextMocks();
     EndpointDesc desc = MakeHostRoceDesc();
-    HostServerSocketContext ctx(Hccl::ConnectProtoType::RDMA);
+    HostServerSocketContext ctx(Hccl::ConnectProtoType::RDMA, desc.commAddr);
 
-    // 先监听
-    EXPECT_EQ(ctx.ServerSocketListen(kUtListenIp, 60003), HCCL_SUCCESS);
-    // 再 GetListenPort：应命中 dynamicPort_ 分支
-    uint32_t port = 0;
-    HcclResult ret = ctx.ServerSocketGetListenPort(kUtListenIp, &port);
-    EXPECT_EQ(ret, HCCL_SUCCESS);
-    EXPECT_NE(port, 0u);
+    // 第一次 GetListenPort：走完整查询路径（StartListen 成功后写入 dynamicPort_ 缓存）
+    uint32_t firstGetListenPort = 0;
+    EXPECT_EQ(ctx.ServerSocketGetListenPort(&firstGetListenPort), HCCL_SUCCESS);
+    EXPECT_NE(firstGetListenPort, 0u);
+    // 将外部查询打桩为失败：若缓存分支失效，第二次 GetListenPort 会触发 StartListen 并返回失败
+    MOCKER_CPP(&hcomm::ServerSocketManager::ServerSocketStartListen).stubs().will(returnValue(HCCL_E_INTERNAL));
+    // 第二次 GetListenPort：命中 dynamicPort_ 缓存分支，不再触发外部查询
+    uint32_t secondGetListenPort = 0;
+    EXPECT_EQ(ctx.ServerSocketGetListenPort(&secondGetListenPort), HCCL_SUCCESS);
+    EXPECT_EQ(secondGetListenPort, firstGetListenPort);
 }
 
 // TC-HostServerSocketContext_GetListenPort: port 出参为空返回 HCCL_E_PTR
@@ -154,9 +156,9 @@ TEST_F(ServerSocketContextTest, Ut_HostGetListenPort_When_PortNull_Expect_Return
 {
     SetupServerSocketContextMocks();
     EndpointDesc desc = MakeHostRoceDesc();
-    HostServerSocketContext ctx(Hccl::ConnectProtoType::RDMA);
+    HostServerSocketContext ctx(Hccl::ConnectProtoType::RDMA, desc.commAddr);
 
-    HcclResult ret = ctx.ServerSocketGetListenPort(kUtListenIp, nullptr);
+    HcclResult ret = ctx.ServerSocketGetListenPort(nullptr);
     EXPECT_EQ(ret, HCCL_E_PTR);
 }
 
@@ -165,10 +167,10 @@ TEST_F(ServerSocketContextTest, Ut_HostStopListen_When_Called_Expect_Success)
 {
     SetupServerSocketContextMocks();
     EndpointDesc desc = MakeHostRoceDesc();
-    HostServerSocketContext ctx(Hccl::ConnectProtoType::RDMA);
+    HostServerSocketContext ctx(Hccl::ConnectProtoType::RDMA, desc.commAddr);
 
-    EXPECT_EQ(ctx.ServerSocketListen(kUtListenIp, 60004), HCCL_SUCCESS);
-    HcclResult ret = ctx.ServerSocketStopListen(kUtListenIp, 60004);
+    EXPECT_EQ(ctx.ServerSocketListen(60004), HCCL_SUCCESS);
+    HcclResult ret = ctx.ServerSocketStopListen(60004);
     EXPECT_EQ(ret, HCCL_SUCCESS);
 }
 
@@ -177,9 +179,10 @@ TEST_F(ServerSocketContextTest, Ut_DeviceListen_When_UbDevice_Expect_Success)
 {
     SetupServerSocketContextMocks();
     EndpointDesc desc = MakeDeviceUbDesc();
-    DeviceServerSocketContext ctx(Hccl::ConnectProtoType::UB, desc.loc.device.devPhyId, desc.loc.locType);
+    DeviceServerSocketContext ctx(
+        Hccl::ConnectProtoType::UB, desc.loc.device.devPhyId, desc.loc.locType, desc.commAddr);
 
-    HcclResult ret = ctx.ServerSocketListen(kUtListenIp, 60005);
+    HcclResult ret = ctx.ServerSocketListen(60005);
     EXPECT_EQ(ret, HCCL_SUCCESS);
 }
 
@@ -188,9 +191,10 @@ TEST_F(ServerSocketContextTest, Ut_DeviceListen_When_LocTypeHost_Expect_SkipAndS
 {
     SetupServerSocketContextMocks();
     EndpointDesc desc = MakeHostRoceDesc(); // locType=HOST
-    DeviceServerSocketContext ctx(Hccl::ConnectProtoType::UB, desc.loc.device.devPhyId, desc.loc.locType);
+    DeviceServerSocketContext ctx(
+        Hccl::ConnectProtoType::UB, desc.loc.device.devPhyId, desc.loc.locType, desc.commAddr);
 
-    HcclResult ret = ctx.ServerSocketListen(kUtListenIp, 60006);
+    HcclResult ret = ctx.ServerSocketListen(60006);
     EXPECT_EQ(ret, HCCL_SUCCESS);
 }
 
@@ -199,10 +203,11 @@ TEST_F(ServerSocketContextTest, Ut_DeviceGetListenPort_When_LocTypeHost_Expect_S
 {
     SetupServerSocketContextMocks();
     EndpointDesc desc = MakeHostRoceDesc(); // locType=HOST
-    DeviceServerSocketContext ctx(Hccl::ConnectProtoType::UB, desc.loc.device.devPhyId, desc.loc.locType);
+    DeviceServerSocketContext ctx(
+        Hccl::ConnectProtoType::UB, desc.loc.device.devPhyId, desc.loc.locType, desc.commAddr);
 
     uint32_t port = 0;
-    HcclResult ret = ctx.ServerSocketGetListenPort(kUtListenIp, &port);
+    HcclResult ret = ctx.ServerSocketGetListenPort(&port);
     EXPECT_EQ(ret, HCCL_SUCCESS);
 }
 
@@ -211,13 +216,19 @@ TEST_F(ServerSocketContextTest, Ut_DeviceGetListenPort_When_AlreadyListened_Expe
 {
     SetupServerSocketContextMocks();
     EndpointDesc desc = MakeDeviceUbDesc();
-    DeviceServerSocketContext ctx(Hccl::ConnectProtoType::UB, desc.loc.device.devPhyId, desc.loc.locType);
+    DeviceServerSocketContext ctx(
+        Hccl::ConnectProtoType::UB, desc.loc.device.devPhyId, desc.loc.locType, desc.commAddr);
 
-    EXPECT_EQ(ctx.ServerSocketListen(kUtListenIp, 60007), HCCL_SUCCESS);
-    uint32_t port = 0;
-    HcclResult ret = ctx.ServerSocketGetListenPort(kUtListenIp, &port);
-    EXPECT_EQ(ret, HCCL_SUCCESS);
-    EXPECT_NE(port, 0u);
+    // 第一次 GetListenPort：走完整查询路径（StartListen 成功后写入 dynamicPort_ 缓存）
+    uint32_t firstPort = 0;
+    EXPECT_EQ(ctx.ServerSocketGetListenPort(&firstPort), HCCL_SUCCESS);
+    EXPECT_NE(firstPort, 0u);
+    // 将外部查询打桩为失败：若缓存分支失效，第二次 GetListenPort 会触发 StartListen 并返回失败
+    MOCKER_CPP(&hcomm::ServerSocketManager::ServerSocketStartListen).stubs().will(returnValue(HCCL_E_INTERNAL));
+    // 第二次 GetListenPort：命中 dynamicPort_ 缓存分支，不再触发外部查询
+    uint32_t secondPort = 0;
+    EXPECT_EQ(ctx.ServerSocketGetListenPort(&secondPort), HCCL_SUCCESS);
+    EXPECT_EQ(secondPort, firstPort);
 }
 
 // TC-DeviceServerSocketContext_StopListen-001: 停止监听
@@ -225,10 +236,11 @@ TEST_F(ServerSocketContextTest, Ut_DeviceStopListen_When_Called_Expect_Success)
 {
     SetupServerSocketContextMocks();
     EndpointDesc desc = MakeDeviceUbDesc();
-    DeviceServerSocketContext ctx(Hccl::ConnectProtoType::UB, desc.loc.device.devPhyId, desc.loc.locType);
+    DeviceServerSocketContext ctx(
+        Hccl::ConnectProtoType::UB, desc.loc.device.devPhyId, desc.loc.locType, desc.commAddr);
 
-    EXPECT_EQ(ctx.ServerSocketListen(kUtListenIp, 60008), HCCL_SUCCESS);
-    HcclResult ret = ctx.ServerSocketStopListen(kUtListenIp, 60008);
+    EXPECT_EQ(ctx.ServerSocketListen(60008), HCCL_SUCCESS);
+    HcclResult ret = ctx.ServerSocketStopListen(60008);
     EXPECT_EQ(ret, HCCL_SUCCESS);
 }
 
@@ -239,9 +251,11 @@ TEST_F(ServerSocketContextTest, Ut_HostDtor_When_ListenedNotStopped_Expect_NoCra
     SetupServerSocketContextMocks();
     EndpointDesc desc = MakeHostRoceDesc();
     {
-        HostServerSocketContext ctx(Hccl::ConnectProtoType::RDMA);
-        EXPECT_EQ(ctx.ServerSocketListen(kUtListenIp, 60009), HCCL_SUCCESS);
-        // 离开作用域析构，应自动 StopListen dynamicPort_
+        HostServerSocketContext ctx(Hccl::ConnectProtoType::RDMA, desc.commAddr);
+        EXPECT_EQ(ctx.ServerSocketListen(60009), HCCL_SUCCESS);
+        // 先经 GetListenPort 使 dynamicPort_ 生效，离开作用域时析构兜底真实走到 StopListenImpl 分支
+        uint32_t port = 0;
+        EXPECT_EQ(ctx.ServerSocketGetListenPort(&port), HCCL_SUCCESS);
     }
     SUCCEED();
 }
@@ -251,8 +265,12 @@ TEST_F(ServerSocketContextTest, Ut_DeviceDtor_When_ListenedNotStopped_Expect_NoC
     SetupServerSocketContextMocks();
     EndpointDesc desc = MakeDeviceUbDesc();
     {
-        DeviceServerSocketContext ctx(Hccl::ConnectProtoType::UB, desc.loc.device.devPhyId, desc.loc.locType);
-        EXPECT_EQ(ctx.ServerSocketListen(kUtListenIp, 60010), HCCL_SUCCESS);
+        DeviceServerSocketContext ctx(
+            Hccl::ConnectProtoType::UB, desc.loc.device.devPhyId, desc.loc.locType, desc.commAddr);
+        EXPECT_EQ(ctx.ServerSocketListen(60010), HCCL_SUCCESS);
+        // 先经 GetListenPort 使 dynamicPort_ 生效，离开作用域时析构兜底真实走到 StopListenImpl 分支
+        uint32_t port = 0;
+        EXPECT_EQ(ctx.ServerSocketGetListenPort(&port), HCCL_SUCCESS);
     }
     SUCCEED();
 }
@@ -262,14 +280,30 @@ TEST_F(ServerSocketContextTest, Ut_BaseStopListen_When_DefaultImpl_Expect_NotSup
 {
     SetupServerSocketContextMocks();
     EndpointDesc desc = MakeHostRoceDesc();
-    HostServerSocketContext ctx(Hccl::ConnectProtoType::RDMA);
+    HostServerSocketContext ctx(Hccl::ConnectProtoType::RDMA, desc.commAddr);
     // 基类虚函数默认实现返回 NOT_SUPPORT，但 Host 子类 override 了；
     // 此处验证基类指针调用走子类 override（应 Success）。基类默认只对未 override 子类生效。
     ServerSocketContext* base = &ctx;
-    HcclResult ret = base->ServerSocketStopListen(kUtListenIp, 60011);
+    HcclResult ret = base->ServerSocketStopListen(60011);
     // Host override 实现，未实际监听该端口，ServerSocketStopListen 返回成功或错误取决于实现，仅验证不崩溃
     (void)ret;
     SUCCEED();
+}
+
+// TC-HostServerSocketContext_CommAddrConvert-001: CommAddrToIpAddress 失败时 Listen/StopListen/GetListenPort
+// 均返回失败码 （Host 三方法均以地址转换为前置步骤，覆盖本次改造引入的主要错误路径）
+TEST_F(ServerSocketContextTest, Ut_HostSocketOps_When_CommAddrConvertFailed_Expect_Error)
+{
+    EndpointDesc desc = MakeHostRoceDesc();
+    HostServerSocketContext ctx(Hccl::ConnectProtoType::RDMA, desc.commAddr);
+    MOCKER(hrtGetDevice).stubs().will(returnValue(HCCL_SUCCESS));
+    MOCKER(hrtGetDevicePhyIdByIndex).stubs().will(returnValue(HCCL_SUCCESS));
+    MOCKER(&CommAddrToIpAddress).stubs().will(returnValue(HCCL_E_NOT_SUPPORT));
+
+    EXPECT_EQ(ctx.ServerSocketListen(60012), HCCL_E_NOT_SUPPORT);
+    EXPECT_EQ(ctx.ServerSocketStopListen(60012), HCCL_E_NOT_SUPPORT);
+    uint32_t port = 0;
+    EXPECT_EQ(ctx.ServerSocketGetListenPort(&port), HCCL_E_NOT_SUPPORT);
 }
 
 // TC-AicpuTsRoceServerSocketContext_StopListen/GetListenPort-001:
@@ -278,10 +312,10 @@ TEST_F(ServerSocketContextTest, Ut_BaseStopListen_When_DefaultImpl_Expect_NotSup
 TEST_F(ServerSocketContextTest, Ut_AicpuTsRoceStopListenGetListenPort_When_InheritBaseDefault_Expect_NotSupport)
 {
     AicpuTsRoceServerSocketContext ctx(nullptr, 0U);
-    EXPECT_EQ(ctx.ServerSocketStopListen(kUtListenIp, 16666U), HCCL_E_NOT_SUPPORT);
+    EXPECT_EQ(ctx.ServerSocketStopListen(16666U), HCCL_E_NOT_SUPPORT);
 
     uint32_t port = 0;
-    EXPECT_EQ(ctx.ServerSocketGetListenPort(kUtListenIp, &port), HCCL_E_NOT_SUPPORT);
+    EXPECT_EQ(ctx.ServerSocketGetListenPort(&port), HCCL_E_NOT_SUPPORT);
 }
 
 // TC-AicpuTsHccsServerSocketContext_GetListenPort-001:
@@ -292,7 +326,7 @@ TEST_F(ServerSocketContextTest, Ut_AicpuTsHccsGetListenPort_When_InheritBaseDefa
     AicpuTsHccsServerSocketContext ctx(0U, 16666U);
 
     uint32_t port = 0;
-    EXPECT_EQ(ctx.ServerSocketGetListenPort(kUtListenIp, &port), HCCL_E_NOT_SUPPORT);
+    EXPECT_EQ(ctx.ServerSocketGetListenPort(&port), HCCL_E_NOT_SUPPORT);
 }
 
 // TC-UbRtpUboeServerSocketContext_Listen/StopListen-001:
@@ -301,8 +335,8 @@ TEST_F(ServerSocketContextTest, Ut_AicpuTsHccsGetListenPort_When_InheritBaseDefa
 TEST_F(ServerSocketContextTest, Ut_UbRtpUboeListenStopListen_When_NoOp_Expect_Success)
 {
     UbRtpUboeServerSocketContext ctx;
-    EXPECT_EQ(ctx.ServerSocketListen(kUtListenIp, 60001U), HCCL_SUCCESS);
-    EXPECT_EQ(ctx.ServerSocketStopListen(kUtListenIp, 60001U), HCCL_SUCCESS);
+    EXPECT_EQ(ctx.ServerSocketListen(60001U), HCCL_SUCCESS);
+    EXPECT_EQ(ctx.ServerSocketStopListen(60001U), HCCL_SUCCESS);
 }
 
 // TC-UbRtpUboeServerSocketContext_GetListenPort-001:
@@ -312,24 +346,5 @@ TEST_F(ServerSocketContextTest, Ut_UbRtpUboeGetListenPort_When_InheritBaseDefaul
     UbRtpUboeServerSocketContext ctx;
 
     uint32_t port = 0;
-    EXPECT_EQ(ctx.ServerSocketGetListenPort(kUtListenIp, &port), HCCL_E_NOT_SUPPORT);
-}
-
-// TC-Endpoint_GetServerSocketContext-001: 非 Socket 类 GetServerSocketContext 返回 nullptr
-// （Endpoint 基类默认实现返回 nullptr；此处用 Endpoint 抽象类的默认行为验证）
-// 注意：Endpoint 是抽象类，无法直接实例化。该用例由 ut_endpoint_mgr.cc / 各 endpoint UT 间接覆盖。
-// 此处仅验证 ServerSocketContext 基类指针语义：StopListen/GetListenPort 基类默认 NOT_SUPPORT，
-// 未覆写的子类（AicpuTsRoce/AicpuTsHccs）继承该行为（见上方 NotSupport 用例）。
-TEST_F(ServerSocketContextTest, Ut_ServerSocketContext_When_AbstractBase_Expect_PureVirtualInSubclass)
-{
-    // HostServerSocketContext / DeviceServerSocketContext 均为具体类，可实例化
-    EndpointDesc desc = MakeHostRoceDesc();
-    HostServerSocketContext hostCtx(Hccl::ConnectProtoType::RDMA);
-    EXPECT_EQ(hostCtx.nicType_, Hccl::NicType::HOST_NIC_TYPE);
-
-    // Device 子类成员瘦身：nicType_ 不再持有，DEVICE_NIC_TYPE 由实现内固定传入，
-    // 此处验证 devPhyId_ 构造注入值
-    EndpointDesc devDesc = MakeDeviceUbDesc();
-    DeviceServerSocketContext devCtx(Hccl::ConnectProtoType::UB, devDesc.loc.device.devPhyId, devDesc.loc.locType);
-    EXPECT_EQ(devCtx.devPhyId_, devDesc.loc.device.devPhyId);
+    EXPECT_EQ(ctx.ServerSocketGetListenPort(&port), HCCL_E_NOT_SUPPORT);
 }

@@ -30,16 +30,14 @@ AicpuTsHccsServerSocketContext::~AicpuTsHccsServerSocketContext()
     }
 }
 
-HcclResult AicpuTsHccsServerSocketContext::ServerSocketListen(
-    [[maybe_unused]] const Hccl::IpAddress& ipAddr, [[maybe_unused]] const uint32_t port)
+HcclResult AicpuTsHccsServerSocketContext::ServerSocketListen([[maybe_unused]] const uint32_t port)
 {
     CHK_RET(hccl::GlobalNetDevMgr::GetInstance(devPhyId_).ServerInit(serverPort_));
     serverListened_ = true;
     return HCCL_SUCCESS;
 }
 
-HcclResult AicpuTsHccsServerSocketContext::ServerSocketStopListen(
-    [[maybe_unused]] const Hccl::IpAddress& ipAddr, const uint32_t port)
+HcclResult AicpuTsHccsServerSocketContext::ServerSocketStopListen(const uint32_t port)
 {
     if (serverListened_) {
         CHK_RET(hccl::GlobalNetDevMgr::GetInstance(devPhyId_).ServerDeInit(port));

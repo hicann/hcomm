@@ -24,7 +24,7 @@ AicpuTsHccsEndpoint::~AicpuTsHccsEndpoint()
     try {
         // 析构顺序保持：先停止 GlobalNetDevMgr Server（子类 context 承载），再 UnRefNetDevCtx
         if (serverSocketContext_.has_value()) {
-            (void)serverSocketContext_->ServerSocketStopListen(Hccl::IpAddress(), serverPort_);
+            (void)serverSocketContext_->ServerSocketStopListen(serverPort_);
         }
     } catch (...) {
     }

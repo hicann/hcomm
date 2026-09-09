@@ -12,7 +12,6 @@
 #define UB_RTP_UBOE_SERVER_SOCKET_CONTEXT_H
 
 #include <cstdint>
-#include "ip_address.h"
 #include "log.h"
 #include "server_socket_context.h"
 
@@ -24,14 +23,12 @@ namespace hcomm {
 class UbRtpUboeServerSocketContext : public ServerSocketContext {
 public:
     UbRtpUboeServerSocketContext() = default;
-    HcclResult
-    ServerSocketListen([[maybe_unused]] const Hccl::IpAddress& ipAddr, [[maybe_unused]] uint32_t port) override
+    HcclResult ServerSocketListen([[maybe_unused]] uint32_t port) override
     {
         HCCL_INFO("[%s] server socket listen is not supported, no-op success", __func__);
         return HCCL_SUCCESS;
     }
-    HcclResult
-    ServerSocketStopListen([[maybe_unused]] const Hccl::IpAddress& ipAddr, [[maybe_unused]] uint32_t port) override
+    HcclResult ServerSocketStopListen([[maybe_unused]] uint32_t port) override
     {
         HCCL_INFO("[%s] server socket stop listen is not supported, no-op success", __func__);
         return HCCL_SUCCESS;

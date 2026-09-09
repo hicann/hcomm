@@ -14,32 +14,31 @@
 #include <cstdint>
 #include <mutex>
 #include "port.h"
-#include "ip_address.h"
+#include "hcomm_res_defs.h"
 #include "socket/socket.h"
 #include "externalinput_pub.h"
 #include "server_socket_context.h"
 
 namespace hcomm {
 
-// ---- ServerSocketManager 路径（原基类公共成员 protoType_/nicType_/portMutex_/dynamicPort_ 下放至子类）----
+// ---- ServerSocketManager 路径（原基类公共成员 protoType_/portMutex_/dynamicPort_ 下放至子类）----
 
 // HOST 侧 Endpoint 使用：devPhyId 经 hrtGetDevice + hrtGetDevicePhyIdByIndex 获取，NicType=HOST_NIC_TYPE
 class HostServerSocketContext : public ServerSocketContext {
 public:
-    explicit HostServerSocketContext(Hccl::ConnectProtoType protoType); // RDMA 或 UB
+    HostServerSocketContext(Hccl::ConnectProtoType protoType, const CommAddr& commAddr);
     ~HostServerSocketContext() override; // 析构期内虚表仍指向本类，显式调非虚停止监听实现
-    HcclResult ServerSocketListen(const Hccl::IpAddress& ipAddr, uint32_t port) override;
-    HcclResult ServerSocketStopListen(const Hccl::IpAddress& ipAddr, uint32_t port) override;
-    HcclResult ServerSocketGetListenPort(const Hccl::IpAddress& ipAddr, uint32_t* port) override;
+    HcclResult ServerSocketListen(uint32_t port) override;
+    HcclResult ServerSocketStopListen(uint32_t port) override;
+    HcclResult ServerSocketGetListenPort(uint32_t* port) override;
 
 private:
-    HcclResult ServerSocketStopListenImpl(const Hccl::IpAddress& ipAddr, uint32_t port);
+    HcclResult ServerSocketStopListenImpl(uint32_t port);
     // devPhyId 在每个方法内部调 hrtGetDevice + hrtGetDevicePhyIdByIndex 获取
     Hccl::ConnectProtoType protoType_;
-    Hccl::NicType nicType_ = Hccl::NicType::HOST_NIC_TYPE;
     std::mutex portMutex_;
     uint32_t dynamicPort_{HCCL_INVALID_PORT};
-    Hccl::IpAddress listenAddr_{}; // 与 dynamicPort_ 同步记录的监听地址，析构停止监听时构造 PortData 用
+    CommAddr commAddr_; // 构造时从 endpointDesc.commAddr 传入，方法内经 CommAddrToIpAddress 转换
 };
 
 } // namespace hcomm

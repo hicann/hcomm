@@ -13,7 +13,6 @@
 
 #include <cstdint>
 #include "port.h"
-#include "ip_address.h"
 #include "server_socket_context.h"
 
 namespace hcomm {
@@ -24,10 +23,9 @@ namespace hcomm {
 class AicpuTsHccsServerSocketContext : public ServerSocketContext {
 public:
     AicpuTsHccsServerSocketContext(uint32_t devPhyId, uint32_t serverPort);
-    ~AicpuTsHccsServerSocketContext() override; // serverListened_ 时 ServerDeInit 兜底（幂等）
-    HcclResult ServerSocketListen(const Hccl::IpAddress& ipAddr, uint32_t port) override; // 调 ServerInit(serverPort_)
-    HcclResult ServerSocketStopListen(
-        const Hccl::IpAddress& ipAddr, uint32_t port) override; // 调 ServerDeInit(port)，serverListened_ 判断
+    ~AicpuTsHccsServerSocketContext() override;                // serverListened_ 时 ServerDeInit 兜底（幂等）
+    HcclResult ServerSocketListen(uint32_t port) override;     // 调 ServerInit(serverPort_)，port 未使用
+    HcclResult ServerSocketStopListen(uint32_t port) override; // 调 ServerDeInit(port)，serverListened_ 判断
     // ServerSocketGetListenPort 迁移前未覆写，继承基类默认 HCCL_E_NOT_SUPPORT
 
 private:

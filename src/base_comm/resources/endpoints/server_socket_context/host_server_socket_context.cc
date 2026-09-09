@@ -17,7 +17,10 @@
 
 namespace hcomm {
 
-HostServerSocketContext::HostServerSocketContext(Hccl::ConnectProtoType protoType) : protoType_(protoType) {}
+HostServerSocketContext::HostServerSocketContext(Hccl::ConnectProtoType protoType, const CommAddr& commAddr)
+    : protoType_(protoType),
+      commAddr_(commAddr)
+{}
 
 HostServerSocketContext::~HostServerSocketContext()
 {
@@ -25,29 +28,32 @@ HostServerSocketContext::~HostServerSocketContext()
     // 析构函数 noexcept，ServerSocketStopListenImpl 返回值忽略。
     std::lock_guard<std::mutex> lock(portMutex_);
     if (dynamicPort_ != HCCL_INVALID_PORT) {
-        (void)ServerSocketStopListenImpl(listenAddr_, dynamicPort_);
+        (void)ServerSocketStopListenImpl(dynamicPort_);
     }
     dynamicPort_ = HCCL_INVALID_PORT;
 }
 
-HcclResult HostServerSocketContext::ServerSocketListen(const Hccl::IpAddress& ipAddr, const uint32_t port)
+HcclResult HostServerSocketContext::ServerSocketListen(const uint32_t port)
 {
+    Hccl::IpAddress ipAddr{};
+    CHK_RET(CommAddrToIpAddress(commAddr_, ipAddr));
     s32 devId = 0;
     CHK_RET(hrtGetDevice(&devId));
     u32 devPhyId = 0;
     CHK_RET(hrtGetDevicePhyIdByIndex(devId, devPhyId));
     Hccl::DevNetPortType type = Hccl::DevNetPortType(protoType_);
     Hccl::PortData localPort = Hccl::PortData(devPhyId, type, 0, ipAddr);
-    HCCL_INFO(
-        "[HostServerSocketContext::%s] devicePhyId[%u] ipAddress[%s]", __func__, devPhyId, ipAddr.Describe().c_str());
+    HCCL_INFO("[HostServerSocketContext::%s] devPhyId[%u] ipAddr[%s]", __func__, devPhyId, ipAddr.Describe().c_str());
     uint32_t requestPort = port;
     CHK_RET(ServerSocketManager::GetInstance().ServerSocketStartListen(
         localPort, Hccl::NicType::HOST_NIC_TYPE, devPhyId, &requestPort));
     return HCCL_SUCCESS;
 }
 
-HcclResult HostServerSocketContext::ServerSocketStopListenImpl(const Hccl::IpAddress& ipAddr, const uint32_t port)
+HcclResult HostServerSocketContext::ServerSocketStopListenImpl(const uint32_t port)
 {
+    Hccl::IpAddress ipAddr{};
+    CHK_RET(CommAddrToIpAddress(commAddr_, ipAddr));
     s32 devId = 0;
     CHK_RET(hrtGetDevice(&devId));
     u32 devPhyId = 0;
@@ -58,12 +64,12 @@ HcclResult HostServerSocketContext::ServerSocketStopListenImpl(const Hccl::IpAdd
     return HCCL_SUCCESS;
 }
 
-HcclResult HostServerSocketContext::ServerSocketStopListen(const Hccl::IpAddress& ipAddr, const uint32_t port)
+HcclResult HostServerSocketContext::ServerSocketStopListen(const uint32_t port)
 {
-    return ServerSocketStopListenImpl(ipAddr, port);
+    return ServerSocketStopListenImpl(port);
 }
 
-HcclResult HostServerSocketContext::ServerSocketGetListenPort(const Hccl::IpAddress& ipAddr, uint32_t* port)
+HcclResult HostServerSocketContext::ServerSocketGetListenPort(uint32_t* port)
 {
     std::lock_guard<std::mutex> lock(portMutex_);
     CHK_PTR_NULL(port);
@@ -71,21 +77,25 @@ HcclResult HostServerSocketContext::ServerSocketGetListenPort(const Hccl::IpAddr
     CHK_RET(hrtGetDevice(&devId));
     u32 devPhyId = 0;
     CHK_RET(hrtGetDevicePhyIdByIndex(devId, devPhyId));
+    Hccl::IpAddress ipAddr{};
+    CHK_RET(CommAddrToIpAddress(commAddr_, ipAddr));
     Hccl::DevNetPortType type = Hccl::DevNetPortType(protoType_);
     Hccl::PortData localPort = Hccl::PortData(devPhyId, type, 0, ipAddr);
+    HCCL_INFO("[HostServerSocketContext::%s] devPhyId[%u], ipAddr[%s]", __func__, devPhyId, ipAddr.Describe().c_str());
+
     if (dynamicPort_ != HCCL_INVALID_PORT) {
         *port = dynamicPort_;
+        HCCL_INFO("[HostServerSocketContext::%s] already listening, return existing port[%u]", __func__, dynamicPort_);
         return HCCL_SUCCESS;
     }
     uint32_t requestPort = 0;
     CHK_RET(ServerSocketManager::GetInstance().ServerSocketStartListen(
         localPort, Hccl::NicType::HOST_NIC_TYPE, devPhyId, &requestPort));
     if (requestPort == 0 || requestPort == HCCL_INVALID_PORT) {
-        HCCL_ERROR("[HostServerSocketContext][%s] get listen port failed, port is invalid", __func__);
+        HCCL_ERROR("[HostServerSocketContext::%s] get listen port failed, port is invalid", __func__);
         return HCCL_E_NETWORK;
     }
     dynamicPort_ = requestPort;
-    listenAddr_ = ipAddr;
     *port = dynamicPort_;
     return HCCL_SUCCESS;
 }

@@ -35,9 +35,8 @@ AicpuTsRoceServerSocketContext::GetServerSocketMap()
     return serverSocketMap;
 }
 
-HcclResult AicpuTsRoceServerSocketContext::ServerSocketListen(const Hccl::IpAddress& ipAddr, const uint32_t port)
+HcclResult AicpuTsRoceServerSocketContext::ServerSocketListen(const uint32_t port)
 {
-    (void)ipAddr; // HcclSocket 自管理路径按 netDevRefPhyId_+port 复用，不依赖 ipAddr
     const uint32_t listenPort = (port != 0U) ? port : kDefaultAicpuTsRocePort;
     const SocketMapKey key{netDevRefPhyId_, listenPort};
     std::lock_guard<std::mutex> lk(ListenSocketMapMutex());

@@ -85,13 +85,11 @@ public:
     PluginServerSocketContext(HcommNicEndpointOps* nicOps, void* nicCtx) : nicOps_(nicOps), nicCtx_(nicCtx) {}
     ~PluginServerSocketContext() override = default;
 
-    HcclResult ServerSocketGetListenPort(const Hccl::IpAddress& ipAddr, uint32_t* port) override
+    HcclResult ServerSocketGetListenPort(uint32_t* port) override
     {
-        (void)ipAddr;
         return static_cast<HcclResult>(nicOps_->getListenPort(nicCtx_, port));
     }
-    HcclResult
-    ServerSocketListen([[maybe_unused]] const Hccl::IpAddress& ipAddr, [[maybe_unused]] uint32_t port) override
+    HcclResult ServerSocketListen([[maybe_unused]] uint32_t port) override
     {
         return HCCL_E_NOT_SUPPORT; // ops 表无 listen 字段
     }

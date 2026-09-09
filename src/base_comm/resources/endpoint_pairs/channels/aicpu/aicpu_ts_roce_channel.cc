@@ -218,10 +218,9 @@ HcclResult AicpuTsRoceChannel::BuildServerDataSocket(
     AicpuTsRoceEndpoint* roceEp, const hccl::HcclIpAddress& remoteIp, uint32_t port, const std::string& socketTag)
 {
     HCCL_INFO("[AicpuTsRoceChannel][server] BuildDataSocket listen and accept");
-    // HcclSocket 自管理路径不使用 ipAddr，传默认地址占位；数据面方法经具体 context 类型访问
     auto* roceCtx = static_cast<AicpuTsRoceServerSocketContext*>(roceEp->GetServerSocketContext());
     CHK_PTR_NULL(roceCtx);
-    CHK_RET(roceCtx->ServerSocketListen(Hccl::IpAddress(), port));
+    CHK_RET(roceCtx->ServerSocketListen(port));
     SocketWlistInfo wlistEntry{};
     wlistEntry.connLimit = 1U;
     const auto bin = remoteIp.GetBinaryAddress();

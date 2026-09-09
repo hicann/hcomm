@@ -125,6 +125,9 @@ HcclResult CpuUrmaEndpoint::Init()
         CHK_RET(ReleaseEndpointCtx());
         return ret;
     }
+
+    // ServerSocketContext：Init 成功路径构造，commAddr 供方法内转换 IpAddress 使用
+    serverSocketContext_.emplace(Hccl::ConnectProtoType::UB, endpointDesc_.commAddr);
     return HCCL_SUCCESS;
 }
 
