@@ -1275,8 +1275,6 @@ int32_t HcommChannelDrainOnThread(ThreadHandle thread, ChannelHandle channel)
     AddThread(thread);
     Thread* const threadPtr = reinterpret_cast<Thread*>(thread);
     CHK_PTR_NULL(threadPtr);
-    Stream* stream = GetStream(thread);
-    CHK_PTR_NULL(stream);
 
     HcclResult ret = HCCL_SUCCESS;
     if (threadPtr->IsDeviceA5()) {
@@ -1287,10 +1285,12 @@ int32_t HcommChannelDrainOnThread(ThreadHandle thread, ChannelHandle channel)
         CHK_PTR_NULL(streamLitePtr);
 
         EXCEPTION_CATCH(transportLitePtr->Drain(*streamLitePtr), ret = HCCL_E_INTERNAL);
-        return ret;
+    } else {
+        Stream* stream = GetStream(thread);
+        CHK_PTR_NULL(stream);
+        ret = HcclRemoteDrain(stream, reinterpret_cast<void*>(channel));
     }
 
-    ret = HcclRemoteDrain(stream, reinterpret_cast<void*>(channel));
     CHK_PRT_RET(
         ret != HCCL_SUCCESS, HCCL_ERROR("[%s] Run FAIL. thread[0x%llx], channel[0x%llx].", __func__, thread, channel),
         ret);
