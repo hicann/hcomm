@@ -15,6 +15,7 @@
 #include "rank_graph_interface.h"
 #include "rank_graph_v2.h"
 #include "hccl/hccl_res.h"
+#include "hccl_types.h"
 #include <hccl/hccl_comm.h>
 #include "hcomm_adapter_hccp.h"
 #include "hcomm_c_adpt.h"
@@ -429,6 +430,74 @@ TEST_F(MyRankTest, Ut_When_BatchCreateChannels_Expect_SUCCESS)
     MOCKER_CPP(&hcomm::ChannelProcess::ChannelGetStatus).stubs().with(mockcpp::any()).will(returnValue(HCCL_E_TIMEOUT));
     EXPECT_EQ(myRank->BatchConnectChannels(channelDesc, hostChannelHandleList, 3), HCCL_E_TIMEOUT);
     unsetenv("HCCL_DFS_CONFIG");
+}
+
+TEST_F(MyRankTest, Ut_CreateChannels_When_CpuEngine_UbCtp_Expect_PARAM_ERROR)
+{
+    uint32_t devPort = 60001;
+    MOCKER_CPP(&Hccl::IRankGraph::GetDevicePort)
+        .stubs()
+        .with(mockcpp::any(), outBoundP(&devPort))
+        .will(returnValue(HCCL_SUCCESS));
+    MOCKER_CPP(&Hccl::IRankGraph::GetDeviceId)
+        .stubs()
+        .with(mockcpp::any())
+        .will(returnValue(static_cast<int>(HCCL_SUCCESS)));
+    MockerFuncs();
+
+    HcclMem cclBuffer;
+    CreateCclBuffer(cclBuffer);
+    EXPECT_EQ(myRank->Init(cclBuffer, 2, 2), HCCL_SUCCESS);
+
+    EndpointDesc localEp;
+    CreateEndpointDesc(localEp, COMM_PROTOCOL_UB_CTP, "1.0.0.0");
+    EndpointDesc rmtEp;
+    CreateEndpointDesc(rmtEp, COMM_PROTOCOL_UB_CTP, "2.0.0.0");
+
+    HcclChannelDesc channelDesc[1]{};
+    channelDesc[0].channelProtocol = COMM_PROTOCOL_UB_CTP;
+    channelDesc[0].remoteRank = 1;
+    channelDesc[0].notifyNum = 2;
+    channelDesc[0].localEndpoint = localEp;
+    channelDesc[0].remoteEndpoint = rmtEp;
+
+    ChannelHandle handles[1] = {0};
+    HcclResult ret = myRank->CreateChannels(COMM_ENGINE_CPU, "test_ubctp_blocked", channelDesc, 1, handles);
+    EXPECT_EQ(ret, HCCL_E_PARA);
+}
+
+TEST_F(MyRankTest, Ut_CreateChannels_When_CpuEngine_UbcTp_Expect_PARAM_ERROR)
+{
+    uint32_t devPort = 60001;
+    MOCKER_CPP(&Hccl::IRankGraph::GetDevicePort)
+        .stubs()
+        .with(mockcpp::any(), outBoundP(&devPort))
+        .will(returnValue(HCCL_SUCCESS));
+    MOCKER_CPP(&Hccl::IRankGraph::GetDeviceId)
+        .stubs()
+        .with(mockcpp::any())
+        .will(returnValue(static_cast<int>(HCCL_SUCCESS)));
+    MockerFuncs();
+
+    HcclMem cclBuffer;
+    CreateCclBuffer(cclBuffer);
+    EXPECT_EQ(myRank->Init(cclBuffer, 2, 2), HCCL_SUCCESS);
+
+    EndpointDesc localEp;
+    CreateEndpointDesc(localEp, COMM_PROTOCOL_UBC_TP, "1.0.0.0");
+    EndpointDesc rmtEp;
+    CreateEndpointDesc(rmtEp, COMM_PROTOCOL_UBC_TP, "2.0.0.0");
+
+    HcclChannelDesc channelDesc[1]{};
+    channelDesc[0].channelProtocol = COMM_PROTOCOL_UBC_TP;
+    channelDesc[0].remoteRank = 1;
+    channelDesc[0].notifyNum = 2;
+    channelDesc[0].localEndpoint = localEp;
+    channelDesc[0].remoteEndpoint = rmtEp;
+
+    ChannelHandle handles[1] = {0};
+    HcclResult ret = myRank->CreateChannels(COMM_ENGINE_CPU, "test_ubctp_blocked", channelDesc, 1, handles);
+    EXPECT_EQ(ret, HCCL_E_PARA);
 }
 
 // 测试Init时用户未配置展开模式时，读取环境变量配置
