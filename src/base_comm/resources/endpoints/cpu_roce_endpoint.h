@@ -11,6 +11,7 @@
 #ifndef ROCE_ENDPOINT_H
 #define ROCE_ENDPOINT_H
 
+#include <optional>
 #include <memory>
 #include <mutex>
 #include <vector>
@@ -35,7 +36,10 @@ public:
     RegedMemMgr* GetRegedMemMgr() override { return regedMemMgr_.get(); }
     void* GetRdmaHandle() override { return ctxHandle_; }
     bool IsCtxHandleValid() const override;
-    ServerSocketContext* GetServerSocketContext() override { return &serverSocketContext_; }
+    ServerSocketContext* GetServerSocketContext() override
+    {
+        return serverSocketContext_.has_value() ? &serverSocketContext_.value() : nullptr;
+    }
 
     struct Capabilities {
         uint64_t maxMsgSize{0};
@@ -52,7 +56,7 @@ private:
     void* ctxHandle_{nullptr};
     std::shared_ptr<EndpointCtx> endpointCtx_{};
     std::shared_ptr<RoceRegedMemMgr> regedMemMgr_{};
-    HostServerSocketContext serverSocketContext_{Hccl::ConnectProtoType::RDMA};
+    std::optional<HostServerSocketContext> serverSocketContext_{};
     MemMgrCacheKey cacheKey_{};
     std::shared_ptr<ProcRegedMemMgrCache> cacheKeepAlive_{};
     Capabilities capabilities_{};

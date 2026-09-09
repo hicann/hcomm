@@ -833,6 +833,34 @@ TEST_F(HcommCAdptTest, ut_HcommEndpointGetListenPort_When_ServerSocketNotSupport
     EXPECT_EQ(ret, HCCL_E_NOT_SUPPORT);
 }
 
+// endpoint 不持有 ServerSocketContext（GetServerSocketContext 返回 nullptr）时：
+// StartListen 历史上为 no-op SUCCESS，StopListen 历史上返回 NOT_SUPPORT（保持迁移前语义）
+TEST_F(HcommCAdptTest, ut_HcommEndpointStartListen_When_NoServerSocketContext_Expect_NoOpSuccess)
+{
+    EndpointHandle endpointHandle = reinterpret_cast<EndpointHandle>(0x12345);
+    ChannelAdptStubEndpoint stubEndpoint(EndpointDesc{});
+
+    MOCKER_CPP(&hcomm::EndpointMgr::Get, Endpoint * (hcomm::EndpointMgr::*)(EndpointHandle))
+        .stubs()
+        .will(returnValue(static_cast<Endpoint*>(&stubEndpoint)));
+
+    HcommResult ret = HcommEndpointStartListen(endpointHandle, 100, nullptr);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+}
+
+TEST_F(HcommCAdptTest, ut_HcommEndpointStopListen_When_NoServerSocketContext_Expect_E_NOT_SUPPORT)
+{
+    EndpointHandle endpointHandle = reinterpret_cast<EndpointHandle>(0x12345);
+    ChannelAdptStubEndpoint stubEndpoint(EndpointDesc{});
+
+    MOCKER_CPP(&hcomm::EndpointMgr::Get, Endpoint * (hcomm::EndpointMgr::*)(EndpointHandle))
+        .stubs()
+        .will(returnValue(static_cast<Endpoint*>(&stubEndpoint)));
+
+    HcommResult ret = HcommEndpointStopListen(endpointHandle, 100);
+    EXPECT_EQ(ret, HCCL_E_NOT_SUPPORT);
+}
+
 TEST_F(HcommCAdptTest, ut_HcommEndpointCheckFeature_When_SupportedFeature_Expect_True)
 {
     EndpointDesc endpointDesc{};

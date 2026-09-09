@@ -18,7 +18,6 @@
 #include <unordered_map>
 #include <vector>
 #include "port.h"
-#include "ip_address.h"
 #include "hccl_mem_defs.h"
 #include "hccl_socket.h"
 #include "externalinput_pub.h"
@@ -57,8 +56,8 @@ class AicpuTsRoceServerSocketContext : public ServerSocketContext {
 public:
     AicpuTsRoceServerSocketContext(HcclNetDev netDev, uint32_t netDevRefPhyId);
     ~AicpuTsRoceServerSocketContext() override; // 析构释放本实例持有的监听引用（ReleaseListenSocketRefs）
-    HcclResult ServerSocketListen(const Hccl::IpAddress& ipAddr, uint32_t port)
-        override; // 默认端口 kDefaultAicpuTsRocePort；ReuseListenSocketIfExist 复用
+    HcclResult
+    ServerSocketListen(uint32_t port) override; // 默认端口 kDefaultAicpuTsRocePort；ReuseListenSocketIfExist 复用
     // ServerSocketStopListen/ServerSocketGetListenPort 迁移前（Endpoint 时期）未覆写，
     // 继承基类默认 HCCL_E_NOT_SUPPORT，保持迁移前对外行为
 

@@ -35,10 +35,10 @@
 using namespace hcomm;
 
 namespace {
-// UT 直连：模拟 Init 内的 DeviceServerSocketContext 构造
+// UT 直连：模拟 Init 内的 DeviceServerSocketContext 构造（commAddr 从 endpointDesc 传入，方法内转换 IpAddress）
 void EmplaceUrmaServerSocketContext(UrmaEndpoint& ep, EndpointLocType locType)
 {
-    ep.serverSocketContext_.emplace(Hccl::ConnectProtoType::UB, 0U, locType);
+    ep.serverSocketContext_.emplace(Hccl::ConnectProtoType::UB, 0U, locType, ep.endpointDesc_.commAddr);
 }
 } // namespace
 
@@ -78,7 +78,7 @@ TEST_F(UrmaEndpointTest, Ut_When_ServerSocketListen_Normal_Expect_HCCL_SUCCESS)
     EmplaceUrmaServerSocketContext(*endpoint, ENDPOINT_LOC_TYPE_DEVICE);
 
     MOCKER_CPP(&hcomm::ServerSocketManager::ServerSocketStartListen).stubs().will(returnValue(HCCL_SUCCESS));
-    EXPECT_EQ(endpoint->GetServerSocketContext()->ServerSocketListen(Hccl::IpAddress("1.0.0.0"), 60001), HCCL_SUCCESS);
+    EXPECT_EQ(endpoint->GetServerSocketContext()->ServerSocketListen(60001), HCCL_SUCCESS);
 }
 
 TEST_F(UrmaEndpointTest, Ut_When_ServerSocketListen_LocTypeNotDevice_Expect_HCCL_SUCCESS)
@@ -87,7 +87,7 @@ TEST_F(UrmaEndpointTest, Ut_When_ServerSocketListen_LocTypeNotDevice_Expect_HCCL
     auto endpoint = std::make_unique<UrmaEndpoint>(endpointDesc);
     EmplaceUrmaServerSocketContext(*endpoint, ENDPOINT_LOC_TYPE_HOST);
 
-    EXPECT_EQ(endpoint->GetServerSocketContext()->ServerSocketListen(Hccl::IpAddress("1.0.0.0"), 60001), HCCL_SUCCESS);
+    EXPECT_EQ(endpoint->GetServerSocketContext()->ServerSocketListen(60001), HCCL_SUCCESS);
 }
 
 TEST_F(UrmaEndpointTest, Ut_When_ServerSocketListen_StartListenFailed_Expect_Error)
@@ -97,8 +97,7 @@ TEST_F(UrmaEndpointTest, Ut_When_ServerSocketListen_StartListenFailed_Expect_Err
     EmplaceUrmaServerSocketContext(*endpoint, ENDPOINT_LOC_TYPE_DEVICE);
 
     MOCKER_CPP(&hcomm::ServerSocketManager::ServerSocketStartListen).stubs().will(returnValue(HCCL_E_INTERNAL));
-    EXPECT_EQ(
-        endpoint->GetServerSocketContext()->ServerSocketListen(Hccl::IpAddress("1.0.0.0"), 60001), HCCL_E_INTERNAL);
+    EXPECT_EQ(endpoint->GetServerSocketContext()->ServerSocketListen(60001), HCCL_E_INTERNAL);
 }
 
 TEST_F(UrmaEndpointTest, Ut_When_ServerSocketGetListenPort_Normal_Expect_HCCL_SUCCESS)
@@ -113,8 +112,7 @@ TEST_F(UrmaEndpointTest, Ut_When_ServerSocketGetListenPort_Normal_Expect_HCCL_SU
         .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBoundP(&portValue, sizeof(portValue)))
         .will(returnValue(HCCL_SUCCESS));
     uint32_t port = 0;
-    EXPECT_EQ(
-        endpoint->GetServerSocketContext()->ServerSocketGetListenPort(Hccl::IpAddress("1.0.0.0"), &port), HCCL_SUCCESS);
+    EXPECT_EQ(endpoint->GetServerSocketContext()->ServerSocketGetListenPort(&port), HCCL_SUCCESS);
     EXPECT_EQ(port, 60001);
 }
 
@@ -125,8 +123,7 @@ TEST_F(UrmaEndpointTest, Ut_When_ServerSocketGetListenPort_LocTypeNotDevice_Expe
     EmplaceUrmaServerSocketContext(*endpoint, ENDPOINT_LOC_TYPE_HOST);
 
     uint32_t port = 0;
-    EXPECT_EQ(
-        endpoint->GetServerSocketContext()->ServerSocketGetListenPort(Hccl::IpAddress("1.0.0.0"), &port), HCCL_SUCCESS);
+    EXPECT_EQ(endpoint->GetServerSocketContext()->ServerSocketGetListenPort(&port), HCCL_SUCCESS);
 }
 
 TEST_F(UrmaEndpointTest, Ut_When_ServerSocketGetListenPort_AlreadyListening_Expect_ReturnCachedPort)
@@ -139,8 +136,7 @@ TEST_F(UrmaEndpointTest, Ut_When_ServerSocketGetListenPort_AlreadyListening_Expe
     endpoint->serverSocketContext_->dynamicPort_ = cachedPort;
 
     uint32_t port = 0;
-    EXPECT_EQ(
-        endpoint->GetServerSocketContext()->ServerSocketGetListenPort(Hccl::IpAddress("1.0.0.0"), &port), HCCL_SUCCESS);
+    EXPECT_EQ(endpoint->GetServerSocketContext()->ServerSocketGetListenPort(&port), HCCL_SUCCESS);
     EXPECT_EQ(port, cachedPort);
 }
 
@@ -156,9 +152,7 @@ TEST_F(UrmaEndpointTest, Ut_When_ServerSocketGetListenPort_StartListenReturnsPor
         .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBoundP(&portValue, sizeof(portValue)))
         .will(returnValue(HCCL_SUCCESS));
     uint32_t port = 0;
-    EXPECT_EQ(
-        endpoint->GetServerSocketContext()->ServerSocketGetListenPort(Hccl::IpAddress("1.0.0.0"), &port),
-        HCCL_E_NETWORK);
+    EXPECT_EQ(endpoint->GetServerSocketContext()->ServerSocketGetListenPort(&port), HCCL_E_NETWORK);
 }
 
 TEST_F(UrmaEndpointTest, Ut_When_ServerSocketGetListenPort_StartListenReturnsInvalidPort_Expect_HCCL_E_NETWORK)
@@ -173,9 +167,7 @@ TEST_F(UrmaEndpointTest, Ut_When_ServerSocketGetListenPort_StartListenReturnsInv
         .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBoundP(&portValue, sizeof(portValue)))
         .will(returnValue(HCCL_SUCCESS));
     uint32_t port = 0;
-    EXPECT_EQ(
-        endpoint->GetServerSocketContext()->ServerSocketGetListenPort(Hccl::IpAddress("1.0.0.0"), &port),
-        HCCL_E_NETWORK);
+    EXPECT_EQ(endpoint->GetServerSocketContext()->ServerSocketGetListenPort(&port), HCCL_E_NETWORK);
 }
 
 TEST_F(UrmaEndpointTest, Ut_When_ServerSocketGetListenPort_StartListenFailed_Expect_Error)
@@ -186,9 +178,7 @@ TEST_F(UrmaEndpointTest, Ut_When_ServerSocketGetListenPort_StartListenFailed_Exp
 
     MOCKER_CPP(&hcomm::ServerSocketManager::ServerSocketStartListen).stubs().will(returnValue(HCCL_E_INTERNAL));
     uint32_t port = 0;
-    EXPECT_EQ(
-        endpoint->GetServerSocketContext()->ServerSocketGetListenPort(Hccl::IpAddress("1.0.0.0"), &port),
-        HCCL_E_INTERNAL);
+    EXPECT_EQ(endpoint->GetServerSocketContext()->ServerSocketGetListenPort(&port), HCCL_E_INTERNAL);
 }
 
 TEST_F(UrmaEndpointTest, Ut_When_IsCtxHandleValid_NullCtxHandle_Expect_False)

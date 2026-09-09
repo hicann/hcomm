@@ -148,9 +148,10 @@ HcclResult UrmaEndpoint::Init()
         return ret;
     }
 
-    // ServerSocketContext：以修正后的 devPhyId/locType 构造
+    // ServerSocketContext：以修正后的 devPhyId/locType 构造，commAddr 供方法内转换 IpAddress 使用
     serverSocketContext_.emplace(
-        Hccl::ConnectProtoType::UB, endpointDesc_.loc.device.devPhyId, endpointDesc_.loc.locType);
+        Hccl::ConnectProtoType::UB, endpointDesc_.loc.device.devPhyId, endpointDesc_.loc.locType,
+        endpointDesc_.commAddr);
 
     // ccu模式专用的资源分配器
     ccuChannelCtxPool_.reset(new (std::nothrow) CcuChannelCtxPool(deviceLogicId));

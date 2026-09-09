@@ -209,54 +209,6 @@ HcclResult CreateBuiltinEndpoint(const EndpointDesc* endpoint, EndpointHandle* e
     return HCCL_SUCCESS;
 }
 
-// C 适配层监听入口统一分发：全部 Socket 类经 endpoint->GetServerSocketContext() 访问
-// （Host/Device/AicpuTsRoce/AicpuTsHccs/Plugin 5 类子类均 override 返回非 nullptr）。
-HcclResult StartListenByEndpoint(Endpoint* endpoint, uint32_t port)
-{
-    ServerSocketContext* serverSocketContext = endpoint->GetServerSocketContext();
-    if (serverSocketContext == nullptr) {
-        // 非 Socket 类（Uboe/UbRtp/UbMem）历史上为 no-op SUCCESS，保持现有语义
-        HCCL_INFO(
-            "[%s] endpoint does not hold server socket context, skip listen, protocol[%d]", __func__,
-            endpoint->GetEndpointDesc().protocol);
-        return HCCL_SUCCESS;
-    }
-    Hccl::IpAddress ipAddr{};
-    CHK_RET(CommAddrToIpAddress(endpoint->GetEndpointDesc().commAddr, ipAddr));
-    return serverSocketContext->ServerSocketListen(ipAddr, port);
-}
-
-HcclResult StopListenByEndpoint(Endpoint* endpoint, uint32_t port)
-{
-    ServerSocketContext* serverSocketContext = endpoint->GetServerSocketContext();
-    if (serverSocketContext == nullptr) {
-        HCCL_ERROR(
-            "[%s] endpoint does not support server socket stop listen, protocol[%d]", __func__,
-            endpoint->GetEndpointDesc().protocol);
-        return HCCL_E_NOT_SUPPORT;
-    }
-    Hccl::IpAddress ipAddr{};
-    CHK_RET(CommAddrToIpAddress(endpoint->GetEndpointDesc().commAddr, ipAddr));
-    return serverSocketContext->ServerSocketStopListen(ipAddr, port);
-}
-
-HcclResult GetListenPortByEndpoint(Endpoint* endpoint, uint32_t* port)
-{
-    ServerSocketContext* serverSocketContext = endpoint->GetServerSocketContext();
-    if (serverSocketContext == nullptr) {
-        HCCL_ERROR(
-            "[%s] endpoint does not support get listen port, protocol[%d]", __func__,
-            endpoint->GetEndpointDesc().protocol);
-        return HCCL_E_NOT_SUPPORT;
-    }
-    Hccl::IpAddress ipAddr{};
-    HcclResult ret = CommAddrToIpAddress(endpoint->GetEndpointDesc().commAddr, ipAddr);
-    if (ret == HCCL_E_NOT_SUPPORT) {
-        return ret;
-    }
-    CHK_RET(ret);
-    return serverSocketContext->ServerSocketGetListenPort(ipAddr, port);
-}
 } // namespace
 
 HcommResult HcommEndpointGetDescNum(int32_t deviceLogicId, uint32_t* descNum)
@@ -417,7 +369,15 @@ HcommEndpointStartListen(EndpointHandle endpointHandle, uint32_t port, const Hco
     CHK_PRT_RET(
         endpoint == nullptr, HCCL_ERROR("[%s] endpoint not found, endpointHandle[%p]", __func__, endpointHandle),
         HCCL_E_NOT_FOUND);
-    return static_cast<HcommResult>(StartListenByEndpoint(endpoint, port));
+    ServerSocketContext* serverSocketContext = endpoint->GetServerSocketContext();
+    if (serverSocketContext == nullptr) {
+        // 非 Socket 类（UbMem）历史上为 no-op SUCCESS，保持现有语义
+        HCCL_INFO(
+            "[%s] endpoint does not hold server socket context, skip listen, protocol[%d]", __func__,
+            endpoint->GetEndpointDesc().protocol);
+        return HCCL_SUCCESS;
+    }
+    return static_cast<HcommResult>(serverSocketContext->ServerSocketListen(port));
 }
 
 HcommResult HcommEndpointStopListen(EndpointHandle endpointHandle, uint32_t port)
@@ -426,7 +386,14 @@ HcommResult HcommEndpointStopListen(EndpointHandle endpointHandle, uint32_t port
     CHK_PRT_RET(
         endpoint == nullptr, HCCL_ERROR("[%s] endpoint not found, endpointHandle[%p]", __func__, endpointHandle),
         HCCL_E_NOT_FOUND);
-    return static_cast<HcommResult>(StopListenByEndpoint(endpoint, port));
+    ServerSocketContext* serverSocketContext = endpoint->GetServerSocketContext();
+    if (serverSocketContext == nullptr) {
+        HCCL_ERROR(
+            "[%s] endpoint does not support server socket stop listen, protocol[%d]", __func__,
+            endpoint->GetEndpointDesc().protocol);
+        return HCCL_E_NOT_SUPPORT;
+    }
+    return static_cast<HcommResult>(serverSocketContext->ServerSocketStopListen(port));
 }
 
 HcommResult HcommEndpointGetListenPort(EndpointHandle endpointHandle, uint32_t* port)
@@ -437,7 +404,14 @@ HcommResult HcommEndpointGetListenPort(EndpointHandle endpointHandle, uint32_t* 
         endpoint == nullptr, HCCL_ERROR("[%s] endpoint not found, endpointHandle[%p]", __func__, endpointHandle),
         HCCL_E_NOT_FOUND);
     CHK_RET(RefreshEndpointContext(endpoint->GetEndpointDesc()));
-    return static_cast<HcommResult>(GetListenPortByEndpoint(endpoint, port));
+    ServerSocketContext* serverSocketContext = endpoint->GetServerSocketContext();
+    if (serverSocketContext == nullptr) {
+        HCCL_ERROR(
+            "[%s] endpoint does not support get listen port, protocol[%d]", __func__,
+            endpoint->GetEndpointDesc().protocol);
+        return HCCL_E_NOT_SUPPORT;
+    }
+    return static_cast<HcommResult>(serverSocketContext->ServerSocketGetListenPort(port));
 }
 
 HcommResult

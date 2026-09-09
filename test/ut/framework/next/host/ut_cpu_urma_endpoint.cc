@@ -94,7 +94,7 @@ TEST_F(CpuUrmaEndpointTest, Ut_When_ServerSocketListen_Normal_Expect_HCCL_SUCCES
     EXPECT_EQ(endpoint->Init(), HCCL_SUCCESS);
     MOCKER_CPP(&hcomm::ServerSocketManager::ServerSocketStartListen).stubs().will(returnValue(HCCL_SUCCESS));
     // 监听 3 方法由 ServerSocketContext 承载，经 GetServerSocketContext() 访问
-    EXPECT_EQ(endpoint->GetServerSocketContext()->ServerSocketListen(Hccl::IpAddress("1.0.0.0"), 60001), HCCL_SUCCESS);
+    EXPECT_EQ(endpoint->GetServerSocketContext()->ServerSocketListen(60001), HCCL_SUCCESS);
 }
 
 TEST_F(CpuUrmaEndpointTest, Ut_When_ServerSocketStopListen_Normal_Expect_HCCL_SUCCESS)
@@ -102,8 +102,7 @@ TEST_F(CpuUrmaEndpointTest, Ut_When_ServerSocketStopListen_Normal_Expect_HCCL_SU
     auto endpoint = std::make_unique<CpuUrmaEndpoint>(endpointDesc);
     EXPECT_EQ(endpoint->Init(), HCCL_SUCCESS);
     MOCKER_CPP(&hcomm::ServerSocketManager::ServerSocketStopListen).stubs().will(returnValue(HCCL_SUCCESS));
-    EXPECT_EQ(
-        endpoint->GetServerSocketContext()->ServerSocketStopListen(Hccl::IpAddress("1.0.0.0"), 60001), HCCL_SUCCESS);
+    EXPECT_EQ(endpoint->GetServerSocketContext()->ServerSocketStopListen(60001), HCCL_SUCCESS);
 }
 
 TEST_F(CpuUrmaEndpointTest, Ut_When_RegisterMemory_Normal_Expect_HCCL_SUCCESS)
@@ -143,6 +142,5 @@ TEST_F(CpuUrmaEndpointTest, Ut_When_ServerSocketGetListenPort_Normal_Expect_HCCL
         .stubs()
         .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBoundP(&portValue, sizeof(portValue)))
         .will(returnValue(HCCL_SUCCESS));
-    EXPECT_EQ(
-        endpoint->GetServerSocketContext()->ServerSocketGetListenPort(Hccl::IpAddress("1.0.0.0"), &port), HCCL_SUCCESS);
+    EXPECT_EQ(endpoint->GetServerSocketContext()->ServerSocketGetListenPort(&port), HCCL_SUCCESS);
 }

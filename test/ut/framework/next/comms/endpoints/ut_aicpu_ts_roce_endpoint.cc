@@ -372,7 +372,7 @@ TEST_F(AicpuTsRoceEndpointTest, Ut_ServerSocketListen_WhenReuse_Returns_SUCCESS)
     sockMap[key]
         = AicpuTsListenSocketSlot{std::make_shared<hccl::HcclSocket>(static_cast<HcclNetDevCtx>(nullptr), 16666U), 1U};
     ASSERT_NE(ep.GetServerSocketContext(), nullptr);
-    ASSERT_EQ(ep.GetServerSocketContext()->ServerSocketListen(Hccl::IpAddress(), 16666U), HCCL_SUCCESS);
+    ASSERT_EQ(ep.GetServerSocketContext()->ServerSocketListen(16666U), HCCL_SUCCESS);
 }
 
 TEST_F(AicpuTsRoceEndpointTest, Ut_ServerSocketListen_WhenNoExistingSocket_InsertMapSuccess)
@@ -392,7 +392,7 @@ TEST_F(AicpuTsRoceEndpointTest, Ut_ServerSocketListen_WhenNoExistingSocket_Inser
     ASSERT_EQ(ep.Init(), HCCL_SUCCESS);
 
     ASSERT_NE(ep.GetServerSocketContext(), nullptr);
-    ASSERT_EQ(ep.GetServerSocketContext()->ServerSocketListen(Hccl::IpAddress(), 16666U), HCCL_SUCCESS);
+    ASSERT_EQ(ep.GetServerSocketContext()->ServerSocketListen(16666U), HCCL_SUCCESS);
 
     auto& sockMap = AicpuTsRoceServerSocketContext::GetServerSocketMap();
     const SocketMapKey key{0U, 16666U};

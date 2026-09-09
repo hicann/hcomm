@@ -14,7 +14,6 @@
 #include <cstdint>
 #include <mutex>
 #include "port.h"
-#include "ip_address.h"
 #include "externalinput_pub.h"
 #include "hcomm_res_defs.h"
 #include "server_socket_context.h"
@@ -24,20 +23,21 @@ namespace hcomm {
 // DEVICE 侧 Endpoint 使用：devPhyId/locType 构造时传入，NicType=DEVICE_NIC_TYPE，有 locType 前置检查
 class DeviceServerSocketContext : public ServerSocketContext {
 public:
-    DeviceServerSocketContext(Hccl::ConnectProtoType protoType, uint32_t devPhyId, EndpointLocType locType);
+    DeviceServerSocketContext(
+        Hccl::ConnectProtoType protoType, uint32_t devPhyId, EndpointLocType locType, const CommAddr& commAddr);
     ~DeviceServerSocketContext() override; // 析构期内虚表仍指向本类，显式调非虚停止监听实现
-    HcclResult ServerSocketListen(const Hccl::IpAddress& ipAddr, uint32_t port) override;
-    HcclResult ServerSocketStopListen(const Hccl::IpAddress& ipAddr, uint32_t port) override;
-    HcclResult ServerSocketGetListenPort(const Hccl::IpAddress& ipAddr, uint32_t* port) override;
+    HcclResult ServerSocketListen(uint32_t port) override;
+    HcclResult ServerSocketStopListen(uint32_t port) override;
+    HcclResult ServerSocketGetListenPort(uint32_t* port) override;
 
 private:
-    HcclResult ServerSocketStopListenImpl(const Hccl::IpAddress& ipAddr, uint32_t port);
+    HcclResult ServerSocketStopListenImpl(uint32_t port);
     Hccl::ConnectProtoType protoType_;
     uint32_t devPhyId_;       // 构造时从 endpointDesc_.loc.device.devPhyId 传入
     EndpointLocType locType_; // 构造时传入，用于前置检查
     std::mutex portMutex_;
     uint32_t dynamicPort_{HCCL_INVALID_PORT};
-    Hccl::IpAddress listenAddr_{}; // 与 dynamicPort_ 同步记录的监听地址，析构停止监听时构造 PortData 用
+    CommAddr commAddr_; // 构造时从 endpointDesc.commAddr 传入，方法内经 CommAddrToIpAddress 转换
 };
 
 } // namespace hcomm

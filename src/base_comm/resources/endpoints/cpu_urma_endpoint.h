@@ -14,6 +14,7 @@
 #include <cstdint>
 #include <memory>
 #include <mutex>
+#include <optional>
 
 #include "endpoint.h"
 #include "comm_queue_context/jetty_context.h"
@@ -35,7 +36,10 @@ public:
     bool IsCtxHandleValid() const override;
     // 共享 Jetty 上下文访问入口：返回 CommQueueContext 基类视图，调用方按需 downcast JettyContext
     CommQueueContext* GetCommQueueContext() override;
-    ServerSocketContext* GetServerSocketContext() override { return &serverSocketContext_; }
+    ServerSocketContext* GetServerSocketContext() override
+    {
+        return serverSocketContext_.has_value() ? &serverSocketContext_.value() : nullptr;
+    }
 
 private:
     HcclResult ReleaseEndpointCtx();
@@ -45,7 +49,7 @@ private:
     void* ctxHandle_{nullptr};
     std::shared_ptr<EndpointCtx> endpointCtx_{};
     std::shared_ptr<UbRegedMemMgr> regedMemMgr_{};
-    HostServerSocketContext serverSocketContext_{Hccl::ConnectProtoType::UB};
+    std::optional<HostServerSocketContext> serverSocketContext_{};
     MemMgrCacheKey cacheKey_{};
     std::shared_ptr<ProcRegedMemMgrCache> cacheKeepAlive_{};
     std::unique_ptr<JettyContext> jettyContext_{nullptr};
