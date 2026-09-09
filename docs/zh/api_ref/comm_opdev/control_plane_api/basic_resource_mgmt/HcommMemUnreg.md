@@ -41,31 +41,23 @@ HcommResult：接口成功返回0，其他失败。
 
 ## 约束说明
 
-Endpoint对本接口的支持情况与其位置、protocol及芯片型号有关，具体如下。
-
-<!-- npu="950" id6 -->
-针对Ascend 950PR/Ascend 950DT：
-
-- 当Endpoint位于HOST侧时，支持通信协议为RoCE、UB_CTP的Endpoint。
-- 当Endpoint位于DEVICE侧时，支持通信协议为UB_CTP、UB_MEM、PCIe、UBoE、UB_RTP的Endpoint。
-
-<!-- end id6 -->
-
-<!-- npu="A3" id7 -->
-针对Atlas A3 训练系列产品/Atlas A3 推理系列产品：
-
-- 仅支持Endpoint位于DEVICE侧，支持通信协议为RoCE、HCCS的Endpoint。
-
-<!-- end id7 -->
-
-<!-- npu="910b" id8 -->
-针对Atlas A2 训练系列产品/Atlas A2 推理系列产品：
-
-- 仅支持Endpoint位于DEVICE侧，支持通信协议为RoCE、HCCS的Endpoint。
-
-<!-- end id8 -->
-
 - NIC插件类型的Endpoint默认不支持本接口：调用时日志中打印not supported告警。
+
+- Endpoint对本接口的支持情况与其位置、protocol及芯片型号有关，具体如下。
+
+   <!-- npu="950" id6 -->
+   - 针对Ascend 950PR/Ascend 950DT：
+     - 当Endpoint位于HOST侧时，支持通信协议为RoCE、UB_CTP的Endpoint。
+     - 当Endpoint位于DEVICE侧时，支持通信协议为UB_CTP、UB_MEM、PCIe、UBoE、UB_RTP的Endpoint。
+   <!-- end id6 -->
+
+   <!-- npu="A3" id7 -->
+   - 针对Atlas A3 训练系列产品/Atlas A3 推理系列产品：仅支持Endpoint位于DEVICE侧，支持通信协议为RoCE、HCCS的Endpoint。
+   <!-- end id7 -->
+
+   <!-- npu="910b" id8 -->
+   - 针对Atlas A2 训练系列产品/Atlas A2 推理系列产品：仅支持Endpoint位于DEVICE侧，支持通信协议为RoCE、HCCS的Endpoint。
+   <!-- end id8 -->
 
 ## 调用示例
 
