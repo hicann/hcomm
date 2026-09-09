@@ -400,7 +400,7 @@ hrtRaAiQpCreate(u32 phyId, RdmaHandle rdmaHandle, struct QpExtAttrs* attrs, stru
 
 HcclResult IsSuppportRaGetSocketVnicIps(bool& supportGetSocketVnicIp);
 HcclResult hrtRaGetSocketVnicIpInfos(
-    u32 phyId, enum IdType type, std::vector<u32> deviceIds, std::vector<hccl::HcclIpAddress>& vnicIps);
+    u32 phyId, enum IdType type, const std::vector<u32>& deviceIds, std::vector<hccl::HcclIpAddress>& vnicIps);
 
 HcclResult hrtRaPingInit(struct PingInitAttr* initAttr, struct PingInitInfo* initInfo, void** pingHandle);
 HcclResult hrtRaPingDeinit(void* pingHandle);

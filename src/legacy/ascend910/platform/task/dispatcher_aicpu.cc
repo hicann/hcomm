@@ -180,7 +180,7 @@ HcclResult DispatcherAiCpu::SignalRecord(
     uint8_t* sqeDfxInfoAddr = nullptr;
     uint16_t taskId = 0U;
     CHK_RET(GetStreamSqeBufferAddr(stream, sqeBuffer, sqeTypeAddr, sqeDfxInfoAddr, taskId));
-    AicpuDfxInfo* const dfxInfo = (AicpuDfxInfo* const)sqeDfxInfoAddr;
+    AicpuDfxInfo* const dfxInfo = (AicpuDfxInfo*)sqeDfxInfoAddr;
     dfxInfo->opRingBufferIdx = opRingBufferIdx_;
     dfxInfo->remoteRank = userRank;
     dfxInfo->notifyId = notifyId;
@@ -249,7 +249,7 @@ HcclResult DispatcherAiCpu::SignalRecord(
     uint8_t linkType = static_cast<uint8_t>(inLinkType);
 
     CHK_RET(GetStreamSqeBufferAddr(stream, sqeBuffer, sqeTypeAddr, sqeDfxInfoAddr, taskId));
-    AicpuDfxInfo* const dfxInfo = reinterpret_cast<AicpuDfxInfo* const>(sqeDfxInfoAddr);
+    AicpuDfxInfo* const dfxInfo = reinterpret_cast<AicpuDfxInfo*>(sqeDfxInfoAddr);
     dfxInfo->opRingBufferIdx = opRingBufferIdx_;
     dfxInfo->remoteRank = remoteUserRank;
     dfxInfo->notifyId = notifyId;
@@ -296,7 +296,7 @@ HcclResult DispatcherAiCpu::SignalWait(
     uint8_t* sqeDfxInfoAddr = nullptr;
     uint16_t taskId = 0U;
     CHK_RET(GetStreamSqeBufferAddr(stream, sqeBuffer, sqeTypeAddr, sqeDfxInfoAddr, taskId));
-    AicpuDfxInfo* const dfxInfo = (AicpuDfxInfo* const)sqeDfxInfoAddr;
+    AicpuDfxInfo* const dfxInfo = (AicpuDfxInfo*)sqeDfxInfoAddr;
     dfxInfo->opRingBufferIdx = opRingBufferIdx_;
     dfxInfo->remoteRank = remoteUserRank;
     dfxInfo->notifyId = notifyId;
@@ -341,7 +341,7 @@ HcclResult DispatcherAiCpu::SignalWait(
                 uint8_t* sqeTypeAddr1 = nullptr;
                 uint8_t* sqeDfxInfoAddr1 = nullptr;
                 CHK_RET(GetStreamSqeBufferAddr(stream, sqeBuffer1, sqeTypeAddr1, sqeDfxInfoAddr1, taskId));
-                AicpuDfxInfo* const dfxInfo = (AicpuDfxInfo* const)sqeDfxInfoAddr1;
+                AicpuDfxInfo* const dfxInfo = (AicpuDfxInfo*)sqeDfxInfoAddr1;
                 dfxInfo->opRingBufferIdx = opRingBufferIdx_;
                 dfxInfo->remoteRank = INVALID_VALUE_RANKID;
 
@@ -399,7 +399,7 @@ HcclResult DispatcherAiCpu::MemcpyAsync(
             sqeTypeAddr, hcclQos_);
 
         // 设置dfxInfo
-        AicpuDfxInfo* const dfxInfo = (AicpuDfxInfo* const)sqeDfxInfoAddr;
+        AicpuDfxInfo* const dfxInfo = (AicpuDfxInfo*)sqeDfxInfoAddr;
         dfxInfo->opRingBufferIdx = opRingBufferIdx_;
         dfxInfo->remoteRank = remoteUserRank;
         dfxInfo->notifyId = INVALID_VALUE_RANKID;
@@ -457,7 +457,7 @@ HcclResult DispatcherAiCpu::MemcpyAsync(
         void* dstSplit = static_cast<void*>(static_cast<char*>(dst.ptr()) + addrOffset);
 
         CHK_RET(GetStreamSqeBufferAddr(stream, sqeBuffer, sqeTypeAddr, sqeDfxInfoAddr, taskId));
-        AicpuDfxInfo* const dfxInfo = (AicpuDfxInfo* const)sqeDfxInfoAddr;
+        AicpuDfxInfo* const dfxInfo = (AicpuDfxInfo*)sqeDfxInfoAddr;
         dfxInfo->opRingBufferIdx = opRingBufferIdx_;
         dfxInfo->remoteRank = remoteUserRank;
         dfxInfo->notifyId = INVALID_VALUE_RANKID;
@@ -1037,7 +1037,7 @@ HcclResult DispatcherAiCpu::InlineReduceAsync(
         void* dstSplit = static_cast<void*>(static_cast<char*>(dst) + addr_offset);
 
         CHK_RET(GetStreamSqeBufferAddr(stream, sqeBuffer, sqeTypeAddr, sqeDfxInfoAddr, taskId));
-        AicpuDfxInfo* const dfxInfo = (AicpuDfxInfo* const)sqeDfxInfoAddr;
+        AicpuDfxInfo* const dfxInfo = (AicpuDfxInfo*)sqeDfxInfoAddr;
         dfxInfo->opRingBufferIdx = opRingBufferIdx_;
         dfxInfo->remoteRank = remoteUserRank;
         dfxInfo->notifyId = INVALID_VALUE_RANKID;
@@ -1075,7 +1075,7 @@ HcclResult DispatcherAiCpu::RdmaSend(u32 dbindex, u64 dbinfo, hccl::Stream& stre
     uint16_t taskId = 0U;
 
     CHK_RET(GetStreamSqeBufferAddr(stream, sqeBuffer, sqeTypeAddr, sqeDfxInfoAddr, taskId));
-    AicpuDfxInfo* const dfxInfo = (AicpuDfxInfo* const)sqeDfxInfoAddr;
+    AicpuDfxInfo* const dfxInfo = (AicpuDfxInfo*)sqeDfxInfoAddr;
     dfxInfo->opRingBufferIdx = opRingBufferIdx_;
     dfxInfo->remoteRank = taskInfo.remoteRank;
     dfxInfo->notifyId = INVALID_UINT; // 多个wr只敲一次doorbell的情况下，一般只会有一个notify
@@ -1517,7 +1517,7 @@ HcclResult DispatcherAiCpu::AddFlipTask(Stream& stream)
     uint8_t* sqeDfxInfoAddr = nullptr;
     CHK_RET(stream.GetNextSqeBufferAddr(sqeBufferAddr, sqeTypeAddr, sqeDfxInfoAddr, taskId));
 
-    AicpuDfxInfo* const dfxInfo = (AicpuDfxInfo* const)sqeDfxInfoAddr;
+    AicpuDfxInfo* const dfxInfo = (AicpuDfxInfo*)sqeDfxInfoAddr;
     dfxInfo->opRingBufferIdx = opRingBufferIdx_;
     dfxInfo->remoteRank = INVALID_VALUE_RANKID;
     dfxInfo->notifyId = INVALID_VALUE_RANKID;

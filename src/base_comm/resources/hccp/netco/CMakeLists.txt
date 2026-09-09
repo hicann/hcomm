@@ -90,6 +90,7 @@ target_include_directories(net_co PRIVATE
 
 target_compile_options(net_co PRIVATE
 	-Werror
+    -Wno-cast-function-type
     -fno-common
 	-fno-strict-aliasing
     $<$<CONFIG:Debug>:-Og -g>

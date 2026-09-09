@@ -1724,7 +1724,7 @@ int RaHandle(struct RaHdcOpSec *opSec, char *recvBuf, int rcvBufLen, char **send
     RaGetOpRight(opSec, recvMsgHead->opcode, recvMsgHead->asyncReqId, &opRight);
     CHK_PRT_RETURN(opRight != HAVE_OP_RIGHT, ret = OpMsgErr(sendBuf, recvMsgHead, sndBufLen, opRight), ret);
 
-    *sendBuf = (char *)calloc(sizeof(char), recvMsgHead->msgDataLen + sizeof(struct MsgHead));
+    *sendBuf = (char *)calloc(recvMsgHead->msgDataLen + sizeof(struct MsgHead), sizeof(char));
     CHK_PRT_RETURN(*sendBuf == NULL, hccp_err("calloc failed."), -ENOMEM);
 
     for (i = 0; i < num; i++) {

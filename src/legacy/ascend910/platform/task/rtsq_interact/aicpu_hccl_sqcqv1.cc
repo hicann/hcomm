@@ -124,7 +124,7 @@ void AddOneNotifyWaitSqeV1(
     const dfx::DfxTimeOutConfig& dfxTimeOutConfig)
 {
     *sqeType = SqeType::NOTIFY_SQE;
-    rtStarsNotifySqeV1_t* const sqe = (rtStarsNotifySqeV1_t* const)sqeIn;
+    rtStarsNotifySqeV1_t* const sqe = (rtStarsNotifySqeV1_t*)sqeIn;
     sqe->header.type = RT_STARS_SQE_TYPE_NOTIFY_WAIT;
     const auto& credit_and_time_out = GetTimeOutValue(dfxTimeOutConfig);
     sqe->kernel_credit = static_cast<uint8_t>(credit_and_time_out.first);
@@ -141,7 +141,7 @@ void AddOneNotifyWaitSqeV1(
 void AddOneRecordSqeV1(uint16_t streamId, uint16_t taskId, u64 notifyId, const uint8_t* sqeIn, uint8_t* sqeType)
 {
     *sqeType = SqeType::NOTIFY_SQE;
-    rtStarsNotifySqeV1_t* const sqe = (rtStarsNotifySqeV1_t* const)sqeIn;
+    rtStarsNotifySqeV1_t* const sqe = (rtStarsNotifySqeV1_t*)sqeIn;
     sqe->header.type = RT_STARS_SQE_TYPE_NOTIFY_RECORD;
     sqe->kernel_credit = RT_STARS_DEFAULT_KERNEL_CREDIT;
     sqe->header.rtStreamId = streamId;
@@ -157,7 +157,7 @@ void AddOneWriteValueRecordSqeV1(
     uint16_t streamId, uint16_t taskId, u64 notifyWRAddr, const uint8_t* sqeIn, uint8_t* sqeType)
 {
     *sqeType = SqeType::WRITE_VALUE_SQE;
-    rtStarsWriteValueSqe_t* const sqe = (rtStarsWriteValueSqe_t* const)sqeIn;
+    rtStarsWriteValueSqe_t* const sqe = (rtStarsWriteValueSqe_t*)sqeIn;
     sqe->header.type = RT_STARS_SQE_TYPE_WRITE_VALUE;
     sqe->header.rtStreamId = streamId;
     sqe->header.taskId = taskId;
@@ -179,7 +179,7 @@ void AddOneMemcpySqeV1(
     (void)devId;
     (void)overflowAddr;
     *sqeType = SqeType::MEMCPY_ASYNC_SQE;
-    rtStarsMemcpyAsyncSqe_t* const sqe = (rtStarsMemcpyAsyncSqe_t* const)sqeIn;
+    rtStarsMemcpyAsyncSqe_t* const sqe = (rtStarsMemcpyAsyncSqe_t*)sqeIn;
 
     u32 len, srcAddrLow, srcAddrHigh, dstAddrLow, dstAddrHigh;
     if (length != 0U || src != nullptr || dst != nullptr) {
@@ -234,7 +234,7 @@ void AddOneRdmaDbSendSqeV1(
     const uint8_t* sqeIn, uint8_t* sqeType)
 {
     *sqeType = SqeType::RDMA_DB_SEND_SQE;
-    rtStarsWriteValueSqe_t* const sqe = (rtStarsWriteValueSqe_t* const)sqeIn;
+    rtStarsWriteValueSqe_t* const sqe = (rtStarsWriteValueSqe_t*)sqeIn;
 
     sqe->header.type = RT_STARS_SQE_TYPE_WRITE_VALUE;
     sqe->header.ie = RT_STARS_SQE_INT_DIR_NO;
@@ -271,7 +271,7 @@ void AddOneEventResetSqeV1(
 {
     (void)eventAddr;
     *sqeType = SqeType::WRITE_VALUE_SQE;
-    rtStarsWriteValueSqe_t* const sqe = (rtStarsWriteValueSqe_t* const)sqeIn;
+    rtStarsWriteValueSqe_t* const sqe = (rtStarsWriteValueSqe_t*)sqeIn;
     sqe->header.type = RT_STARS_SQE_TYPE_WRITE_VALUE;
 
     sqe->header.rtStreamId = streamId;
@@ -299,7 +299,7 @@ void AddOneEventResetSqeV1(
 void AddOneEventRecordSqeV1(uint16_t streamId, int32_t eventId, uint16_t taskId, const uint8_t* sqeIn, uint8_t* sqeType)
 {
     *sqeType = SqeType::EVENT_SQE;
-    rtStarsEventSqe_t* const sqe = (rtStarsEventSqe_t* const)sqeIn;
+    rtStarsEventSqe_t* const sqe = (rtStarsEventSqe_t*)sqeIn;
     sqe->header.type = RT_STARS_SQE_TYPE_EVENT_RECORD;
     sqe->header.wrCqe = 1U; // 1: set wrCqe
     sqe->kernel_credit = RT_STARS_DEFAULT_KERNEL_CREDIT;
@@ -318,7 +318,7 @@ void AddOneEventRecordSqeV1(uint16_t streamId, int32_t eventId, uint16_t taskId,
 void AddOneEventWaitSqeV1(uint16_t streamId, int32_t eventId, uint16_t taskId, const uint8_t* sqeIn, uint8_t* sqeType)
 {
     *sqeType = SqeType::EVENT_SQE;
-    rtStarsEventSqe_t* const sqe = (rtStarsEventSqe_t* const)sqeIn;
+    rtStarsEventSqe_t* const sqe = (rtStarsEventSqe_t*)sqeIn;
     sqe->header.type = RT_STARS_SQE_TYPE_EVENT_WAIT;
     sqe->kernel_credit = RT_STARS_NEVER_TIMEOUT_KERNEL_CREDIT;
 
@@ -332,7 +332,7 @@ void AddOneFlipPlaceHolderSqeV1(
     uint16_t streamId, uint16_t flipNum, uint16_t taskId, const uint8_t* sqeIn, uint8_t* sqeType)
 {
     *sqeType = SqeType::FLIP_PLACEHOLDER_SQE;
-    rtStarsPlaceHolderSqe_t* const sqe = (rtStarsPlaceHolderSqe_t* const)sqeIn;
+    rtStarsPlaceHolderSqe_t* const sqe = (rtStarsPlaceHolderSqe_t*)sqeIn;
     sqe->header.type = RT_STARS_SQE_TYPE_PLACE_HOLDER;
     sqe->header.ie = 0U;
     sqe->header.preP = 1U;
@@ -355,7 +355,7 @@ void AddOneCacheMemcpyPlaceHolderSqeV1(
     *sqeType = SqeType::CACHE_MEMCPY_PLACEHOLDER_SQE;
     SetCachePlaceholderHeaderV1(streamId, taskId, sqeIn);
 
-    rtStarsPlaceHolderSqe_t* const sqe = (rtStarsPlaceHolderSqe_t* const)sqeIn;
+    rtStarsPlaceHolderSqe_t* const sqe = (rtStarsPlaceHolderSqe_t*)sqeIn;
     constexpr uint64_t uintBitWidth = 32;
     uint64_t srcAddr = reinterpret_cast<uint64_t>(src);
     uint64_t dstAddr = reinterpret_cast<uint64_t>(dst);
@@ -389,7 +389,7 @@ void AddOneCacheNotifyWaitPlaceholderSqeV1(
     *sqeType = SqeType::CACHE_NOTIFY_PLACEHOLDER_SQE;
     SetCachePlaceholderHeaderV1(streamId, taskId, sqeIn);
 
-    rtStarsPlaceHolderSqe_t* const sqe = (rtStarsPlaceHolderSqe_t* const)sqeIn;
+    rtStarsPlaceHolderSqe_t* const sqe = (rtStarsPlaceHolderSqe_t*)sqeIn;
     sqe->u.cache_notify_task_info.is_wait = 1; // NotifyWait
     const auto& credit_and_time_out = GetTimeOutValue(dfxTimeOutConfig);
     sqe->u.cache_notify_task_info.kernel_credit = static_cast<uint8_t>(credit_and_time_out.first);
@@ -408,7 +408,7 @@ void AddOneCacheNotifyRecordPlaceholderSqeV1(
     *sqeType = SqeType::CACHE_NOTIFY_PLACEHOLDER_SQE;
     SetCachePlaceholderHeaderV1(streamId, taskId, sqeIn);
 
-    rtStarsPlaceHolderSqe_t* const sqe = (rtStarsPlaceHolderSqe_t* const)sqeIn;
+    rtStarsPlaceHolderSqe_t* const sqe = (rtStarsPlaceHolderSqe_t*)sqeIn;
     sqe->u.cache_notify_task_info.is_wait = 0; // NotifyRecord
     sqe->u.cache_notify_task_info.notify_id = notifyId;
 
@@ -424,7 +424,7 @@ void AddOneCacheWriteValuePlaceholderSqeV1(
     *sqeType = SqeType::CACHE_WRITE_VALUE_PLACEHOLDER_SQE;
     SetCachePlaceholderHeaderV1(streamId, taskId, sqeIn);
 
-    rtStarsPlaceHolderSqe_t* const sqe = (rtStarsPlaceHolderSqe_t* const)sqeIn;
+    rtStarsPlaceHolderSqe_t* const sqe = (rtStarsPlaceHolderSqe_t*)sqeIn;
     sqe->u.cache_write_value_task_info.write_addr_low = static_cast<uint32_t>(notifyWRAddr & MASK_32_BIT);
     sqe->u.cache_write_value_task_info.write_addr_high
         = static_cast<uint32_t>((notifyWRAddr >> UINT32_BIT_NUM) & MASK_17_BIT);
@@ -441,7 +441,7 @@ void AddOneCacheMemcpyRecordPlaceholderSqeV1(
     (void)devId;
     (void)overflowAddr;
     *sqeType = SqeType::CACHE_MEMCPY_RECORD_PLACEHOLDER_SQE;
-    rtStarsPlaceHolderSqe_t* const sqe = (rtStarsPlaceHolderSqe_t* const)sqeIn;
+    rtStarsPlaceHolderSqe_t* const sqe = (rtStarsPlaceHolderSqe_t*)sqeIn;
 
     u32 len, srcAddrLow, srcAddrHigh, dstAddrLow, dstAddrHigh;
     if (length != 0U || src != nullptr || dst != nullptr) {
@@ -494,7 +494,7 @@ void AddOneCacheMemcpyRecordPlaceholderSqeV1(
 
 void SetCachePlaceholderHeaderV1(uint16_t streamId, uint16_t taskId, const uint8_t* sqeIn)
 {
-    rtStarsPlaceHolderSqe_t* const sqe = (rtStarsPlaceHolderSqe_t* const)sqeIn;
+    rtStarsPlaceHolderSqe_t* const sqe = (rtStarsPlaceHolderSqe_t*)sqeIn;
     sqe->header.type = RT_STARS_SQE_TYPE_PLACE_HOLDER;
     sqe->header.ie = 0U;
     sqe->header.preP = 0U; // 不需要STARS_FW参与任何预处理

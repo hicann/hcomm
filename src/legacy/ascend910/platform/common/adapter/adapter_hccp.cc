@@ -3205,7 +3205,8 @@ HcclResult IsSuppportRaGetSocketVnicIps(bool& supportGetSocketVnicIp)
     return HCCL_SUCCESS;
 }
 
-HcclResult hrtRaGetSocketVnicIpInfos(u32 phyId, enum IdType type, vector<u32> deviceIds, vector<HcclIpAddress>& vnicIps)
+HcclResult
+hrtRaGetSocketVnicIpInfos(u32 phyId, enum IdType type, const vector<u32>& deviceIds, vector<HcclIpAddress>& vnicIps)
 {
     u32 vnicIpNum = deviceIds.size();
     CHK_PRT_RET(
@@ -3232,7 +3233,8 @@ HcclResult hrtRaGetSocketVnicIpInfos(u32 phyId, enum IdType type, vector<u32> de
                     "params: dest[%p], dest_size[%zu], count[%zu]",
                     HCCL_ERROR_CODE(HCCL_E_SYSCALL), &vnicIpInfo, sizeof(IpInfo), sizeof(IpInfo)),
                 HCCL_E_SYSCALL);
-            s32 ret = DlRaFunction::GetInstance().dlRaGetSocketVnicIpInfos(phyId, type, &deviceIds[i], 1, &vnicIpInfo);
+            u32 devId = deviceIds[i];
+            s32 ret = DlRaFunction::GetInstance().dlRaGetSocketVnicIpInfos(phyId, type, &devId, 1, &vnicIpInfo);
             CHK_PRT_RET(
                 ret != 0,
                 HCCL_ERROR(
