@@ -9,6 +9,7 @@
  */
 
 #include "user_log.h"
+#include "config_log.h"
 #include "hccp_common.h"
 #include "hccp_async.h"
 #include "ra.h"
@@ -196,6 +197,10 @@ HCCP_ATTRI_VISI_DEF int RaSocketSendAsync(const void *fdHandle, const void *data
 {
     int ret = 0;
 
+    hccp_info_socket("[%s]Input parameters: fdHandle(%p), data(%p), size(%llu), sentSize(%p), "
+                     "reqHandle(%p)",
+        __func__, fdHandle, data, size, (void *)sentSize, (void *)reqHandle);
+
     CHK_PRT_RETURN(fdHandle == NULL || data == NULL || sentSize == NULL || size == 0 || reqHandle == NULL,
         hccp_err("[send][ra_socket]fd_handle or data or sent_size or req_handle is NULL or size[%llu] is 0", size),
         ConverReturnCode(SOCKET_OP, -EINVAL));
@@ -208,6 +213,10 @@ HCCP_ATTRI_VISI_DEF int RaSocketRecvAsync(const void *fdHandle, void *data, unsi
     unsigned long long *receivedSize, void **reqHandle)
 {
     int ret = 0;
+
+    hccp_info_socket("[%s]Input parameters: fdHandle(%p), data(%p), size(%llu), receivedSize(%p), "
+                     "reqHandle(%p)",
+        __func__, fdHandle, data, size, (void *)receivedSize, (void *)reqHandle);
 
     CHK_PRT_RETURN(fdHandle == NULL || data == NULL || receivedSize == NULL || size == 0 || reqHandle == NULL,
         hccp_err("[recv][ra_socket]fd_handle or data or received_size or req_handle is NULL or size[%llu] is 0", size),

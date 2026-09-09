@@ -42,6 +42,7 @@ set(RS_SOURCE_LIST
     ${CMAKE_CURRENT_SOURCE_DIR}/../common/ascend_hal_dl.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../common/file_opt.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../common/network_comm.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../inc/private/network/log/config_log.c
     $<$<STREQUAL:${PRODUCT_SIDE},device>:${TLV_DIR}/dl_netco_function.c>
     $<$<STREQUAL:${PRODUCT_SIDE},device>:${TLV_DIR}/rs_tlv.c>
     $<$<STREQUAL:${PRODUCT_SIDE},device>:${TLV_DIR}/rs_adp_nslb.c>
@@ -100,6 +101,7 @@ target_include_directories(rs PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/../inc
     ${CMAKE_CURRENT_SOURCE_DIR}/../inc/network
     ${CMAKE_CURRENT_SOURCE_DIR}/../inc/private/network
+    ${CMAKE_CURRENT_SOURCE_DIR}/../inc/private/network/log
     ${CMAKE_CURRENT_SOURCE_DIR}/../common/
     ${TLV_DIR}
     # 第三方库依赖路径

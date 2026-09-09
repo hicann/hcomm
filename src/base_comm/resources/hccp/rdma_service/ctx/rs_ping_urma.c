@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include "config_log.h"
 #include <unistd.h>
 #include <stdlib.h>
 #include <sys/types.h>
@@ -215,7 +216,7 @@ STATIC int RsPingCommonInitLocalJetty(struct rs_cb *rscb, struct RsPingCtxCb *pi
 {
     int ret;
 
-    hccp_info("eid:%016llx:%016llx cap{%u %u %u %u %u} start init local jettys",
+    hccp_info_rma("eid:%016llx:%016llx cap{%u %u %u %u %u} start init local jettys",
         pingCb->udevCb.eidInfo.eid.in6.subnetPrefix, pingCb->udevCb.eidInfo.eid.in6.interfaceId,
         attr->ub.qpAttr.cap.maxSendWr, attr->ub.qpAttr.cap.maxRecvWr, attr->ub.qpAttr.cap.maxSendSge,
         attr->ub.qpAttr.cap.maxRecvSge, attr->ub.qpAttr.cap.maxInlineData);
@@ -309,7 +310,7 @@ STATIC int RsPingCommonInitSegCb(struct rs_cb *rscb, struct RsPingCtxCb *pingCb,
         .user_ctx = (uintptr_t)NULL,
         .iova = 0};
 
-    hccp_info("payload_offset:%u len:0x%llx sge_num:%u grp_id:%u", segCb->payloadOffset, segCb->len, segCb->sgeNum,
+    hccp_info_rma("payload_offset:%u len:0x%llx sge_num:%u grp_id:%u", segCb->payloadOffset, segCb->len, segCb->sgeNum,
         rscb->grpId);
 
     ret = pthread_mutex_init(&segCb->mutex, NULL);
@@ -351,7 +352,7 @@ STATIC int RsPingCommonInitSegCb(struct rs_cb *rscb, struct RsPingCtxCb *pingCb,
     }
     segCb->sgeIdx = 0;
 
-    hccp_info("eid:%016llx:%016llx segment register success, addr:0x%llx len:%u",
+    hccp_info_rma("eid:%016llx:%016llx segment register success, addr:0x%llx len:%u",
         pingCb->udevCb.eidInfo.eid.in6.subnetPrefix, pingCb->udevCb.eidInfo.eid.in6.interfaceId, segCb->addr,
         segCb->len);
 
@@ -625,7 +626,7 @@ STATIC int RsPingUrmaFindTargetNode(struct RsPingCtxCb *pingCb, struct PingQpInf
     }
     RS_PTHREAD_MUTEX_ULOCK(&pingCb->pingMutex);
 
-    hccp_info("ping target node for jetty_id:%u eid:%016llx:%016llx not found", targetJettyId.id,
+    hccp_info_rma("ping target node for jetty_id:%u eid:%016llx:%016llx not found", targetJettyId.id,
         targetEid.in6.subnet_prefix, targetEid.in6.interface_id);
     return -ENODEV;
 }
@@ -855,7 +856,7 @@ STATIC int RsPingCommonPollSendJfc(struct RsPingLocalJettyCb *jettyCb)
 
     polledCnt = RsUrmaPollJfc(jettyCb->sendJfc.jfc, 1, &cr);
     if (polledCnt < 0) {
-        hccp_warn("urma_poll_jfc unsuccessful, polledCnt:%d", polledCnt);
+        hccp_warn_rma("urma_poll_jfc unsuccessful, polledCnt:%d", polledCnt);
     } else if (polledCnt > 0) {
         if (cr.status != URMA_CR_SUCCESS) {
             hccp_err("wr_id:0x%llx error cqe status(%d)", cr.user_ctx, cr.status);
@@ -889,7 +890,7 @@ STATIC int RsPongJettyFindTargetNode(struct RsPingCtxCb *pingCb, struct PingQpIn
     }
     RS_PTHREAD_MUTEX_ULOCK(&pingCb->pongMutex);
 
-    hccp_info("pong target node for jetty_id:%u eid:%016llX:%016llX not found", targetJettyId.id,
+    hccp_info_rma("pong target node for jetty_id:%u eid:%016llX:%016llX not found", targetJettyId.id,
         targetEid.in6.subnet_prefix, targetEid.in6.interface_id);
     return -ENODEV;
 }
@@ -905,7 +906,7 @@ STATIC int RsPongJettyFindAllocTargetNode(struct RsPingCtxCb *pingCb, struct Pin
         return 0;
     } else if (ret == 0) {
         targetInfo = *node;
-        hccp_info("delete pong target uuid:0x%llx state:%d, realloc again", targetInfo->uuid, targetInfo->state);
+        hccp_info_rma("delete pong target uuid:0x%llx state:%d, realloc again", targetInfo->uuid, targetInfo->state);
         RsListDel(&targetInfo->list);
         if (targetInfo->importTjetty != NULL) {
             (void)RsUrmaUnimportJetty(targetInfo->importTjetty);
@@ -1061,7 +1062,7 @@ STATIC int RsPongJettyResolveResponsePacket(struct RsPingCtxCb *pingCb, uint32_t
     recvList = &pingCb->pongJetty.recvSegCb.sgeList[sgeIdx];
     header = (struct RsPingPayloadHeader *)(uintptr_t)(recvList->addr);
     if (header->taskId != pingCb->taskId) {
-        hccp_warn("drop received packet, recv_taskId:%u, curr_taskId:%u", header->taskId, pingCb->taskId);
+        hccp_warn_rma("drop received packet, recv_taskId:%u, curr_taskId:%u", header->taskId, pingCb->taskId);
         return 0;
     }
     RsGetJettyInfo(&header->target, &targetJettyId, &targetEid);
@@ -1294,7 +1295,7 @@ STATIC void RsPingUrmaAddTargetSuccess(struct PingTargetInfo *target, struct RsP
 {
     urma_jetty_id_t jettyId = {0};
     RsGetJettyInfo(&targetInfo->qpInfo, &jettyId, NULL);
-    hccp_info("target eid:%016llx:%016llx payload_size:%u add success, jettyId:%u uuid:0x%llx",
+    hccp_info_rma("target eid:%016llx:%016llx payload_size:%u add success, jettyId:%u uuid:0x%llx",
         target->remoteInfo.eid.in6.subnetPrefix, target->remoteInfo.eid.in6.interfaceId, target->payload.size,
         jettyId.id, targetInfo->uuid);
 }

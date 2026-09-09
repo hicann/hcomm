@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include "config_log.h"
 #include <errno.h>
 #include <sys/prctl.h>
 #include "securec.h"
@@ -83,7 +84,7 @@ STATIC void *RsPingHandle(void *arg)
 
     RS_CHECK_POINTER_NULL_RETURN_NULL(arg);
 
-    hccp_info("<PING> thread begin! thread_id:%lu, pid:%d, ppid:%d", pthread_self(), getpid(), getppid());
+    hccp_info_rma("<PING> thread begin! thread_id:%lu, pid:%d, ppid:%d", pthread_self(), getpid(), getppid());
     CHK_PRT_RETURN(pthread_detach(pthread_self()) != 0,
         hccp_err("pthread_detach failed! thread_id:%lu, errno:%d", pthread_self(), errno), NULL);
 
@@ -122,7 +123,7 @@ STATIC void *RsPingHandle(void *arg)
 
             ret = rsCb->pingCb.pingPongOps->pingPostSend(&rsCb->pingCb, targetCurr);
             if (ret != 0) {
-                hccp_warn("ping_post_send unsuccessful, ret:%d", ret);
+                hccp_warn_rma("ping_post_send unsuccessful, ret:%d", ret);
                 usleep(rsCb->pingCb.taskAttr.packetInterval * RS_PING_MSEC_TO_USEC);
                 continue;
             }
@@ -151,7 +152,7 @@ STATIC void *RsPingHandle(void *arg)
     RS_PTHREAD_MUTEX_LOCK(&rsCb->pingCb.pingMutex);
     rsCb->pingCb.threadStatus = RS_PING_THREAD_FINISH;
     RS_PTHREAD_MUTEX_ULOCK(&rsCb->pingCb.pingMutex);
-    hccp_info("<PING> QUIT thread_id:%lu, pid:%d", pthread_self(), getpid());
+    hccp_info_rma("<PING> QUIT thread_id:%lu, pid:%d", pthread_self(), getpid());
     return NULL;
 }
 
@@ -381,7 +382,7 @@ RS_ATTRI_VISI_DEF int RsPingTargetAdd(struct RaRsDevInfo *rdev, struct PingTarge
 
     ret = pingCb->pingPongOps->pingFindTargetNode(pingCb, &target->remoteInfo.qpInfo, &targetInfo);
     if (ret == 0) {
-        hccp_info("target node exist! phyId:%u", rdev->phyId);
+        hccp_info_rma("target node exist! phyId:%u", rdev->phyId);
         ret = -EEXIST;
         goto out;
     }
@@ -416,7 +417,7 @@ RS_ATTRI_VISI_DEF int RsPingTaskStart(struct RaRsDevInfo *rdev, struct PingTaskA
     CHK_PRT_RETURN(ret != 0, hccp_err("rs_get_ping_cb failed, ret=%d phyId:%u", ret, rdev->phyId), ret);
 
     if (pingCb->taskStatus != RS_PING_TASK_RESET) {
-        hccp_warn("task_status:%d disallow to start ping task, phyId:%u", pingCb->taskStatus, rdev->phyId);
+        hccp_warn_rma("task_status:%d disallow to start ping task, phyId:%u", pingCb->taskStatus, rdev->phyId);
         return -EEXIST;
     }
     CHK_PRT_RETURN(attr->packetCnt == 0 || attr->packetInterval == 0 || attr->timeoutInterval == 0,
@@ -445,8 +446,8 @@ RS_ATTRI_VISI_DEF int RsPingTaskStart(struct RaRsDevInfo *rdev, struct PingTaskA
     pingCb->taskStatus = RS_PING_TASK_RUNNING;
     RS_PTHREAD_MUTEX_ULOCK(&pingCb->pingMutex);
 
-    hccp_info("target_cnt:%u packet_cnt:%u packet_interval:%u timeout_interval:%u task_id:%u start success", targetCnt,
-        attr->packetCnt, attr->packetInterval, attr->timeoutInterval, pingCb->taskId);
+    hccp_info_rma("target_cnt:%u packet_cnt:%u packet_interval:%u timeout_interval:%u task_id:%u start success",
+        targetCnt, attr->packetCnt, attr->packetInterval, attr->timeoutInterval, pingCb->taskId);
     return 0;
 }
 
@@ -467,7 +468,7 @@ RS_ATTRI_VISI_DEF int RsPingGetResults(struct RaRsDevInfo *rdev, struct PingTarg
 
     // caller needs to retry, degrade log level
     if (pingCb->taskStatus == RS_PING_TASK_RUNNING) {
-        hccp_warn("task_status:%d disallow to get ping results phyId:%u", pingCb->taskStatus, rdev->phyId);
+        hccp_warn_rma("task_status:%d disallow to get ping results phyId:%u", pingCb->taskStatus, rdev->phyId);
         return -EAGAIN;
     }
 
@@ -494,7 +495,7 @@ RS_ATTRI_VISI_DEF int RsPingTaskStop(struct RaRsDevInfo *rdev)
     ret = RsGetPingCb(rdev, &pingCb);
     CHK_PRT_RETURN(ret != 0, hccp_err("rs_get_ping_cb failed, ret=%d phyId:%u", ret, rdev->phyId), ret);
 
-    hccp_info("task_status:%d modify to %d, phyId:%u", pingCb->taskStatus, RS_PING_TASK_RESET, rdev->phyId);
+    hccp_info_rma("task_status:%d modify to %d, phyId:%u", pingCb->taskStatus, RS_PING_TASK_RESET, rdev->phyId);
 
     RS_PTHREAD_MUTEX_LOCK(&pingCb->pingMutex);
     pingCb->taskStatus = RS_PING_TASK_RESET;

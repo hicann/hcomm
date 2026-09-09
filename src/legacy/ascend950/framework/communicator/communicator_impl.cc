@@ -14,6 +14,7 @@
 #include <adapter_error_manager_pub.h>
 #include "orion_adapter_rts.h"
 #include "orion_adapter_hal.h"
+#include "config_plf_log_v2.h"
 #include "hccl_exception.h"
 #include "null_ptr_exception.h"
 #include "runtime_api_exception.h"
@@ -3366,10 +3367,13 @@ HcclResult CommunicatorImpl::PrepareDpuKernelResource(aclrtFuncHandle& funcHandl
     }
 
     // 创建dpustream
-    if (aclrtCreateStreamWithConfig(&dpuStream, 0, ACL_STREAM_FAST_LAUNCH) != ACL_SUCCESS) {
+    aclError ret = aclrtCreateStreamWithConfig(&dpuStream, 0, ACL_STREAM_FAST_LAUNCH);
+    if (ret != ACL_SUCCESS) {
         HCCL_ERROR("[CommunicatorImpl::%s] Create Local Stream Failed", __func__);
         return HCCL_E_INTERNAL;
     }
+    PLF_CONFIG_INFO(
+        PLF_RES, "Create Stream para: deviceId[%d] streamId[%d]", HrtGetDevice(), HrtGetStreamId(dpuStream));
 
     // 查找核函数
     if (aclrtBinaryGetFunction(binHandle, "RunDpuRpcSrvLaunch", &funcHandle) != ACL_SUCCESS) {
@@ -3489,10 +3493,13 @@ HcclResult CommunicatorImpl::InitAndLaunchAicpuKernel()
     aclrtFuncHandle funcHandle = GetAicpuKernelFuncHandle(kernelName.c_str());
     constexpr u32 numBlocks = 1;
     aclrtStream tempAicpuStream;                                                                   // 创建局部流
-    if (aclrtCreateStreamWithConfig(&tempAicpuStream, 0, ACL_STREAM_FAST_LAUNCH) != ACL_SUCCESS) { // 后两个入参？
+    aclError createRet = aclrtCreateStreamWithConfig(&tempAicpuStream, 0, ACL_STREAM_FAST_LAUNCH); // 后两个入参？
+    if (createRet != ACL_SUCCESS) {
         HCCL_ERROR("[CommunicatorImpl::%s] Create Local Stream Failed", __func__);
         return HCCL_E_INTERNAL;
     }
+    PLF_CONFIG_INFO(
+        PLF_RES, "Create Stream para: deviceId[%d] streamId[%d]", HrtGetDevice(), HrtGetStreamId(tempAicpuStream));
     aclrtLaunchKernelCfg cfg;
     aclrtLaunchKernelAttr kernelAttr;
     kernelAttr.id = ACL_RT_LAUNCH_KERNEL_ATTR_TIMEOUT;

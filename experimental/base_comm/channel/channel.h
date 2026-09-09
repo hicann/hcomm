@@ -99,7 +99,8 @@ public:
     virtual HcclResult ChannelFence() = 0;
 
     // ------------------ 工具方法 ------------------
-    static ChannelStatus TransportStatusToChannelStatus(Hccl::TransportStatus ts);
+    static ChannelStatus TransportStatusToChannelStatus(
+        Hccl::TransportStatus ts, const EndpointDesc& localEp, const HcommChannelDesc& channelDesc);
 
     // ------------------ 工厂 ------------------
     static HcclResult CreateChannel(

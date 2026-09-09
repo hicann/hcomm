@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include "config_log.h"
 #include "hccp_dl.h"
 #include "hccp_tlv.h"
 #include "dl_ccu_function.h"
@@ -172,7 +173,7 @@ bool isCcuTlvReqExist(void)
 {
     if (gCcuApiHandle == NULL || gCcuOps.rsCcuTlvRequest == NULL) {
 #ifndef CA_CONFIG_LLT
-        hccp_info("g_ccu_api_handle is NULL or rsCcuTlvRequest is NULL");
+        hccp_info_rma("g_ccu_api_handle is NULL or rsCcuTlvRequest is NULL");
         return false;
 #endif
     }

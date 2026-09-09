@@ -18,6 +18,7 @@ set(ra_peer_list
     ${BASE_DIR}/ctx/ra_ctx_comm.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../../common/dl_hal_function.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../../common/ascend_hal_dl.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../inc/private/network/log/config_log.c
 )
 
 #编译目标
@@ -30,6 +31,7 @@ target_include_directories(ra_peer PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/../../rdma_service
     ${CMAKE_CURRENT_SOURCE_DIR}/../../inc/network
     ${CMAKE_CURRENT_SOURCE_DIR}/../../inc/private/network
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../inc/private/network/log
     ${CMAKE_CURRENT_SOURCE_DIR}/../../common/
 
     # rdma头文件

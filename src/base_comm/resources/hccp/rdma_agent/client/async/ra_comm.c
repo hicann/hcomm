@@ -9,6 +9,7 @@
  */
 
 #include "user_log.h"
+#include "config_log.h"
 #include "ra_async.h"
 #include "ra_rs_comm.h"
 #include "ra_hdc_async.h"

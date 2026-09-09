@@ -137,6 +137,17 @@ union OpGetSecRandomData {
     } rxData;
 };
 
+union OpSetDebugConfigData {
+    struct {
+        u64 debugConfig;
+        unsigned int rsvd[RA_RSVD_NUM_4];
+    } txData;
+
+    struct {
+        unsigned int rsvd[RA_RSVD_NUM_6];
+    } rxData;
+};
+
 union OpGetHccnCfgData {
     struct {
         unsigned int phyId;
@@ -232,6 +243,7 @@ void RaHdcGetAllOpcodeVersion(unsigned int phyId);
 bool RaHdcHasCapability(unsigned int phyId, unsigned int capability);
 int RaHdcGetCqeErrInfo(unsigned int phyId, struct CqeErrInfo *info);
 int RaHdcProcessMsg(unsigned int opcode, unsigned int phyId, char *data, unsigned int dataSize);
+int RaHdcSetDebugConfig(unsigned int phyId, u64 debugConfig);
 int RaHdcInitSession(int peerNode, int peerDevid, unsigned int phyId, int hdcType, HDC_SESSION *session);
 void RaHdcDeinitSession(HDC_SESSION *session);
 int RaHdcSetSessionReference(HDC_SESSION *session);

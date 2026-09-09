@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include "config_log.h"
 #include <string.h>
 #include "securec.h"
 #include "ra_hdc.h"
@@ -130,7 +131,7 @@ HCCP_ATTRI_VISI_DEF int RaTlvRequest(void *tlvHandle, unsigned int moduleType, s
     RA_PTHREAD_MUTEX_LOCK(&tlvHandleTmp->mutex);
     ret = tlvHandleTmp->tlvOps->raTlvRequest(tlvHandleTmp, moduleType, sendMsg, recvMsg);
     if (ret == -EUSERS || ret == -ENOTSUPP) {
-        hccp_warn("[request][ra_tlv]ra_tlv_request unsuccessful, ret(%d), phyId(%u) sendType(%u)", ret,
+        hccp_warn_others("[request][ra_tlv]ra_tlv_request unsuccessful, ret(%d), phyId(%u) sendType(%u)", ret,
             tlvHandleTmp->initInfo.phyId, sendMsg->type);
     } else if (ret != 0) {
         hccp_err("[request][ra_tlv]ra_tlv_request failed, ret(%d), phyId(%u) sendType(%u)", ret,

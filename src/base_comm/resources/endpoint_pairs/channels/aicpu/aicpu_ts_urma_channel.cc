@@ -14,6 +14,7 @@
 #include "orion_adpt_utils.h"
 #include "hcomm_c_adpt.h"
 #include "config_log.h"
+#include "config_plf_log_v2.h"
 #include "hcomm_res_mgr.h"
 #include "endpoint.h"
 
@@ -25,6 +26,7 @@
 #include "makebufs_helper.h"
 
 namespace hcomm {
+using Hccl::PLF_CHANNEL;
 constexpr uint16_t DEFAULT_LISTENING_PORT = 60001;
 
 AicpuTsUrmaChannel::AicpuTsUrmaChannel(EndpointHandle endpointHandle, const HcommChannelDesc& channelDesc)
@@ -146,6 +148,9 @@ HcclResult AicpuTsUrmaChannel::BuildConnection()
     commonRes_.connVec.emplace_back(ubConn.get());
     connections_.clear();
     connections_.push_back(std::move(ubConn));
+    PLF_CONFIG_INFO(
+        PLF_CHANNEL, "[AicpuTsUrmaChannel] build DevUbConnection, protocol[%s] sqDepth[%u].",
+        ctx.protocol.Describe().c_str(), ctx.sqDepth);
     return HCCL_SUCCESS;
 }
 
@@ -160,6 +165,7 @@ HcclResult AicpuTsUrmaChannel::BuildNotify()
         commonRes_.notifyVec.push_back(notifyPtr.get());
         localNotifies_.push_back(std::move(notifyPtr));
     }
+    PLF_CONFIG_INFO(PLF_CHANNEL, "[AicpuTsUrmaChannel] create notify, notifyNum[%u].", notifyNum_);
     return HCCL_SUCCESS;
 }
 
@@ -180,6 +186,9 @@ HcclResult AicpuTsUrmaChannel::BuildUbMemTransport()
         memTransport_ = std::make_unique<Hccl::UbMemTransport>(
             commonRes_, attr_, linkData, socket, rdmaHandle_, locCntNotifyRes, isRecvFirst),
         return HCCL_E_PTR);
+    PLF_CONFIG_INFO(
+        PLF_CHANNEL, "[AicpuTsUrmaChannel] create UbMemTransport, socket[%s], linkData[%s].",
+        socket_->Describe().c_str(), linkData.Describe().c_str());
     return HCCL_SUCCESS;
 }
 
@@ -273,7 +282,7 @@ HcclResult AicpuTsUrmaChannel::GetRemoteMems(uint32_t* memNum, CommMem** remoteM
 
 ChannelStatus AicpuTsUrmaChannel::GetStatus()
 {
-    ChannelStatus out = Channel::TransportStatusToChannelStatus(memTransport_->GetStatus());
+    ChannelStatus out = Channel::TransportStatusToChannelStatus(memTransport_->GetStatus(), localEp_, GetChannelDesc());
 
     if (isFirstPrintChannelInfo_ && out == ChannelStatus::READY) {
         std::string channelInfo = "create channel info:channel handle[";
@@ -336,6 +345,7 @@ HcclResult AicpuTsUrmaChannel::H2DResPack(std::vector<char>& buffer)
 
 HcclResult AicpuTsUrmaChannel::Clean()
 {
+    PLF_CONFIG_INFO(PLF_CHANNEL, "[AicpuTsUrmaChannel] clean channel resource.");
     memTransport_.reset();
     return HCCL_SUCCESS;
 }

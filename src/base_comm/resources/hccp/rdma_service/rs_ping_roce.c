@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include "config_log.h"
 #include <errno.h>
 #include <infiniband/verbs.h>
 #include "securec.h"
@@ -157,7 +158,7 @@ STATIC int RsPingCommonInitLocalQp(struct rs_cb *rscb, struct RsPingCtxCb *pingC
     int randNum;
     int ret;
 
-    hccp_info("cq_attr{%d %d, %d %d}", attr->rdma.cqAttr.sendCqDepth, attr->rdma.cqAttr.sendCqCompVector,
+    hccp_info_rma("cq_attr{%d %d, %d %d}", attr->rdma.cqAttr.sendCqDepth, attr->rdma.cqAttr.sendCqCompVector,
         attr->rdma.cqAttr.recvCqDepth, attr->rdma.cqAttr.recvCqCompVector);
 
     // create send cq with attr
@@ -203,7 +204,7 @@ STATIC int RsPingCommonInitLocalQp(struct rs_cb *rscb, struct RsPingCtxCb *pingC
     qpInitAttr.attr.qp_type = IBV_QPT_UD;
     qpInitAttr.udp_sport = attr->rdma.qpAttr.udpSport;
 
-    hccp_info("qkey:%u udp_sport:%u qp_cap{%u %u %u %u %u}", qpCb->qkey, qpCb->udpSport,
+    hccp_info_rma("qkey:%u udp_sport:%u qp_cap{%u %u %u %u %u}", qpCb->qkey, qpCb->udpSport,
         attr->rdma.qpAttr.cap.maxSendWr, attr->rdma.qpAttr.cap.maxRecvWr, attr->rdma.qpAttr.cap.maxSendSge,
         attr->rdma.qpAttr.cap.maxRecvSge, attr->rdma.qpAttr.cap.maxInlineData);
     qpCb->ibQp = RsIbvExpCreateQp(pingCb->rdevCb.ibPd, &qpInitAttr, &qpResp);
@@ -252,7 +253,7 @@ STATIC int RsPingCommonInitMrCb(struct rs_cb *rscb, struct RsPingCtxCb *pingCb, 
     uint32_t idx = 0;
     int ret;
 
-    hccp_info("payload_offset:%u len:0x%llx sge_num:%u grp_id:%u", mrCb->payloadOffset, mrCb->len, mrCb->sgeNum,
+    hccp_info_rma("payload_offset:%u len:0x%llx sge_num:%u grp_id:%u", mrCb->payloadOffset, mrCb->len, mrCb->sgeNum,
         rscb->grpId);
 
     ret = pthread_mutex_init(&mrCb->mutex, NULL);
@@ -293,7 +294,7 @@ STATIC int RsPingCommonInitMrCb(struct rs_cb *rscb, struct RsPingCtxCb *pingCb, 
     }
     mrCb->sgeIdx = 0;
 
-    hccp_info("addr:0x%llx lkey:%u ", mrCb->addr, mrCb->ibMr->lkey);
+    hccp_info_rma("addr:0x%llx lkey:%u ", mrCb->addr, mrCb->ibMr->lkey);
 
     return 0;
 
@@ -587,7 +588,7 @@ STATIC int RsPingRoceFindTargetNode(struct RsPingCtxCb *pingCb, struct PingQpInf
     }
     RS_PTHREAD_MUTEX_ULOCK(&pingCb->pingMutex);
 
-    hccp_info("ping target node for qpn:%u gid:%016llx:%016llx not found", target->rdma.qpn,
+    hccp_info_rma("ping target node for qpn:%u gid:%016llx:%016llx not found", target->rdma.qpn,
         target->rdma.gid.global.subnetPrefix, target->rdma.gid.global.interfaceId);
     return -ENODEV;
 }
@@ -815,7 +816,7 @@ STATIC int RsPingCommonPollScq(struct RsPingLocalQpCb *qpCb)
 
     polledCnt = RsIbvPollCq(qpCb->sendCq.ibCq, 1, &wc);
     if (polledCnt < 0) {
-        hccp_warn("rs_ibv_poll_cq unsuccessful, polledCnt:%d", polledCnt);
+        hccp_warn_rma("rs_ibv_poll_cq unsuccessful, polledCnt:%d", polledCnt);
     } else if (polledCnt > 0) {
         if (wc.status != IBV_WC_SUCCESS) {
             hccp_err("wr_id:0x%llx error cqe %s(%d)", wc.wr_id, RsIbvWcStatusStr(wc.status), wc.status);
@@ -844,7 +845,7 @@ STATIC int RsPongFindTargetNode(struct RsPingCtxCb *pingCb, struct PingQpInfo *t
     }
     RS_PTHREAD_MUTEX_ULOCK(&pingCb->pongMutex);
 
-    hccp_info("pong target node for qpn:%u gid:%016llx:%016llx not found", target->rdma.qpn,
+    hccp_info_rma("pong target node for qpn:%u gid:%016llx:%016llx not found", target->rdma.qpn,
         target->rdma.gid.global.subnetPrefix, target->rdma.gid.global.interfaceId);
     return -ENODEV;
 }
@@ -860,7 +861,7 @@ STATIC int RsPongFindAllocTargetNode(struct RsPingCtxCb *pingCb, struct PingQpIn
         return 0;
     } else if (ret == 0) {
         targetInfo = *node;
-        hccp_info("delete pong target uuid:0x%llx state:%d, realloc again", targetInfo->uuid, targetInfo->state);
+        hccp_info_rma("delete pong target uuid:0x%llx state:%d, realloc again", targetInfo->uuid, targetInfo->state);
         RsListDel(&targetInfo->list);
         if (targetInfo->ah) {
             (void)RsIbvDestroyAh(targetInfo->ah);
@@ -1023,7 +1024,7 @@ STATIC int RsPongResolveResponsePacket(struct RsPingCtxCb *pingCb, uint32_t sgeI
     // UD consume 40 Bytes for GRH
     header = (struct RsPingPayloadHeader *)(uintptr_t)(recvList->addr + RS_PING_PAYLOAD_HEADER_RESV_GRH);
     if (header->taskId != pingCb->taskId) {
-        hccp_warn("drop received packet, recv_task_id:%u, curr_task_id:%u", header->taskId, pingCb->taskId);
+        hccp_warn_rma("drop received packet, recv_task_id:%u, curr_task_id:%u", header->taskId, pingCb->taskId);
         return 0;
     }
 
@@ -1244,7 +1245,7 @@ STATIC void RsPingRocePingCbDeinit(unsigned int phyId, struct RsPingCtxCb *pingC
 
 STATIC void RsPingRoceAddTargetSuccess(struct PingTargetInfo *target, struct RsPingTargetInfo *targetInfo)
 {
-    hccp_info("target ip:0x%llx payload_size:%u add success, qpn:%u uuid:0x%llx", target->remoteInfo.ip.addr.s_addr,
+    hccp_info_rma("target ip:0x%llx payload_size:%u add success, qpn:%u uuid:0x%llx", target->remoteInfo.ip.addr.s_addr,
         target->payload.size, targetInfo->qpInfo.rdma.qpn, targetInfo->uuid);
 }
 

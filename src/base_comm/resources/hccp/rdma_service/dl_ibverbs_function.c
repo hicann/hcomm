@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include "config_log.h"
 #include <pthread.h>
 #include "ra_rs_err.h"
 #include "dl_ibv_extend_function.h"
@@ -517,7 +518,7 @@ int RsHrnApiInit(void)
 
     ret = RsOpenHrnSo();
     if (ret != 0) {
-        hccp_warn("HccpDlopen[libhrn5-rdmav34.so or libhrn5.so.1] doesn't exist!");
+        hccp_warn_others("HccpDlopen[libhrn5-rdmav34.so or libhrn5.so.1] doesn't exist!");
         return 0;
     }
 

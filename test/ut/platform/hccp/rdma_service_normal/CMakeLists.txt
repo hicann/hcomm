@@ -66,9 +66,11 @@ set(rs_ut_normal_list
     ${CTX_DIR}/rs_ping_urma.c
     ${CTX_DIR}/rs_ub_jetty.c
     ${CTX_DIR}/rs_ub_jfc.c
+    ${SRC_DIR}/src/base_comm/resources/hccp/inc/private/network/log/config_log.c
     main.cc
     ut_test.cc
     ${SRC_DIR}/test/ut/platform/hccp/stub/ut_dispatch.cc
+    ${SRC_DIR}/test/ut/platform/hccp/stub/dlog_stub.cc
 )
 
 add_executable(rs_ut_normal ${rs_ut_normal_list})
@@ -79,6 +81,7 @@ target_include_directories(rs_ut_normal BEFORE PRIVATE
     ${ASCEND_CANN_PACKAGE_PATH}/pkg_inc/driver/
     ${ASCEND_CANN_PACKAGE_PATH}/include/driver/
     ${SRC_DIR}/test/stub/depends/include
+    ${SRC_DIR}/test/stub/depends/pkg_inc/base
     ${SRC_DIR}/test/ut/platform/hccp/stub/roce_user
     ${SRC_DIR}/test/ut/platform/hccp/stub/
     ${SRC_DIR}/test/ut/platform/hccp/ut_include
@@ -89,6 +92,7 @@ target_include_directories(rs_ut_normal BEFORE PRIVATE
     ${SRC_DIR}/src/base_comm/resources/hccp/rdma_service/tlv
     ${SRC_DIR}/src/base_comm/resources/hccp/rdma_service/ctx
     ${SRC_DIR}/src/base_comm/resources/hccp/inc/private/network
+    ${SRC_DIR}/src/base_comm/resources/hccp/inc/private/network/log
     ${SRC_DIR}/src/base_comm/resources/hccp/inc/network
     ${SRC_DIR}/src/base_comm/resources/hccp/external_depends/inc
     ${SRC_DIR}/src/base_comm/resources/hccp/external_depends/ubengine

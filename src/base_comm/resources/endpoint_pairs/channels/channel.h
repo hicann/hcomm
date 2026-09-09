@@ -136,7 +136,8 @@ public:
     void* GetNicCtx() const { return nicCtx_; }
 
     // ------------------ 工具方法 ------------------
-    static ChannelStatus TransportStatusToChannelStatus(Hccl::TransportStatus ts);
+    static ChannelStatus TransportStatusToChannelStatus(
+        Hccl::TransportStatus ts, const EndpointDesc& localEp, const HcommChannelDesc& channelDesc);
 
     // ------------------ 共享 Jetty 模式 ------------------
     // 由 CreateChannelsLoop 根据本次调用是否共享（HcommChannelConfig.isSharedQueue）设置；

@@ -18,6 +18,7 @@
 
 #include "hcomm_c_adpt.h"
 #include "hcomm_res_mgr.h"
+#include "config_plf_log_v2.h"
 
 // Orion
 #include "topo_common_types.h"
@@ -33,6 +34,7 @@
 #include <cstring>
 
 namespace hcomm {
+using Hccl::PLF_CHANNEL;
 constexpr uint16_t DEFAULT_LISTENING_PORT = 60001;
 
 namespace {
@@ -543,6 +545,9 @@ HcclResult AivUrmaChannel::BuildConnection()
     connections_.clear();
     commonRes_.connVec.emplace_back(ubConn.get());
     connections_.push_back(std::move(ubConn));
+    PLF_CONFIG_INFO(
+        PLF_CHANNEL, "[AivUrmaChannel] build DevUbConnection, protocol[%s] sqDepth[%u] sharedJetty[%d].",
+        ctx.protocol.Describe().c_str(), ctx.sqDepth, static_cast<int>(IsSharedJetty()));
 
     return HCCL_SUCCESS;
 }
@@ -559,6 +564,9 @@ HcclResult AivUrmaChannel::BuildAivUrmaTransport()
         transport_ = std::make_unique<Hccl::AivUrmaTransport>(
             commonRes_, attr_, linkData, socket, rdmaHandle_), // 这里区分是否是优先recv
         return HCCL_E_PTR);
+    PLF_CONFIG_INFO(
+        PLF_CHANNEL, "[AivUrmaChannel] create AivUrmaTransport, socket[%s], linkData[%s].", socket_->Describe().c_str(),
+        linkData.Describe().c_str());
     return HCCL_SUCCESS;
 }
 
@@ -726,6 +734,7 @@ HcclResult AivUrmaChannel::UpdateMemInfo(HcommMemHandle* memHandles, uint32_t me
 
 HcclResult AivUrmaChannel::Clean()
 {
+    PLF_CONFIG_INFO(PLF_CHANNEL, "[AivUrmaChannel] clean channel resource.");
     ReleaseDeviceChannelEntity();
     ReleasePtrArrayDevMems();
     transport_.reset();

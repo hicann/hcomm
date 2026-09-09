@@ -23,6 +23,7 @@
 #include "ccu_assist.h"
 #include "dev_buffer.h"
 #include "hccp_tlv_hdc_manager.h"
+#include "config_plf_log_v2.h"
 
 #ifdef HCCL_ALG_ANALYZER_DAVID
 #include "instruction.h"

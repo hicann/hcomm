@@ -18,11 +18,13 @@
 #include "comm_mems.h"
 
 #include "config_log.h"
+#include "config_plf_log_v2.h"
 
 // 暂时引入orion
 #include "local_ub_rma_buffer.h"
 
 namespace hcomm {
+using Hccl::PLF_CHANNEL;
 
 CcuUrmaChannel::CcuUrmaChannel(const EndpointHandle locEndpointHandle, const HcommChannelDesc& channelDesc)
     : locEndpointHandle_(locEndpointHandle),
@@ -131,7 +133,9 @@ static HcclResult CreateCcuTransport(
     }
     CHK_RET(ret);
 
-    HCCL_INFO("[CcuUrmaChannel][%s] end, transport created.", __func__);
+    PLF_CONFIG_INFO(
+        PLF_CHANNEL, "[CcuUrmaChannel] transport created, sqSize[%u], linkData[%s].", sqSize,
+        linkData.Describe().c_str());
     return HCCL_SUCCESS;
 }
 
@@ -392,6 +396,7 @@ HcclResult CcuUrmaChannel::GetRemoteMems(uint32_t* memNum, CommMem** remoteMem, 
 HcclResult CcuUrmaChannel::Clean()
 {
     CHK_PTR_NULL(impl_);
+    PLF_CONFIG_INFO(PLF_CHANNEL, "[CcuUrmaChannel] clean channel resource.");
     impl_->Clean();
     return HcclResult::HCCL_SUCCESS;
 }

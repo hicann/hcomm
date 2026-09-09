@@ -12,6 +12,7 @@
 #include <sys/prctl.h>
 #include "securec.h"
 #include "user_log.h"
+#include "config_log.h"
 #include "dl_hal_function.h"
 #include "ra.h"
 #include "ra_async.h"
@@ -319,7 +320,7 @@ STATIC int RaHdcAsyncSessionClose(unsigned int phyId)
         timeout--;
     }
     if (timeout <= 0) {
-        hccp_warn("[deinit][ra_hdc_async]hdc async session close timeout:%d phyId[%u]", timeout, phyId);
+        hccp_warn_init("[deinit][ra_hdc_async]hdc async session close timeout:%d phyId[%u]", timeout, phyId);
     }
     RA_PTHREAD_MUTEX_LOCK(&gRaHdcAsync[phyId].reqMutex);
     HdcAsyncDelResponse(reqHandle);
@@ -435,7 +436,7 @@ STATIC void RaHwAsyncHdcClientDeinit(unsigned int phyId)
         tryAgain--;
     }
     if (tryAgain <= 0) {
-        hccp_warn("hdc async message thread quit timeout");
+        hccp_warn_others("hdc async message thread quit timeout");
     }
 
     // close session
@@ -507,7 +508,7 @@ STATIC int RaHdcAsyncInitSession(struct RaInitConfig *cfg)
     int ret = 0;
 
     CHK_PRT_RETURN(gRaHdcAsync[phyId].session != NULL,
-        hccp_warn("hdc async session for phyId[%u] already existed", phyId), -EEXIST);
+        hccp_warn_init("hdc async session for phyId[%u] already existed", phyId), -EEXIST);
 
     // server will be blocked, use a thread to trigger server to accept
     ret = pthread_create(&serverTidp, NULL, (void *)RaHwAsyncHdcServerInit, cfg);
@@ -645,7 +646,7 @@ int RaHdcInitAsync(struct RaInitConfig *cfg)
     unsigned int interfaceVersion = 0;
     int ret = 0;
 
-    CHK_PRT_RETURN(!cfg->enableHdcAsync, hccp_info("[init][ra_hdc_async]no need to init async hdc session"), 0);
+    CHK_PRT_RETURN(!cfg->enableHdcAsync, hccp_info_init("[init][ra_hdc_async]no need to init async hdc session"), 0);
 
     ret = RaHdcGetInterfaceVersion(cfg->phyId, RA_RS_ASYNC_HDC_SESSION_CONNECT, &interfaceVersion);
     // normal case: driver not support to or no need to init async hdc session
@@ -678,7 +679,7 @@ int RaHdcDeinitAsync(unsigned int phyId)
     hccp_run_info("hdc deinit async start! phyId[%u] restore_flag[%u]", phyId, gRaHdcAsync[phyId].restoreFlag);
 
     CHK_PRT_RETURN(gRaHdcAsync[phyId].session == NULL && gRaHdcAsync[phyId].restoreFlag == 0,
-        hccp_warn("hdc async session for phyId[%u] is NULL", phyId), -ENODEV);
+        hccp_warn_socket("hdc async session for phyId[%u] is NULL", phyId), -ENODEV);
 
     // close server session
     ret = RaHdcAsyncSessionClose(phyId);

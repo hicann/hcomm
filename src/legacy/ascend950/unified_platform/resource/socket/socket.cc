@@ -13,6 +13,7 @@
 #include "sal.h"
 #include "socket_exception.h"
 #include "network_api_exception.h"
+#include "config_plf_log_v2.h"
 
 namespace Hccl {
 
@@ -55,7 +56,7 @@ bool Socket::Listen(u32& port)
     isListening = true;
     socketStatus = SocketStatus::LISTENING;
 
-    HCCL_INFO("[Socket::%s] socket[%s] listen success.", __func__, Describe().c_str());
+    PLF_CONFIG_INFO(PLF_CHANNEL, "[Socket] listen success, [%s].", Describe().c_str());
     return true;
 }
 
@@ -71,6 +72,7 @@ void Socket::Connect()
     HCCL_INFO("conn.tag %s", tag.c_str());
 
     socketStatus = SocketStatus::CONNECTING;
+    PLF_CONFIG_INFO(PLF_CHANNEL, "[Socket] connect to remote, [%s].", this->Describe().c_str());
 }
 
 void Socket::PrintErrorSocketInfo()
@@ -100,6 +102,7 @@ SocketStatus Socket::GetStatus(u32 timeout)
     if (result.status == SOCKET_CONNECTED) {
         socketStatus = SocketStatus::OK;
         isConnected = true;
+        PLF_CONFIG_INFO(PLF_CHANNEL, "[Socket] link established, [%s].", this->Describe().c_str());
     } else if (result.status == SOCKET_CONNECT_TIMEOUT) {
         socketStatus = SocketStatus::TIMEOUT;
     } else if (result.status == SOCKET_CONNECTING) {
@@ -152,6 +155,7 @@ void Socket::Close()
         RaSocketCloseParam param(socketHandle, fdHandle);
         HrtRaSocketCloseOne(param);
         isConnected = false;
+        PLF_CONFIG_INFO(PLF_CHANNEL, "[Socket] close, [%s].", this->Describe().c_str());
     }
 }
 
@@ -161,6 +165,7 @@ void Socket::StopListen()
         RaSocketListenParam param(socketHandle, listenPort, localIp);
         HrtRaSocketListenOneStop(param);
         isListening = false;
+        PLF_CONFIG_INFO(PLF_CHANNEL, "[Socket] stop listen, [%s].", this->Describe().c_str());
     }
 }
 
@@ -315,7 +320,7 @@ bool Socket::CheckRecvRequestResult()
     if (recvSize > recvLeftSize) {
         THROW<SocketException>(StringFormat(
             "[Socket][%s] prev recv request handle[%llu] failed, "
-            "recv size[%u] is greater than expected[%u], [%s].",
+            "recv size[%llu] is greater than expected[%u], [%s].",
             __func__, lastReqHandle, recvSize, recvLeftSize, this->Describe().c_str()));
     }
 
@@ -323,6 +328,10 @@ bool Socket::CheckRecvRequestResult()
     // SOCK_E_AGAIN 表示接口调用失败，需要重新调用接口
     // 其余结果为异常场景，抛出异常
     if (result == ReqHandleResult::COMPLETED) {
+        PLF_CONFIG_INFO(
+            PLF_CHANNEL, "[Socket] recv request[%llu] completed, real recvSize[%llu], totalRecvSize[%llu], [%s].",
+            lastReqHandle, recvSize, static_cast<unsigned long long>(totalRecvSize) + recvSize,
+            this->Describe().c_str());
         totalRecvSize += recvSize;
         recvLeftSize -= recvSize;
     } else if (result == ReqHandleResult::SOCK_E_AGAIN) {

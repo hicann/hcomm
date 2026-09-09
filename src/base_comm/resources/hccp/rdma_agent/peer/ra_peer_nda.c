@@ -11,6 +11,7 @@
 #include <stdlib.h>
 #include <errno.h>
 #include "securec.h"
+#include "config_log.h"
 #include "ra_comm.h"
 #include "rs_nda.h"
 #include "ra_peer.h"
@@ -142,6 +143,6 @@ int RaPeerGetQpHyperFeature(struct RaQpHandle *qpPeer, struct HyperFeature *hype
     RsSetCtx(qpPeer->phyId);
     ret = RsGetQpHyperFeature(qpPeer->phyId, qpPeer->rdevIndex, qpPeer->qpn, hyperFeature);
     RaPeerMutexUnlock(qpPeer->phyId);
-    CHK_PRT_RETURN(ret, hccp_warn("RsGetQpHyperFeature unsuccessful ret(%d) phyId(%u)", ret, qpPeer->phyId), ret);
+    CHK_PRT_RETURN(ret, hccp_warn_rma("RsGetQpHyperFeature unsuccessful ret(%d) phyId(%u)", ret, qpPeer->phyId), ret);
     return ret;
 }

@@ -11,6 +11,7 @@
 #ifndef RA_CTX_H
 #define RA_CTX_H
 
+#include <stddef.h>
 #include "hccp_ctx.h"
 #include "ra_rs_ctx.h"
 
@@ -44,6 +45,9 @@ struct RaCtxQpHandle {
     struct QpCreateInfo qpInfo;
     struct RaCtxHandle *ctxHandle;
 };
+
+/* External accessors (e.g. legacy HrtGetJettyQpNum) read id as the first member; keep this layout stable. */
+_Static_assert(offsetof(struct RaCtxQpHandle, id) == 0, "id must be the first member of struct RaCtxQpHandle");
 
 struct RaCtxRemQpHandle {
     unsigned int id; // qpn(rdma) or jetty_id(udma)

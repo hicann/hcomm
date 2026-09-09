@@ -148,6 +148,7 @@ struct OpcodeInterfaceInfo gInterfaceInfoList[] = {
     {RA_RS_SET_PID, 1},
     {RA_RS_ASYNC_HDC_SESSION_CONNECT, 2},
     {RA_RS_ASYNC_HDC_SESSION_CLOSE, 1},
+    {RA_RS_SET_DEBUG_CONFIG, 1},
 };
 
 RS_ATTRI_VISI_DEF int RsGetInterfaceVersion(unsigned int opcode, unsigned int *version)

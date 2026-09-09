@@ -15,6 +15,7 @@
 #include "ra.h"
 #include "ra_client_host.h"
 #include "user_log.h"
+#include "config_log.h"
 #include "ra_hdc_ping.h"
 #include "ra_rs_comm.h"
 #include "ra_ping.h"
@@ -191,12 +192,12 @@ HCCP_ATTRI_VISI_DEF int RaPingTaskStart(void *pingHandle, struct PingTaskAttr *a
     RA_PTHREAD_MUTEX_LOCK(&pingHandleTmp->mutex);
     // disallow multi task running or no target to start
     if (pingHandleTmp->taskCnt != 0) {
-        hccp_warn("[start][ra_ping]task_cnt:%u != 0 invalid, task already running", pingHandleTmp->taskCnt);
+        hccp_warn_rma("[start][ra_ping]task_cnt:%u != 0 invalid, task already running", pingHandleTmp->taskCnt);
         RA_PTHREAD_MUTEX_UNLOCK(&pingHandleTmp->mutex);
         return ConverReturnCode(RDMA_OP, -EEXIST);
     }
     if (pingHandleTmp->targetCnt == 0) {
-        hccp_warn("[start][ra_ping]target_cnt is 0 invalid, no target exist");
+        hccp_warn_rma("[start][ra_ping]target_cnt is 0 invalid, no target exist");
         RA_PTHREAD_MUTEX_UNLOCK(&pingHandleTmp->mutex);
         return ConverReturnCode(RDMA_OP, -ENODEV);
     }
@@ -332,7 +333,7 @@ HCCP_ATTRI_VISI_DEF int RaPingTaskStop(void *pingHandle)
     // no task to stop
     RA_PTHREAD_MUTEX_LOCK(&pingHandleTmp->mutex);
     if (pingHandleTmp->taskCnt == 0) {
-        hccp_warn("[stop][ra_ping]task_cnt is 0 invalid, no task running");
+        hccp_warn_rma("[stop][ra_ping]task_cnt is 0 invalid, no task running");
         RA_PTHREAD_MUTEX_UNLOCK(&pingHandleTmp->mutex);
         return ConverReturnCode(RDMA_OP, -ENODEV);
     }

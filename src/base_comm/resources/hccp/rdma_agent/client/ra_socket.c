@@ -9,6 +9,7 @@
  */
 
 #include "user_log.h"
+#include "config_log.h"
 #include "ra.h"
 #include "ra_rs_comm.h"
 #include "ra_client_host.h"
@@ -23,6 +24,8 @@ HCCP_ATTRI_VISI_DEF int RaGetClientSocketErrInfo(struct SocketConnectInfoT conn[
     unsigned int phyId = 0;
     unsigned int i;
     int ret;
+
+    hccp_info_rma("[%s]Input parameters: conn(%p), err(%p), num(%u)", __func__, (void *)conn, (void *)err, num);
 
     CHK_PRT_RETURN(conn == NULL || err == NULL || num == 0 || num > MAX_SOCKET_NUM,
         hccp_err("[get][ra_socket]conn is NULL or err is NULL or num[%u] is zero or num is greater than %d", num,
@@ -49,7 +52,7 @@ HCCP_ATTRI_VISI_DEF int RaGetClientSocketErrInfo(struct SocketConnectInfoT conn[
         CHK_PRT_RETURN(ret != 0, hccp_err("[get][ra_socket]ra_inet_pton for remote_ip failed, ret(%d)", ret),
             ConverReturnCode(SOCKET_OP, ret));
 
-        hccp_info("Input parameters: [%u]th, phyId[%u], localIp[%s], remoteIp[%s], port[%u], tag[%s]", i, phyId,
+        hccp_info_rma("Input parameters: [%u]th, phyId[%u], localIp[%s], remoteIp[%s], port[%u], tag[%s]", i, phyId,
             localIp, remoteIp, conn[i].port, conn[i].tag);
     }
 
@@ -65,6 +68,8 @@ HCCP_ATTRI_VISI_DEF int RaGetServerSocketErrInfo(struct SocketListenInfoT conn[]
     unsigned int phyId = 0;
     unsigned int i;
     int ret;
+
+    hccp_info_rma("[%s]Input parameters: conn(%p), err(%p), num(%u)", __func__, (void *)conn, (void *)err, num);
 
     CHK_PRT_RETURN(conn == NULL || err == NULL || num == 0 || num > MAX_SOCKET_NUM,
         hccp_err("[get][ra_socket]conn is NULL or err is NULL or num[%u] is zero or num is greater than %d", num,
@@ -87,7 +92,7 @@ HCCP_ATTRI_VISI_DEF int RaGetServerSocketErrInfo(struct SocketListenInfoT conn[]
         CHK_PRT_RETURN(ret, hccp_err("[get][ra_socket]ra_inet_pton for server_ip failed, ret(%d)", ret),
             ConverReturnCode(SOCKET_OP, ret));
 
-        hccp_info("Input parameters: [%u]th, phyId[%u], localIp[%s], port[%u]", i, phyId, localIp, conn[i].port);
+        hccp_info_rma("Input parameters: [%u]th, phyId[%u], localIp[%s], port[%u]", i, phyId, localIp, conn[i].port);
     }
 
     ret = socketHandle->socketOps->raGetServerSocketErrInfo(phyId, conn, err, num);

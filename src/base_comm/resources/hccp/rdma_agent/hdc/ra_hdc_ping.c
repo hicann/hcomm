@@ -10,6 +10,7 @@
 
 #include "securec.h"
 #include "user_log.h"
+#include "config_log.h"
 #include "ra_rs_err.h"
 #include "ra_hdc_ping.h"
 
@@ -123,7 +124,7 @@ int RaHdcPingGetResults(struct RaPingHandle *pingHandle, struct PingTargetResult
         ret = RaHdcProcessMsg(RA_RS_PING_GET_RESULTS, phyId, (char *)&pingData, sizeof(union OpPingResultsData));
         // caller needs to retry, degrade log level
         if (ret == -EAGAIN) {
-            hccp_warn("[get][ra_hdc_ping]ra hdc message process unsuccessful, ret(%d) phyId(%u)", ret, phyId);
+            hccp_warn_rma("[get][ra_hdc_ping]ra hdc message process unsuccessful, ret(%d) phyId(%u)", ret, phyId);
             goto out;
         }
 

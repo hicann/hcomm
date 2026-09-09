@@ -10,13 +10,18 @@
 
 #include "endpoint.h"
 #include "channel.h"
+#include "orion_adpt_utils.h"
 #include "host_peer_ra_init.h"
 #include <mutex>
 #include <unordered_set>
 #include "hccp.h"
 #include "log.h"
+#include "config_plf_log_v2.h"
 
 namespace hcomm_experimental {
+
+using Hccl::PLF_CHANNEL;
+
 Endpoint::Endpoint(const EndpointDesc& endpointDesc) : endpointDesc_(endpointDesc) {}
 
 HcclResult Endpoint::CreateEndpoint(const EndpointDesc&, std::unique_ptr<Endpoint>&) { return HCCL_E_NOT_SUPPORT; }
@@ -30,8 +35,28 @@ HcclResult Channel::CreateChannel(EndpointHandle, CommEngine, HcommChannelDesc, 
     return HCCL_E_NOT_SUPPORT;
 }
 
-ChannelStatus Channel::TransportStatusToChannelStatus(Hccl::TransportStatus ts)
+ChannelStatus Channel::TransportStatusToChannelStatus(
+    Hccl::TransportStatus ts, const EndpointDesc& localEp, const HcommChannelDesc& channelDesc)
 {
+    if (Hccl::GetPlfDebugConfigValue() & PLF_CHANNEL) {
+        Hccl::IpAddress localAddr{};
+        std::string localEid = "invalid";
+        if (hcomm::CommAddrToIpAddress(localEp.commAddr, localAddr) == HCCL_SUCCESS) {
+            localEid = localAddr.Describe();
+        }
+
+        Hccl::IpAddress remoteAddr{};
+        std::string remoteEid = "invalid";
+        if (hcomm::CommAddrToIpAddress(channelDesc.remoteEndpoint.commAddr, remoteAddr) == HCCL_SUCCESS) {
+            remoteEid = remoteAddr.Describe();
+        }
+
+        const char* socketTag = channelDesc.channelName != nullptr ? channelDesc.channelName : "anonymous";
+
+        PLF_CONFIG_INFO(
+            PLF_CHANNEL, "status[%d], localEid[%s], remoteEid[%s], socketTag[%s].", static_cast<int>(ts),
+            localEid.c_str(), remoteEid.c_str(), socketTag);
+    }
     switch (ts) {
         case Hccl::TransportStatus::INIT:
             return ChannelStatus::INIT;

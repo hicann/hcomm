@@ -138,6 +138,7 @@ global:
     RsSendWr;
     RsSendWrlist;
     RsSetCtx;
+    RsSetDebugConfig;
     RsSetHostPid;
     RsSetQpAttrQos;
     RsSetQpAttrRetryCnt;

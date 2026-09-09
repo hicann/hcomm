@@ -11,6 +11,7 @@
 #include <stdbool.h>
 #include <errno.h>
 #include "user_log.h"
+#include "config_log.h"
 #include "hccp.h"
 #include "hccp_common.h"
 #include "ra_client_host.h"
@@ -162,10 +163,12 @@ HCCP_ATTRI_VISI_DEF int RaGetSecRandom(struct RaInfo *info, u32 *value)
 
 HCCP_ATTRI_VISI_DEF bool RaHasCapability(struct RaInfo *info, unsigned int capability)
 {
-    CHK_PRT_RETURN(info == NULL, hccp_warn("info is NULL"), false);
+    hccp_info_rma("[%s]Input parameters: info(%p), capability(0x%x)", __func__, (void *)info, capability);
+
+    CHK_PRT_RETURN(info == NULL, hccp_warn_rma("info is NULL"), false);
     CHK_PRT_RETURN(info->phyId >= RA_MAX_PHY_ID_NUM,
-        hccp_warn("phy_id(%u) must be smaller than %u", info->phyId, RA_MAX_PHY_ID_NUM), false);
-    CHK_PRT_RETURN(info->mode != NETWORK_OFFLINE, hccp_warn("mode:%u not support", info->mode), false);
+        hccp_warn_rma("phy_id(%u) must be smaller than %u", info->phyId, RA_MAX_PHY_ID_NUM), false);
+    CHK_PRT_RETURN(info->mode != NETWORK_OFFLINE, hccp_warn_rma("mode:%u not support", info->mode), false);
 
     return RaHdcHasCapability(info->phyId, capability);
 }

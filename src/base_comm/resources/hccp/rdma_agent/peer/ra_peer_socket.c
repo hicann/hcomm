@@ -9,6 +9,7 @@
  */
 
 #include "user_log.h"
+#include "config_log.h"
 #include "ra.h"
 #include "ra_comm.h"
 #include "rs.h"
@@ -77,7 +78,7 @@ int RaPeerSocketAcceptCreditAdd(unsigned int phyId, struct SocketListenInfoT con
     RsSetCtx(phyId);
     ret = RsSocketAcceptCreditAdd(rsConn, num, creditLimit);
     if (ret == -ENODEV) {
-        hccp_warn("[set][ra_peer_socket]rs_socket_accept_credit_add unsuccessful ret(%d) phyId(%u)", ret, phyId);
+        hccp_warn_socket("[set][ra_peer_socket]rs_socket_accept_credit_add unsuccessful ret(%d) phyId(%u)", ret, phyId);
     } else if (ret != 0) {
         hccp_err("[set][ra_peer_socket]rs_socket_accept_credit_add failed ret(%d) phyId(%u)", ret, phyId);
     }

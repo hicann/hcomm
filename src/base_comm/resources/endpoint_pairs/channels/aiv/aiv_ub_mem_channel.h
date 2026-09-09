@@ -51,6 +51,7 @@ private:
     // --------------------- 入参 ---------------------
     EndpointHandle endpointHandle_;
     HcommChannelDesc channelDesc_;
+    EndpointDesc localEp_{}; // 本端 Endpoint 描述，用于状态日志打印
 
     // --------------------- 具体成员 ---------------------
     Hccl::Socket* socket_{nullptr};

@@ -11,6 +11,7 @@
 #include <sys/prctl.h>
 #include "securec.h"
 #include "user_log.h"
+#include "config_log.h"
 #include "ra_hdc_async.h"
 #include "ra_rs_comm.h"
 #include "ra_rs_err.h"
@@ -134,7 +135,7 @@ STATIC void *RaAsyncPthread(void *arg)
         RaAsyncHandlePkt(chipId, recvBuf, recvLen);
     }
 
-    hccp_info("thread [%d] is out, cleaning resources", getpid());
+    hccp_info_others("thread [%d] is out, cleaning resources", getpid());
     RA_PTHREAD_MUTEX_LOCK(&gHdcAsyncInitPara.mutex);
     gHdcAsyncInitPara.threadStatus = THREAD_HALT;
     RA_PTHREAD_MUTEX_UNLOCK(&gHdcAsyncInitPara.mutex);
@@ -159,7 +160,7 @@ STATIC void RaHwAsyncHdcInit(void *arg)
 
     (void)prctl(PR_SET_NAME, (uintptr_t) "hccp_hw_async", 0, 0, 0);
 
-    hccp_info("chip_id(%u)", chipId);
+    hccp_info_others("chip_id(%u)", chipId);
     gHdcAsyncInitPara.hdcFlag = 1;
 
     ret = pthread_create(&tidp, NULL, (void *)RaAsyncPthread, NULL);
@@ -267,7 +268,7 @@ int RaRsAsyncHdcSessionClose(char *inBuf, char *outBuf, int *outLen, int *opResu
     }
 
     if (tryAgain <= 0) {
-        hccp_warn("hdc async message thread quit timeout");
+        hccp_warn_others("hdc async message thread quit timeout");
     }
 
     phyId = gHdcAsyncInitPara.chipId;

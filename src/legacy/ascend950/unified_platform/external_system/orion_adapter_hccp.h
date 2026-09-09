@@ -332,6 +332,9 @@ constexpr s32 OPBASE_QP_MODE_EXT = 4;  // 单算子模式(81)的QP
 
 QpHandle HrtRaQpCreate(RdmaHandle rdmaHandle, int flag, int qpMode);
 
+constexpr u32 HRT_INVALID_QPN = 0xFFFFFFFFU; // sentinel returned by HrtGetQpNum/HrtGetJettyQpNum on failure
+
+u32 HrtGetQpNum(QpHandle qpHandle);
 void HrtRaQpDestroy(QpHandle qpHandle);
 void HrtRaQpConnectAsync(QpHandle qpHandle, FdHandle fdHandle);
 int HrtGetRaQpStatus(QpHandle qpHandle);

@@ -17,6 +17,7 @@
 #include <sys/prctl.h>
 #include <pthread.h>
 #include "user_log.h"
+#include "config_log.h"
 #include "ra_hdc.h"
 #include "securec.h"
 #include "ra.h"
@@ -44,7 +45,7 @@ void RaHdcLiteStoreTypicalCq(struct RaRdmaHandle *rdmaHandle, unsigned int cqn, 
             tmp->liteCq = liteCq;
             tmp->deviceCqAttr = *deviceCqAttr;
             RA_PTHREAD_MUTEX_UNLOCK(&rdmaHandle->typicalLiteCqMutex);
-            hccp_info("[store][ra_hdc_lite]updated typical lite cq, phyId[%u] cqn[%u]", phyId, cqn);
+            hccp_info_rma("[store][ra_hdc_lite]updated typical lite cq, phyId[%u] cqn[%u]", phyId, cqn);
             return;
         }
     }
@@ -61,7 +62,7 @@ void RaHdcLiteStoreTypicalCq(struct RaRdmaHandle *rdmaHandle, unsigned int cqn, 
     entry->deviceCqAttr = *deviceCqAttr;
     RaListAddTail(&entry->list, &rdmaHandle->typicalLiteCqList);
     RA_PTHREAD_MUTEX_UNLOCK(&rdmaHandle->typicalLiteCqMutex);
-    hccp_info("[store][ra_hdc_lite]stored typical lite cq, phyId[%u] cqn[%u]", phyId, cqn);
+    hccp_info_rma("[store][ra_hdc_lite]stored typical lite cq, phyId[%u] cqn[%u]", phyId, cqn);
 }
 
 struct rdma_lite_cq *RaHdcLiteFindTypicalCq(struct RaRdmaHandle *rdmaHandle, unsigned int cqn)
@@ -89,7 +90,7 @@ struct rdma_lite_cq *RaHdcLiteFindTypicalCq(struct RaRdmaHandle *rdmaHandle, uns
     RA_PTHREAD_MUTEX_UNLOCK(&rdmaHandle->typicalLiteCqMutex);
 
     if (liteCq != NULL) {
-        hccp_info("[find][ra_hdc_lite]found typical lite cq, phyId[%u] cqn[%u]", phyId, cqn);
+        hccp_info_rma("[find][ra_hdc_lite]found typical lite cq, phyId[%u] cqn[%u]", phyId, cqn);
     } else {
         hccp_err("[find][ra_hdc_lite]typical lite cq not found, phyId[%u] cqn[%u]", phyId, cqn);
     }
@@ -147,12 +148,12 @@ void RaHdcLiteRemoveTypicalCq(struct RaRdmaHandle *rdmaHandle, unsigned int cqn)
             RaListDel(&tmp->list);
             free(tmp);
             RA_PTHREAD_MUTEX_UNLOCK(&rdmaHandle->typicalLiteCqMutex);
-            hccp_info("[remove][ra_hdc_lite]removed typical lite cq, phyId[%u] cqn[%u]", phyId, cqn);
+            hccp_info_rma("[remove][ra_hdc_lite]removed typical lite cq, phyId[%u] cqn[%u]", phyId, cqn);
             return;
         }
     }
     RA_PTHREAD_MUTEX_UNLOCK(&rdmaHandle->typicalLiteCqMutex);
-    hccp_warn("[remove][ra_hdc_lite]typical lite cq not found for removal, phyId[%u] cqn[%u]", phyId, cqn);
+    hccp_warn_rma("[remove][ra_hdc_lite]typical lite cq not found for removal, phyId[%u] cqn[%u]", phyId, cqn);
 }
 
 STATIC void *RaHdcLitePthread(void *arg);
@@ -177,7 +178,7 @@ STATIC int RaHdcGetDrvLiteSupport(unsigned int phyId, bool enabled910aLite, unsi
             hccp_err("[init][ra_hdc_lite]dl_hal_get_device_info failed, ret(%d), phyId(%u)", ret, phyId), ret);
         if (DlHalPlatGetChip((uint64_t)deviceInfo) == CHIP_TYPE_910A) { // Memory Limits
             *support = 0;
-            hccp_info("[init][ra_hdc_lite]device_info:0x%llx not support, phyId(%u)", deviceInfo, phyId);
+            hccp_info_init("[init][ra_hdc_lite]device_info:0x%llx not support, phyId(%u)", deviceInfo, phyId);
             return 0;
         }
     }
@@ -209,7 +210,7 @@ STATIC void RaHdcGetOpcodeLiteSupport(unsigned int phyId, unsigned int supportFe
     ret = RaHdcGetInterfaceVersion(phyId, RA_RS_GET_LITE_SUPPORT, &interfaceVersion);
     // get version failed or opcode interface_version is 0: opcode not support lite
     if (ret != 0 || interfaceVersion == 0) {
-        hccp_info("[init][ra_hdc_lite]get opcode not support, ret[%d] != 0 or interfaceVersion is 0", ret);
+        hccp_info_init("[init][ra_hdc_lite]get opcode not support, ret[%d] != 0 or interfaceVersion is 0", ret);
         *support = LITE_NOT_SUPPORT;
         return;
     }
@@ -227,8 +228,8 @@ STATIC void RaHdcGetOpcodeLiteSupport(unsigned int phyId, unsigned int supportFe
     }
 
     // none of 4KB page_size align & 2MB page_size align lite support
-    hccp_info("[init][ra_hdc_lite]get opcode not support, interfaceVersion[%u] supportFeature[0x%x]", interfaceVersion,
-        supportFeature);
+    hccp_info_init("[init][ra_hdc_lite]get opcode not support, interfaceVersion[%u] supportFeature[0x%x]",
+        interfaceVersion, supportFeature);
     *support = LITE_NOT_SUPPORT;
     return;
 }
@@ -314,7 +315,7 @@ STATIC int RaSensorNodeRegister(unsigned int phyId, struct RaRdmaHandle *rdmaHan
     if ((ret != 0) || (interfaceVersion <= RA_RS_OPCODE_BASE_VERSION)) {
         /* unknown or old version, not support sensor */
         rdmaHandle->sensorHandle = 0;
-        hccp_warn("[init][ra_hdc_lite]not support sensor, ret:%d, phyId:%u, interfaceVersion:%u", ret, phyId,
+        hccp_warn_init("[init][ra_hdc_lite]not support sensor, ret:%d, phyId:%u, interfaceVersion:%u", ret, phyId,
             interfaceVersion);
         return 0;
     }
@@ -532,7 +533,8 @@ int RaHdcLiteGetCqAttr(struct RaRdmaHandle *rdmaHandle, unsigned int cqn, struct
     }
 
     *deviceCqAttr = getLiteCqAttrData.rxData.deviceCqAttr;
-    hccp_info("[create][ra_hdc_lite_get_cq_attr]get lite cq attr success, cqn[%u] depth[%u]", cqn, deviceCqAttr->depth);
+    hccp_info_rma("[create][ra_hdc_lite_get_cq_attr]get lite cq attr success, cqn[%u] depth[%u]", cqn,
+        deviceCqAttr->depth);
     return 0;
 }
 
@@ -544,7 +546,7 @@ int RaHdcLiteCqCreate(struct RaRdmaHandle *rdmaHandle, unsigned int cqDepth, uni
     int ret;
 
     if (rdmaHandle->supportLite == 0) {
-        hccp_warn("[RaHdcLiteCqCreate]rdmaHandle->supportLite = 0");
+        hccp_warn_rma("[RaHdcLiteCqCreate]rdmaHandle->supportLite = 0");
         return 0;
     }
 
@@ -569,7 +571,7 @@ int RaHdcLiteCqCreate(struct RaRdmaHandle *rdmaHandle, unsigned int cqDepth, uni
 
     RaHdcLiteStoreTypicalCq(rdmaHandle, cqData->rxData.cqn, *liteCq, &deviceCqAttr);
 
-    hccp_info("[create][ra_hdc_lite_cq]lite cq created successfully, cqDepth(%u), liteCq[%p]", cqDepth, *liteCq);
+    hccp_info_rma("[create][ra_hdc_lite_cq]lite cq created successfully, cqDepth(%u), liteCq[%p]", cqDepth, *liteCq);
 
     return 0;
 }
@@ -823,8 +825,9 @@ int RaHdcLiteQpCreateWithCQ(struct RaRdmaHandle *rdmaHandle, struct RaQpHandle *
         return 0;
     }
 
-    hccp_info("[QP_PATH][ra_hdc_lite_qp_with_cq]RaHdcLiteQpCreateWithCQ NEW path, phyId[%u] sendCqn[%u] recvCqn[%u]",
-        phyId, sendCqn, recvCqn);
+    hccp_info_rma(
+        "[QP_PATH][ra_hdc_lite_qp_with_cq]RaHdcLiteQpCreateWithCQ NEW path, phyId[%u] sendCqn[%u] recvCqn[%u]", phyId,
+        sendCqn, recvCqn);
 
     ret = RaHdcLiteGetQpAttr(qpHdc, &liteQpAttr);
     CHK_PRT_RETURN(ret != 0,
@@ -1079,8 +1082,8 @@ STATIC void RaRetryTimeoutExceptionCheck(struct RaRdmaHandle *rdmaHandle, struct
         }
     }
 
-    hccp_warn("update sensor state logic_devid(%u), qpn(%u), sensorUpdateCnt(%d), ret(%d)\n", rdmaHandle->logicDevid,
-        wc->qp_num, rdmaHandle->sensorUpdateCnt, ret);
+    hccp_warn_rma("update sensor state logic_devid(%u), qpn(%u), sensorUpdateCnt(%d), ret(%d)\n",
+        rdmaHandle->logicDevid, wc->qp_num, rdmaHandle->sensorUpdateCnt, ret);
 }
 
 STATIC void RaHdcLitePeriodPollCqe(struct RaRdmaHandle *rdmaHandle)
@@ -1294,7 +1297,7 @@ STATIC int RaHdcLiteHandleBp(struct RaQpHandle *qpHdc)
         hccp_run_warn("qpn:%u send_wr_num:%u poll_cqe_num:%u send_wr:%u sq_depth:%u, back pressure occurred",
             qpHdc->qpn, qpHdc->sendWrNum, qpHdc->pollCqeNum, sendWr, qpHdc->sqDepth);
     } else {
-        hccp_warn("qpn:%u send_wr_num:%u poll_cqe_num:%u send_wr:%u sq_depth:%u, back pressure continues bpCnt:%u",
+        hccp_warn_rma("qpn:%u send_wr_num:%u poll_cqe_num:%u send_wr:%u sq_depth:%u, back pressure continues bpCnt:%u",
             qpHdc->qpn, qpHdc->sendWrNum, qpHdc->pollCqeNum, sendWr, qpHdc->sqDepth, qpHdc->bpCnt);
     }
 
@@ -1346,7 +1349,7 @@ int RaHdcLiteTypicalSendWr(struct RaQpHandle *qpHdc, struct LiteSendWr *wr, stru
     ret = RaRdmaLitePostSend(qpHdc->liteQp, &liteWr, &badWr, &attr, &resp);
     if (ret) {
         if (ret == -ENOMEM) {
-            hccp_warn("[send][ra_hdc_wr]ra hdc post send unsuccessful, ret(%d) phyId(%u)", ret, qpHdc->phyId);
+            hccp_warn_rma("[send][ra_hdc_wr]ra hdc post send unsuccessful, ret(%d) phyId(%u)", ret, qpHdc->phyId);
         } else {
             hccp_err("[send][ra_hdc_wr]ra hdc post send failed ret(%d) phyId(%u)", ret, qpHdc->phyId);
         }
@@ -1393,7 +1396,7 @@ int RaHdcLiteSendWr(struct RaQpHandle *qpHdc, struct LiteSendWr *wr, struct Send
     ret = RaHdcLitePostSend(qpHdc, localMr, remMr, wr, opRsp, wrId);
     if (ret) {
         if (ret == -ENOMEM) {
-            hccp_warn("[send][ra_hdc_wr]ra hdc post send unsuccessful, ret(%d) phyId(%u)", ret, qpHdc->phyId);
+            hccp_warn_rma("[send][ra_hdc_wr]ra hdc post send unsuccessful, ret(%d) phyId(%u)", ret, qpHdc->phyId);
         } else {
             hccp_err("[send][ra_hdc_wr]ra hdc post send failed, ret(%d) phyId(%u)", ret, qpHdc->phyId);
         }
@@ -1425,8 +1428,8 @@ int RaHdcLiteSendWrlist(struct RaQpHandle *qpHdc, struct SendWrlistData wr[], st
         ret = RaHdcLiteSendWr(qpHdc, &normalWr, &opRsp[i], HDC_LITE_DEFAULT_WR_ID);
         if (ret) {
             if (ret == -ENOMEM) {
-                hccp_warn("[send][ra_hdc_lite_wrlist]ra_hdc_lite_send_wr unsuccessful, ret(%d) phyId(%u) "
-                          "send_index(%u)",
+                hccp_warn_rma("[send][ra_hdc_lite_wrlist]ra_hdc_lite_send_wr unsuccessful, ret(%d) phyId(%u) "
+                              "send_index(%u)",
                     ret, qpHdc->phyId, i);
             } else {
                 hccp_err("[send][ra_hdc_lite_wrlist]ra_hdc_lite_send_wr failed, ret(%d) phyId(%u) send_index(%u)", ret,
@@ -1463,8 +1466,8 @@ int RaHdcLiteSendWrlistExt(struct RaQpHandle *qpHdc, struct SendWrlistDataExt wr
         ret = RaHdcLiteSendWr(qpHdc, &normalWr, &opRsp[i], HDC_LITE_DEFAULT_WR_ID);
         if (ret) {
             if (ret == -ENOMEM) {
-                hccp_warn("[send][ra_hdc_lite_send_wrlist_ext]ra_hdc_lite_send_wr unsuccessful, ret(%d) phyId(%u) "
-                          "send_index(%u)",
+                hccp_warn_rma("[send][ra_hdc_lite_send_wrlist_ext]ra_hdc_lite_send_wr unsuccessful, ret(%d) phyId(%u) "
+                              "send_index(%u)",
                     ret, qpHdc->phyId, i);
             } else {
                 hccp_err("[send][ra_hdc_lite_send_wrlist_ext]ra_hdc_lite_send_wr failed, ret(%d) phyId(%u) "
@@ -1506,8 +1509,8 @@ int RaHdcLiteSendNormalWrlist(struct RaQpHandle *qpHdc, struct WrInfo wr[], stru
         ret = RaHdcLiteTypicalSendWr(qpHdc, &normalWr, &opRsp[i], wr[i].wrId);
         if (ret != 0) {
             if (ret == -ENOMEM) {
-                hccp_warn("[send][send_wrlist]ra_hdc_lite_send_wr unsuccessful, ret(%d) phyId(%u) send_index(%u)", ret,
-                    qpHdc->phyId, i);
+                hccp_warn_rma("[send][send_wrlist]ra_hdc_lite_send_wr unsuccessful, ret(%d) phyId(%u) send_index(%u)",
+                    ret, qpHdc->phyId, i);
             } else {
                 hccp_err("[send][send_wrlist]ra_hdc_lite_send_wr failed, ret(%d) phyId(%u) send_index(%u)", ret,
                     qpHdc->phyId, i);

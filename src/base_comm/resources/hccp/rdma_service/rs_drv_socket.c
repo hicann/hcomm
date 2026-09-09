@@ -25,6 +25,7 @@
 #include "ra_rs_comm.h"
 #include "ra_rs_err.h"
 #include "rs.h"
+#include "config_log.h"
 #include "rs_inner.h"
 #include "rs_epoll.h"
 #include "rs_tls.h"
@@ -114,7 +115,7 @@ enum RsHardwareType RsGetDeviceType(unsigned int phyId)
 
     ret = DlHalGetDeviceInfo(logicId, MODULE_TYPE_SYSTEM, INFO_TYPE_BOARD_ID, &boardId);
     CHK_PRT_RETURN(ret != 0, hccp_err("dl_hal_get_device_info board_id failed, ret[%d]", ret), RS_HARDWARE_UNKNOWN);
-    hccp_info("board_id is (0x%llx)", boardId);
+    hccp_info_others("board_id is (0x%llx)", boardId);
     boardType = (unsigned int)((uint64_t)boardId & (0xfff0));
     ret = DlHalGetDeviceInfo(logicId, MODULE_TYPE_SYSTEM, INFO_TYPE_VERSION, &deviceInfo);
     CHK_PRT_RETURN(ret != 0, hccp_err("dl_hal_get_device_info device_info failed, ret(%d), phyId(%u)", ret, phyId),
@@ -246,15 +247,16 @@ int RsPeerFillIfaddrInfos(struct InterfaceInfo interfaceInfos[], unsigned int *n
         if (family == AF_INET) {
             interfaceInfos[*num - 1].ifaddr.ip.addr = ((struct sockaddr_in *)ifa->ifa_addr)->sin_addr;
             interfaceInfos[*num - 1].ifaddr.mask = ((struct sockaddr_in *)ifa->ifa_netmask)->sin_addr;
-            hccp_info("ifname[%s] addr[0x%08x]", ifa->ifa_name, ((struct sockaddr_in *)ifa->ifa_addr)->sin_addr.s_addr);
+            hccp_info_socket("ifname[%s] addr[0x%08x]", ifa->ifa_name,
+                ((struct sockaddr_in *)ifa->ifa_addr)->sin_addr.s_addr);
         } else {
             interfaceInfos[*num - 1].ifaddr.ip.addr6 = ((struct sockaddr_in6 *)ifa->ifa_addr)->sin6_addr;
             interfaceInfos[*num - 1].scopeId = (int)((struct sockaddr_in6 *)ifa->ifa_addr)->sin6_scope_id;
-            hccp_info("ifname[%s] scope_id[%u] flowinfo[%u]", ifa->ifa_name,
+            hccp_info_socket("ifname[%s] scope_id[%u] flowinfo[%u]", ifa->ifa_name,
                 ((struct sockaddr_in6 *)ifa->ifa_addr)->sin6_scope_id,
                 ((struct sockaddr_in6 *)ifa->ifa_addr)->sin6_flowinfo);
             for (unsigned long i = 0; i < sizeof(struct in6_addr); i++) {
-                hccp_info("addr[%lu] 0x%02x", i, ((struct sockaddr_in6 *)ifa->ifa_addr)->sin6_addr.s6_addr[i]);
+                hccp_info_socket("addr[%lu] 0x%02x", i, ((struct sockaddr_in6 *)ifa->ifa_addr)->sin6_addr.s6_addr[i]);
             }
         }
         interfaceInfos[*num - 1].family = family;
@@ -300,7 +302,7 @@ int RsDrvConnect(int fd, struct RsIpAddrInfo *serverIp, struct RsIpAddrInfo *cli
     int errNo;
     int ret;
 
-    hccp_info("IP(%s) port %d family %d fd:%d begin", serverIp->readAddr, port, clientIp->family, fd);
+    hccp_info_socket("IP(%s) port %d family %d fd:%d begin", serverIp->readAddr, port, clientIp->family, fd);
     if (clientIp->family == AF_INET) {
         struct sockaddr_in addr = {0};
         addr.sin_family = clientIp->family;
@@ -325,7 +327,7 @@ int RsDrvConnect(int fd, struct RsIpAddrInfo *serverIp, struct RsIpAddrInfo *cli
          * if the errno is EINTR, it can not retry directly,
          * otherwise it will directly return an error
          */
-        hccp_warn("connect not success, need to try again! server IP:%s, port:%d, fd:%d, ret:%d, errNo:%d",
+        hccp_warn_socket("connect not success, need to try again! server IP:%s, port:%d, fd:%d, ret:%d, errNo:%d",
             serverIp->readAddr, port, fd, ret, errNo);
 
         return -errNo;
@@ -337,7 +339,7 @@ out:
     clientPort = (clientIp->family == AF_INET) ? ntohs(clientAddr.sAddr.sin_port) : ntohs(clientAddr.sAddr6.sin6_port);
 
     if ((clientPort < 60000) || (clientPort > 60015)) { // HCCL默认监听60000-60015端口,如client使用该端口，记录EVENT日志
-        hccp_info("client connect success. client family %d addr %s:%u, server addr %s:%u, fd:%d", clientIp->family,
+        hccp_run_info("client connect success. client family %d addr %s:%u, server addr %s:%u, fd:%d", clientIp->family,
             clientIp->readAddr, clientPort, serverIp->readAddr, port, fd);
     } else {
         hccp_run_info("client connect success. client family %d addr %s:%u, server addr %s:%u, fd:%d", clientIp->family,
@@ -386,7 +388,7 @@ int RsFd2conn(int fd, struct RsConnInfo **conn)
 
     RS_PTHREAD_MUTEX_ULOCK(&rsCb->connCb.connMutex);
 
-    hccp_warn("cannot find conn node for fd:%d!", fd);
+    hccp_warn_socket("cannot find conn node for fd:%d!", fd);
     *conn = NULL;
 
     return -ENODEV;
@@ -400,12 +402,12 @@ int RsSslWriteInnerCheck(struct RsConnInfo *conn, int sslRet, uint64_t size)
 
     rs_ssl_err_string(fd, err);
     CHK_PRT_RETURN((err == SSL_ERROR_WANT_WRITE) || (err == SSL_ERROR_WANT_READ),
-        hccp_info("ssl_adp_write fd:%d need to retry, err:%d errno:%d", fd, err, errNo), -EAGAIN);
+        hccp_info_socket("ssl_adp_write fd:%d need to retry, err:%d errno:%d", fd, err, errNo), -EAGAIN);
     CHK_PRT_RETURN((err == SSL_ERROR_SYSCALL) && (errNo == EAGAIN || errNo == EWOULDBLOCK || errNo == EINTR),
-        hccp_info("ssl_adp_write fd:%d need to retry, err:%d errno:%d", fd, err, errNo), -EAGAIN);
+        hccp_info_socket("ssl_adp_write fd:%d need to retry, err:%d errno:%d", fd, err, errNo), -EAGAIN);
 
     // degrade log level to prevent false alarms and log flooding in heartbeat monitor scenario
-    hccp_warn("ssl_adp_write fd:%d ret:%d, size:%llu err:%d errno:%d", fd, sslRet, size, err, errNo);
+    hccp_warn_socket("ssl_adp_write fd:%d ret:%d, size:%llu err:%d errno:%d", fd, sslRet, size, err, errNo);
     return sslRet;
 }
 
@@ -433,7 +435,7 @@ int RsDrvSocketSend(int fd, const void *data, uint64_t size, int flags)
                 hccp_dbg("send to fd:%d need retry, send size:%llu, ret:%d, errno:%d", fd, size, ret, errNo);
                 ret = -EAGAIN;
             } else {
-                hccp_warn("send to fd:%d not success, send size:%llu, ret:%d, errno:%d", fd, size, ret, errNo);
+                hccp_warn_socket("send to fd:%d not success, send size:%llu, ret:%d, errno:%d", fd, size, ret, errNo);
                 ret = -EFILEOPER;
             }
         }
@@ -454,7 +456,7 @@ int RsSslReadInnerCheck(SSL *ssl, int fd, int sslRet, uint64_t size)
         hccp_dbg("ssl_adp_read fd:%d need to retry, err:%d errno:%d", fd, err, errNo), -EAGAIN);
 
     // degrade log level to prevent false alarms and log flooding in heartbeat monitor scenario
-    hccp_warn("ssl_adp_read fd:%d ret:%d, size:%llu err:%d errno:%d", fd, sslRet, size, err, errNo);
+    hccp_warn_socket("ssl_adp_read fd:%d ret:%d, size:%llu err:%d errno:%d", fd, sslRet, size, err, errNo);
     return sslRet;
 }
 
@@ -470,7 +472,7 @@ int RsDrvSocketRecv(int fd, void *data, uint64_t size, int flags)
     if (gRsCb->sslEnable == RS_SSL_ENABLE) {
         ret = RsFd2conn(fd, &conn);
         CHK_PRT_RETURN(ret,
-            hccp_warn("can not find conn for fd[%d], ret:%d, the local fd may have been closed ", fd, ret), ret);
+            hccp_warn_socket("can not find conn for fd[%d], ret:%d, the local fd may have been closed ", fd, ret), ret);
         ret = ssl_adp_read(conn->ssl, data, size);
         if (ret <= 0) {
             ret = RsSslReadInnerCheck(conn->ssl, conn->connfd, ret, size);
@@ -483,7 +485,7 @@ int RsDrvSocketRecv(int fd, void *data, uint64_t size, int flags)
             if (errNo == EAGAIN || errNo == EINTR) {
                 ret = -EAGAIN;
             } else {
-                hccp_warn("recv for fd:%d not success, recv size:%llu, ret:%d, errNo:%d", fd, size, ret, errNo);
+                hccp_warn_socket("recv for fd:%d not success, recv size:%llu, ret:%d, errNo:%d", fd, size, ret, errNo);
                 ret = -EFILEOPER;
             }
         }
@@ -500,7 +502,7 @@ void ShowConnNode(struct RsListHead *listHead)
     RS_LIST_GET_HEAD_ENTRY(connTmp, connTmp2, listHead, list, struct RsConnInfo);
     for (; (&connTmp->list) != listHead;
          connTmp = connTmp2, connTmp2 = list_entry(connTmp2->list.next, struct RsConnInfo, list)) {
-        hccp_info("current server ip: %s, client ip:%s, fd:%d, state:%d, tag:%s", connTmp->serverIp.readAddr,
+        hccp_info_socket("current server ip: %s, client ip:%s, fd:%d, state:%d, tag:%s", connTmp->serverIp.readAddr,
             connTmp->clientIp.readAddr, connTmp->connfd, connTmp->state, connTmp->tag);
     }
 }
@@ -535,7 +537,7 @@ int RsGetConnInfo(struct RsConnCb *connCb, struct SocketConnectInfo *conn, struc
     RS_PTHREAD_MUTEX_ULOCK(&connCb->connMutex);
 
     conn->tag[SOCK_CONN_TAG_SIZE - 1] = '\0';
-    hccp_warn("conn node for IP(%s) server_port(%u) tag(%s) not found", ipAddr.readAddr, serverPort, conn->tag);
+    hccp_warn_socket("conn node for IP(%s) server_port(%u) tag(%s) not found", ipAddr.readAddr, serverPort, conn->tag);
     return -ENODEV;
 }
 
@@ -558,7 +560,7 @@ int RsFindListenNode(struct RsConnCb *connCb, struct RsIpAddrInfo *ipAddr, uint3
     }
     RS_PTHREAD_MUTEX_ULOCK(&connCb->connMutex);
 
-    hccp_info("listen node for IP(%s), serverPort(%u) is not listen!", ipAddr->readAddr, serverPort);
+    hccp_info_socket("listen node for IP(%s), serverPort(%u) is not listen!", ipAddr->readAddr, serverPort);
     return -ENODEV;
 }
 
@@ -609,13 +611,13 @@ int RsListenNodeAlloc(struct RsConnCb *connCb, struct RsIpAddrInfo *ipAddr, uint
     int ret;
 
     ret = RsFindListenNode(connCb, ipAddr, serverPort, &listenInfo);
-    CHK_PRT_RETURN(ret == 0, hccp_info("listen node for IP(%s) exist! state:%u", ipAddr->readAddr, listenInfo->state),
-        -EEXIST);
+    CHK_PRT_RETURN(ret == 0,
+        hccp_info_socket("listen node for IP(%s) exist! state:%u", ipAddr->readAddr, listenInfo->state), -EEXIST);
 
     listenInfo = calloc(1, sizeof(struct RsListenInfo));
     CHK_PRT_RETURN(listenInfo == NULL, hccp_err("alloc mem for socket listen info failed!"), -ENOMEM);
 
-    hccp_info("create listen node for IP(%s)!", ipAddr->readAddr);
+    hccp_info_socket("create listen node for IP(%s)!", ipAddr->readAddr);
     listenInfo->serverIpAddr = *ipAddr;
     listenInfo->state = RS_CONN_STATE_RESET;
     ret = RsListenCreditLimitInit(listenInfo);
@@ -712,7 +714,7 @@ int RsFindWhiteListNode(struct RsWhiteList *rsSocketWhiteList, struct SocketWlis
     for (; (&whiteListTmp->list) != &rsSocketWhiteList->whiteList;
          whiteListTmp = whiteListTmp2,
          whiteListTmp2 = list_entry(whiteListTmp2->list.next, struct RsWhiteListInfo, list)) {
-        hccp_info("client_ip %s 0x%08x, expectIp %s 0x%08x", whiteListTmp->clientIp.readAddr,
+        hccp_info_socket("client_ip %s 0x%08x, expectIp %s 0x%08x", whiteListTmp->clientIp.readAddr,
             whiteListTmp->clientIp.binAddr.addr.s_addr, expectIp.readAddr, expectIp.binAddr.addr.s_addr);
         if ((!RsCompareIpAddr(&whiteListTmp->clientIp, &expectIp)) &&
             (strncmp(whiteListTmp->tag, whiteListExpect->tag, SOCK_CONN_TAG_SIZE) == 0)) {
@@ -722,7 +724,7 @@ int RsFindWhiteListNode(struct RsWhiteList *rsSocketWhiteList, struct SocketWlis
     }
 
     whiteListExpect->tag[SOCK_CONN_TAG_SIZE - 1] = '\0';
-    hccp_info("white list node for IP(%s), tag(%s) doesn't exist!", expectIp.readAddr, whiteListExpect->tag);
+    hccp_info_socket("white list node for IP(%s), tag(%s) doesn't exist!", expectIp.readAddr, whiteListExpect->tag);
     return -ENODEV;
 }
 
@@ -744,7 +746,7 @@ int RsFindWhiteList(struct RsConnCb *connCb, struct RsIpAddrInfo *serverIp, stru
     }
     RS_PTHREAD_MUTEX_ULOCK(&connCb->connMutex);
 
-    hccp_info("white list for IP(%s) doesn't exist!", serverIp->readAddr);
+    hccp_info_socket("white list for IP(%s) doesn't exist!", serverIp->readAddr);
     return -ENODEV;
 }
 
@@ -759,12 +761,12 @@ void RsSocketGetBindByChip(unsigned int chipId, bool *bindIp)
     // get chip info failed, return directly to avoid exit from batch connect
     ret = DlDrvDeviceGetIndexByPhyId(chipId, &logicId);
     if (ret != 0) {
-        hccp_warn("dl_drv_device_get_index_by_phy_id unsuccessful, ret(%d), chipId(%u)", ret, chipId);
+        hccp_warn_others("dl_drv_device_get_index_by_phy_id unsuccessful, ret(%d), chipId(%u)", ret, chipId);
         return;
     }
     ret = DlHalGetDeviceInfo(logicId, MODULE_TYPE_SYSTEM, INFO_TYPE_VERSION, &deviceInfo);
     if (ret != 0) {
-        hccp_warn("dl_hal_get_device_info unsuccessful, ret(%d), logicId(%u)", ret, logicId);
+        hccp_warn_others("dl_hal_get_device_info unsuccessful, ret(%d), logicId(%u)", ret, logicId);
         return;
     }
 
@@ -780,7 +782,7 @@ void RsSocketGetBindByChip(unsigned int chipId, bool *bindIp)
     // get chip info, chip force to bind: 910_93
     ret = DlHalGetChipInfo(logicId, &chipInfo);
     if (ret != 0) {
-        hccp_warn("dl_hal_get_chip_info unsuccessful, ret(%d), logicId(%u)", ret, logicId);
+        hccp_warn_others("dl_hal_get_chip_info unsuccessful, ret(%d), logicId(%u)", ret, logicId);
         return;
     }
     if (strncmp((char *)chipInfo.name, CHIP_NAME_910_93, sizeof(CHIP_NAME_910_93) - 1) == 0) {
@@ -814,13 +816,13 @@ bool RsSocketIsVnicIp(unsigned int chipId, unsigned int ipAddr)
     // compare ip_addr with current vnic_ip
     ret = rsGetDevIDByLocalDevID(chipId, &phyId);
     if (ret != 0) {
-        hccp_warn("rsGetDevIDByLocalDevID unsuccessful, ret(%d), chipId(%u)", ret, chipId);
+        hccp_warn_others("rsGetDevIDByLocalDevID unsuccessful, ret(%d), chipId(%u)", ret, chipId);
         return false;
     }
 
     ret = DlHalGetDeviceInfo(phyId, MODULE_TYPE_SYSTEM, INFO_TYPE_VNIC_IP, &deviceInfo);
     if (ret != 0) {
-        hccp_warn("dl_hal_get_device_info unsuccessful, ret(%d), chipId(%u), phyId(%u)", ret, chipId, phyId);
+        hccp_warn_others("dl_hal_get_device_info unsuccessful, ret(%d), chipId(%u), phyId(%u)", ret, chipId, phyId);
         return false;
     }
 
@@ -840,10 +842,10 @@ void RsConnCostTime(struct RsConnInfo *conn)
     RsGetCurTime(&conn->endTime);
     HccpTimeInterval(&conn->endTime, &conn->startTime, &timeCost);
     if (timeCost > RS_EXPECT_TIME_MAX) {
-        hccp_warn("socket [%d] connect success cost [%f] ms more than[%f]ms!", conn->connfd, timeCost,
+        hccp_warn_socket("socket [%d] connect success cost [%f] ms more than[%f]ms!", conn->connfd, timeCost,
             RS_EXPECT_TIME_MAX);
     } else {
-        hccp_info("socket [%d] connect success! cost [%f] ms", conn->connfd, timeCost);
+        hccp_info_socket("socket [%d] connect success! cost [%f] ms", conn->connfd, timeCost);
     }
 
     return;

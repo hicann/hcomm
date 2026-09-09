@@ -12,6 +12,8 @@
 #include <stdlib.h>
 #include "hccp.h"
 #include "orion_adapter_rts.h"
+#include "orion_adapter_hccp.h"
+#include "config_plf_log_v2.h"
 
 namespace Hccl {
 
@@ -208,6 +210,10 @@ HcclResult FlushHandle::DestroyLoopbackQp()
         return HCCL_SUCCESS;
     }
 
+    if (GetPlfDebugConfigValue() & PLF_RES) {
+        u32 qpn = HrtGetQpNum(qpHandle);
+        PLF_CONFIG_INFO(PLF_RES, "Destroy Qp para: qpn[%u]%s", qpn, (qpn == HRT_INVALID_QPN) ? " (invalid)" : "");
+    }
     int ret = RaQpDestroy(qpHandle);
     if (ret != 0) {
         HCCL_ERROR("[DestroyLoopbackQp] Failed to destroy QP. qpHandle=%p, error=%d", qpHandle, ret);

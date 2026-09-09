@@ -388,6 +388,8 @@ int RsGetLiteMemAttr(unsigned int phyId, unsigned int rdevIndex, unsigned int qp
 
 void RsSetCtx(unsigned int phyId) { return; }
 
+void RsSetDebugConfig(uint64_t debugConfig) { return; }
+
 int RsCreateEventHandle(int* eventHandle) { return 0; }
 
 int RsCtlEventHandle(int eventHandle, const void* fdHandle, int opcode, enum RaEpollEvent event)

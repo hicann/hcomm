@@ -198,4 +198,6 @@ int RaPeerDestroyEventHandle(int *eventHandle);
 void RaPeerMutexLock(unsigned int phyId);
 
 void RaPeerMutexUnlock(unsigned int phyId);
+
+void RaPeerSetDebugConfig(uint64_t debugConfig);
 #endif // RA_PEER_H

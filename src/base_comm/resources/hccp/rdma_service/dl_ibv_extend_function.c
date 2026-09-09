@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include "config_log.h"
 #include <pthread.h>
 #include "hccp_dl.h"
 #include "dl_ibv_extend_function.h"
@@ -113,7 +114,7 @@ int RsIbvExtendApiInit(void)
 
     ret = RsOpenIbvExtendSo();
     if (ret != 0) {
-        hccp_warn("HccpDlopen[libibv_extend.so] doesn't exist!");
+        hccp_warn_others("HccpDlopen[libibv_extend.so] doesn't exist!");
         return 0;
     }
 
@@ -157,7 +158,7 @@ struct ibv_context_extend *RsIbvOpenExtend(struct ibv_context *context)
 {
     if (gIbvExtendOps.rsIbvOpenExtend == NULL) {
 #ifndef CA_CONFIG_LLT
-        hccp_warn("rsIbvOpenExtend is null");
+        hccp_warn_others("rsIbvOpenExtend is null");
         return NULL;
 #endif
     }
@@ -241,7 +242,7 @@ int RsIbvModifyQpExtend(struct ibv_context_extend *context, struct ibv_qp_attr_e
 {
     if (gIbvExtendOps.rsIbvModifyQpExtend == NULL) {
 #ifndef CA_CONFIG_LLT
-        hccp_warn("rsIbvModifyQpExtend is null");
+        hccp_warn_others("rsIbvModifyQpExtend is null");
         return -EINVAL;
 #endif
     }
@@ -253,7 +254,7 @@ int RsIbvQueryQpSupportedHyroceFeature(struct ibv_context_extend *context, struc
 {
     if (gIbvExtendOps.rsIbvQueryQpSupportedHyroceFeature == NULL) {
 #ifndef CA_CONFIG_LLT
-        hccp_warn("rsIbvQueryQpSupportedHyroceFeature is null");
+        hccp_warn_others("rsIbvQueryQpSupportedHyroceFeature is null");
         return -EINVAL;
 #endif
     }
@@ -265,7 +266,7 @@ int RsIbvNegoQpHyroceFeature(struct ibv_context_extend *context, struct ibv_qp *
 {
     if (gIbvExtendOps.rsIbvNegoQpHyroceFeature == NULL) {
 #ifndef CA_CONFIG_LLT
-        hccp_warn("rsIbvNegoQpHyroceFeature is null");
+        hccp_warn_others("rsIbvNegoQpHyroceFeature is null");
         return -EINVAL;
 #endif
     }

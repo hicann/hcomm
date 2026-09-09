@@ -14,6 +14,7 @@
 #include <unistd.h>
 #include <errno.h>
 #include "user_log.h"
+#include "config_log.h"
 #include "ra_hdc.h"
 #include "securec.h"
 #include "ra.h"
@@ -82,8 +83,8 @@ int RaHdcSocketListenStart(unsigned int phyId, struct SocketListenInfoT conn[], 
     ret = RaHdcProcessMsg(RA_RS_SOCKET_LISTEN_START, phyId, (char *)&socketListenData,
         sizeof(union OpSocketListenData));
     CHK_PRT_RETURN(ret == -EADDRINUSE,
-        hccp_warn("[listen_start][ra_hdc_socket]ra hdc message process unsuccessful,"
-                  " ret(%d) phyId(%u)",
+        hccp_warn_socket("[listen_start][ra_hdc_socket]ra hdc message process unsuccessful,"
+                         " ret(%d) phyId(%u)",
             ret, phyId),
         ret);
     CHK_PRT_RETURN(ret != 0,
@@ -304,7 +305,7 @@ int RaHdcSocketSend(unsigned int phyId, const void *handle, const void *data, un
             ret = -EINVAL; /* 0:success; ret > 0:failed maybe drv interface return; ret < 0:failed maybe rs return */
         }
         if (ret != -EAGAIN) {
-            hccp_warn("[send][ra_hdc_socket]ra hdc message process unsuccessful, ret(%d) phyId(%u)", ret, phyId);
+            hccp_warn_socket("[send][ra_hdc_socket]ra hdc message process unsuccessful, ret(%d) phyId(%u)", ret, phyId);
         }
         realSendSize = ret;
         goto out;
@@ -339,7 +340,7 @@ int RaHdcSocketRecv(unsigned int phyId, const void *handle, void *data, unsigned
             ret = -EINVAL; /* 0:success; ret > 0:failed maybe drv interface return; ret < 0:failed maybe rs return */
         }
         if (ret != -EAGAIN) {
-            hccp_warn("[recv][ra_hdc_socket]ra hdc message process unsuccessful, ret(%d) phyId(%u)", ret, phyId);
+            hccp_warn_socket("[recv][ra_hdc_socket]ra hdc message process unsuccessful, ret(%d) phyId(%u)", ret, phyId);
         }
         realRecvSize = ret;
         goto out;
@@ -460,8 +461,8 @@ STATIC int RaHdcGetAllVnic(unsigned int curPhyId, unsigned int *vnicIp, unsigned
             ret);
 
         vnicIp[phyId] = vnicIpData.rxData.vnicIp;
-        hccp_info("vnic ipaddr:0x%x, get vnicIp:0x%x, phyId:%u, logicId:%u", vnicIpData.rxData.vnicIp, vnicIp[phyId],
-            phyId, logicId);
+        hccp_info_socket("vnic ipaddr:0x%x, get vnicIp:0x%x, phyId:%u, logicId:%u", vnicIpData.rxData.vnicIp,
+            vnicIp[phyId], phyId, logicId);
     }
 
     return 0;

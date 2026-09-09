@@ -115,6 +115,7 @@ global:
     RaHdcSendWrVerbs;
     RaHdcSendWrlist;
     RaHdcSendWrlistExt;
+    RaHdcSetDebugConfig;
     RaHdcSetQpAttrQos;
     RaHdcSetQpAttrRetryCnt;
     RaHdcSetQpAttrTimeout;

@@ -25,6 +25,7 @@
 #include "exception_util.h"
 #include "adapter_error_manager_pub.h"
 #include "hccl_log_keywords.h"
+#include "config_plf_log_v2.h"
 
 using namespace std;
 
@@ -209,6 +210,29 @@ void HrtRaTlvDeInit(void* tlv_handle)
     }
 }
 
+// hccp 模块日志掩码，bit0~bit3 依次对应 INIT/RDMA_OP/SOCKET_OP/OTHERS（见 ra_rs_opcode.h 的 ModuleType）
+constexpr u64 HCCP_DEBUG_ALL_MODULES = (1ULL << 0) | (1ULL << 1) | (1ULL << 2) | (1ULL << 3);
+
+static void SetHccpDebugConfig(HrtNetworkMode mode, uint32_t phyId)
+{
+    auto modeIter = HRT_NETWORK_MODE_MAP.find(mode);
+    if (modeIter == HRT_NETWORK_MODE_MAP.end()) {
+        HCCL_ERROR("[SetHccpDebugConfig] invalid network mode[%u], skip debug config.", mode);
+        return;
+    }
+    struct RaInfo debugInfo {};
+    debugInfo.mode = modeIter->second;
+    debugInfo.phyId = phyId;
+    u64 hccpDebugConfig = 0;
+    if (GetPlfDebugConfigValue() & PLF_CHANNEL) {
+        hccpDebugConfig = HCCP_DEBUG_ALL_MODULES;
+    }
+    s32 ret = RaSetDebugConfig(&debugInfo, hccpDebugConfig);
+    if (ret != 0) {
+        HCCL_WARNING("[SetHccpDebugConfig] RaSetDebugConfig failed, ret[%d], mode[%u], phyId[%u].", ret, mode, phyId);
+    }
+}
+
 void HrtRaInit(HRaInitConfig& cfg)
 {
     HCCL_INFO("[Init][Ra] Input params: phyId=[%u], mode=[%u]", cfg.phyId, cfg.mode);
@@ -247,6 +271,7 @@ void HrtRaInit(HRaInitConfig& cfg)
         }
     }
     HCCL_INFO("init ra success,return: ret[%d]", ret);
+    SetHccpDebugConfig(cfg.mode, cfg.phyId);
 }
 
 void HrtRaDeInit(HRaInitConfig& cfg)
@@ -911,7 +936,7 @@ u32 HrtRaSocketGetWhiteListStatus()
 void HrtRaSocketWhiteListAdd(SocketHandle socketHandle, vector<RaSocketWhitelist>& wlists)
 {
     CHECK_NULLPTR(socketHandle, "[HrtRaSocketWhiteListAdd] socketHandle is nullptr!");
-    HCCL_INFO("[HrtRaSocketWhiteListAdd] Input params: socketHandle=%p", socketHandle);
+    PLF_CONFIG_INFO(PLF_CHANNEL, "[HrtRaSocketWhiteListAdd] Input params: socketHandle=%p", socketHandle);
 
     vector<struct SocketWlistInfoT> wlistInfoVec;
     wlistInfoVec.reserve(MAX_NUM_OF_WHITE_LIST_NUM);
@@ -961,7 +986,7 @@ void HrtRaSocketWhiteListAdd(SocketHandle socketHandle, vector<RaSocketWhitelist
 void HrtRaSocketWhiteListDel(SocketHandle socketHandle, vector<RaSocketWhitelist>& wlists)
 {
     CHECK_NULLPTR(socketHandle, "[HrtRaSocketWhiteListDel] socketHandle is nullptr!");
-    HCCL_INFO("[HrtRaSocketWhiteListDel] Input params: socketHandle=%p", socketHandle);
+    PLF_CONFIG_INFO(PLF_CHANNEL, "[HrtRaSocketWhiteListDel] Input params: socketHandle=%p", socketHandle);
 
     vector<struct SocketWlistInfoT> wlistInfoVec;
     wlistInfoVec.reserve(MAX_NUM_OF_WHITE_LIST_NUM);
@@ -1261,12 +1286,34 @@ QpHandle HrtRaQpCreate(RdmaHandle rdmaHandle, int flag, int qpMode)
     return connHandle;
 }
 
+u32 HrtGetQpNum(QpHandle qpHandle)
+{
+    struct QpAttr attr {};
+    if (qpHandle == nullptr || RaGetQpAttr(qpHandle, &attr) != 0) {
+        HCCL_ERROR("[HrtGetQpNum] RaGetQpAttr failed, qpHandle[%p].", qpHandle);
+        return HRT_INVALID_QPN;
+    }
+    return attr.qpn;
+}
+
+static u32 HrtGetJettyQpNum(void* ctxQpHandle)
+{
+    if (ctxQpHandle == nullptr) {
+        return HRT_INVALID_QPN;
+    }
+    return *reinterpret_cast<const u32*>(ctxQpHandle);
+}
+
 void HrtRaQpDestroy(QpHandle qpHandle)
 {
     CHECK_NULLPTR(qpHandle, "[HrtRaQpDestroy] qpHandle is nullptr!");
     HCCL_INFO("[HrtRaQpDestroy] Input params: qpHandle=%p", qpHandle);
     auto startTime = std::chrono::steady_clock::now();
     auto timeout = std::chrono::seconds(EnvLinkTimeoutGet());
+    if (GetPlfDebugConfigValue() & PLF_RES) {
+        u32 qpn = HrtGetQpNum(qpHandle);
+        PLF_CONFIG_INFO(PLF_RES, "Destroy Qp para: qpn[%u]%s", qpn, (qpn == HRT_INVALID_QPN) ? " (invalid)" : "");
+    }
     while (true) {
         s32 ret = RaQpDestroy(qpHandle);
         if (ret == 0) {
@@ -1812,6 +1859,7 @@ HrtRaUbJettyCreatedOutParam HrtRaUbCreateJetty(RdmaHandle handle, const HrtRaUbC
         string msg = StringFormat("ubCreateJetty failed, rdmaHandle=%p,", handle);
         MACRO_THROW(NetworkApiException, msg);
     }
+    PLF_CONFIG_INFO(PLF_RES, "Create Qp para: qpn[%u]", info.ub.id);
 
     HrtRaUbJettyCreatedOutParam out;
     out.handle = reinterpret_cast<JettyHandle>(qpHandle);
@@ -1837,6 +1885,10 @@ HrtRaUbJettyCreatedOutParam HrtRaUbCreateJetty(RdmaHandle handle, const HrtRaUbC
 void HrtRaUbDestroyJetty(JettyHandle jettyHandle)
 {
     HCCL_INFO("[HrtRaUbDestroyJetty] Input params: jettyHandle=0x%llx", jettyHandle);
+    if (GetPlfDebugConfigValue() & PLF_RES) {
+        u32 qpn = HrtGetJettyQpNum(reinterpret_cast<void*>(jettyHandle));
+        PLF_CONFIG_INFO(PLF_RES, "Destroy Qp para: qpn[%u]%s", qpn, (qpn == HRT_INVALID_QPN) ? " (invalid)" : "");
+    }
     s32 ret = RaCtxQpDestroy(reinterpret_cast<void*>(jettyHandle));
     if (ret != 0) {
         string msg = StringFormat("ubDestroyJetty failed, jettyHandle=0x%llx", jettyHandle);
@@ -2371,7 +2423,6 @@ RaSocketFdHandleParam RaGetOneSocket(u32 role, RaSocketGetParam& param)
                 "than expected[%u], role[%u], num[%u], connectednum[%u]",
                 __func__, connectedNum, SOCKET_NUM_ONE, sockRet, role, SOCKET_NUM_ONE, connectedNum));
     }
-
     return RaSocketFdHandleParam(socketInfo.fdHandle, socketInfo.status);
 }
 
@@ -2399,9 +2450,10 @@ RequestHandle HrtRaSocketRecvAsync(const FdHandle fdHandle, void* data, u32 size
 {
     CHECK_NULLPTR(fdHandle, "[HrtRaSocketRecvAsync] fdHandle is nullptr!");
     CHECK_NULLPTR(data, "[HrtRaSocketRecvAsync] data is nullptr!");
-    HCCL_INFO(
-        "[HrtRaSocketRecvAsync] Input params: fdHandle=%p, data=%p, size=%u, recvSize=%llu", fdHandle, data, size,
-        recvSize);
+    PLF_CONFIG_INFO(
+        PLF_CHANNEL, "[HrtRaSocketRecvAsync] Input params: fdHandle=%p, data=%p, size=%u, recvSize=%llu", fdHandle,
+        data, size, recvSize);
+
     void* raReqHandle = nullptr;
     s32 ret = RaSocketRecvAsync(fdHandle, data, size, &recvSize, &raReqHandle);
     if (ret != 0 || !raReqHandle) {
@@ -2411,7 +2463,6 @@ RequestHandle HrtRaSocketRecvAsync(const FdHandle fdHandle, void* data, u32 size
                                      "raReqHandle[%p], fdHandle[%p], data[%p], size[%u], recvSize[%u].",
                                      __func__, ret, raReqHandle, fdHandle, data, size, recvSize));
     }
-
     return reinterpret_cast<RequestHandle>(raReqHandle);
 }
 
@@ -2494,8 +2545,8 @@ RequestHandle RaUbCreateJettyAsync(
                                      __func__, ret, raReqHandle, handle));
     }
     attr.ub.tokenValue = 0;
-    HCCL_INFO(
-        "[%s] RaCtxQpCreateAsync success, reqHandle[%llu] jettyHandle[%p].", __func__,
+    PLF_CONFIG_INFO(
+        PLF_RES, "Create RaCtxQpCreateAsync success, reqHandle[%llu] jettyHandle[%p].",
         reinterpret_cast<RequestHandle>(raReqHandle), jettyHandle);
     return reinterpret_cast<RequestHandle>(raReqHandle);
 }
@@ -2514,8 +2565,8 @@ RequestHandle RaUbDestroyJettyAsync(void* jettyHandle)
                                      __func__, ret, raReqHandle, jettyHandle));
     }
 
-    HCCL_INFO(
-        "[%s] RaCtxQpDestroyAsync success, reqHandle[%llu] jettyHandle[%p].", __func__,
+    PLF_CONFIG_INFO(
+        PLF_RES, "Destroy RaCtxQpDestroyAsync success, reqHandle[%llu] jettyHandle[%p].",
         reinterpret_cast<RequestHandle>(raReqHandle), jettyHandle);
     return reinterpret_cast<RequestHandle>(raReqHandle);
 }
@@ -2893,6 +2944,10 @@ HcclResult HrtRaNormalQpCreate(RdmaHandle rdmaHandle, QpInfo& qp)
             "[Create][NormalQp]errNo[0x%016llx] RaNormalQpCreate fail. return[%d], params: rdmaHandle[%p], context[%p]",
             HCCL_ERROR_CODE(HCCL_E_NETWORK), ret, rdmaHandle, qp.context),
         HCCL_E_NETWORK);
+    if (GetPlfDebugConfigValue() & PLF_RES) {
+        u32 qpn = HrtGetQpNum(qp.qpHandle);
+        PLF_CONFIG_INFO(PLF_RES, "Create Qp para: qpn[%u]%s", qpn, (qpn == HRT_INVALID_QPN) ? " (invalid)" : "");
+    }
     return HCCL_SUCCESS;
 }
 
@@ -2900,6 +2955,10 @@ HcclResult HrtRaNormalQpDestroy(QpHandle qpHandle)
 {
     CHK_PTR_NULL(qpHandle);
     HCCL_INFO("[HrtRaNormalQpDestroy] Input params: qpHandle=%p", qpHandle);
+    if (GetPlfDebugConfigValue() & PLF_RES) {
+        u32 qpn = HrtGetQpNum(qpHandle);
+        PLF_CONFIG_INFO(PLF_RES, "Destroy Qp para: qpn[%u]%s", qpn, (qpn == HRT_INVALID_QPN) ? " (invalid)" : "");
+    }
     s32 ret = RaNormalQpDestroy(qpHandle);
     CHK_PRT_RET(
         ret != 0,
@@ -3074,6 +3133,13 @@ HcclResult HrtRaCtxQpDestoryBatch(
         void* raReqHandle = nullptr;
         delNum = min(qp_handle.size(), static_cast<size_t>(MAX_DELETE_JETTY_NUMS));
         del_qp_handle.assign(qp_handle.begin(), qp_handle.begin() + delNum);
+        if (GetPlfDebugConfigValue() & PLF_RES) {
+            for (void* qp : del_qp_handle) {
+                u32 qpn = HrtGetJettyQpNum(qp);
+                PLF_CONFIG_INFO(
+                    PLF_RES, "Destroy Qp para: qpn[%u]%s", qpn, (qpn == HRT_INVALID_QPN) ? " (invalid)" : "");
+            }
+        }
         auto ret = RaCtxQpDestroyBatchAsync(handle, del_qp_handle.data(), &delNum, &raReqHandle);
         if (ret != 0) {
             HCCL_ERROR("[%s] failed, ret is [%d].", __func__, ret);

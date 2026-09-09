@@ -10,6 +10,7 @@
 
 #include "securec.h"
 #include "user_log.h"
+#include "config_log.h"
 #include "ra_rs_comm.h"
 #include "ra_rs_err.h"
 #include "hccp_tlv.h"
@@ -30,13 +31,13 @@ int RaHdcTlvInit(struct RaTlvHandle *tlvHandle)
         opCode = RA_RS_TLV_INIT;
     } else {
         ret = -ENOTSUPP;
-        hccp_warn("[init][ra_hdc_tlv]ra tlv init version not support, phy_id(%u)", phyId);
+        hccp_warn_init("[init][ra_hdc_tlv]ra tlv init version not support, phy_id(%u)", phyId);
         return ret;
     }
 
     ret = RaHdcProcessMsg(opCode, phyId, (char *)&tlvData, sizeof(union OpTlvInitData));
     CHK_PRT_RETURN(ret == -ENOTSUPP,
-        hccp_warn("[init][ra_hdc_tlv]ra hdc message process unsuccessful ret(%d) phy_id(%u)", ret, phyId), ret);
+        hccp_warn_init("[init][ra_hdc_tlv]ra hdc message process unsuccessful ret(%d) phy_id(%u)", ret, phyId), ret);
     CHK_PRT_RETURN(ret != 0, hccp_err("[init][ra_hdc_tlv]ra hdc message process failed ret(%d) phy_id(%u)", ret, phyId),
         ret);
 
@@ -79,7 +80,7 @@ STATIC int RaHdTlvRequestForSendNullMsg(unsigned int phyId, union OpTlvRequestDa
 
     ret = RaHdcProcessMsg(opTlvCommon.txData.opcode, phyId, tlvData, opTlvCommon.txData.size);
     CHK_PRT_RETURN(ret == -EUSERS || ret == -ENOTSUPP,
-        hccp_warn("[request][ra_hdc_tlv]hdc message process unsuccessful ret(%d) phy_id(%u)", ret, phyId), ret);
+        hccp_warn_others("[request][ra_hdc_tlv]hdc message process unsuccessful ret(%d) phy_id(%u)", ret, phyId), ret);
     CHK_PRT_RETURN(ret != 0, hccp_err("[request][ra_hdc_tlv]hdc message process failed ret(%d) phy_id(%u)", ret, phyId),
         ret);
 
@@ -160,7 +161,7 @@ int RaHdcTlvRequest(struct RaTlvHandle *tlvHandle, unsigned int moduleType, stru
 
         ret = RaHdcProcessMsg(opTlvCommon.txData.opcode, phyId, opTlvCommon.txData.tlvData, opTlvCommon.txData.size);
         if (ret == -EUSERS || ret == -ENOTSUPP) {
-            hccp_warn("[request][ra_hdc_tlv]hdc message process unsuccessful ret(%d) phy_id(%u)", ret, phyId);
+            hccp_warn_others("[request][ra_hdc_tlv]hdc message process unsuccessful ret(%d) phy_id(%u)", ret, phyId);
             ret = -ESAFEFUNC;
             goto out;
         } else if (ret != 0) {

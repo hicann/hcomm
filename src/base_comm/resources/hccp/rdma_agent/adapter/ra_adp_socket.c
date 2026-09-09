@@ -13,6 +13,7 @@
 #include <sys/prctl.h>
 #include "securec.h"
 #include "user_log.h"
+#include "config_log.h"
 #include "ra_comm.h"
 #include "ra_hdc_socket.h"
 #include "ra_rs_comm.h"
@@ -146,7 +147,7 @@ int RaRsSocketListenStart(char *inBuf, char *outBuf, int *outLen, int *opResult,
     }
     *opResult = gSocketOps.socketListenStart((socketListenData->txData).conn, (socketListenData->txData).num);
     if (*opResult == -EADDRINUSE) {
-        hccp_warn("socket listen start unsuccessful ret[%d]", *opResult);
+        hccp_warn_socket("socket listen start unsuccessful ret[%d]", *opResult);
         return 0;
     } else if (*opResult != 0) {
         hccp_err("socket listen start failed ret[%d]", *opResult);
@@ -234,7 +235,7 @@ int RaRsSocketSend(char *inBuf, char *outBuf, int *outLen, int *opResult, int rc
         if (sendLen == -EAGAIN) {
             hccp_dbg("socket send need retry, ret[%d]", sendLen);
         } else {
-            hccp_warn("send unsuccessful, sendLen[%d] expect greater than 0.", sendLen);
+            hccp_warn_socket("send unsuccessful, sendLen[%d] expect greater than 0.", sendLen);
         }
     }
 
@@ -483,7 +484,7 @@ int RaRsGetVnicIp(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcv
     }
 
     vnicIpDataRet = (union OpGetVnicIpData *)(outBuf + sizeof(struct MsgHead));
-    hccp_info("rs get vnic_ip, phyId %d, vnicIp 0x%x", vnicIpData->txData.phyId, vnicIp);
+    hccp_info_socket("rs get vnic_ip, phyId %d, vnicIp 0x%x", vnicIpData->txData.phyId, vnicIp);
     vnicIpDataRet->rxData.vnicIp = vnicIp;
     return 0;
 }

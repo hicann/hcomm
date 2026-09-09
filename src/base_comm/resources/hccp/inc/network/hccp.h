@@ -1130,6 +1130,16 @@ HCCP_ATTRI_VISI_DEF int RaRestoreSnapshot(struct RaInfo *info);
  */
 HCCP_ATTRI_VISI_DEF int RaGetSecRandom(struct RaInfo *info, uint32_t *value);
 
+/**
+ * @ingroup libcommon
+ * @brief ra set debug config
+ * @param info [IN] see struct RaInfo
+ * @param debugConfig [IN] debug config mask
+ * @retval #zero Success
+ * @retval #non-zero Failure
+ */
+HCCP_ATTRI_VISI_DEF int RaSetDebugConfig(struct RaInfo *info, uint64_t debugConfig);
+
 #ifdef __cplusplus
 }
 #endif

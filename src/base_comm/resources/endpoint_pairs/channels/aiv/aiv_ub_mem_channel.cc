@@ -9,6 +9,7 @@
  */
 
 #include "aiv_ub_mem_channel.h"
+#include "endpoint.h"
 
 namespace hcomm {
 
@@ -19,6 +20,9 @@ AivUbMemChannel::AivUbMemChannel(EndpointHandle endpointHandle, const HcommChann
 
 HcclResult AivUbMemChannel::ParseInputParam()
 {
+    Endpoint* localEpPtr = static_cast<Endpoint*>(endpointHandle_);
+    CHK_PTR_NULL(localEpPtr);
+    localEp_ = localEpPtr->GetEndpointDesc();
     socket_ = static_cast<Hccl::Socket*>(channelDesc_.socket);
     return HCCL_SUCCESS;
 }
@@ -39,7 +43,10 @@ HcclResult AivUbMemChannel::Init()
     return HCCL_SUCCESS;
 }
 
-ChannelStatus AivUbMemChannel::GetStatus() { return Channel::TransportStatusToChannelStatus(transport_->GetStatus()); }
+ChannelStatus AivUbMemChannel::GetStatus()
+{
+    return Channel::TransportStatusToChannelStatus(transport_->GetStatus(), localEp_, GetChannelDesc());
+}
 
 HcclResult AivUbMemChannel::GetNotifyNum([[maybe_unused]] uint32_t* notifyNum) const
 {

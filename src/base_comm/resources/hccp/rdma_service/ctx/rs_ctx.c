@@ -10,6 +10,7 @@
 
 #include "securec.h"
 #include "aubdfx_api.h"
+#include "config_log.h"
 #include "dl_hal_function.h"
 #include "dl_ibverbs_function.h"
 #include "dl_urma_function.h"
@@ -43,7 +44,7 @@ int RsGetChipProtocol(unsigned int chipId, enum NetworkMode hccpMode, enum Proto
 
     ret = DlHalGetChipInfo(logicId, &chipInfo);
     CHK_PRT_RETURN(ret != 0,
-        hccp_warn("hal get chip info unsuccessful, chipId[%u], logicId[%u], ret[%d]", chipId, logicId, ret), 0);
+        hccp_warn_rma("hal get chip info unsuccessful, chipId[%u], logicId[%u], ret[%d]", chipId, logicId, ret), 0);
 
     if ((strncmp((char *)chipInfo.name, CHIP_NAME_950, sizeof(CHIP_NAME_950) - 1) == 0) ||
         (strncmp((char *)chipInfo.name, CHIP_NAME_960, sizeof(CHIP_NAME_960) - 1) == 0)) {

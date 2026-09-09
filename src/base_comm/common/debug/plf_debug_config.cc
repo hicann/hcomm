@@ -49,6 +49,8 @@ static u64 ParseDebugConfig(const char* envName, u64 domainMask)
             mask = PLF_RES;
         } else if (((domainMask & PLF_DATA_OP) != 0) && strcasecmp(subConfig.c_str(), "DATA_OP") == 0) {
             mask = PLF_DATA_OP;
+        } else if (((domainMask & PLF_CHANNEL) != 0) && strcasecmp(subConfig.c_str(), "CHANNEL") == 0) {
+            mask = PLF_CHANNEL;
         } else {
             HCCL_ERROR("%s:%s subConfig:%s is not supported", envName, env, subConfig.c_str());
             return 0;
@@ -62,7 +64,7 @@ static u64 ParseDebugConfig(const char* envName, u64 domainMask)
 void EnvPlfDebugConfig::Parse()
 {
     plfDebugConfig_ = ParseDebugConfig("HCCL_DEBUG_CONFIG", PLF_TASK | PLF_ALG | PLF_RES);
-    plfDebugConfig_ |= ParseDebugConfig("HCOMM_DEBUG_CONFIG", PLF_TASK | PLF_DATA_OP);
+    plfDebugConfig_ |= ParseDebugConfig("HCOMM_DEBUG_CONFIG", PLF_TASK | PLF_DATA_OP | PLF_RES | PLF_CHANNEL);
     HCCL_RUN_INFO("[HCCL_ENV] plfDebugConfig set to [0x%llx]", plfDebugConfig_);
 }
 
