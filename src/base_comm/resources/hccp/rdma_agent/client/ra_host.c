@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include "config_log.h"
 #include <sys/epoll.h>
 #include <stdlib.h>
 #include <string.h>
@@ -584,6 +585,7 @@ HCCP_ATTRI_VISI_DEF int RaRdevInitV2(struct RdevInitInfo initInfo, struct rdev r
 HCCP_ATTRI_VISI_DEF int RaRdevInit(int mode, unsigned int notifyType, struct rdev rdevInfo, void **rdmaHandle)
 {
     struct RdevInitInfo initInfo = {0};
+
     initInfo.mode = mode;
     initInfo.notifyType = notifyType;
     initInfo.disabledLiteThread = false; // will start lite thread by default
@@ -750,7 +752,7 @@ HCCP_ATTRI_VISI_DEF int RaSocketBatchClose(struct SocketCloseInfoT conn[], unsig
         socketHandle = (struct RaSocketHandle *)conn[i].socketHandle;
         if (socketHandle == NULL || socketHandle->socketOps == NULL ||
             socketHandle->socketOps->raSocketBatchClose == NULL) {
-            hccp_warn("[batch_close][ra_socket]socket_handle or func is NULL, no need to close");
+            hccp_warn_socket("[batch_close][ra_socket]socket_handle or func is NULL, no need to close");
             return 0;
         }
         phyId = socketHandle->rdevInfo.phyId;
@@ -960,7 +962,7 @@ HCCP_ATTRI_VISI_DEF int RaSocketRecv(const void *fdHandle, void *data, unsigned 
         *receivedSize = (unsigned long long)(unsigned int)ret;
         return 0;
     } else if (ret == 0) {
-        hccp_warn("[recv][ra_socket]socket has been closed. received_size is 0");
+        hccp_warn_socket("[recv][ra_socket]socket has been closed. received_size is 0");
         ret = -ESOCKCLOSED;
     }
 
@@ -997,7 +999,7 @@ HCCP_ATTRI_VISI_DEF int RaSocketSend(const void *fdHandle, const void *data, uns
         *sentSize = (unsigned long long)(unsigned int)ret;
         return 0;
     } else if (ret == 0) {
-        hccp_warn("[send][ra_socket]socket has been closed. sent_size is 0");
+        hccp_warn_socket("[send][ra_socket]socket has been closed. sent_size is 0");
         ret = -ESOCKCLOSED;
     }
 
@@ -1086,7 +1088,7 @@ HCCP_ATTRI_VISI_DEF int RaGetTsqpDepth(void *rdevHandle, unsigned int *tempDepth
             phyId, RA_MAX_PHY_ID_NUM),
         ConverReturnCode(RDMA_OP, -EINVAL));
 
-    hccp_info("Input parameters: phyId[%u], rdevIndex[%u]", phyId, rdmaHandleTmp->rdevIndex);
+    hccp_info_rma("Input parameters: phyId[%u], rdevIndex[%u]", phyId, rdmaHandleTmp->rdevIndex);
 
     ret = rdmaHandleTmp->rdmaOps->raGetTsqpDepth(rdmaHandleTmp, tempDepth, qpNum);
     return ConverReturnCode(RDMA_OP, ret);
@@ -1560,7 +1562,7 @@ HCCP_ATTRI_VISI_DEF int RaSocketGetWhiteListStatus(unsigned int *enable)
         ConverReturnCode(SOCKET_OP, -EINVAL));
 
     *enable = gWhiteListSwitch;
-    hccp_info("white list status: enable[%u]", *enable);
+    hccp_info_socket("white list status: enable[%u]", *enable);
     return 0;
 }
 
@@ -1603,7 +1605,7 @@ HCCP_ATTRI_VISI_DEF int RaSocketWhiteListAdd(void *socketHandle, struct SocketWl
         hccp_err("[add][ra_socket_white_list]phyId(%u) must be smaller than %u", phyId, RA_MAX_PHY_ID_NUM),
         ConverReturnCode(SOCKET_OP, -EINVAL));
 
-    hccp_info("Input parameters: phyId[%u], localIp[%s], num[%u]", phyId, localIp, num);
+    hccp_info_socket("Input parameters: phyId[%u], localIp[%s], num[%u]", phyId, localIp, num);
 
     ret = socketHandleTmp->socketOps->raSocketWhiteListAdd(socketHandleTmp->rdevInfo, whiteList, num);
     return ConverReturnCode(SOCKET_OP, ret);
@@ -1638,7 +1640,7 @@ HCCP_ATTRI_VISI_DEF int RaSocketWhiteListDel(void *socketHandle, struct SocketWl
         return ConverReturnCode(SOCKET_OP, -EINVAL);
     }
 
-    hccp_info("Input parameters: phyId[%u], localIp[%s], num[%u]", phyId, localIp, num);
+    hccp_info_socket("Input parameters: phyId[%u], localIp[%s], num[%u]", phyId, localIp, num);
 
     ret = socketHandleTmp->socketOps->raSocketWhiteListDel(socketHandleTmp->rdevInfo, whiteList, num);
     return ConverReturnCode(SOCKET_OP, ret);
@@ -1847,7 +1849,7 @@ int ConverReturnCode(enum ModuleType module, int erroCode)
     }
 
     if (erroCode != -EAGAIN) { // 防止刷屏
-        hccp_info("ConverReturnCode: orig_errcode[%d] curr_errcode[%d]", erroCode, ret);
+        hccp_info_others("ConverReturnCode: orig_errcode[%d] curr_errcode[%d]", erroCode, ret);
     }
     return ret;
 }
@@ -2175,7 +2177,7 @@ HCCP_ATTRI_VISI_DEF int RaGetQpAttr(void *qpHandle, struct QpAttr *attr)
     if (raQpHandle->rdmaOps != NULL && raQpHandle->rdmaOps->raGetQpHyperFeature != NULL) {
         ret = raQpHandle->rdmaOps->raGetQpHyperFeature(raQpHandle, &attr->feature);
         if (ret != 0) {
-            hccp_warn("[get][GetQpAttr]raGetQpHyperFeature unsuccessful, ret:%d phyId:%u qpn:%u", ret,
+            hccp_warn_rma("[get][GetQpAttr]raGetQpHyperFeature unsuccessful, ret:%d phyId:%u qpn:%u", ret,
                 raQpHandle->phyId, raQpHandle->qpn);
         }
     }

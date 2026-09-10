@@ -92,6 +92,7 @@ global:
     RaPeerSetQpAttrRetryCnt;
     RaPeerSetQpAttrTimeout;
     RaPeerSetQpLbValue;
+    RaPeerSetDebugConfig;
     RaPeerSetTcpRecvCallback;
     RaPeerSetTsqpDepth;
     RaPeerSocketAcceptCreditAdd;

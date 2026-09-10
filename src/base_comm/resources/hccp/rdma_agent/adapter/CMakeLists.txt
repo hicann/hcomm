@@ -21,6 +21,7 @@ set(ra_adp_list
     ${BASIC_PATH}/rdma_agent/adapter/ctx/ra_adp_ctx.c
     ${BASIC_PATH}/common/dl_hal_function.c
     ${BASIC_PATH}/common/ascend_hal_dl.c
+    ${BASIC_PATH}/inc/private/network/log/config_log.c
     $<$<STREQUAL:${PRODUCT_SIDE},device>:${TLV_DIR}/ra_adp_tlv.c>
 )
 
@@ -36,6 +37,7 @@ target_compile_definitions(ra_adp PRIVATE
 target_include_directories(ra_adp PRIVATE
     ${BASIC_PATH}/inc/network
     ${BASIC_PATH}/inc/private/network
+    ${BASIC_PATH}/inc/private/network/log
     ${BASIC_PATH}/rdma_agent/inc
     ${BASIC_PATH}/rdma_agent/hdc/
     ${BASIC_PATH}/rdma_agent/hdc/async/

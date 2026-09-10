@@ -9,6 +9,7 @@
  */
 
 #define _GNU_SOURCE
+#include "config_log.h"
 #include <unistd.h>
 #include <stdlib.h>
 #include <dlfcn.h>
@@ -130,8 +131,8 @@ STATIC void RsRdmaRetryTimeoutExceptionCheck(struct SensorNode *sensorNode, stru
 
     ret = RsRetryTimeoutExceptionCheck(sensorNode);
 
-    hccp_warn("update sensor state logic_devid(%u), qpn(%u), sensorUpdateCnt(%d), ret(%d)\n", sensorNode->logicDevid,
-        wc->qp_num, sensorNode->sensorUpdateCnt, ret);
+    hccp_warn_rma("update sensor state logic_devid(%u), qpn(%u), sensorUpdateCnt(%d), ret(%d)\n",
+        sensorNode->logicDevid, wc->qp_num, sensorNode->sensorUpdateCnt, ret);
 }
 
 STATIC void RsCqeCallbackProcess(struct RsQpCb *qpCb, struct ibv_wc *wc, struct ibv_cq *evCq)
@@ -166,11 +167,11 @@ void RsDrvPollSrqCqHandle(struct RsQpCb *qpCb)
 
     struct event_summary *evCtxTmp = (struct event_summary *)evCtx;
     if ((int)evCtxTmp->event_id != INVALID_EVENT) {
-        hccp_info("SubmitEvent: event id:%d, pid:%d, grp id:%u, dev id:%u", evCtxTmp->event_id, evCtxTmp->pid,
+        hccp_info_rma("SubmitEvent: event id:%d, pid:%d, grp id:%u, dev id:%u", evCtxTmp->event_id, evCtxTmp->pid,
             evCtxTmp->grp_id, qpCb->rdevCb->rsCb->chipId);
         int ret = DlHalEschedSubmitEvent(qpCb->rdevCb->rsCb->chipId, evCtx);
         if (ret) {
-            hccp_warn("halEschedSubmitEvent unsuccessful, ret:%d", ret);
+            hccp_warn_rma("halEschedSubmitEvent unsuccessful, ret:%d", ret);
         }
     }
 
@@ -202,11 +203,11 @@ void RsDrvPollCqHandle(struct RsQpCb *qpCb)
     if (evCtx != NULL) {
         struct event_summary *evCtxTmp = (struct event_summary *)evCtx;
         if ((int)(evCtxTmp->event_id) != INVALID_EVENT) {
-            hccp_info("SubmitEvent: event id:%d, pid:%d, grp id:%u, dev id:%u", evCtxTmp->event_id, evCtxTmp->pid,
+            hccp_info_rma("SubmitEvent: event id:%d, pid:%d, grp id:%u, dev id:%u", evCtxTmp->event_id, evCtxTmp->pid,
                 evCtxTmp->grp_id, qpCb->rdevCb->rsCb->chipId);
             int ret = DlHalEschedSubmitEvent(qpCb->rdevCb->rsCb->chipId, evCtx);
             if (ret) {
-                hccp_warn("halEschedSubmitEvent unsuccessful, ret:%d", ret);
+                hccp_warn_rma("halEschedSubmitEvent unsuccessful, ret:%d", ret);
             }
         }
         return;
@@ -269,7 +270,7 @@ int RsDrvGetGidIndex(struct RsRdevCb *rdevCb, struct ibv_port_attr *attr, int *i
 
     // link maybe suffer from intermittent disconnection, should continue process
     if (attr->state != IBV_PORT_ACTIVE) {
-        hccp_warn("port number %u state is %s", rdevCb->ibPort, portStates[attr->state]);
+        hccp_warn_rma("port number %u state is %s", rdevCb->ibPort, portStates[attr->state]);
     }
 
     for (i = 0; i < attr->gid_tbl_len; i++) {
@@ -343,7 +344,7 @@ int RsDrvCreateCqWithAttrs(struct RsQpCb *qpCb, int isExt, struct CqExtAttr *cqA
     if (isExt == 1) {
         qpCb->ibSendCq = RsIbvExpCreateCq(qpCb->rdevCb->ibCtx, cqAttr->sendCqDepth, NULL, channel, sendEqNum, &attr,
             &qpCb->qpResp.sendCqData);
-        hccp_info("rs_ibv_exp_create_cq ibSendCq");
+        hccp_info_rma("rs_ibv_exp_create_cq ibSendCq");
     } else {
         qpCb->ibSendCq = RsIbvCreateCq(qpCb->rdevCb->ibCtx, cqAttr->sendCqDepth, NULL, channel, sendEqNum);
     }
@@ -354,7 +355,7 @@ int RsDrvCreateCqWithAttrs(struct RsQpCb *qpCb, int isExt, struct CqExtAttr *cqA
     if (isExt == 1) {
         qpCb->ibRecvCq = RsIbvExpCreateCq(qpCb->rdevCb->ibCtx, cqAttr->recvCqDepth, NULL, channel, recvEqNum, &attr,
             &qpCb->qpResp.recvCqData);
-        hccp_info("rs_ibv_exp_create_cq ibRecvCq");
+        hccp_info_rma("rs_ibv_exp_create_cq ibRecvCq");
     } else {
         qpCb->ibRecvCq = RsIbvCreateCq(qpCb->rdevCb->ibCtx, cqAttr->recvCqDepth, NULL, channel, recvEqNum);
     }
@@ -366,7 +367,7 @@ int RsDrvCreateCqWithAttrs(struct RsQpCb *qpCb, int isExt, struct CqExtAttr *cqA
         return -ENOMEM;
     }
 
-    hccp_info("create cq success");
+    hccp_info_rma("create cq success");
     return 0;
 }
 
@@ -421,7 +422,7 @@ int RsDrvQpStateModifytoReset(struct RsQpCb *qpCb)
         return ret;
     }
 
-    hccp_info("qpn[%d] modify to reset success", qpCb->qpInfoLo.qpn);
+    hccp_info_rma("qpn[%d] modify to reset success", qpCb->qpInfoLo.qpn);
     return 0;
 }
 
@@ -436,7 +437,7 @@ int RsDrvQpStateModifytoInit(struct RsQpCb *qpCb, struct ibv_qp_attr *attr)
     ret = RsIbvModifyQp(qpCb->ibQp, attr, IBV_QP_STATE | IBV_QP_PKEY_INDEX | IBV_QP_PORT | IBV_QP_ACCESS_FLAGS);
     CHK_PRT_RETURN(ret, hccp_err("[modify]qpn[%d] modify to init failed, ret %d", qpCb->qpInfoLo.qpn, ret), ret);
 
-    hccp_info("qpn[%d] modify to init success", qpCb->qpInfoLo.qpn);
+    hccp_info_rma("qpn[%d] modify to init success", qpCb->qpInfoLo.qpn);
     return 0;
 }
 
@@ -504,7 +505,7 @@ int RsDrvQpStateModifytoRtr(struct RsQpCb *qpCb, struct ibv_qp_attr *attr)
         hccp_err("qpn[%d] failed to modify QP to RTR, ibv_modify_qp failed ret[%d], errno[%d]", qpCb->qpInfoLo.qpn, ret,
             errno),
         -EOPENSRC);
-    hccp_info("qp qos attr: qpn[%d] tc[%u] sl[%u]", qpCb->qpInfoLo.qpn, qpCb->qosAttr.tc, qpCb->qosAttr.sl);
+    hccp_info_rma("qp qos attr: qpn[%d] tc[%u] sl[%u]", qpCb->qpInfoLo.qpn, qpCb->qosAttr.tc, qpCb->qosAttr.sl);
     return 0;
 }
 
@@ -526,7 +527,7 @@ int RsDrvQpStateModifytoRts(struct RsQpCb *qpCb, struct ibv_qp_attr *attr)
     CHK_PRT_RETURN(ret,
         hccp_err("qpn[%d] failed to modify QP to RTS, ibv_modify_qp failed ret[%d]", qpCb->qpInfoLo.qpn, ret),
         -EOPENSRC);
-    hccp_info("qp rdma attr: qpn[%d] timeout[%u] retrycnt[%u]", qpCb->qpInfoLo.qpn, qpCb->timeout, qpCb->retryCnt);
+    hccp_info_rma("qp rdma attr: qpn[%d] timeout[%u] retrycnt[%u]", qpCb->qpInfoLo.qpn, qpCb->timeout, qpCb->retryCnt);
     return 0;
 }
 
@@ -617,7 +618,7 @@ STATIC int RsDrvQueryNotify(struct RsRdevCb *rdevCb)
         }
     }
 #endif
-    hccp_info("chip_id:%u, RsDrvQueryNotify ok, notify va:0x%llx, size:%llu", rdevCb->rsCb->chipId,
+    hccp_info_rma("chip_id:%u, RsDrvQueryNotify ok, notify va:0x%llx, size:%llu", rdevCb->rsCb->chipId,
         rdevCb->notifyVaBase, rdevCb->notifySize);
     return ret;
 }
@@ -680,7 +681,7 @@ int RsDrvRegNotifyMr(struct RsRdevCb *rdevCb)
         hccp_err("ibv_reg_mr addr[0x%llx] len[%llu] errno[%d] failed", rdevCb->notifyVaBase, rdevCb->notifySize, errno),
         -EACCES);
 
-    hccp_info("ibv_reg_mr ok");
+    hccp_info_rma("ibv_reg_mr ok");
     return 0;
 }
 
@@ -914,7 +915,7 @@ STATIC int RsDrvExpQpCreate(struct RsQpCb *qpCb, int qpMode)
 
     qpCb->dbIndex = (qpMode == RA_RS_OP_QP_MODE || qpMode == RA_RS_GDR_ASYN_QP_MODE) ? qpCb->qpResp.qpData.qp_info : 0;
     qpCb->sqIndex = (qpMode == RA_RS_GDR_TMPL_QP_MODE) ? qpCb->qpResp.qpData.qp_info : 0;
-    hccp_info("db index is [%d], sq index is [%d]", qpCb->dbIndex, qpCb->sqIndex);
+    hccp_info_rma("db index is [%d], sq index is [%d]", qpCb->dbIndex, qpCb->sqIndex);
 
     /* query qp attr */
     ret = RsIbvQueryQp(qpCb->ibQp, &qpAttr, IBV_QP_CAP, &qpInitAttr.attr);
@@ -930,7 +931,7 @@ STATIC int RsDrvExpQpCreate(struct RsQpCb *qpCb, int qpMode)
         goto exp_init_qp_err;
     }
 
-    hccp_info("chip_id %u, rdevIndex:%u, qp[%d] create succ.", qpCb->rdevCb->rsCb->chipId, qpCb->rdevCb->rdevIndex,
+    hccp_info_rma("chip_id %u, rdevIndex:%u, qp[%d] create succ.", qpCb->rdevCb->rsCb->chipId, qpCb->rdevCb->rdevIndex,
         qpCb->qpInfoLo.qpn);
 
     return 0;
@@ -991,7 +992,7 @@ STATIC int RsDrvQpNormal(struct RsQpCb *qpCb, int qpMode)
         goto normal_init_qp_err;
     }
 
-    hccp_info("chip_id %u, rdevIndex:%u, qp[%d] create succ.", qpCb->rdevCb->rsCb->chipId, qpCb->rdevCb->rdevIndex,
+    hccp_info_rma("chip_id %u, rdevIndex:%u, qp[%d] create succ.", qpCb->rdevCb->rsCb->chipId, qpCb->rdevCb->rdevIndex,
         qpCb->qpInfoLo.qpn);
 
     return 0;
@@ -1067,7 +1068,7 @@ STATIC int RsDrvExpQpCreateWithAttrs(struct RsQpCb *qpCb, struct RsQpNormWithAtt
                         ? qpCb->qpResp.qpData.qp_info
                         : 0;
     qpCb->sqIndex = (qpCb->qpMode == RA_RS_GDR_TMPL_QP_MODE) ? qpCb->qpResp.qpData.qp_info : 0;
-    hccp_info("db index is [%d], sq index is [%d]", qpCb->dbIndex, qpCb->sqIndex);
+    hccp_info_rma("db index is [%d], sq index is [%d]", qpCb->dbIndex, qpCb->sqIndex);
 
     /* query qp attr */
     ret = RsIbvQueryQp(qpCb->ibQp, &qpAttr, IBV_QP_CAP, &qpInitAttr.attr);
@@ -1083,7 +1084,7 @@ STATIC int RsDrvExpQpCreateWithAttrs(struct RsQpCb *qpCb, struct RsQpNormWithAtt
         goto exp_init_qp_err;
     }
 
-    hccp_info("chip_id %u, rdevIndex:%u, qp[%d] create succ.", qpCb->rdevCb->rsCb->chipId, qpCb->rdevCb->rdevIndex,
+    hccp_info_rma("chip_id %u, rdevIndex:%u, qp[%d] create succ.", qpCb->rdevCb->rsCb->chipId, qpCb->rdevCb->rdevIndex,
         qpCb->qpInfoLo.qpn);
 
     return 0;
@@ -1145,7 +1146,7 @@ STATIC int RsDrvQpNormalWithAttrs(struct RsQpCb *qpCb, struct RsQpNormWithAttrs 
         goto normal_init_qp_err;
     }
 
-    hccp_info("chip_id %u, rdevIndex:%u, qp[%d] create succ.", qpCb->rdevCb->rsCb->chipId, qpCb->rdevCb->rdevIndex,
+    hccp_info_rma("chip_id %u, rdevIndex:%u, qp[%d] create succ.", qpCb->rdevCb->rsCb->chipId, qpCb->rdevCb->rdevIndex,
         qpCb->qpInfoLo.qpn);
 
     return 0;
@@ -1189,7 +1190,7 @@ int RsQueryEvent(int cqEventId, struct event_summary **event)
     (*event)->msg = NULL;
     (*event)->dst_engine = ACPU_DEVICE;
     (*event)->policy = ONLY;
-    hccp_info("pid:%d, cqEventId:%d", (*event)->pid, cqEventId);
+    hccp_info_rma("pid:%d, cqEventId:%d", (*event)->pid, cqEventId);
     unsigned int i;
     for (i = 0; i < EVENT_SUMMARY_RSV; i++) {
         (*event)->rsv[i] = 0;
@@ -1202,7 +1203,7 @@ int RsDrvCreateCqEvent(struct RsCqContext *cqContext, struct CqAttr *attr)
 {
     int ret;
 
-    hccp_info("create cq event start cq_create_mode [%d]", cqContext->cqCreateMode);
+    hccp_info_rma("create cq event start cq_create_mode [%d]", cqContext->cqCreateMode);
 
     if (cqContext->cqCreateMode == RS_NORMAL_CQ_CREATE || cqContext->cqCreateMode == RS_SQ_CQ_CREATE) {
         ret = RsQueryEvent(attr->sendCqEventId, &(cqContext->sendEvent));
@@ -1245,7 +1246,7 @@ int RsDrvCreateCqEvent(struct RsCqContext *cqContext, struct CqAttr *attr)
         *attr->ibRecvCq = cqContext->ibRecvCq;
     }
 
-    hccp_info("create cq event success");
+    hccp_info_rma("create cq event success");
     return 0;
 
 create_cq_even_err:
@@ -1282,7 +1283,7 @@ int RsDrvCreateCqWithChannel(struct RsCqContext *cqContext, struct CqAttr *attr)
 
     *attr->ibSendCq = cqContext->ibSendCq;
     *attr->ibRecvCq = cqContext->ibRecvCq;
-    hccp_info("create cq with channel success");
+    hccp_info_rma("create cq with channel success");
     return 0;
 
 create_recv_cq_err:
@@ -1305,7 +1306,7 @@ int RsDrvTypicalCqCreate(struct RsRdevCb *rdevCb, unsigned int cqDepth, unsigned
     }
 
     *cqn = deviceCqAttr->cqn;
-    hccp_info("drv typical cq create success, cqn[%u] cqDepth[%u]", *cqn, cqDepth);
+    hccp_info_rma("drv typical cq create success, cqn[%u] cqDepth[%u]", *cqn, cqDepth);
     return 0;
 }
 
@@ -1360,7 +1361,7 @@ int RsDrvNormalQpCreate(struct RsQpCb *qpCb, struct ibv_qp_init_attr *qpInitAttr
         goto normal_init_qp_err;
     }
 
-    hccp_info("chip_id %u, rdevIndex:%u, qp[%d] create succ.", qpCb->rdevCb->rsCb->chipId, qpCb->rdevCb->rdevIndex,
+    hccp_info_rma("chip_id %u, rdevIndex:%u, qp[%d] create succ.", qpCb->rdevCb->rsCb->chipId, qpCb->rdevCb->rdevIndex,
         qpCb->qpInfoLo.qpn);
 
     return 0;

@@ -14,6 +14,7 @@
 #include <stdio.h>
 #include <pwd.h>
 #include <unistd.h>
+#include "config_log.h"
 
 #define CHK_PRT_RETURN(result, exeLog, ret) \
     do {                                    \

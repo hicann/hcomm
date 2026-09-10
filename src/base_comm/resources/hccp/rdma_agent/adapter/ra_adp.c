@@ -14,6 +14,7 @@
 #include <sys/prctl.h>
 #include "securec.h"
 #include "user_log.h"
+#include "config_log.h"
 #include "dl_hal_function.h"
 #include "ra_comm.h"
 #include "ra_hdc.h"
@@ -755,7 +756,7 @@ STATIC int RaRsSendWr(char *inBuf, char *outBuf, int *outLen, int *opResult, int
     *opResult = ret;
     if (ret) {
         if (ret == -ENOENT) {
-            hccp_warn("not found remote mr_info, need try again");
+            hccp_warn_rma("not found remote mr_info, need try again");
         } else {
             hccp_err("send wr failed ret[%d].", ret);
         }
@@ -808,7 +809,7 @@ STATIC int RaRsSendWrList(char *inBuf, char *outBuf, int *outLen, int *opResult,
     *opResult = ret;
     if (ret) {
         if (ret == -ENOENT) {
-            hccp_warn("not found remote mr_info, need try again");
+            hccp_warn_rma("not found remote mr_info, need try again");
         } else {
             hccp_err("send wr failed ret[%d].", ret);
         }
@@ -880,7 +881,7 @@ STATIC int RaRsSendWrListV2(char *inBuf, char *outBuf, int *outLen, int *opResul
     *opResult = ret;
     if (ret) {
         if (ret == -ENOENT) {
-            hccp_warn("not found remote mr_info, need try again");
+            hccp_warn_rma("not found remote mr_info, need try again");
         } else {
             hccp_err("send wr failed ret[%d].", ret);
         }
@@ -955,7 +956,7 @@ STATIC int RaRsSendWrListExt(char *inBuf, char *outBuf, int *outLen, int *opResu
     *opResult = ret;
     if (ret) {
         if (ret == -ENOENT) {
-            hccp_warn("not found remote mr_info, need try again");
+            hccp_warn_rma("not found remote mr_info, need try again");
         } else {
             hccp_err("send wr failed ret[%d].", ret);
         }
@@ -1030,7 +1031,7 @@ STATIC int RaRsSendWrListExtV2(char *inBuf, char *outBuf, int *outLen, int *opRe
     *opResult = ret;
     if (ret) {
         if (ret == -ENOENT) {
-            hccp_warn("not found remote mr_info, need try again");
+            hccp_warn_rma("not found remote mr_info, need try again");
         } else {
             hccp_err("send wr failed ret[%d].", ret);
         }
@@ -1147,11 +1148,11 @@ STATIC int RaSetPid(char *inBuf, char *outBuf, int *outLen, int *opResult, int r
 
     HCCP_CHECK_PARAM_LEN_RET_HOST(sizeof(union OpSetPidData), sizeof(struct MsgHead), rcvBufLen, opResult);
 
-    hccp_info("ra get pid is [%d]", setPidData->txData.pid);
+    hccp_info_others("ra get pid is [%d]", setPidData->txData.pid);
 
     *opResult = gRaRsOps.setHostPid(setPidData->txData.phyId, setPidData->txData.pid, setPidData->txData.pidSign);
 
-    hccp_info("ra_set_pid finish");
+    hccp_info_others("ra_set_pid finish");
     return 0;
 }
 
@@ -1162,7 +1163,7 @@ STATIC int RaRsCloseHdcSession(char *inBuf, char *outBuf, int *outLen, int *opRe
     (void)outLen;
     (void)rcvBufLen;
     *opResult = 0;
-    hccp_info("ra_rs_close_hdc_session finish");
+    hccp_info_socket("ra_rs_close_hdc_session finish");
     return 0;
 }
 
@@ -1441,6 +1442,20 @@ STATIC int RaRsGetHccnCfg(char *inBuf, char *outBuf, int *outLen, int *opResult,
     return 0;
 }
 
+STATIC int RaRsSetDebugConfig(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcvBufLen)
+{
+    union OpSetDebugConfigData *opData = (union OpSetDebugConfigData *)(inBuf + sizeof(struct MsgHead));
+
+    (void)outBuf;
+    (void)outLen;
+    HCCP_CHECK_PARAM_LEN_RET_HOST(sizeof(union OpSetDebugConfigData), sizeof(struct MsgHead), rcvBufLen, opResult);
+
+    RsSetDebugConfig(opData->txData.debugConfig);
+    HccpSetDebugConfig(opData->txData.debugConfig);
+    *opResult = 0;
+    return 0;
+}
+
 #define US_PRE_SECOND 1000000
 #define US_PRE_MSECOND 1000
 #define MS_PRE_SECOND 1000
@@ -1603,6 +1618,7 @@ struct RaOpHandle gRaOpHandle[] = {
     {RA_RS_GET_TLS_ENABLE, RaRsGetTlsEnable, sizeof(union OpGetTlsEnableData)},
     {RA_RS_GET_SEC_RANDOM, RaRsGetSecRandom, sizeof(union OpGetSecRandomData)},
     {RA_RS_GET_HCCN_CFG, RaRsGetHccnCfg, sizeof(union OpGetHccnCfgData)},
+    {RA_RS_SET_DEBUG_CONFIG, RaRsSetDebugConfig, sizeof(union OpSetDebugConfigData)},
     {RA_RS_ASYNC_HDC_SESSION_CONNECT, RaRsAsyncHdcSessionConnect, sizeof(union OpAsyncHdcConnectData)},
     {RA_RS_ASYNC_HDC_SESSION_CLOSE, RaRsAsyncHdcSessionClose, sizeof(union OpAsyncHdcCloseData)},
     {RA_RS_GET_DEV_EID_INFO_NUM, RaRsGetDevEidInfoNum, sizeof(union OpGetDevEidInfoNumData)},
@@ -1720,7 +1736,7 @@ int RaHandle(struct RaHdcOpSec *opSec, char *recvBuf, int rcvBufLen, char **send
         }
     }
 
-    hccp_warn("not support opcode:%d", recvMsgHead->opcode);
+    hccp_warn_others("not support opcode:%d", recvMsgHead->opcode);
     ret = -EPROTONOSUPPORT;
 out:
     free(*sendBuf);
@@ -1760,19 +1776,19 @@ STATIC int RecvHandleSendPkt(HDC_SESSION session, unsigned int *closeSession, un
 
     ret = RA_HDC_OPS.recv(session, msgRcv, MAX_HDC_DATA, 0, &recvBufCnt, RA_HDC_RECV_SEND_TIMEOUT);
     if (ret) {
-        hccp_warn("recv hdc msg unsuccessful, ret %d", ret);
+        hccp_warn_others("recv hdc msg unsuccessful, ret %d", ret);
         goto out;
     }
 
     RA_HDC_OPS.getMsgBuffer(msgRcv, 0, (char **)&recvBuf, &rcvBufLen);
     if (recvBuf == NULL) {
-        hccp_warn("rcv_buf_len is NULL, Session disconnect.");
+        hccp_warn_others("rcv_buf_len is NULL, Session disconnect.");
         goto out;
     }
 
     if (rcvBufLen == 0) {
         *closeSession = 1;
-        hccp_warn("rcv_buf_len is 0, Session disconnect.");
+        hccp_warn_others("rcv_buf_len is 0, Session disconnect.");
         RA_HDC_OPS.freeMsg(msgRcv);
         return 0;
     }
@@ -1804,7 +1820,7 @@ STATIC void RaHdcRecvHandleSendPkt(const unsigned int chipId)
 
     ret = RecvHandleSendPkt(gHdcServer[chipId].hdcSession, &closeSession, chipId);
     if (closeSession != 0 || ret != 0) {
-        hccp_warn("recv_handle_send_pkt close_session[%u] ret[%d]", closeSession, ret);
+        hccp_warn_socket("recv_handle_send_pkt close_session[%u] ret[%d]", closeSession, ret);
         RA_PTHREAD_MUTEX_LOCK(&gHdcInitPara.mutex);
         gHdcInitPara.connectStatus = HDC_UNCONNECTED;
         RA_PTHREAD_MUTEX_UNLOCK(&gHdcInitPara.mutex);
@@ -1824,7 +1840,7 @@ STATIC void RaHwHdcCloseSession(HDC_SESSION *session)
 
     ret = RA_HDC_OPS.sessionClose(*session);
     if (ret != 0) {
-        hccp_warn("RA_HDC_OPS.sessionClose unsuccessful, ret:%d", ret);
+        hccp_warn_socket("RA_HDC_OPS.sessionClose unsuccessful, ret:%d", ret);
     }
     *session = NULL;
 
@@ -1867,7 +1883,7 @@ STATIC void *RaPthread(void *arg)
         RaHdcRecvHandleSendPkt(chipId);
     }
 
-    hccp_info("thread [%d] is out", getpid());
+    hccp_info_others("thread [%d] is out", getpid());
     RaHwHdcCloseSession(&gHdcServer[chipId].hdcSession);
     RA_PTHREAD_MUTEX_LOCK(&gHdcInitPara.mutex);
     gHdcInitPara.threadStatus = THREAD_HALT;
@@ -1914,7 +1930,7 @@ int RaHdcSessionAccept(unsigned int chipId, HDC_SESSION *session, int initHostTg
 
     ret = RA_HDC_OPS.sessionAccept(gHdcServer[chipId].hdcServer, session);
     if (ret != 0) {
-        hccp_warn("Session accept failed, chipId(%u), ret(%d) ", chipId, ret);
+        hccp_warn_socket("Session accept failed, chipId(%u), ret(%d) ", chipId, ret);
         return ret;
     }
 
@@ -1926,7 +1942,8 @@ int RaHdcSessionAccept(unsigned int chipId, HDC_SESSION *session, int initHostTg
     }
 
     if (hostTgid != initHostTgid) {
-        hccp_warn("host_tgid[%d] from ra not equal to the tgid[%d] from hccp_init, invalid", hostTgid, initHostTgid);
+        hccp_warn_others("host_tgid[%d] from ra not equal to the tgid[%d] from hccp_init, invalid", hostTgid,
+            initHostTgid);
         goto out;
     }
 
@@ -1950,13 +1967,13 @@ int RaHdcAsyncRecvPkt(struct RaHdcAsyncInfo *asyncInfo, unsigned int chipId, voi
 
     ret = RA_HDC_OPS.recv(asyncInfo->hdcSession, msgRcv, MAX_HDC_DATA, 0, &rcvLen, RA_HDC_RECV_SEND_TIMEOUT);
     if (ret != 0) {
-        hccp_warn("recv hdc msg unsuccessful ret %d", ret);
+        hccp_warn_socket("recv hdc msg unsuccessful ret %d", ret);
         goto out;
     }
 
     RA_HDC_OPS.getMsgBuffer(msgRcv, 0, (char **)&rcvBuf, &rcvLen);
     if (rcvBuf == NULL || rcvLen == 0) {
-        hccp_warn("get_msg_buffer unsuccessful, rcvBuf is NULL or rcvLen:%d is 0", rcvLen);
+        hccp_warn_others("get_msg_buffer unsuccessful, rcvBuf is NULL or rcvLen:%d is 0", rcvLen);
         goto out;
     }
 
@@ -1983,7 +2000,7 @@ int RaHdcAsyncSendPkt(struct RaHdcAsyncInfo *asyncInfo, unsigned int chipId, voi
     RA_PTHREAD_MUTEX_LOCK(&asyncInfo->sendMutex);
     // degrade log level because session will be closed by recv thread and request will be abort
     if (asyncInfo->hdcSession == NULL) {
-        hccp_warn("[async][send_pkt]hdc_session is NULL, chipId(%u)", chipId);
+        hccp_warn_socket("[async][send_pkt]hdc_session is NULL, chipId(%u)", chipId);
         goto alloc_msg_err;
     }
 
@@ -2034,7 +2051,7 @@ STATIC void RaHwHdcInit(void *arg)
 
     (void)prctl(PR_SET_NAME, (uintptr_t) "hccp_hw_hdc", 0, 0, 0);
 
-    hccp_info("chip_id(%u)", chipId);
+    hccp_info_others("chip_id(%u)", chipId);
     gHdcInitPara.hdcFlag = 1;
 
     ret = pthread_create(&tidp, NULL, (void *)RaPthread, NULL);
@@ -2051,7 +2068,7 @@ STATIC void RaHwHdcInit(void *arg)
         RaHwHdcCloseSession(&gHdcServer[chipId].hdcSession);
         ret = RaHdcSessionAccept(chipId, &gHdcServer[chipId].hdcSession, (int)gHdcInitPara.hostTgid);
         if (ret != 0) {
-            hccp_warn("Session Accept unsuccessful, chipId(%u), ret(%d) ", chipId, ret);
+            hccp_warn_socket("Session Accept unsuccessful, chipId(%u), ret(%d) ", chipId, ret);
             gHdcInitPara.hdcFlag = 0;
             return;
         }
@@ -2080,17 +2097,17 @@ STATIC void RaHwHdcDeinit(void)
         tryAgain--;
     }
     if (tryAgain == 0) {
-        hccp_warn("hdc message thread quit timeout, chipId:%u", chipId);
+        hccp_warn_others("hdc message thread quit timeout, chipId:%u", chipId);
     }
 
     if (gHdcServer[chipId].hdcServer != NULL) {
         ret = RA_HDC_OPS.serverDestroy(gHdcServer[chipId].hdcServer);
         if (ret != 0) {
-            hccp_warn("RA_HDC_OPS.server_destroy unsuccessful, ret:%d, chipId:%u", ret, chipId);
+            hccp_warn_socket("RA_HDC_OPS.server_destroy unsuccessful, ret:%d, chipId:%u", ret, chipId);
         }
         gHdcServer[chipId].hdcServer = NULL;
     } else {
-        hccp_warn("hdc_server is NULL, chipId:%u", chipId);
+        hccp_warn_socket("hdc_server is NULL, chipId:%u", chipId);
     }
     pthread_mutex_destroy(&gHdcInitPara.mutex);
 }
@@ -2165,7 +2182,7 @@ RA_ADP_ATTRI_VISI_DEF int HccpInit(unsigned int chipId, pid_t pid, int hdcType, 
     float timeCost = 0.0;
     int ret, retTmp;
 
-    hccp_info("hccp[%u] hdc_type[%d] white_list_status[%u] init start", chipId, hdcType, whiteListStatus);
+    hccp_info_init("hccp[%u] hdc_type[%d] white_list_status[%u] init start", chipId, hdcType, whiteListStatus);
 
     ret = DlHalInit();
     if (ret != 0) {
@@ -2207,7 +2224,7 @@ RA_ADP_ATTRI_VISI_DEF int HccpInit(unsigned int chipId, pid_t pid, int hdcType, 
 
     RsGetCurTime(&end);
     HccpTimeInterval(&end, &start, &timeCost);
-    hccp_info("ra_hw_init ok cost [%f] ms", timeCost);
+    hccp_info_init("ra_hw_init ok cost [%f] ms", timeCost);
 
     struct RsInitConfig offlineConfig = {
         .chipId = chipId,
@@ -2223,7 +2240,7 @@ RA_ADP_ATTRI_VISI_DEF int HccpInit(unsigned int chipId, pid_t pid, int hdcType, 
     }
     RsGetCurTime(&end);
     HccpTimeInterval(&end, &start, &timeCost);
-    hccp_info("rs_init ok cost [%f] ms", timeCost);
+    hccp_info_init("rs_init ok cost [%f] ms", timeCost);
 
     RsGetCurTime(&start);
     ret = RsBindHostpid(chipId, pid);
@@ -2233,7 +2250,7 @@ RA_ADP_ATTRI_VISI_DEF int HccpInit(unsigned int chipId, pid_t pid, int hdcType, 
     }
     RsGetCurTime(&end);
     HccpTimeInterval(&end, &start, &timeCost);
-    hccp_info("rs_bind_hostpid ok cost [%f] ms", timeCost);
+    hccp_info_init("rs_bind_hostpid ok cost [%f] ms", timeCost);
 
     RsGetCurTime(&start);
     ret = RsPingHandleInit(chipId, hdcType, whiteListStatus);
@@ -2243,7 +2260,7 @@ RA_ADP_ATTRI_VISI_DEF int HccpInit(unsigned int chipId, pid_t pid, int hdcType, 
     }
     RsGetCurTime(&end);
     HccpTimeInterval(&end, &start, &timeCost);
-    hccp_info("rs_ping_handle_init ok cost [%f] ms", timeCost);
+    hccp_info_init("rs_ping_handle_init ok cost [%f] ms", timeCost);
 
     return 0;
 bind_hostpid_err:
@@ -2269,7 +2286,7 @@ RA_ADP_ATTRI_VISI_DEF int HccpDeinit(unsigned int chipId)
     };
     int ret;
 
-    hccp_info("hccp[%u] deinit start", chipId);
+    hccp_info_init("hccp[%u] deinit start", chipId);
 
     ret = RsPingHandleDeinit(chipId);
     CHK_PRT_RETURN(ret, hccp_err("rs_ping_handle_deinit failed %d ", ret), ret);
@@ -2281,7 +2298,7 @@ RA_ADP_ATTRI_VISI_DEF int HccpDeinit(unsigned int chipId)
 
     RaHwAsyncDeinit();
     DlHalDeinit();
-    hccp_info("hccp [%u] deinit success", chipId);
+    hccp_info_init("hccp [%u] deinit success", chipId);
 
     return ret;
 }

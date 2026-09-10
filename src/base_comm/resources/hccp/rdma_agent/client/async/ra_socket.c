@@ -9,6 +9,7 @@
  */
 
 #include "user_log.h"
+#include "config_log.h"
 #include "hccp_common.h"
 #include "hccp_async.h"
 #include "ra.h"

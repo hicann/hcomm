@@ -10,6 +10,7 @@
 
 #include "securec.h"
 #include "user_log.h"
+#include "config_log.h"
 #include "ra.h"
 #include "ra_comm.h"
 #include "ra_async.h"
@@ -76,12 +77,12 @@ void RaHdcAsyncHandleSocketSend(struct RaRequestHandle *reqHandle)
         *(unsigned long long *)reqHandle->privData = asyncData->rxData.realSendSize;
         reqHandle->opRet = 0;
     } else if (reqHandle->opRet == 0) {
-        hccp_warn("[send][ra_hdc_socket]socket has been closed. sent_size is 0");
+        hccp_warn_socket("[send][ra_hdc_socket]socket has been closed. sent_size is 0");
         *(unsigned long long *)reqHandle->privData = 0;
         reqHandle->opRet = -ESOCKCLOSED;
     } else {
         if (reqHandle->opRet != -EAGAIN) {
-            hccp_warn("[send][ra_hdc_socket]socket send unsuccessful ret(%d) phyId(%u)", reqHandle->opRet,
+            hccp_warn_socket("[send][ra_hdc_socket]socket send unsuccessful ret(%d) phyId(%u)", reqHandle->opRet,
                 reqHandle->phyId);
         }
         *(unsigned long long *)reqHandle->privData = 0;
@@ -162,12 +163,12 @@ void RaHdcAsyncHandleSocketRecv(struct RaRequestHandle *reqHandle)
 
     phyId = reqHandle->phyId;
     if (reqHandle->opRet == 0) {
-        hccp_warn("[recv][ra_hdc_socket]socket has been closed. received_size is 0");
+        hccp_warn_socket("[recv][ra_hdc_socket]socket has been closed. received_size is 0");
         reqHandle->opRet = -ESOCKCLOSED;
         goto out;
     } else if (reqHandle->opRet < 0) {
         if (reqHandle->opRet != -EAGAIN) {
-            hccp_warn("[recv][ra_hdc_socket]socket recv ret(%d) phyId(%u)", reqHandle->opRet, phyId);
+            hccp_warn_socket("[recv][ra_hdc_socket]socket recv ret(%d) phyId(%u)", reqHandle->opRet, phyId);
         }
         goto out;
     }

@@ -15,16 +15,16 @@
 #include "plf_debug_config.h"
 
 // config要求传入宏名字作为日志打印关键字，不可以传入其他变量或常量
-#define PLF_CONFIG_INFO(config, format, ...)                                                                  \
-    do {                                                                                                      \
-        if (UNLIKELY((Hccl::GetPlfDebugConfigValue() & (config)) != 0)) {                                     \
-            const char* configName = #config;                                                                 \
-            LOG_FUNC(                                                                                         \
-                static_cast<u32>(HCCL) | RUN_LOG_MASK, HCCL_LOG_INFO, "[%s:%d] [%u] [%s]: " format, __FILE__, \
-                __LINE__, static_cast<u32>(syscall(SYS_gettid)), configName, ##__VA_ARGS__);                  \
-        } else {                                                                                              \
-            HCCL_INFO(format, ##__VA_ARGS__);                                                                 \
-        }                                                                                                     \
+#define PLF_CONFIG_INFO(config, format, ...)                                                                       \
+    do {                                                                                                           \
+        if (UNLIKELY((Hccl::GetPlfDebugConfigValue() & (config)) != 0)) {                                          \
+            const char* configName = #config;                                                                      \
+            LOG_FUNC(                                                                                              \
+                static_cast<u32>(HCCL) | RUN_LOG_MASK, HCCL_LOG_INFO, "[%s:%d] [%u] [%s] [%s]: " format, __FILE__, \
+                __LINE__, static_cast<u32>(syscall(SYS_gettid)), configName, __func__, ##__VA_ARGS__);             \
+        } else {                                                                                                   \
+            HCCL_INFO(format, ##__VA_ARGS__);                                                                      \
+        }                                                                                                          \
     } while (0)
 
 #define PLF_CONFIG_DEBUG(config, format, ...)                                                                 \

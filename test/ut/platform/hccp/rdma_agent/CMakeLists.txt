@@ -70,9 +70,11 @@ set(rdma_agent_utest_list
     ${SRC_DIR}/test/ut/platform/hccp/stub/devdrv_runtime_api.c
     ${SRC_DIR}/src/base_comm/resources/hccp/rdma_agent/hdc/ra_hdc_lite.c
     ${SRC_DIR}/src/base_comm/resources/hccp/rdma_agent/hdc/ra_rdma_lite.c
+    ${SRC_DIR}/src/base_comm/resources/hccp/inc/private/network/log/config_log.c
     main.cc
     ut_test.cc
-    ${SRC_DIR}/test/ut/platform/hccp/stub/ut_dispatch.cc)
+    ${SRC_DIR}/test/ut/platform/hccp/stub/ut_dispatch.cc
+    ${SRC_DIR}/test/ut/platform/hccp/stub/dlog_stub.cc)
 
 add_executable(rdma_agent_utest ${rdma_agent_utest_list})
 
@@ -84,6 +86,7 @@ target_include_directories(rdma_agent_utest BEFORE PRIVATE
     ${SRC_DIR}/test/ut/platform/hccp/ut_include
     ${SRC_DIR}/test/ut/platform/hccp/stub/
     ${SRC_DIR}/test/stub/depends/include
+    ${SRC_DIR}/test/stub/depends/pkg_inc/base
     ${SRC_DIR}/src/base_comm/resources/hccp/rdma_agent/client
     ${SRC_DIR}/src/base_comm/resources/hccp/rdma_agent/adapter
     ${SRC_DIR}/src/base_comm/resources/hccp/rdma_agent/adapter/tlv
@@ -101,6 +104,7 @@ target_include_directories(rdma_agent_utest BEFORE PRIVATE
     ${SRC_DIR}/src/base_comm/resources/hccp/common
     ${SRC_DIR}/src/base_comm/resources/hccp/inc/network
     ${SRC_DIR}/src/base_comm/resources/hccp/inc/private/network
+    ${SRC_DIR}/src/base_comm/resources/hccp/inc/private/network/log
     ${SRC_DIR}/src/base_comm/resources/hccp/external_depends/inc
     ${ASCEND_CANN_PACKAGE_PATH}/pkg_inc/driver/
     ${ASCEND_CANN_PACKAGE_PATH}/include/driver/

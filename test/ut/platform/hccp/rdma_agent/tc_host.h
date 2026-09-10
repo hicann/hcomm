@@ -34,4 +34,5 @@ extern "C" void TcRaGetLbMax(void);
 extern "C" void TcRaSetQpLbValue(void);
 extern "C" void TcRaGetQpLbValue(void);
 extern "C" void TcRaGetQpHyperFeature(void);
+extern "C" void TcRaSetDebugConfig(void);
 #endif

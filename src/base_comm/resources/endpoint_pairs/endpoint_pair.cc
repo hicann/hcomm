@@ -17,8 +17,10 @@
 
 #include "hcom_common.h"
 #include "exception_handler.h"
+#include "config_plf_log_v2.h"
 
 namespace hcomm {
+using Hccl::PLF_CHANNEL;
 
 EndpointPair::~EndpointPair()
 {
@@ -205,6 +207,10 @@ HcclResult EndpointPair::CreateChannel(
         channelHandles_[engine].push_back(channels[0]);
         // 记录真实槽位下标：UNREUSE 通道的入参 reuseIdx 为 0xFFFFFFFF，实际槽位是 push_back 后的下标
         handleToLoc_[channels[0]] = {engine, static_cast<u32>(channelHandles_[engine].size() - 1)};
+        PLF_CONFIG_INFO(
+            PLF_CHANNEL, "EndpointPair::CreateChannel: engine[%s] reuseIdx[%u] channelHandle[0x%llx].",
+            GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str(), reuseIdx,
+            static_cast<unsigned long long>(channels[0]));
         return HCCL_SUCCESS;
     }
 
@@ -213,6 +219,10 @@ HcclResult EndpointPair::CreateChannel(
         CHK_RET(static_cast<HcclResult>(
             HcommChannelUpdateMemInfo(channelDescs->memHandles + 1, channelDescs->memHandleNum - 1, channels[0])));
     }
+    PLF_CONFIG_INFO(
+        PLF_CHANNEL, "EndpointPair::CreateChannel: engine[%s] reuseIdx[%u] reuse channelHandle[0x%llx].",
+        GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str(), reuseIdx,
+        static_cast<unsigned long long>(channels[0]));
     return HCCL_SUCCESS;
 }
 
@@ -255,6 +265,10 @@ HcclResult EndpointPair::DestroyChannel(CommEngine engine, u32 reuseIdx)
         "EndpointPair::DestroyChannel: engine[%s] reuseIdx[%u] destroy channel success,"
         "channelHandle size[%u]",
         GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str(), reuseIdx, channelHandles_[engine].size());
+    PLF_CONFIG_INFO(
+        PLF_CHANNEL, "EndpointPair::DestroyChannel: engine[%s] reuseIdx[%u] channelHandle[0x%llx].",
+        GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str(), reuseIdx,
+        static_cast<unsigned long long>(channelHandle));
     return destroyRet;
 }
 

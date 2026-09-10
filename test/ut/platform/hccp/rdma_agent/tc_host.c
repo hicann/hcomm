@@ -17,6 +17,7 @@
 #include "ra_hdc_rdma.h"
 #include "ra_hdc_socket.h"
 #include "ra_peer.h"
+#include "config_log.h"
 
 extern struct RaSocketOps gRaPeerSocketOps;
 extern int HdcSendRecvPkt(void* session, void* pSendRcvBuf, unsigned int inBufLen, unsigned int outDataLen);
@@ -1517,4 +1518,41 @@ void TcRaGetQpHyperFeature(void)
     qpHandle.rdmaOps->raGetQpHyperFeature = RaGetQpHyperFeatureFailStub;
     ret = RaGetQpAttr(&qpHandle, &attr);
     EXPECT_INT_EQ(0, ret);
+}
+
+void TcRaSetDebugConfig()
+{
+    int ret;
+    struct RaInfo info = {0};
+
+    /* 参数校验：info 为空 */
+    ret = RaSetDebugConfig(NULL, 0);
+    EXPECT_INT_NE(0, ret);
+
+    /* 参数校验：phyId 越界 */
+    info.mode = NETWORK_PEER_ONLINE;
+    info.phyId = RA_MAX_PHY_ID_NUM;
+    ret = RaSetDebugConfig(&info, 0);
+    EXPECT_INT_NE(0, ret);
+
+    /* PEER_ONLINE：直写本进程调试配置，校验配置生效 */
+    info.phyId = 0;
+    info.mode = NETWORK_PEER_ONLINE;
+    ret = RaSetDebugConfig(&info, 0xF);
+    EXPECT_INT_EQ(0, ret);
+    EXPECT_INT_EQ(0xF, (int)HccpGetDebugConfig());
+
+    /* OFFLINE：经 RaHdcSetDebugConfig 下发（mock 成功） */
+    info.mode = NETWORK_OFFLINE;
+    mocker(RaHdcSetDebugConfig, 1, 0);
+    ret = RaSetDebugConfig(&info, 0xF);
+    EXPECT_INT_EQ(0, ret);
+    mocker_clean();
+
+    /* 非法 mode：返回 EPROTONOSUPPORT */
+    info.mode = 99;
+    ret = RaSetDebugConfig(&info, 0xF);
+    EXPECT_INT_NE(0, ret);
+
+    return;
 }

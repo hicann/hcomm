@@ -277,3 +277,37 @@ TEST_F(UtChannelRoceFactory, Channel_Base_Serialize_Returns_NOT_SUPPORT)
     EXPECT_EQ(ch.Serialize(out), HCCL_E_NOT_SUPPORT);
     EXPECT_EQ(out.get(), nullptr);
 }
+
+TEST_F(UtChannelRoceFactory, TransportStatusToChannelStatus_AllStates_Returns_Mapped)
+{
+    EndpointDesc localEp{};
+    localEp.commAddr.type = COMM_ADDR_TYPE_IP_V4;
+    ASSERT_EQ(inet_pton(AF_INET, "10.20.30.1", &localEp.commAddr.addr), 1);
+
+    HcommChannelDesc channelDesc{};
+    channelDesc.remoteEndpoint.commAddr.type = COMM_ADDR_TYPE_IP_V4;
+    ASSERT_EQ(inet_pton(AF_INET, "10.20.30.2", &channelDesc.remoteEndpoint.commAddr.addr), 1);
+    channelDesc.channelName = "ut-socket-tag";
+
+    EXPECT_EQ(
+        Channel::TransportStatusToChannelStatus(Hccl::TransportStatus::INIT, localEp, channelDesc),
+        ChannelStatus::INIT);
+    EXPECT_EQ(
+        Channel::TransportStatusToChannelStatus(Hccl::TransportStatus::SOCKET_OK, localEp, channelDesc),
+        ChannelStatus::SOCKET_OK);
+    EXPECT_EQ(
+        Channel::TransportStatusToChannelStatus(Hccl::TransportStatus::SOCKET_TIMEOUT, localEp, channelDesc),
+        ChannelStatus::SOCKET_TIMEOUT);
+    EXPECT_EQ(
+        Channel::TransportStatusToChannelStatus(Hccl::TransportStatus::READY, localEp, channelDesc),
+        ChannelStatus::READY);
+}
+
+TEST_F(UtChannelRoceFactory, TransportStatusToChannelStatus_InvalidStatus_Returns_FAILED)
+{
+    EndpointDesc localEp{};
+    HcommChannelDesc channelDesc{};
+    EXPECT_EQ(
+        Channel::TransportStatusToChannelStatus(Hccl::TransportStatus::INVALID, localEp, channelDesc),
+        ChannelStatus::FAILED);
+}

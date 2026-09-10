@@ -177,6 +177,7 @@ global:
     RaTypicalQpModify;
     RaTypicalSendWr;
     RaWaitEventHandle;
+    RaSetDebugConfig;
 local:
     *;
 };

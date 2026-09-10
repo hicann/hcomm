@@ -12,6 +12,7 @@
 #include <pthread.h>
 #include "securec.h"
 #include "user_log.h"
+#include "config_log.h"
 #include "ra_hdc.h"
 #include "ra_rs_err.h"
 #include "ra_adp_pool.h"
@@ -103,7 +104,7 @@ STATIC void RaHdcPoolFreeWorkers(struct RaHdcThreadPool *pool)
         timeout--;
     }
     if (pool->threadNum > 0 && timeout <= 0) {
-        hccp_warn("destroy thread pool timeout, threadNum:%u > 0 and timeout:%d <= 0", pool->threadNum, timeout);
+        hccp_warn_others("destroy thread pool timeout, threadNum:%u > 0 and timeout:%d <= 0", pool->threadNum, timeout);
     }
 }
 

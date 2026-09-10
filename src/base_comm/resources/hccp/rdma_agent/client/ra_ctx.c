@@ -10,6 +10,7 @@
 
 #include "securec.h"
 #include "user_log.h"
+#include "config_log.h"
 #include "hccp_common.h"
 #include "hccp_ctx.h"
 #include "ra.h"
@@ -203,7 +204,7 @@ HCCP_ATTRI_VISI_DEF int RaGetDevBaseAttr(void *ctxHandle, struct DevBaseAttr *at
     ctxHandleTmp = (struct RaCtxHandle *)ctxHandle;
     (void)memcpy_s(attr, sizeof(struct DevBaseAttr), &(ctxHandleTmp->devAttr), sizeof(struct DevBaseAttr));
 
-    hccp_info("[get][dev_attr]phy_id(%u), devIndex(%u)", ctxHandleTmp->attr.phyId, ctxHandleTmp->devIndex);
+    hccp_info_rma("[get][dev_attr]phy_id(%u), devIndex(%u)", ctxHandleTmp->attr.phyId, ctxHandleTmp->devIndex);
     return 0;
 }
 
@@ -729,7 +730,7 @@ HCCP_ATTRI_VISI_DEF int RaCtxQpDestroy(void *qpHandle)
 
     ret = qpHandleTmp->ctxHandle->ctxOps->raCtxQpDestroy(qpHandleTmp);
     if (ret == -ENODEV) {
-        hccp_warn("[deinit][ra_qp]destroy unsuccessful, ret(%d) phyId(%u) devIndex(%u) qp_id(%u)", ret,
+        hccp_warn_rma("[deinit][ra_qp]destroy unsuccessful, ret(%d) phyId(%u) devIndex(%u) qp_id(%u)", ret,
             qpHandleTmp->phyId, qpHandleTmp->devIndex, qpHandleTmp->id);
         goto out;
     }
@@ -903,7 +904,7 @@ HCCP_ATTRI_VISI_DEF int RaCtxQpUnbind(void *qpHandle)
 
     ret = qpHandleTmp->ctxHandle->ctxOps->raCtxQpUnbind(qpHandleTmp);
     CHK_PRT_RETURN(ret == -ENODEV,
-        hccp_warn("[deinit][ra_qp]unbind unsuccessful, ret(%d) phyId(%u) devIndex(%u)", ret,
+        hccp_warn_rma("[deinit][ra_qp]unbind unsuccessful, ret(%d) phyId(%u) devIndex(%u)", ret,
             qpHandleTmp->ctxHandle->attr.phyId, qpHandleTmp->ctxHandle->devIndex),
         ConverReturnCode(RDMA_OP, ret));
 

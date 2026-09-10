@@ -22,8 +22,11 @@
 #include "ccu_var_event_res_mgr.h"
 #include "ccu_res_specs.h"
 #include "ccu_dev_mgr_imp.h"
+#include "config_plf_log_v2.h"
 
 namespace hcomm {
+
+using Hccl::PLF_RES;
 
 CcuInstance::~CcuInstance()
 {
@@ -170,7 +173,7 @@ static uint32_t SumResNum(const std::vector<ResInfo>& resInfos, std::string resN
     for (const auto& info : resInfos) {
         total += info.num;
     }
-    HCCL_INFO("[CcuInstance][FillTotalResDescs] resType: %s, resNum: %u", resName.c_str(), total);
+    PLF_CONFIG_INFO(PLF_RES, "[CcuInstance][FillTotalResDescs] resType: %s, resNum: %u", resName.c_str(), total);
     return total;
 }
 

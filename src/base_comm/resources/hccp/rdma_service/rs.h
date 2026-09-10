@@ -325,6 +325,7 @@ RS_ATTRI_VISI_DEF int RsGetLiteConnectedInfo(unsigned int phyId, unsigned int rd
 RS_ATTRI_VISI_DEF int RsGetLiteMemAttr(unsigned int phyId, unsigned int rdevIndex, unsigned int qpn,
     struct LiteMemAttrResp *resp);
 RS_ATTRI_VISI_DEF void RsSetCtx(unsigned int phyId);
+RS_ATTRI_VISI_DEF void RsSetDebugConfig(uint64_t debugConfig);
 RS_ATTRI_VISI_DEF int RsGetCqeErrInfoNum(unsigned int phyId, unsigned int rdevIdx, unsigned int *num);
 RS_ATTRI_VISI_DEF int RsGetCqeErrInfoList(unsigned int phyId, unsigned int rdevIdx, struct CqeErrInfo *info,
     unsigned int *num);

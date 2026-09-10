@@ -12,6 +12,7 @@
 #include "ra_hdc.h"
 #include "ra_adp.h"
 #include "rs_ping.h"
+#include "config_log.h"
 #include "ra_adp_ping.h"
 
 struct RsPingOps gPingOps = {
@@ -97,7 +98,7 @@ int RaRsPingGetResults(char *inBuf, char *outBuf, int *outLen, int *opResult, in
         pingDataOut->rxData.target);
     // caller needs to retry, degrade log level
     if (*opResult == -EAGAIN) {
-        hccp_warn("ping_get_results unsuccessful, ret[%d].", *opResult);
+        hccp_warn_rma("ping_get_results unsuccessful, ret[%d].", *opResult);
     } else if (*opResult != 0) {
         hccp_err("ping_get_results failed, ret[%d].", *opResult);
     }

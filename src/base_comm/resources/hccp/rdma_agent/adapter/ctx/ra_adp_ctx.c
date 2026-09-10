@@ -10,6 +10,7 @@
 
 #include "securec.h"
 #include "user_log.h"
+#include "config_log.h"
 #include "hccp_ctx.h"
 #include "ra_hdc_ctx.h"
 #include "ra_hdc_async_ctx.h"
@@ -490,8 +491,8 @@ int RaRsCtxQpDestroy(char *inBuf, char *outBuf, int *outLen, int *opResult, int 
 
     *opResult = gRaRsCtxOps.ctxQpDestroy(&devInfo, opData->txData.id);
     CHK_PRT_RETURN(*opResult == -ENODEV,
-        hccp_warn("[deinit][ra_rs_qp]jetty not found, ret[%d] phyId[%u] "
-                  "devIndex[0x%x] qpId[%u]",
+        hccp_warn_rma("[deinit][ra_rs_qp]jetty not found, ret[%d] phyId[%u] "
+                      "devIndex[0x%x] qpId[%u]",
             *opResult, devInfo.phyId, devInfo.devIndex, opData->txData.id),
         0);
     CHK_PRT_RETURN(*opResult != 0,
@@ -622,8 +623,8 @@ int RaRsCtxQpUnbind(char *inBuf, char *outBuf, int *outLen, int *opResult, int r
 
     *opResult = gRaRsCtxOps.ctxQpUnbind(&devInfo, opData->txData.id);
     CHK_PRT_RETURN(*opResult == -ENODEV,
-        hccp_warn("[deinit][ra_rs_qp]jetty not found, ret[%d] phyId[%u] "
-                  "devIndex[0x%x] qpId[%u]",
+        hccp_warn_rma("[deinit][ra_rs_qp]jetty not found, ret[%d] phyId[%u] "
+                      "devIndex[0x%x] qpId[%u]",
             *opResult, devInfo.phyId, devInfo.devIndex, opData->txData.id),
         0);
     CHK_PRT_RETURN(*opResult != 0,

@@ -42,11 +42,12 @@
 
 #include "ccu_ins_generator_base.h"
 #include "ccu_ins_generator_v1.h"
-#include "unified_platform/pub_inc/config_plf_log_v2.h"
+#include "config_plf_log_v2.h"
 
 namespace hcomm {
 
 using Hccl::PLF_DATA_OP;
+using Hccl::PLF_RES;
 
 constexpr uint32_t TOKEN_VALUE_INDEX = 2;
 constexpr uint16_t INVALID_U16 = 65535;
@@ -394,7 +395,7 @@ CcuResReq CcuKernel::GetResourceRequest()
         req.loopEngineReq[dieId], req.blockLoopEngineReq[dieId], req.gsaReq[dieId], req.blockGsaReq[dieId],
         req.xnReq[dieId], req.blockXnReq[dieId], req.missionReq.req[dieId]);
 
-    HCCL_INFO("%s", info.c_str());
+    PLF_CONFIG_INFO(PLF_RES, "%s", info.c_str());
 
     return req;
 }

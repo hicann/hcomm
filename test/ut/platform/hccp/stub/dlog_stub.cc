@@ -8,31 +8,20 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
-#ifndef HCCLV2_PLF_DEBUG_CONFIG_H
-#define HCCLV2_PLF_DEBUG_CONFIG_H
+#include "dlog_pub.h"
+#include <cstdarg>
+#include <cstdio>
 
-#include "hccl/base.h"
+int32_t CheckLogLevel(int32_t moduleId, int32_t logLevel)
+{
+    (void)moduleId;
+    (void)logLevel;
+    return 1;
+}
 
-namespace Hccl {
-
-constexpr u64 PLF_ALG = 0x1ULL << 0;
-constexpr u64 PLF_TASK = 0x1ULL << 1;
-constexpr u64 PLF_RES = 0x1ULL << 2;
-constexpr u64 PLF_DATA_OP = 0x1ULL << 3;
-constexpr u64 PLF_CHANNEL = 0x1ULL << 4;
-
-u64 GetPlfDebugConfigValue();
-void SetPlfDebugConfigValue(u64 value);
-
-class EnvPlfDebugConfig {
-public:
-    void Parse();
-    u64 GetConfigValue() const;
-
-private:
-    u64 plfDebugConfig_ = 0;
-};
-
-} // namespace Hccl
-
-#endif // HCCLV2_PLF_DEBUG_CONFIG_H
+void DlogRecord(int32_t moduleId, int32_t level, const char* fmt, ...)
+{
+    (void)moduleId;
+    (void)level;
+    (void)fmt;
+}

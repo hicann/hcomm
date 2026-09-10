@@ -9,6 +9,7 @@
  */
 
 #include "user_log.h"
+#include "config_log.h"
 #include "ra_hdc.h"
 #include <stdlib.h>
 #include <string.h>
@@ -181,6 +182,7 @@ struct OpcodeInterfaceInfo gRaInterfaceInfoList[] = {
     {RA_RS_SET_PID, 0},
     {RA_RS_ASYNC_HDC_SESSION_CONNECT, 0},
     {RA_RS_ASYNC_HDC_SESSION_CLOSE, 0},
+    {RA_RS_SET_DEBUG_CONFIG, 0},
 };
 
 STATIC int MsgHeadCheck(struct MsgHead *sendRcvHead, unsigned int opcode, int rsRet, unsigned int msgDataLen);
@@ -358,7 +360,7 @@ STATIC int HdcSendRecvPktRecvCheck(int rcvBufLen, unsigned int outDataLen, struc
     rcvBufLenTmp = (unsigned int)rcvBufLen;
     if (outDataLen != rcvBufLenTmp) {
         if (recvMsgHead->ret == -EACCES) {
-            hccp_warn("exceed the speed limit, need try again, ret:%d", recvMsgHead->ret);
+            hccp_warn_init("exceed the speed limit, need try again, ret:%d", recvMsgHead->ret);
             RA_HDC_OPS.freeMsg(pMsgRcv);
             return -EAGAIN;
         } else if (recvMsgHead->ret == -EPROTONOSUPPORT) {
@@ -502,7 +504,7 @@ int RaHdcProcessMsg(unsigned int opcode, unsigned int phyId, char *data, unsigne
     // opcode RA_RS_SOCKET_RECV not to print EAGAIN to avoid log flush
     if ((ret != 0) && (ret != -EAGAIN || opcode != RA_RS_SOCKET_RECV)) {
         /* maybe has retry return value, record warning log */
-        hccp_warn("message head check unsuccessful, ret[%d] phyId[%u]", ret, phyId);
+        hccp_warn_socket("message head check unsuccessful, ret[%d] phyId[%u]", ret, phyId);
     }
 
     if (memcpy_s(data, dataSize, sendRcvBuf + sizeof(struct MsgHead), dataSize)) {
@@ -673,7 +675,7 @@ void RaHdcGetAllOpcodeVersion(unsigned int phyId)
     for (i = 0; i < num; i++) {
         ret = RaHdcGetOpcodeVersion(phyId, gRaInterfaceInfoList[i].opcode, &gRaInterfaceInfoList[i].version);
         if (ret != 0) {
-            hccp_warn("ra_hdc_get_opcode_version unsuccessful, ret[%d], opcode[%d]", ret,
+            hccp_warn_rma("ra_hdc_get_opcode_version unsuccessful, ret[%d], opcode[%d]", ret,
                 gRaInterfaceInfoList[i].opcode);
             continue;
         }
@@ -807,7 +809,7 @@ int RaHdcInit(struct RaInitConfig *cfg, struct ProcessRaSign pRaSign)
             goto SESS_ERR;
         }
     } else {
-        hccp_warn("hdc session for phyId[%u] already existed", phyId);
+        hccp_warn_socket("hdc session for phyId[%u] already existed", phyId);
         return -EEXIST;
     }
 
@@ -1045,5 +1047,25 @@ int RaHdcGetHccnCfg(unsigned int phyId, enum HccnCfgKey key, char *value, unsign
         ret);
 
     *valueLen = opData.rxData.valueLen;
+    return ret;
+}
+
+int RaHdcSetDebugConfig(unsigned int phyId, u64 debugConfig)
+{
+    union OpSetDebugConfigData opData = {0};
+    unsigned int interfaceVersion = 0;
+    int ret;
+
+    HccpSetDebugConfig(debugConfig);
+    ret = RaHdcGetInterfaceVersion(phyId, RA_RS_SET_DEBUG_CONFIG, &interfaceVersion);
+    CHK_PRT_RETURN(ret != 0 || interfaceVersion < RA_RS_OPCODE_BASE_VERSION,
+        hccp_run_warn("[set][debug_config]not support to set debug config, ret(%d), interfaceVersion(%u), phyId(%u)",
+            ret, interfaceVersion, phyId),
+        -EPROTONOSUPPORT);
+
+    opData.txData.debugConfig = debugConfig;
+    ret = RaHdcProcessMsg(RA_RS_SET_DEBUG_CONFIG, phyId, (char *)&opData, sizeof(union OpSetDebugConfigData));
+    CHK_PRT_RETURN(ret != 0, hccp_err("[set][debug_config]ra hdc message process failed ret(%d) phyId(%u)", ret, phyId),
+        ret);
     return ret;
 }

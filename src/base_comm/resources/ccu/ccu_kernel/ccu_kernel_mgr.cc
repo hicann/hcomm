@@ -29,8 +29,11 @@
 
 #include "ccu_log.h"
 #include "ccu_kernel_func.h"
+#include "config_plf_log_v2.h"
 
 namespace hcomm {
+
+using Hccl::PLF_RES;
 
 HcclResult GetHcclVersionForCcuKernelMgr(int& hcclVersion)
 {
@@ -404,8 +407,8 @@ static CcuResult AllocInstrRes(std::unique_ptr<CcuKernel>& kernel, const int32_t
     const uint32_t dieId = kernel->GetDieId();
     ResInfo insInfo(0, 0);
     CCU_CHK_RET(CcuDevMgrImp::AllocIns(devLogicId, dieId, instrCount, insInfo));
-    HCCL_INFO(
-        "[CcuKernelMgr][%s]: devLogicId[%d], dieId[%u], startId[%u], count[%u]", __func__, devLogicId, dieId,
+    PLF_CONFIG_INFO(
+        PLF_RES, "[CcuKernelMgr]: devLogicId[%d], dieId[%u], startId[%u], count[%u]", devLogicId, dieId,
         insInfo.startId, insInfo.num);
     kernel->SetInstrId(insInfo.startId);
 

@@ -11,6 +11,7 @@
 #include <sys/prctl.h>
 #include <pthread.h>
 #include "user_log.h"
+#include "config_log.h"
 #include "dl_hal_function.h"
 #include "hccp_msg.h"
 #include "hccp_common.h"
@@ -37,7 +38,7 @@ STATIC void RsEschedJettyDestroy(struct rs_cb *rscb, TsUbTaskReportT *taskInfo)
             continue;
         }
 
-        hccp_info("jetty destroy task success, task_index[%d] logicId[%u] dieId[%u] funcId[%u] jettyId[%u]", i,
+        hccp_info_rma("jetty destroy task success, task_index[%d] logicId[%u] dieId[%u] funcId[%u] jettyId[%u]", i,
             rscb->logicId, dieId, funcId, taskInfo->array[i].jettyId);
     }
     return;
@@ -69,7 +70,7 @@ STATIC void RsEschedCleanAllResource(struct rs_cb *rscb)
     RS_LIST_GET_HEAD_ENTRY(devCbCurr, devCbNext, &rscb->udevList, list, struct RsUbDevCb);
     for (; (&devCbCurr->list) != &rscb->udevList;
          devCbCurr = devCbNext, devCbNext = list_entry(devCbNext->list.next, struct RsUbDevCb, list)) {
-        hccp_info("logicId[%u] devIndex[%u] start clean", rscb->logicId, devCbCurr->index);
+        hccp_info_rma("logicId[%u] devIndex[%u] start clean", rscb->logicId, devCbCurr->index);
         RsUbFreeJettyCbList(devCbCurr, &devCbCurr->jettyList, &devCbCurr->rjettyList);
     }
 
@@ -143,7 +144,7 @@ STATIC void RsEschedHandleEvent(struct rs_cb *rscb)
         return;
     }
 
-    hccp_info("wait event success, event_id[%d] subeventId[%u]", event.comm.event_id, event.comm.subevent_id);
+    hccp_info_rma("wait event success, event_id[%d] subeventId[%u]", event.comm.event_id, event.comm.subevent_id);
     ret = RsEschedProcessEvent(rscb, &event);
     if (ret != 0) {
         hccp_run_warn("rs_esched_process_event unsuccessful, ret[%d] logicId[%u]", ret, rscb->logicId);
@@ -224,7 +225,7 @@ void RsEschedDeinit(enum ProtocolTypeT protocol)
     }
 
     if (tryAgain <= 0) {
-        hccp_warn("rs_esched_handle thread quit timeout");
+        hccp_warn_rma("rs_esched_handle thread quit timeout");
     }
     return;
 }

@@ -16,6 +16,7 @@
 #include <errno.h>
 #include "securec.h"
 #include "dl_hal_function.h"
+#include "config_log.h"
 #include "ra_comm.h"
 #include "ra_rs_comm.h"
 #include "ra_rs_err.h"
@@ -37,6 +38,12 @@ void RaPeerMutexLock(unsigned int phyId)
 void RaPeerMutexUnlock(unsigned int phyId)
 {
     PEER_PTHREAD_MUTEX_UNLOCK(&gRaPeerMutex[phyId]);
+}
+
+void RaPeerSetDebugConfig(uint64_t debugConfig)
+{
+    HccpSetDebugConfig(debugConfig);
+    RsSetDebugConfig(debugConfig);
 }
 
 int RaPeerSocketBatchClose(unsigned int devId, struct SocketCloseInfoT conn[], unsigned int num)
@@ -165,9 +172,9 @@ int RaPeerSocketListenStart(unsigned int devId, struct SocketListenInfoT conn[],
     ret = RsSocketListenStart(rsConn, num);
     // listen node found, degrade log level make it consistent with inner call
     if (ret == -EEXIST) {
-        hccp_info("[listen_start][ra_peer_socket]ra listen start unsuccessful ret(%d), phyId(%u)", ret, devId);
+        hccp_info_socket("[listen_start][ra_peer_socket]ra listen start unsuccessful ret(%d), phyId(%u)", ret, devId);
     } else if (ret == -EADDRINUSE) {
-        hccp_warn("[listen_start][ra_peer_socket]ra listen start unsuccessful ret(%d), phyId(%u)", ret, devId);
+        hccp_warn_socket("[listen_start][ra_peer_socket]ra listen start unsuccessful ret(%d), phyId(%u)", ret, devId);
     } else if (ret != 0) {
         hccp_err("[listen_start][ra_peer_socket]ra listen start failed ret(%d), phyId(%u)", ret, devId);
     }
@@ -209,7 +216,8 @@ int RaPeerSocketListenStop(unsigned int devId, struct SocketListenInfoT conn[], 
     RsSetCtx(devId);
     ret = RsSocketListenStop(rsConn, num);
     if (ret == -ENODEV) {
-        hccp_warn("[listen_stop][ra_peer_socket]ra socket listen stop unsuccessful ret(%d), phyId(%u)", ret, devId);
+        hccp_warn_socket("[listen_stop][ra_peer_socket]ra socket listen stop unsuccessful ret(%d), phyId(%u)", ret,
+            devId);
     } else if (ret != 0) {
         hccp_err("[listen_stop][ra_peer_socket]ra socket listen stop failed ret(%d), phyId(%u)", ret, devId);
     }
@@ -1115,7 +1123,7 @@ int RaPeerDeinit(struct RaInitConfig *cfg)
 {
     int ret = 0;
 
-    hccp_info("[deinit][ra_peer]ra_peer_deinit phyId[%d] start", cfg->phyId);
+    hccp_info_init("[deinit][ra_peer]ra_peer_deinit phyId[%d] start", cfg->phyId);
 
     /* In peer online mode chip id equals to phy id */
     struct RsInitConfig rsPeerOnlineCfg = {
@@ -1133,7 +1141,7 @@ int RaPeerDeinit(struct RaInitConfig *cfg)
     ret = RsDeinit(&rsPeerOnlineCfg);
     // no need to destroy lock & return immediately for retry
     if (ret == -EAGAIN) {
-        hccp_warn("[deinit][ra_peer]rs deinit unsuccessful(%d), phyId(%u)", ret, cfg->phyId);
+        hccp_warn_init("[deinit][ra_peer]rs deinit unsuccessful(%d), phyId(%u)", ret, cfg->phyId);
         PEER_PTHREAD_MUTEX_UNLOCK(&gRaPeerMutex[cfg->phyId]);
         return ret;
     }
@@ -1146,7 +1154,7 @@ int RaPeerDeinit(struct RaInitConfig *cfg)
 
 dl_deinit:
     DlHalDeinit();
-    hccp_info("[deinit][ra_peer]ra_peer_deinit phyId[%d] succ", cfg->phyId);
+    hccp_info_init("[deinit][ra_peer]ra_peer_deinit phyId[%d] succ", cfg->phyId);
     return ret;
 }
 
@@ -1154,14 +1162,14 @@ int RaPeerGetIfnum(unsigned int phyId, unsigned int *num)
 {
     int ret;
 
-    hccp_info("[get][ra_peer_ifnum]ra_peer_get_ifnum phyId[%u] start", phyId);
+    hccp_info_socket("[get][ra_peer_ifnum]ra_peer_get_ifnum phyId[%u] start", phyId);
     PEER_PTHREAD_MUTEX_LOCK(&gRaPeerMutex[phyId]);
     RsSetCtx(phyId);
     ret = RsPeerGetIfnum(phyId, num);
     if (ret) {
         hccp_err("[get][ra_peer_ifnum]rs_peer_get_ifnum failed(%d) phyId[%u]", ret, phyId);
     } else {
-        hccp_info("[get][ra_peer_ifnum]ra_peer_get_ifnum phyId[%u] succ", phyId);
+        hccp_info_socket("[get][ra_peer_ifnum]ra_peer_get_ifnum phyId[%u] succ", phyId);
     }
     PEER_PTHREAD_MUTEX_UNLOCK(&gRaPeerMutex[phyId]);
 
@@ -1171,7 +1179,7 @@ int RaPeerGetIfnum(unsigned int phyId, unsigned int *num)
 int RaPeerGetIfaddrs(unsigned int phyId, struct InterfaceInfo interfaceInfos[], unsigned int *num)
 {
     int ret;
-    hccp_info("[get][ra_peer_ifaddrs] ra_peer_get_ifaddrs phyId[%u] start", phyId);
+    hccp_info_socket("[get][ra_peer_ifaddrs] ra_peer_get_ifaddrs phyId[%u] start", phyId);
     PEER_PTHREAD_MUTEX_LOCK(&gRaPeerMutex[phyId]);
     RsSetCtx(phyId);
     ret = RsPeerGetIfaddrs(interfaceInfos, num, phyId);
@@ -1179,7 +1187,7 @@ int RaPeerGetIfaddrs(unsigned int phyId, struct InterfaceInfo interfaceInfos[], 
         hccp_err("[get][ra_peer_ifaddrs]rs_peer_get_ifaddrs failed(%d), phyId(%u)", ret, phyId);
     }
     PEER_PTHREAD_MUTEX_UNLOCK(&gRaPeerMutex[phyId]);
-    hccp_info("[get][ra_peer_ifaddrs] ra_peer_get_ifaddrs phyId[%u] succ", phyId);
+    hccp_info_socket("[get][ra_peer_ifaddrs] ra_peer_get_ifaddrs phyId[%u] succ", phyId);
     return ret;
 }
 
@@ -1366,7 +1374,7 @@ int RaPeerRdevDeinit(struct RaRdmaHandle *rdmaHandle, unsigned int notifyType)
 {
     int ret;
 
-    hccp_info("[deinit][ra_peer_rdev]ra_peer_rdev_deinit phyId[%d]", rdmaHandle->rdevInfo.phyId);
+    hccp_info_init("[deinit][ra_peer_rdev]ra_peer_rdev_deinit phyId[%d]", rdmaHandle->rdevInfo.phyId);
     PEER_PTHREAD_MUTEX_LOCK(&gRaPeerMutex[rdmaHandle->rdevInfo.phyId]);
     RsSetCtx(rdmaHandle->rdevInfo.phyId);
     ret = RsRdevDeinit(rdmaHandle->rdevInfo.phyId, notifyType, rdmaHandle->rdevIndex);
@@ -1389,7 +1397,7 @@ int RaPeerRdevDeinit(struct RaRdmaHandle *rdmaHandle, unsigned int notifyType)
 int RaPeerSetTsqpDepth(struct RaRdmaHandle *rdmaHandle, unsigned int tempDepth, unsigned int *qpNum)
 {
     int ret;
-    hccp_info("[set][peer_set_tsqp_depth]ra_peer_set_tsqp_depth phyId[%d]", rdmaHandle->rdevInfo.phyId);
+    hccp_info_rma("[set][peer_set_tsqp_depth]ra_peer_set_tsqp_depth phyId[%d]", rdmaHandle->rdevInfo.phyId);
     PEER_PTHREAD_MUTEX_LOCK(&gRaPeerMutex[rdmaHandle->rdevInfo.phyId]);
     RsSetCtx(rdmaHandle->rdevInfo.phyId);
     ret = RsSetTsqpDepth(rdmaHandle->rdevInfo.phyId, rdmaHandle->rdevIndex, tempDepth, qpNum);
@@ -1407,7 +1415,7 @@ int RaPeerGetTsqpDepth(struct RaRdmaHandle *rdmaHandle, unsigned int *tempDepth,
 {
     int ret;
 
-    hccp_info("[get][peer_get_tsqp_depth]ra_peer_get_tsqp_depth phyId[%d]", rdmaHandle->rdevInfo.phyId);
+    hccp_info_rma("[get][peer_get_tsqp_depth]ra_peer_get_tsqp_depth phyId[%d]", rdmaHandle->rdevInfo.phyId);
     PEER_PTHREAD_MUTEX_LOCK(&gRaPeerMutex[rdmaHandle->rdevInfo.phyId]);
     RsSetCtx(rdmaHandle->rdevInfo.phyId);
     ret = RsGetTsqpDepth(rdmaHandle->rdevInfo.phyId, rdmaHandle->rdevIndex, tempDepth, qpNum);

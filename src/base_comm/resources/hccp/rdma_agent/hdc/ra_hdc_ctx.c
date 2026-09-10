@@ -15,6 +15,7 @@
 #include <errno.h>
 #include "securec.h"
 #include "user_log.h"
+#include "config_log.h"
 #include "hccp_ctx.h"
 #include "ra.h"
 #include "ra_ctx.h"
@@ -570,7 +571,7 @@ int RaHdcCtxQpDestroy(struct RaCtxQpHandle *qpHandle)
 
     ret = RaHdcProcessMsg(RA_RS_CTX_QP_DESTROY, phyId, (char *)&opData, sizeof(union OpCtxQpDestroyData));
     CHK_PRT_RETURN(ret == -ENODEV,
-        hccp_warn("[deinit][ra_hdc_qp]hdc message process ret[%d], phyId[%u] devIndex[%u]", ret, phyId,
+        hccp_warn_rma("[deinit][ra_hdc_qp]hdc message process ret[%d], phyId[%u] devIndex[%u]", ret, phyId,
             qpHandle->devIndex),
         ret);
     CHK_PRT_RETURN(ret != 0,
@@ -667,7 +668,8 @@ int RaHdcCtxQpUnbind(struct RaCtxQpHandle *qpHandle)
 
     ret = RaHdcProcessMsg(RA_RS_CTX_QP_UNBIND, phyId, (char *)&opData, sizeof(union OpCtxQpUnbindData));
     CHK_PRT_RETURN(ret == -ENODEV,
-        hccp_warn("[deinit][ra_qp]hdc message process ret[%d], phyId[%u] devIndex[%u]", ret, phyId, qpHandle->devIndex),
+        hccp_warn_rma("[deinit][ra_qp]hdc message process ret[%d], phyId[%u] devIndex[%u]", ret, phyId,
+            qpHandle->devIndex),
         ret);
     CHK_PRT_RETURN(ret != 0,
         hccp_err("[deinit][ra_qp]hdc message process failed ret[%d], phyId[%u] devIndex[%u]", ret, phyId,

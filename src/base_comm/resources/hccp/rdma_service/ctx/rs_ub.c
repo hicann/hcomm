@@ -19,6 +19,7 @@
 #include <udma_u_ctl.h>
 #include "securec.h"
 #include "user_log.h"
+#include "config_log.h"
 #include "dl_urma_function.h"
 #include "ra_rs_err.h"
 #include "ra_rs_ctx.h"
@@ -55,7 +56,7 @@ int RsUbGetDevEidInfoNum(unsigned int phyId, unsigned int *num)
         eidList = RsUrmaGetEidList(devList[i], &eidNum);
         // normal case, should continue to get eid_list from the rest of device
         if (eidList == NULL) {
-            hccp_warn("rs_urma_get_eid_list i=%u unsuccessful, eidList is NULL, errno:%d", i, errno);
+            hccp_warn_rma("rs_urma_get_eid_list i=%u unsuccessful, eidList is NULL, errno:%d", i, errno);
             continue;
         }
 
@@ -99,7 +100,7 @@ int RsUbGetUeInfo(urma_context_t *urmaCtx, struct DevBaseAttr *devAttr)
     devAttr->ub.dieId = ueInfo.die_id;
     devAttr->ub.chipId = ueInfo.chip_id;
     devAttr->ub.funcId = ueInfo.ue_id;
-    hccp_info("func_id:%u, chipId:%u, dieId:%u", devAttr->ub.funcId, devAttr->ub.chipId, devAttr->ub.dieId);
+    hccp_info_rma("func_id:%u, chipId:%u, dieId:%u", devAttr->ub.funcId, devAttr->ub.chipId, devAttr->ub.dieId);
 #endif
     return 0;
 }
@@ -153,7 +154,7 @@ STATIC int RsUbFillInfoByEidList(urma_device_t *currDev, unsigned int *index, st
     eidList = RsUrmaGetEidList(currDev, &eidNum);
     // normal case, should continue to get eid_list from the rest of device
     if (eidList == NULL) {
-        hccp_warn("rs_urma_get_eid_list unsuccessful, eidList is NULL, errno:%d", errno);
+        hccp_warn_rma("rs_urma_get_eid_list unsuccessful, eidList is NULL, errno:%d", errno);
         return 0;
     }
 
@@ -286,8 +287,8 @@ STATIC int RsUbGetDevAttr(struct RsUbDevCb *devCb, struct DevBaseAttr *devAttr, 
     *devIndex = RsGenerateDevIndex(devCb->rscb->devCnt, devAttr->ub.dieId, devAttr->ub.funcId);
     devCb->index = *devIndex;
 
-    hccp_info("max_jetty:%u, maxJfsInlineLen:%u, sqMaxDepth:%u, rqMaxDepth:%u, sqMaxSge:%u, rqMaxSge:%u "
-              "maxReadSize:%u maxWriteSize:%u maxMsgSize:%llu",
+    hccp_info_rma("max_jetty:%u, maxJfsInlineLen:%u, sqMaxDepth:%u, rqMaxDepth:%u, sqMaxSge:%u, rqMaxSge:%u "
+                  "maxReadSize:%u maxWriteSize:%u maxMsgSize:%llu",
         attr.dev_cap.max_jetty, devAttr->ub.maxJfsInlineLen, devAttr->sqMaxDepth, devAttr->rqMaxDepth,
         devAttr->sqMaxSge, devAttr->rqMaxSge, devAttr->maxReadSize, devAttr->maxWriteSize, devAttr->maxMsgSize);
     return 0;
@@ -537,11 +538,11 @@ STATIC int RsUbFreeJfcCb(struct RsUbDevCb *devCb, struct RsCtxJfcCb *jfcCb)
     if (jfcCb->jfcType == JFC_MODE_STARS_POLL || jfcCb->jfcType == JFC_MODE_CCU_POLL ||
         jfcCb->jfcType == JFC_MODE_USER_CTL_NORMAL) {
         (void)RsUbDeleteJfcExt(devCb, jfcCb);
-        hccp_info("[deinit][rs_jfc]destroy success, dev jfcCnt:%u", devCb->jfcCnt);
+        hccp_info_rma("[deinit][rs_jfc]destroy success, dev jfcCnt:%u", devCb->jfcCnt);
     } else if (jfcCb->jfcType == JFC_MODE_NORMAL) {
         urmaJfc = (urma_jfc_t *)(uintptr_t)jfcCb->jfcAddr;
         (void)RsUrmaDeleteJfc(urmaJfc);
-        hccp_info("[deinit][rs_jfc]destroy success, dev jfcCnt:%u", devCb->jfcCnt);
+        hccp_info_rma("[deinit][rs_jfc]destroy success, dev jfcCnt:%u", devCb->jfcCnt);
     } else {
         hccp_err("jfc_type:%d is invalid, not support!", jfcCb->jfcType);
         ret = -EINVAL;
@@ -557,7 +558,7 @@ int RsUbCtxJfcDestroy(struct RsUbDevCb *devCb, unsigned long long addr)
     struct RsCtxJfcCb *jfcCb = NULL;
     int ret;
 
-    hccp_info("[deinit][rs_jfc]destroy addr:0x%llx", addr);
+    hccp_info_rma("[deinit][rs_jfc]destroy addr:0x%llx", addr);
 
     RS_PTHREAD_MUTEX_LOCK(&devCb->mutex);
     ret = RsUbGetJfcCb(devCb, addr, &jfcCb);
@@ -580,7 +581,7 @@ STATIC void RsUbFreeJfcCbList(struct RsUbDevCb *devCb, struct RsListHead *jfcLis
 
     RS_PTHREAD_MUTEX_LOCK(&devCb->mutex);
     if (!RsListEmpty(jfcList)) {
-        hccp_warn("jfc list do not empty!");
+        hccp_warn_rma("jfc list is not empty!");
         RS_LIST_GET_HEAD_ENTRY(jfcCurr, jfcNext, jfcList, list, struct RsCtxJfcCb);
         for (; (&jfcCurr->list) != jfcList;
              jfcCurr = jfcNext, jfcNext = list_entry(jfcNext->list.next, struct RsCtxJfcCb, list)) {
@@ -616,7 +617,7 @@ STATIC void RsUbFreeSegCbList(struct RsUbDevCb *devCb, struct RsListHead *lsegLi
 
     RS_PTHREAD_MUTEX_LOCK(&devCb->mutex);
     if (!RsListEmpty(lsegList)) {
-        hccp_warn("lseg list do not empty!");
+        hccp_warn_rma("lseg list is not empty!");
         RS_LIST_GET_HEAD_ENTRY(segCurr, segNext, lsegList, list, struct RsSegCb);
         for (; (&segCurr->list) != lsegList;
              segCurr = segNext, segNext = list_entry(segNext->list.next, struct RsSegCb, list)) {
@@ -630,7 +631,7 @@ STATIC void RsUbFreeSegCbList(struct RsUbDevCb *devCb, struct RsListHead *lsegLi
 
     RS_PTHREAD_MUTEX_LOCK(&devCb->mutex);
     if (!RsListEmpty(rsegList)) {
-        hccp_warn("rseg list do not empty!");
+        hccp_warn_rma("rseg list is not empty!");
         RS_LIST_GET_HEAD_ENTRY(segCurr, segNext, rsegList, list, struct RsSegCb);
         for (; (&segCurr->list) != rsegList;
              segCurr = segNext, segNext = list_entry(segNext->list.next, struct RsSegCb, list)) {
@@ -701,7 +702,7 @@ STATIC void RsUbUnbindJettyCbList(struct RsUbDevCb *devCb, struct RsListHead *je
     int ret;
 
     if (!RsListEmpty(jettyList)) {
-        hccp_warn("jetty list do not empty! start to unbind");
+        hccp_warn_rma("jetty list is not empty! start to unbind");
         RS_LIST_GET_HEAD_ENTRY(jettyCurr, jettyNext, jettyList, list, struct RsCtxJettyCb);
         for (; (&jettyCurr->list) != jettyList;
              jettyCurr = jettyNext, jettyNext = list_entry(jettyNext->list.next, struct RsCtxJettyCb, list)) {
@@ -709,7 +710,7 @@ STATIC void RsUbUnbindJettyCbList(struct RsUbDevCb *devCb, struct RsListHead *je
             if (jettyCurr->state != RS_JETTY_STATE_BIND) {
                 continue;
             }
-            hccp_info("jetty_id[%u] will be unbind", jettyCurr->jetty->jetty_id.id);
+            hccp_info_rma("jetty_id[%u] will be unbind", jettyCurr->jetty->jetty_id.id);
             ret = RsUrmaUnbindJetty(jettyCurr->jetty);
             if (ret != 0) {
                 hccp_err("rs_urma_unbind_jetty failed, ret:%d errno:%d devIndex:0x%x jetty_id:%u", ret, errno,
@@ -727,7 +728,7 @@ STATIC void RsUbUnimportJettyCbList(struct RsUbDevCb *devCb, struct RsListHead *
     int ret;
 
     if (!RsListEmpty(rjettyList)) {
-        hccp_warn("rjetty list do not empty! start to unimport");
+        hccp_warn_rma("rjetty list is not empty! start to unimport");
         RS_LIST_GET_HEAD_ENTRY(remJettyCurr, remJettyNext, rjettyList, list, struct RsCtxRemJettyCb);
         for (; (&remJettyCurr->list) != rjettyList;
              remJettyCurr = remJettyNext,
@@ -736,7 +737,7 @@ STATIC void RsUbUnimportJettyCbList(struct RsUbDevCb *devCb, struct RsListHead *
             if (remJettyCurr->state != RS_JETTY_STATE_IMPORTED) {
                 continue;
             }
-            hccp_info("rjetty_id[%u] will be destroyed", remJettyCurr->tjetty->id.id);
+            hccp_info_rma("rjetty_id[%u] will be destroyed", remJettyCurr->tjetty->id.id);
             ret = RsUbFreeRemJettyCb(devCb, remJettyCurr);
             if (ret != 0) {
                 hccp_err("rs_ub_ctx_jetty_unimport failed, ret:%d", ret);
@@ -818,7 +819,7 @@ STATIC void RsUbDestroyJettyCbList(struct RsUbDevCb *devCb, struct RsListHead *j
         return;
     }
 
-    hccp_warn("jetty list is not empty! start to delete");
+    hccp_warn_rma("jetty list is not empty! start to delete");
     ret = RsUbCallocJettyBatchInfo(&batchInfo, devCb->jettyCnt);
     if (ret != 0) {
         hccp_err("rs_ub_calloc_jetty_batch_info failed, ret:%d", ret);
@@ -832,7 +833,7 @@ STATIC void RsUbDestroyJettyCbList(struct RsUbDevCb *devCb, struct RsListHead *j
         if (jettyCurr->state != RS_JETTY_STATE_CREATED) {
             continue;
         }
-        hccp_info("jetty_id[%u] will be destroyed", jettyCurr->jetty->jetty_id.id);
+        hccp_info_rma("jetty_id[%u] will be destroyed", jettyCurr->jetty->jetty_id.id);
         batchInfo.jettyCbArr[i] = jettyCurr;
         batchInfo.jettyArr[i] = jettyCurr->jetty;
 
@@ -905,7 +906,7 @@ int RsUbCtxChanCreate(struct RsUbDevCb *devCb, union DataPlaneCstmFlag dataPlane
     RS_PTHREAD_MUTEX_ULOCK(&devCb->mutex);
 
     *fd = outJfce->fd;
-    hccp_info("dev_index:0x%x jfce addr:0x%llx fd:%d", devCb->index, jfceCb->jfceAddr, outJfce->fd);
+    hccp_info_rma("dev_index:0x%x jfce addr:0x%llx fd:%d", devCb->index, jfceCb->jfceAddr, outJfce->fd);
     return ret;
 
 delete_jfce:
@@ -943,7 +944,7 @@ int RsUbCtxChanDestroy(struct RsUbDevCb *devCb, unsigned long long addr)
     urma_jfce_t *jfce = NULL;
     int ret;
 
-    hccp_info("[rs_ctx_chan]jfce destroy addr:0x%llx", addr);
+    hccp_info_rma("[rs_ctx_chan]jfce destroy addr:0x%llx", addr);
 
     ret = RsUbGetJfceCb(devCb, addr, &jfceCb);
     CHK_PRT_RETURN(ret != 0, hccp_err("get jfce_cb failed, ret:%d, jfce addr:0x%llx", ret, addr), ret);
@@ -966,7 +967,7 @@ int RsUbCtxChanDestroy(struct RsUbDevCb *devCb, unsigned long long addr)
     free(jfceCb);
     jfceCb = NULL;
 
-    hccp_info("rs ctx jfce destroy success, dev jfce num is %u", devCb->jfceCnt);
+    hccp_info_rma("rs ctx jfce destroy success, dev jfce num is %u", devCb->jfceCnt);
     return ret;
 }
 
@@ -995,7 +996,7 @@ STATIC void RsUbFreeJfceCbList(struct RsUbDevCb *devCb, struct RsListHead *jfceL
 
     RS_PTHREAD_MUTEX_LOCK(&devCb->mutex);
     if (!RsListEmpty(jfceList)) {
-        hccp_warn("jfce list do not empty!");
+        hccp_warn_rma("jfce list is not empty!");
         RS_LIST_GET_HEAD_ENTRY(jfceCurr, jfceNext, jfceList, list, struct RsCtxJfceCb);
         for (; (&jfceCurr->list) != jfceList;
              jfceCurr = jfceNext, jfceNext = list_entry(jfceNext->list.next, struct RsCtxJfceCb, list)) {
@@ -1029,7 +1030,7 @@ int RsUbCtxTokenIdAlloc(struct RsUbDevCb *devCb, unsigned long long *addr, unsig
     tokenIdCb->devCb->tokenIdCnt++;
     RS_PTHREAD_MUTEX_ULOCK(&devCb->mutex);
 
-    hccp_info("alloc success, tokenId addr:0x%llx, devIndex:0x%x", *addr, devCb->index);
+    hccp_info_rma("alloc success, tokenId addr:0x%llx, devIndex:0x%x", *addr, devCb->index);
     return 0;
 
 free_ctx_token_id_cb:
@@ -1094,8 +1095,8 @@ int RsUbCtxTokenIdFree(struct RsUbDevCb *devCb, unsigned long long addr)
         hccp_err("free_token_id_cb failed, ret:%d, devIndex:0x%x, tokenId addr:0x%llx", ret, devCb->index, addr);
         goto free_lock;
     }
-    hccp_info("rs token id free success, dev tokenId num is %u, devIndex:0x%x, tokenId addr:0x%llx", devCb->tokenIdCnt,
-        devCb->index, addr);
+    hccp_info_rma("rs token id free success, dev tokenId num is %u, devIndex:0x%x, tokenId addr:0x%llx",
+        devCb->tokenIdCnt, devCb->index, addr);
 
 free_lock:
     RS_PTHREAD_MUTEX_ULOCK(&devCb->mutex);
@@ -1109,7 +1110,7 @@ STATIC void RsUbFreeTokenIdCbList(struct RsUbDevCb *devCb, struct RsListHead *to
 
     RS_PTHREAD_MUTEX_LOCK(&devCb->mutex);
     if (!RsListEmpty(tokenIdList)) {
-        hccp_warn("token_id list do not empty!");
+        hccp_warn_rma("token_id list is not empty!");
         RS_LIST_GET_HEAD_ENTRY(tokenIdCurr, tokenIdNext, tokenIdList, list, struct RsTokenIdCb);
         for (; (&tokenIdCurr->list) != tokenIdList;
              tokenIdCurr = tokenIdNext, tokenIdNext = list_entry(tokenIdNext->list.next, struct RsTokenIdCb, list)) {
@@ -1152,7 +1153,7 @@ int RsUbCtxDeinit(struct RsUbDevCb *devCb)
 {
     int ret;
 
-    hccp_info("[deinit][rs_ctx]start deinit, phyId:%u, devIndex:0x%x", devCb->phyId, devCb->index);
+    hccp_info_rma("[deinit][rs_ctx]start deinit, phyId:%u, devIndex:0x%x", devCb->phyId, devCb->index);
 
     RsUbFreeSegCbList(devCb, &devCb->lsegList, &devCb->rsegList);
     RsUbFreeJettyCbList(devCb, &devCb->jettyList, &devCb->rjettyList);
@@ -1204,7 +1205,7 @@ STATIC int RsUbQuerySegCb(struct RsUbDevCb *devCb, uint64_t addr, struct RsSegCb
     *segCb = NULL;
     RS_PTHREAD_MUTEX_ULOCK(&devCb->mutex);
 
-    hccp_info("cannot find seg_cb for addr@0x%lx", addr);
+    hccp_info_rma("cannot find seg_cb for addr@0x%lx", addr);
     return -ENODEV;
 }
 
@@ -1383,7 +1384,7 @@ int RsUbCtxRmemUnimport(struct RsUbDevCb *devCb, unsigned long long addr)
     int ret;
 
     ret = RsUbQuerySegCb(devCb, addr, &remSegCb, &devCb->rsegList);
-    CHK_PRT_RETURN(ret != 0, hccp_warn("[deinit][rs_ctx_rmem]can not find rem seg cb for addr:0x%llx", addr), 0);
+    CHK_PRT_RETURN(ret != 0, hccp_warn_rma("[deinit][rs_ctx_rmem]can not find rem seg cb for addr:0x%llx", addr), 0);
 
     RsUrmaUnimportSeg(remSegCb->segment);
     RS_PTHREAD_MUTEX_LOCK(&devCb->mutex);
@@ -1468,7 +1469,7 @@ int RsUbCtxJfcCreate(struct RsUbDevCb *devCb, struct CtxCqAttr *attr, struct Ctx
     jfcCb->jfcAddr = (uint64_t)(uintptr_t)outJfc; // urma_jfc_t *
     RsUbFillJfcInfo(jfcCb, info);
 
-    hccp_info("jfc addr:0x%llx mode:%d", jfcCb->jfcAddr, jfcCb->jfcType);
+    hccp_info_rma("jfc addr:0x%llx mode:%d", jfcCb->jfcAddr, jfcCb->jfcType);
 
     RS_PTHREAD_MUTEX_LOCK(&devCb->mutex);
     jfcCb->devCb->jfcCnt++;
@@ -1842,12 +1843,12 @@ jetty_found:
     RS_PTHREAD_MUTEX_ULOCK(&devCbCurr->mutex);
 
     if (jettyCb->state == RS_JETTY_STATE_BIND) {
-        hccp_info("jetty_id:%u will be unbind, devIndex:0x%x", jettyId, devCbCurr->index);
+        hccp_info_rma("jetty_id:%u will be unbind, devIndex:0x%x", jettyId, devCbCurr->index);
         (void)RsUrmaUnbindJetty(jettyCb->jetty);
     }
 
     if (jettyCb->state == RS_JETTY_STATE_BIND || jettyCb->state == RS_JETTY_STATE_CREATED) {
-        hccp_info("jetty_id:%u will be destroyed, devIndex:0x%x", jettyId, devCbCurr->index);
+        hccp_info_rma("jetty_id:%u will be destroyed, devIndex:0x%x", jettyId, devCbCurr->index);
         RsUbCtxDrvJettyDelete(jettyCb);
     }
 
@@ -1865,7 +1866,7 @@ STATIC int RsUbGetRemJettyCb(struct RsUbDevCb *devCb, urma_jetty_id_t *remJettyI
     for (; (&jettyCbCurr->list) != &devCb->rjettyList;
          jettyCbCurr = jettyCbNext, jettyCbNext = list_entry(jettyCbNext->list.next, struct RsCtxRemJettyCb, list)) {
         if (jettyCbCurr->tjetty == NULL) {
-            hccp_warn("devIndex:0x%x remJettyId:%u tjetty is NULL", devCb->index, remJettyId->id);
+            hccp_warn_rma("devIndex:0x%x remJettyId:%u tjetty is NULL", devCb->index, remJettyId->id);
             continue;
         }
         if (memcmp(&jettyCbCurr->tjetty->id, remJettyId, sizeof(urma_jetty_id_t)) == 0) {
@@ -1875,7 +1876,7 @@ STATIC int RsUbGetRemJettyCb(struct RsUbDevCb *devCb, urma_jetty_id_t *remJettyI
     }
 
     *tempJettyCb = NULL;
-    hccp_warn("devIndex:0x%x remJettyId:%u do not available!", devCb->index, remJettyId->id);
+    hccp_warn_rma("devIndex:0x%x remJettyId:%u is not available!", devCb->index, remJettyId->id);
     return -ENODEV;
 }
 
@@ -1998,7 +1999,7 @@ STATIC int RsUbGetRemJettyCbDeprecated(struct RsUbDevCb *devCb, unsigned int rem
     for (; (&jettyCbCurr->list) != &devCb->rjettyList;
          jettyCbCurr = jettyCbNext, jettyCbNext = list_entry(jettyCbNext->list.next, struct RsCtxRemJettyCb, list)) {
         if (jettyCbCurr->tjetty == NULL) {
-            hccp_warn("rem_jetty_id:%u jetty_cb_curr->tjetty is NULL", remJettyId);
+            hccp_warn_rma("rem_jetty_id:%u jetty_cb_curr->tjetty is NULL", remJettyId);
             continue;
         }
         if (jettyCbCurr->tjetty->id.id == remJettyId) {
@@ -2369,7 +2370,7 @@ int RsUbCtxJettyUpdateCi(struct RsUbDevCb *devCb, unsigned int jettyId, uint16_t
         hccp_err("rs_urma_user_ctl update ci failed, ret:%d errno:%d jettyId:%u ci:%u", ret, errno, jettyId, ci),
         -EOPENSRC);
 
-    hccp_info("[update_ci]devIndex:0x%x jetty_id:%u update ci:%u success", devCb->index, jettyId, ci);
+    hccp_info_rma("[update_ci]devIndex:0x%x jetty_id:%u update ci:%u success", devCb->index, jettyId, ci);
 
     return 0;
 }

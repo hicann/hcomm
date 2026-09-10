@@ -14,6 +14,7 @@
 #include <unistd.h>
 #include <errno.h>
 #include "user_log.h"
+#include "config_log.h"
 #include "ra_hdc.h"
 #include "securec.h"
 #include "ra.h"
@@ -45,7 +46,7 @@ STATIC int RaHdcNotifyBaseAddrInit(unsigned int notifyType, unsigned int phyId, 
         RA_MEM_TYPE_HBM | (moudleId << MEM_MODULE_ID_BIT));
     CHK_PRT_RETURN(ret, hccp_err("[init][base_addr]halMemAlloc failed, ret(%d), phyId(%u)", ret, phyId), ret);
 
-    hccp_info("notify info: size[%u]", notifySize);
+    hccp_info_rma("notify info: size[%u]", notifySize);
     ret = RaHdcNotifyCfgSet(phyId, (uintptr_t)*notifyVa, notifySize);
     if (ret) {
         hccp_err("[init][base_addr]ra_hdc_notify_cfg_set failed, ret(%d), phyId(%u)", ret, phyId);
@@ -445,7 +446,7 @@ int RaHdcTypicalCqCreate(struct RaRdmaHandle *rdmaHandle, unsigned int cqDepth, 
         cqHdc = NULL;
         return ret;
     }
-    hccp_info("RaHdcProcessMsg RA_RS_TYPICAL_CQ_CREATE Done");
+    hccp_info_rma("RaHdcProcessMsg RA_RS_TYPICAL_CQ_CREATE Done");
 
     *cqn = cqCreateData.rxData.cqn;
 
@@ -548,7 +549,7 @@ int RaHdcGetQpStatus(struct RaQpHandle *qpHdc, int *status)
 
     ret = RaHdcGetInterfaceVersion(qpHdc->phyId, RA_RS_QP_INFO, &interfaceVersion);
     if (ret != 0) {
-        hccp_warn("[get][ra_hdc_qp_status]get interface version not success ret(%d) phyId(%u)", ret, qpHdc->phyId);
+        hccp_warn_rma("[get][ra_hdc_qp_status]get interface version not success ret(%d) phyId(%u)", ret, qpHdc->phyId);
         interfaceVersion = 0;
     }
 
@@ -689,7 +690,7 @@ int RaHdcSendWrV2(struct RaQpHandle *qpHdc, struct SendWrV2 *wr, struct SendWrRs
         }
     }
 
-    hccp_warn("qpn:%u qp_mode:%d support_lite:%d not support to send_wr", qpHdc->qpn, qpHdc->qpMode,
+    hccp_warn_rma("qpn:%u qp_mode:%d support_lite:%d not support to send_wr", qpHdc->qpn, qpHdc->qpMode,
         qpHdc->supportLite);
 
     return -ENOTSUPP;
@@ -712,7 +713,7 @@ int RaHdcSendWrVerbs(struct RaQpHandle *qpHdc, struct SendWrVerbs *wr, struct Se
         }
     }
 
-    hccp_warn("qpn:%u qp_mode:%d support_lite:%d not support to send_wr", qpHdc->qpn, qpHdc->qpMode,
+    hccp_warn_rma("qpn:%u qp_mode:%d support_lite:%d not support to send_wr", qpHdc->qpn, qpHdc->qpMode,
         qpHdc->supportLite);
 
     return -ENOTSUPP;
@@ -742,7 +743,8 @@ int RaHdcRecvWrVerbs(struct RaQpHandle *qpHdc, struct RecvWrVerbs *wr)
             ret = RaRdmaLitePostRecv(qpHdc->liteQp, &liteWr, &badWr);
             if (ret) {
                 if (ret == -ENOMEM) {
-                    hccp_warn("[recv][ra_hdc_wr]ra hdc post recv unsuccessful, ret(%d) phyId(%u)", ret, qpHdc->phyId);
+                    hccp_warn_rma("[recv][ra_hdc_wr]ra hdc post recv unsuccessful, ret(%d) phyId(%u)", ret,
+                        qpHdc->phyId);
                     return 0;
                 } else {
                     hccp_err("[recv][ra_hdc_wr]ra hdc post recv failed ret(%d) phyId(%u)", ret, qpHdc->phyId);
@@ -755,7 +757,7 @@ int RaHdcRecvWrVerbs(struct RaQpHandle *qpHdc, struct RecvWrVerbs *wr)
         }
     }
 
-    hccp_warn("qpn:%u qp_mode:%d support_lite:%d not support to recv_wr_verbs", qpHdc->qpn, qpHdc->qpMode,
+    hccp_warn_rma("qpn:%u qp_mode:%d support_lite:%d not support to recv_wr_verbs", qpHdc->qpn, qpHdc->qpMode,
         qpHdc->supportLite);
 
     return -ENOTSUPP;
@@ -772,7 +774,7 @@ int RaHdcTypicalSendWr(struct RaQpHandle *qpHdc, struct SendWr *wr, struct SendW
         }
     }
 
-    hccp_warn("qpn:%u qp_mode:%d support_lite:%d not support to send_wr", qpHdc->qpn, qpHdc->qpMode,
+    hccp_warn_rma("qpn:%u qp_mode:%d support_lite:%d not support to send_wr", qpHdc->qpn, qpHdc->qpMode,
         qpHdc->supportLite);
 
     return -ENOTSUPP;
@@ -1337,7 +1339,7 @@ int RaHdcRecvWrlist(struct RaQpHandle *qpHdc, struct RecvWrlistData *wr, unsigne
         }
     }
 
-    hccp_warn("qpn:%u qp_mode:%d support_lite:%d not support to recv_wrlist", qpHdc->qpn, qpHdc->qpMode,
+    hccp_warn_rma("qpn:%u qp_mode:%d support_lite:%d not support to recv_wrlist", qpHdc->qpn, qpHdc->qpMode,
         qpHdc->supportLite);
 
     return -ENOTSUPP;
@@ -1353,7 +1355,7 @@ int RaHdcPollCq(struct RaQpHandle *qpHdc, bool isSendCq, unsigned int numEntries
         }
     }
 
-    hccp_warn("qpn:%u qp_mode:%d support_lite:%d not support to poll_cq", qpHdc->qpn, qpHdc->qpMode,
+    hccp_warn_rma("qpn:%u qp_mode:%d support_lite:%d not support to poll_cq", qpHdc->qpn, qpHdc->qpMode,
         qpHdc->supportLite);
 
     return -ENOTSUPP;
@@ -1364,7 +1366,7 @@ int RaHdcPollTypicalCq(struct RaTypicalCqHandle *cqHdc, unsigned int numEntries,
     struct rdma_lite_wc_v2 *liteWc = (struct rdma_lite_wc_v2 *)wc;
     struct rdma_lite_cq *liteCq = RaHdcLiteFindTypicalCq(cqHdc->rdmaHandle, cqHdc->cqn);
     if (liteCq == NULL) {
-        hccp_warn("cqn:%u liteCq not found in table", cqHdc->cqn);
+        hccp_warn_rma("cqn:%u liteCq not found in table", cqHdc->cqn);
         return -ENOTSUPP;
     }
     int ret = RaRdmaLitePollCqV2(liteCq, (int)numEntries, liteWc);
@@ -1416,7 +1418,7 @@ STATIC int RaHdcRdevInitWithBackup(struct RaRdmaHandle *rdmaHandle, unsigned int
     ret = RaHdcGetInterfaceVersion(phyId, RA_RS_RDEV_INIT_WITH_BACKUP, &interfaceVersion);
     // check opcode version, not support to init rdev with backup info
     if (ret != 0 || interfaceVersion < RA_RS_OPCODE_BASE_VERSION) {
-        hccp_warn("[init][ra_hdc_rdev]get opcode[%d] not support, ret[%d] != 0 or interfaceVersion[%u] is 0",
+        hccp_warn_init("[init][ra_hdc_rdev]get opcode[%d] not support, ret[%d] != 0 or interfaceVersion[%u] is 0",
             RA_RS_RDEV_INIT_WITH_BACKUP, ret, interfaceVersion);
         return -ENOTSUPP;
     }
@@ -1645,7 +1647,7 @@ STATIC int RaHdcGetCqeErrInfoNum(struct RaRdmaHandle *rdmaHandle, unsigned int *
     // check opcode version, not support to get cqe err info
     ret = RaHdcGetInterfaceVersion(phyId, RA_RS_GET_CQE_ERR_INFO_NUM, &interfaceVersion);
     if (ret != 0 || interfaceVersion == 0) {
-        hccp_warn("[get][cqe_err_info_list]get opcode[%d] not support, ret[%d] != 0 or interfaceVersion[%u] is 0",
+        hccp_warn_rma("[get][cqe_err_info_list]get opcode[%d] not support, ret[%d] != 0 or interfaceVersion[%u] is 0",
             RA_RS_GET_CQE_ERR_INFO_NUM, ret, interfaceVersion);
         return 0;
     }
@@ -1743,7 +1745,7 @@ STATIC int RaHdcLiteCleanQp(struct RaQpHandle *qpHandle)
     // check opcode version, not support to clean qp
     ret = RaHdcGetInterfaceVersion(qpHandle->phyId, RA_RS_QP_BATCH_MODIFY, &interfaceVersion);
     if (ret != 0 || interfaceVersion <= RA_RS_OPCODE_BASE_VERSION) {
-        hccp_warn("RA_RS_QP_BATCH_MODIFY interface_version:%u <= %u, not support to clean qp, phyId:%u, qpn:%u",
+        hccp_warn_rma("RA_RS_QP_BATCH_MODIFY interface_version:%u <= %u, not support to clean qp, phyId:%u, qpn:%u",
             interfaceVersion, RA_RS_OPCODE_BASE_VERSION, qpHandle->phyId, qpHandle->qpn);
         return 0;
     }

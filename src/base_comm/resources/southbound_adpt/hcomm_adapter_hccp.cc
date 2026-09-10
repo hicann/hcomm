@@ -14,6 +14,7 @@
 
 #include "securec.h"
 #include "log.h"
+#include "config_plf_log_v2.h"
 #include "orion_adpt_utils.h"
 #include "hccp_tlv.h"
 #include "hccp_common.h"
@@ -27,6 +28,7 @@
 #include "hccp_ctx_dfx.h"
 
 namespace hcomm {
+using Hccl::PLF_CHANNEL;
 
 HcclResult IpAddressToHccpEid(const Hccl::IpAddress& ipAddr, Eid& eid)
 {
@@ -97,6 +99,10 @@ HcclResult RaGetDevEidInfos(const RaInfo& raInfo, std::vector<DevEidInfo>& devEi
         devEidInfos[i].chipId = infoList[i].chipId;
         devEidInfos[i].funcId = infoList[i].funcId;
         devEidInfos[i].devFeature = infoList[i].devFeature;
+        PLF_CONFIG_INFO(
+            PLF_CHANNEL, "Get DevEidInfo: name[%s] eidIdx[%u] dieId[%u] chipId[%u] feId[%u] devFeature[0x%x].",
+            devEidInfos[i].name.c_str(), devEidInfos[i].eidIndex, devEidInfos[i].dieId, devEidInfos[i].chipId,
+            devEidInfos[i].funcId, devEidInfos[i].devFeature);
     }
 
     return HcclResult::HCCL_SUCCESS;
@@ -248,7 +254,9 @@ HccpUbCreateJetty(const CtxHandle ctxhandle, const HrtRaUbCreateJettyParam& in, 
     }
     out.keySize = info.key.size;
     attr.ub.tokenValue = 0; // 清理栈中的敏感信息
-    HCCL_INFO("[%s], output params: out.id[%u], out.dbVa[%llx]", __func__, out.id, out.dbVa);
+    PLF_CONFIG_INFO(
+        PLF_CHANNEL, "Create Jetty: jettyId[%u] jettyVa[0x%llx] dbVa[0x%llx] uasid[%u] keySize[%u].", out.id,
+        out.jettyVa, out.dbVa, out.uasid, out.keySize);
 
     return HcclResult::HCCL_SUCCESS;
 }
@@ -383,6 +391,7 @@ static HcclResult ImportJetty(
     out.targetJettyVa = info.out.ub.tjettyHandle;
     out.tpn = info.out.ub.tpn;
     info.in.ub.tokenValue = 0; // 清理栈中的敏感信息
+    PLF_CONFIG_INFO(PLF_CHANNEL, "Import Jetty: tjettyHandle[0x%llx] tpn[%u].", out.targetJettyVa, out.tpn);
     return HcclResult::HCCL_SUCCESS;
 }
 

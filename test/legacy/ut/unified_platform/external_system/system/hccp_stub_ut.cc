@@ -18,6 +18,15 @@
 #include "hccp_nda.h"
 
 /**
+ * @brief Set hccp network debug config mask
+ * @param info [IN] see struct RaInfo
+ * @param debugConfig [IN] debug config mask
+ * @retval #zero Success
+ * @retval #non-zero Failure
+ */
+int RaSetDebugConfig(struct RaInfo* info, uint64_t debugConfig) { return 0; }
+
+/**
  * @ingroup libsocket
  * @brief Client sockets batch connect to server sockets(async)
  * @param conn [IN] client sockets array

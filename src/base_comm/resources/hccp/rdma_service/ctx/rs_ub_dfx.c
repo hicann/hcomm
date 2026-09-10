@@ -14,6 +14,7 @@
 #include <udma_u_ctl.h>
 #include "securec.h"
 #include "user_log.h"
+#include "config_log.h"
 #include "dl_urma_function.h"
 #include "ra_rs_err.h"
 #include "rs_ctx_inner.h"
@@ -99,7 +100,7 @@ STATIC void RsUdmaRetryTimeoutExceptionCheck(struct SensorNode *sensorNode, urma
 
     ret = RsRetryTimeoutExceptionCheck(sensorNode);
 
-    hccp_warn("update sensor state logic_devid(%u), jettyId(%u), sensor_update_cnt(%d), ret(%d)\n",
+    hccp_warn_rma("update sensor state logic_devid(%u), jettyId(%u), sensor_update_cnt(%d), ret(%d)\n",
         sensorNode->logicDevid, cr->local_id, sensorNode->sensorUpdateCnt, ret);
 }
 
@@ -267,7 +268,7 @@ STATIC int RsUbFillAsyncEventCb(urma_async_event_t *event, struct RsUbDevCb *dev
             asyncEventCb->resId = devCb->index;
             break;
         default:
-            hccp_warn("invalid event_type:%d devIndex:0x%x", event->event_type, devCb->index);
+            hccp_warn_rma("invalid event_type:%d devIndex:0x%x", event->event_type, devCb->index);
             break;
     }
     return ret;

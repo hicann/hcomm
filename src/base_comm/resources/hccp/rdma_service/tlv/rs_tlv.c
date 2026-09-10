@@ -10,6 +10,7 @@
 
 #include <errno.h>
 #include "securec.h"
+#include "config_log.h"
 #include "ra_rs_err.h"
 #include "rs_adp_nslb.h"
 #include "rs_inner.h"
@@ -70,7 +71,7 @@ RS_ATTRI_VISI_DEF int RsTlvDeinit(unsigned int phyId)
     ret = RsGetTlvCb(phyId, &tlvCb);
     CHK_PRT_RETURN(ret != 0, hccp_err("rs_get_tlv_cb failed, ret(%d) phyId(%u)", ret, phyId), ret);
 
-    CHK_PRT_RETURN(!tlvCb->initFlag, hccp_warn("rs_tlv not init or already deinit, phyId(%u)", phyId), 0);
+    CHK_PRT_RETURN(!tlvCb->initFlag, hccp_warn_init("rs_tlv not init or already deinit, phyId(%u)", phyId), 0);
 
     RS_PTHREAD_MUTEX_LOCK(&tlvCb->mutex);
     tlvCb->initFlag = false;

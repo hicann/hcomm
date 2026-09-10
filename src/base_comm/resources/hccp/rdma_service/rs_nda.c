@@ -12,6 +12,7 @@
 #include <stdint.h>
 #include <errno.h>
 #include "securec.h"
+#include "config_log.h"
 #include "dl_hal_function.h"
 #include "dl_ibverbs_function.h"
 #include "dl_ibv_extend_function.h"
@@ -33,7 +34,7 @@ RS_ATTRI_VISI_DEF int RsNdaGetDirectFlag(unsigned int phyId, unsigned int rdevIn
     CHK_PRT_RETURN(ret != 0, hccp_err("RsQueryRdevCb phyId:%u rdevIndex:%u ret:%d", phyId, rdevIndex, ret), ret);
 
     if (rdevCb->ibCtxEx == NULL) {
-        hccp_warn("ibCtxEx is null, phyId:%u rdevIndex:%u", phyId, rdevIndex);
+        hccp_warn_rma("ibCtxEx is null, phyId:%u rdevIndex:%u", phyId, rdevIndex);
         *directFlag = DIRECT_FLAG_NOTSUPP;
         return ret;
     }
@@ -43,7 +44,7 @@ RS_ATTRI_VISI_DEF int RsNdaGetDirectFlag(unsigned int phyId, unsigned int rdevIn
         hccp_err("RsIbvQueryDeviceExtend failed, phyId:%u rdevIndex:%u ret:%d", phyId, rdevIndex, ret), ret);
 
     if ((extDevAttr.ext_cap & IBV_EXTEND_DEV_NDA) == 0) {
-        hccp_warn("dev not support NDA, phyId:%u rdevIndex:%u ext_cap:0x%x", phyId, rdevIndex, extDevAttr.ext_cap);
+        hccp_warn_rma("dev not support NDA, phyId:%u rdevIndex:%u ext_cap:0x%x", phyId, rdevIndex, extDevAttr.ext_cap);
         *directFlag = DIRECT_FLAG_NOTSUPP;
         return ret;
     }
@@ -92,7 +93,7 @@ STATIC int RsGetNdaPcieDbCb(struct RsNdaCb *ndaCb, uint64_t hva, struct NdaPcieD
     }
 
     *ndaDbCb = NULL;
-    hccp_info("ndaDbCb for hva:0x%llx does not exist", hva);
+    hccp_info_rma("ndaDbCb for hva:0x%llx does not exist", hva);
     return -ENODEV;
 }
 
@@ -111,7 +112,7 @@ STATIC int RsGetNdaUbDbCb(struct RsNdaCb *ndaCb, uint64_t guidL, uint64_t guidH,
     }
 
     *ndaDbCb = NULL;
-    hccp_info("ndaDbCb for guidL:0x%llx guidH:0x%llx does not exist", guidL, guidH);
+    hccp_info_rma("ndaDbCb for guidL:0x%llx guidH:0x%llx does not exist", guidL, guidH);
     return -ENODEV;
 }
 
@@ -449,13 +450,13 @@ int RsInitNdaCb(struct RsRdevCb *rdevCb)
 
     rdevCb->ibCtxEx = RsIbvOpenExtend(rdevCb->ibCtx);
     if (rdevCb->ibCtxEx == NULL) {
-        hccp_warn("ibCtxEx is null");
+        hccp_warn_rma("ibCtxEx is null");
         return 0;
     }
 
     count = __sync_fetch_and_add(&rdevCb->rsCb->ndaCbRefCnt, 1);
     if (count > 0) {
-        hccp_info("RsNdaCb exist, ndaCbRefCnt:%d", rdevCb->rsCb->ndaCbRefCnt);
+        hccp_info_rma("RsNdaCb exist, ndaCbRefCnt:%d", rdevCb->rsCb->ndaCbRefCnt);
         return 0;
     }
 
@@ -677,7 +678,7 @@ STATIC int RsNdaQpCreateEx(struct RsQpCb *qpCb, struct ibv_qp_init_attr_extend *
         goto nda_init_qp_err;
     }
 
-    hccp_info("chip_id:%u, rdevIndex:%u, qp:%d create succ", rdevCb->rsCb->chipId, rdevCb->rdevIndex,
+    hccp_info_rma("chip_id:%u, rdevIndex:%u, qp:%d create succ", rdevCb->rsCb->chipId, rdevCb->rdevIndex,
         qpCb->qpInfoLo.qpn);
     return ret;
 
@@ -771,10 +772,10 @@ RS_ATTRI_VISI_DEF int RsGetQpHyperFeature(unsigned int phyId, unsigned int rdevI
     struct RsQpCb *qpCb = NULL;
     int ret = 0;
 
-    CHK_PRT_RETURN(hyperFeature == NULL, hccp_warn("hyperFeature is NULL, phyId:%u", phyId), ret);
+    CHK_PRT_RETURN(hyperFeature == NULL, hccp_warn_rma("hyperFeature is NULL, phyId:%u", phyId), ret);
 
     ret = RsQpn2qpcb(phyId, rdevIndex, qpn, &qpCb);
-    CHK_PRT_RETURN(ret != 0 || qpCb == NULL, hccp_warn("get qp cb unsuccessful qpn %u, ret %d", qpn, ret), ret);
+    CHK_PRT_RETURN(ret != 0 || qpCb == NULL, hccp_warn_rma("get qp cb unsuccessful qpn %u, ret %d", qpn, ret), ret);
 
     if (qpCb->rdevCb->ibCtxEx == NULL) {
         return 0;
@@ -783,12 +784,12 @@ RS_ATTRI_VISI_DEF int RsGetQpHyperFeature(unsigned int phyId, unsigned int rdevI
     ret = RsIbvQueryQpSupportedHyroceFeature(qpCb->rdevCb->ibCtxEx, qpCb->ibQp, qpCb->qosAttr.sl, qpCb->qosAttr.tc,
         &feature);
     CHK_PRT_RETURN(ret != 0,
-        hccp_warn("RsIbvQueryQpSupportedHyroceFeature unsuccessful, qpn %u ret %d errno:%d", qpn, ret, errno), ret);
+        hccp_warn_rma("RsIbvQueryQpSupportedHyroceFeature unsuccessful, qpn %u ret %d errno:%d", qpn, ret, errno), ret);
 
     ret = memcpy_s(hyperFeature, sizeof(struct HyperFeature), &feature, sizeof(struct ibv_hyroce_feature));
     CHK_PRT_RETURN(ret != 0,
-        hccp_warn("memcpy_s feature unsuccessful, qpn:%u ret:%d HyperFeature len:%zu "
-                  "ibv_hyroce_feature len:%zu",
+        hccp_warn_rma("memcpy_s feature unsuccessful, qpn:%u ret:%d HyperFeature len:%zu "
+                      "ibv_hyroce_feature len:%zu",
             qpn, ret, sizeof(struct HyperFeature), sizeof(struct ibv_hyroce_feature)),
         ret);
 

@@ -27,6 +27,7 @@ set(ra_hdc_list
     ${ASYNC_DIR}/ra_hdc_async_socket.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../../common/dl_hal_function.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../../common/ascend_hal_dl.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../inc/private/network/log/config_log.c
 )
 
 add_library(ra_hdc SHARED ${ra_hdc_list})
@@ -37,6 +38,7 @@ target_include_directories(ra_hdc PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/../../inc/private
     ${CMAKE_CURRENT_SOURCE_DIR}/../../rdma_service
     ${CMAKE_CURRENT_SOURCE_DIR}/../../inc/private/network
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../inc/private/network/log
     ${BASE_DIR}/
     ${CMAKE_CURRENT_SOURCE_DIR}/
     ${ASYNC_DIR}/

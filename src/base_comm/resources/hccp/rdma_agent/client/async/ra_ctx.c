@@ -10,6 +10,7 @@
 
 #include <stdlib.h>
 #include "user_log.h"
+#include "config_log.h"
 #include "hccp_ctx.h"
 #include "hccp_async_ctx.h"
 #include "ra_hdc_async_ctx.h"

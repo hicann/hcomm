@@ -24,6 +24,7 @@ set(ra_list
     ra_tlv.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../../common/dl_hal_function.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../../common/ascend_hal_dl.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../inc/private/network/log/config_log.c
 )
 
 add_library(ra  SHARED ${ra_list})
@@ -34,6 +35,7 @@ target_include_directories(ra PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/../hdc/async
     ${CMAKE_CURRENT_SOURCE_DIR}/../../inc/network
     ${CMAKE_CURRENT_SOURCE_DIR}/../../inc/private/network
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../inc/private/network/log
     ${CMAKE_CURRENT_SOURCE_DIR}/../comm
     ${CMAKE_CURRENT_SOURCE_DIR}/../peer
     ${CMAKE_CURRENT_SOURCE_DIR}/

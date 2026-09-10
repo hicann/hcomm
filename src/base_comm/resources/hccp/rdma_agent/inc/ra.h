@@ -29,7 +29,6 @@
 #endif
 
 #define RA_MAX_PHY_ID_NUM 64
-
 #define MAX_SUPPORT_IFNUM 65536
 #define SOCKET_SEND_MAXLEN 2048
 #define MAX_HDC_DATA 65536
