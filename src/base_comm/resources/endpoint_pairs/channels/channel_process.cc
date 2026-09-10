@@ -895,6 +895,13 @@ HcclResult ChannelProcess::LaunchCommonChannelKernel(
     return HCCL_SUCCESS;
 }
 
+static bool Is950PlusChannelKind(HcommChannelKind kind)
+{
+    return kind == HcommChannelKind::AICPU_TS_URMA || kind == HcommChannelKind::AICPU_TS_UBOE
+           || kind == HcommChannelKind::AICPU_TS_UB_RTP || kind == HcommChannelKind::AICPU_TS_ROCE_V2
+           || kind == HcommChannelKind::AICPU_TS_PCIE;
+}
+
 HcclResult ChannelProcess::LaunchChannelKernel(
     ChannelHandle* channelHandles, ChannelHandle* hostChannelHandles, HcommChannelDesc* hcommDesc, uint32_t listNum,
     aclrtBinHandle binHandle)
@@ -904,9 +911,20 @@ HcclResult ChannelProcess::LaunchChannelKernel(
     auto* ch = reinterpret_cast<Channel*>(hostChannelHandles[0]);
     CHK_PTR_NULL(ch);
     HcommChannelKind channelKind = ch->GetChannelKind();
-    if (channelKind == HcommChannelKind::AICPU_TS_URMA || channelKind == HcommChannelKind::AICPU_TS_UBOE
-        || channelKind == HcommChannelKind::AICPU_TS_UB_RTP || channelKind == HcommChannelKind::AICPU_TS_ROCE_V2
-        || channelKind == HcommChannelKind::AICPU_TS_PCIE) {
+    // 防御性校验：同一批 channel 必须走同一路径（950 或 910），不允许混用
+    bool is950PlusChannelKind = Is950PlusChannelKind(channelKind);
+    for (uint32_t i = 1; i < listNum; ++i) {
+        auto* curCh = reinterpret_cast<Channel*>(hostChannelHandles[i]);
+        CHK_PTR_NULL(curCh);
+        HcommChannelKind curKind = curCh->GetChannelKind();
+        if (Is950PlusChannelKind(curKind) != is950PlusChannelKind) {
+            HCCL_ERROR(
+                "[%s] mixed channel kind in one batch: index[0] kind[%s] vs index[%u] kind[%s]", __func__,
+                HcommChannelKindToString(channelKind), i, HcommChannelKindToString(curKind));
+            return HCCL_E_PARA;
+        }
+    }
+    if (is950PlusChannelKind) {
         return ChannelKernelLaunchForBase(channelHandles, hostChannelHandles, hcommDesc, listNum, binHandle);
     }
     return LaunchCommonChannelKernel(channelHandles, hostChannelHandles, listNum, channelKind, binHandle);
