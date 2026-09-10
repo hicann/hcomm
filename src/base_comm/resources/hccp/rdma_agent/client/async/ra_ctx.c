@@ -81,9 +81,6 @@ HCCP_ATTRI_VISI_DEF int RaCtxLmemRegisterAsync(void *ctxHandle, struct MrRegInfo
     struct RaCtxHandle *ctxHandleTmp = NULL;
     int ret = 0;
 
-    hccp_info_rma("[%s]Input parameters: ctxHandle(%p), lmemInfo(%p), lmemHandle(%p), reqHandle(%p)", __func__,
-        ctxHandle, (void *)lmemInfo, (void *)lmemHandle, (void *)reqHandle);
-
     CHK_PRT_RETURN(ctxHandle == NULL || lmemInfo == NULL || lmemHandle == NULL || reqHandle == NULL,
         hccp_err("[init][ra_lmem]ctx_handle or lmem_info or lmem_handle or req_handle is NULL"),
         ConverReturnCode(RDMA_OP, -EINVAL));
@@ -117,9 +114,6 @@ HCCP_ATTRI_VISI_DEF int RaCtxLmemUnregisterAsync(void *ctxHandle, void *lmemHand
     struct RaCtxHandle *ctxHandleTmp = NULL;
     int ret;
 
-    hccp_info_rma("[%s]Input parameters: ctxHandle(%p), lmemHandle(%p), reqHandle(%p)", __func__, ctxHandle, lmemHandle,
-        (void *)reqHandle);
-
     CHK_PRT_RETURN(ctxHandle == NULL || lmemHandle == NULL || reqHandle == NULL,
         hccp_err("[deinit][ra_lmem]ctx_handle or lmem_handle or req_handle is NULL"),
         ConverReturnCode(RDMA_OP, -EINVAL));
@@ -143,9 +137,6 @@ HCCP_ATTRI_VISI_DEF int RaCtxQpCreateAsync(void *ctxHandle, struct QpCreateAttr 
     struct RaCtxQpHandle *qpHandleTmp = NULL;
     struct RaCtxHandle *ctxHandleTmp = NULL;
     int ret;
-
-    hccp_info_rma("[%s]Input parameters: ctxHandle(%p), attr(%p), info(%p), qpHandle(%p), reqHandle(%p)", __func__,
-        ctxHandle, (void *)attr, (void *)info, (void *)qpHandle, (void *)reqHandle);
 
     CHK_PRT_RETURN(ctxHandle == NULL || attr == NULL || info == NULL || qpHandle == NULL || reqHandle == NULL,
         hccp_err("[init][ra_qp]ctx_handle or attr or info or qp_handle or req_handle is NULL"),
@@ -179,8 +170,6 @@ HCCP_ATTRI_VISI_DEF int RaCtxQpDestroyAsync(void *qpHandle, void **reqHandle)
     struct RaCtxQpHandle *qpHandleTmp = NULL;
     int ret;
 
-    hccp_info_rma("[%s]Input parameters: qpHandle(%p), reqHandle(%p)", __func__, qpHandle, (void *)reqHandle);
-
     CHK_PRT_RETURN(qpHandle == NULL || reqHandle == NULL, hccp_err("[deinit][ra_qp]qp_handle or req_handle is NULL"),
         ConverReturnCode(RDMA_OP, -EINVAL));
 
@@ -213,9 +202,6 @@ HCCP_ATTRI_VISI_DEF int RaCtxQpDestroyBatchAsync(void *ctxHandle, void *qpHandle
     struct RaCtxHandle *ctxHandleTmp = NULL;
     int ret;
 
-    hccp_info_rma("[%s]Input parameters: ctxHandle(%p), qpHandle(%p), num(%p), reqHandle(%p)", __func__, ctxHandle,
-        (void *)qpHandle, (void *)num, (void *)reqHandle);
-
     CHK_PRT_RETURN(ctxHandle == NULL || qpHandle == NULL || reqHandle == NULL || num == NULL,
         hccp_err("[destroy_batch][ra_qp]ctx_handle or qp_handle or req_handle or num is NULL"),
         ConverReturnCode(RDMA_OP, -EINVAL));
@@ -240,9 +226,6 @@ HCCP_ATTRI_VISI_DEF int RaCtxQpImportAsync(void *ctxHandle, struct QpImportInfoT
     struct RaCtxRemQpHandle *remQpHandleTmp = NULL;
     struct RaCtxHandle *ctxHandleTmp = NULL;
     int ret;
-
-    hccp_info_rma("[%s]Input parameters: ctxHandle(%p), info(%p), remQpHandle(%p), reqHandle(%p)", __func__, ctxHandle,
-        (void *)info, (void *)remQpHandle, (void *)reqHandle);
 
     CHK_PRT_RETURN(ctxHandle == NULL || info == NULL || remQpHandle == NULL || reqHandle == NULL,
         hccp_err("[init][ra_qp]ctx_handle or info or rem_qp_handle or req_handle is NULL"),
@@ -276,8 +259,6 @@ HCCP_ATTRI_VISI_DEF int RaCtxQpUnimportAsync(void *remQpHandle, void **reqHandle
     struct RaCtxRemQpHandle *remQpHandleTmp = NULL;
     int ret;
 
-    hccp_info_rma("[%s]Input parameters: remQpHandle(%p), reqHandle(%p)", __func__, remQpHandle, (void *)reqHandle);
-
     CHK_PRT_RETURN(remQpHandle == NULL || reqHandle == NULL,
         hccp_err("[deinit][ra_qp]rem_qp_handle or req_handle is NULL"), ConverReturnCode(RDMA_OP, -EINVAL));
 
@@ -298,9 +279,6 @@ HCCP_ATTRI_VISI_DEF int RaGetTpInfoListAsync(void *ctxHandle, struct GetTpCfg *c
 {
     struct RaCtxHandle *ctxHandleTmp = NULL;
     int ret;
-
-    hccp_info_rma("[%s]Input parameters: ctxHandle(%p), cfg(%p), infoList(%p), num(%p), reqHandle(%p)", __func__,
-        ctxHandle, (void *)cfg, (void *)infoList, (void *)num, (void *)reqHandle);
 
     CHK_PRT_RETURN(ctxHandle == NULL || cfg == NULL || reqHandle == NULL,
         hccp_err("[get][ra_tp_info]ctx_handle or cfg or req_handle is NULL"), ConverReturnCode(RDMA_OP, -EINVAL));
@@ -327,9 +305,6 @@ HCCP_ATTRI_VISI_DEF int RaGetTpAttrAsync(void *ctxHandle, uint64_t tpHandle, uin
     struct RaCtxHandle *ctxHandleTmp = NULL;
     int ret;
 
-    hccp_info_rma("[%s]Input parameters: ctxHandle(%p), tpHandle(0x%llx), attrBitmap(%p), attr(%p), reqHandle(%p)",
-        __func__, ctxHandle, (unsigned long long)tpHandle, (void *)attrBitmap, (void *)attr, (void *)reqHandle);
-
     CHK_PRT_RETURN(ctxHandle == NULL || attrBitmap == NULL || reqHandle == NULL || attr == NULL,
         hccp_err("[get][ra_tp_attr]ctx_handle or attr_bitmap or req_handle or attr is NULL"),
         ConverReturnCode(RDMA_OP, -EINVAL));
@@ -349,9 +324,6 @@ HCCP_ATTRI_VISI_DEF int RaSetTpAttrAsync(void *ctxHandle, uint64_t tpHandle, uin
 {
     struct RaCtxHandle *ctxHandleTmp = NULL;
     int ret;
-
-    hccp_info_rma("[%s]Input parameters: ctxHandle(%p), tpHandle(0x%llx), attrBitmap(0x%x), attr(%p), reqHandle(%p)",
-        __func__, ctxHandle, (unsigned long long)tpHandle, attrBitmap, (void *)attr, (void *)reqHandle);
 
     CHK_PRT_RETURN(ctxHandle == NULL || attr == NULL || reqHandle == NULL,
         hccp_err("[set][ra_tp_attr]ctx_handle or attr or req_handle or attr is NULL"),

@@ -163,8 +163,6 @@ HCCP_ATTRI_VISI_DEF int RaGetSecRandom(struct RaInfo *info, u32 *value)
 
 HCCP_ATTRI_VISI_DEF bool RaHasCapability(struct RaInfo *info, unsigned int capability)
 {
-    hccp_info_rma("[%s]Input parameters: info(%p), capability(0x%x)", __func__, (void *)info, capability);
-
     CHK_PRT_RETURN(info == NULL, hccp_warn_rma("info is NULL"), false);
     CHK_PRT_RETURN(info->phyId >= RA_MAX_PHY_ID_NUM,
         hccp_warn_rma("phy_id(%u) must be smaller than %u", info->phyId, RA_MAX_PHY_ID_NUM), false);

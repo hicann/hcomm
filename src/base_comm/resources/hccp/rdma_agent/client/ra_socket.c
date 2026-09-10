@@ -25,8 +25,6 @@ HCCP_ATTRI_VISI_DEF int RaGetClientSocketErrInfo(struct SocketConnectInfoT conn[
     unsigned int i;
     int ret;
 
-    hccp_info_rma("[%s]Input parameters: conn(%p), err(%p), num(%u)", __func__, (void *)conn, (void *)err, num);
-
     CHK_PRT_RETURN(conn == NULL || err == NULL || num == 0 || num > MAX_SOCKET_NUM,
         hccp_err("[get][ra_socket]conn is NULL or err is NULL or num[%u] is zero or num is greater than %d", num,
             MAX_SOCKET_NUM),
@@ -68,8 +66,6 @@ HCCP_ATTRI_VISI_DEF int RaGetServerSocketErrInfo(struct SocketListenInfoT conn[]
     unsigned int phyId = 0;
     unsigned int i;
     int ret;
-
-    hccp_info_rma("[%s]Input parameters: conn(%p), err(%p), num(%u)", __func__, (void *)conn, (void *)err, num);
 
     CHK_PRT_RETURN(conn == NULL || err == NULL || num == 0 || num > MAX_SOCKET_NUM,
         hccp_err("[get][ra_socket]conn is NULL or err is NULL or num[%u] is zero or num is greater than %d", num,

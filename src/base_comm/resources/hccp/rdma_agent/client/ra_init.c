@@ -32,8 +32,6 @@ HCCP_ATTRI_VISI_DEF int RaIsFirstUsed(int insId)
 {
     int isFirst = 0;
 
-    hccp_info_rma("[%s]Input parameters: insId(%d)", __func__, insId);
-
     CHK_PRT_RETURN(insId < 0 || insId >= RA_MAX_INSTANCES,
         hccp_err("[ra]ins_id(%d) must be in [0, %u)", insId, RA_MAX_INSTANCES), -EINVAL);
 
@@ -53,8 +51,6 @@ HCCP_ATTRI_VISI_DEF int RaIsFirstUsed(int insId)
 HCCP_ATTRI_VISI_DEF int RaIsLastUsed(int insId)
 {
     int isLast = 0;
-
-    hccp_info_rma("[%s]Input parameters: insId(%d)", __func__, insId);
 
     CHK_PRT_RETURN(insId < 0 || insId >= RA_MAX_INSTANCES,
         hccp_err("[ra]ins_id(%d) must be in [0, %u)", insId, RA_MAX_INSTANCES), -EINVAL);
@@ -80,8 +76,6 @@ HCCP_ATTRI_VISI_DEF int RaIsLastUsed(int insId)
 
 HCCP_ATTRI_VISI_DEF int RaRdevGetHandle(unsigned int phyId, void **rdmaHandle)
 {
-    hccp_info_rma("[%s]Input parameters: phyId(%u), rdmaHandle(%p)", __func__, phyId, (void *)rdmaHandle);
-
     CHK_PRT_RETURN(phyId >= RA_MAX_PHY_ID_NUM,
         hccp_err("[get][ra_rdev]phyId(%u) must be smaller than %u", phyId, RA_MAX_PHY_ID_NUM), -EINVAL);
     CHK_PRT_RETURN(rdmaHandle == NULL, hccp_err("[get][ra_rdev]rdma_handle is NULL, phyId(%u)", phyId), -EINVAL);

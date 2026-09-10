@@ -1442,11 +1442,6 @@ STATIC int RaRsGetHccnCfg(char *inBuf, char *outBuf, int *outLen, int *opResult,
     return 0;
 }
 
-/*
- * 设备侧 RA_RS_SET_DEBUG_CONFIG 消息处理入口：
- * host(ra_init.c) 下发 HCOMM_DEBUG_CONFIG 配置后，分别写入 rs 侧（RsSetDebugConfig）与 adapter 侧
- * （HccpSetDebugConfig）的调试配置，供设备侧 hccp_info_* / PERF_TRACE 宏读取。
- */
 STATIC int RaRsSetDebugConfig(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcvBufLen)
 {
     union OpSetDebugConfigData *opData = (union OpSetDebugConfigData *)(inBuf + sizeof(struct MsgHead));
