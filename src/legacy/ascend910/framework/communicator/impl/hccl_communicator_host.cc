@@ -501,7 +501,7 @@ void HcclCommunicator::UnloadAICPUKernel(void)
         aclError aclRet = aclrtBinaryUnLoad(binHandle_);
         if (aclRet != ACL_SUCCESS) {
             HCCL_ERROR(
-                "[UnloadAICPUKernel]errNo[0x%016llx] unload binary from binHandel[%p] error.", aclRet, binHandle_);
+                "[UnloadAICPUKernel]errNo[0x%016llx] unload binary from binHandle[%p] error.", aclRet, binHandle_);
         }
         binHandle_ = nullptr;
     }
@@ -1807,7 +1807,7 @@ HcclResult HcclCommunicator::GetWorkspaceSubStreamNum(
 
     u64 sliceNum = CalculatePiplineSliceNum(opType, dataSize, algType, deviceType_, deviceNumPerServer_, serverNum_);
     // 图模式下数据量固定, 按照当前数据量判断是否支持pipeline切分并申请从流
-    if (implAlg_ != nullptr && sliceNum >= MIN_PIPLINE_SLICE_NUM) {
+    if (implAlg_ != nullptr && sliceNum >= MIN_PIPELINE_SLICE_NUM) {
         streamNum++;
     }
     return HCCL_SUCCESS;
@@ -9283,7 +9283,7 @@ HcclResult HcclCommunicator::RegisterCommUserMem(void* addr, u64 size, void** ha
         HCCL_ERROR(
             "[HcclCommunicator][%s]Registration user mem is not supported with the params. "
             "Device type[%d], superPodNum[%u]; Or user mem/CCL buffer has already registered, addr[%p], "
-            "isUserMemRegisted[%d]",
+            "isUserMemRegistered[%d]",
             __func__, deviceType_, superPodNum_, addr, isUserMemRegisted_);
         return HCCL_E_NOT_SUPPORT;
     }

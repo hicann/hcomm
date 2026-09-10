@@ -104,7 +104,7 @@ public:
     // 获取存储的完整流
     BinaryStream& GetSnapShotBuf();
 
-    // 恢复通信域，recorver调用，把传入的备份流流反序列化到本地结构
+    // 恢复通信域，recover调用，把传入的备份流流反序列化到本地结构
     HcclResult ParseSnapshotToLocalBuff(void* snapshotBuf, uint32_t snapshotBufSize, SnapShotBuf& localBuff);
 
     // 生成 全局通信域 静态短流

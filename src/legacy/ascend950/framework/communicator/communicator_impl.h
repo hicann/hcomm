@@ -580,7 +580,7 @@ private:
     static std::shared_ptr<BufferType> BarrierAllocBuffer(std::size_t size);
 
     void AppendLocalDieIdForLinks();
-    HcclResult SetAivControledCoreNum(bool isAiv);
+    HcclResult SetAivControlledCoreNum(bool isAiv);
 
     void CheckAcceleratorConsistency(AcceleratorState commAccelerator, AcceleratorState tilingAccelerator) const;
     HcclResult GetTilingAccelerator(void* mc2Tiling, AcceleratorState& acceleratorState) const;

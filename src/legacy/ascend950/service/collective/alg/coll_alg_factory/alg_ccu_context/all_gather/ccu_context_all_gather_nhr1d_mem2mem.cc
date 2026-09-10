@@ -157,7 +157,7 @@ void CcuContextAllGatherNHR1D::AxisSync(uint32_t signalIndex)
     const uint32_t DIE_NUM = 2;
     if (signalIndex > 1) {
         THROW<InvalidParamsException>(
-            StringFormat("[CcuContextAllGatherNHR1D] Unexpected SignalInex[%u]", signalIndex));
+            StringFormat("[CcuContextAllGatherNHR1D] Unexpected SignalIndex[%u]", signalIndex));
     }
     LocalCtxPost(anotherAxisSignal_, 1 << (axisId_ + signalIndex * DIE_NUM));
     LocalWait(localAxisSignal_, 1 << (1 - axisId_ + signalIndex * DIE_NUM));

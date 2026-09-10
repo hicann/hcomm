@@ -182,7 +182,7 @@ HcclResult ReduceScatterUnifiedMarch::NotifyNeighborsEnd(LINK& prevIntraLink, LI
         }
     }
     HCCL_DEBUG(
-        "[ReduceScatterUnifiedMarch][NotifyNeighborsEnd] intraRank[%u] notifys [%u]neighbors reduce done", intraRank_,
+        "[ReduceScatterUnifiedMarch][NotifyNeighborsEnd] intraRank[%u] notify [%u]neighbors reduce done", intraRank_,
         neighbors);
     return HCCL_SUCCESS;
 }

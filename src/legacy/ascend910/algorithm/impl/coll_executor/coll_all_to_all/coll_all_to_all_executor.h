@@ -23,7 +23,7 @@ public:
     HcclResult Orchestrate(OpParam& param, AlgResourceResponse& algRes) override;
     HcclResult GetAdjInfo(AlgResourceResponse& algRes, AdjInfo& adjInfo) override;
     virtual HcclResult
-    SetExcutorExtraInfo(const std::vector<SendRecvInfo>& allMeshAggregationSendRecvInfo, u64 cclbufferSize);
+    SetExecutorExtraInfo(const std::vector<SendRecvInfo>& allMeshAggregationSendRecvInfo, u64 cclbufferSize);
     HcclResult CalcResRequest(const OpParam& param, AlgResourceRequest& resourceRequest) override;
     virtual HcclResult CheckNeedCreateVirtualLinks(AlgResourceRequest& resourceRequest);
 

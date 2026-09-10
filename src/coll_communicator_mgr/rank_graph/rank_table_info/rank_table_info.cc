@@ -172,7 +172,7 @@ void RankTableInfo::Check()
             HCOM_ERROR_CODE(HcclResult::HCCL_E_PARA), recordedReplaceLocalId);
         THROW<InvalidParamsException>(StringFormat(
             "[Parse][ClusterInfo][RankTableInfo::%s] failed with configuring "
-            "same local_id[%u] with replaced one simutaneously",
+            "same local_id[%u] with replaced one simultaneously",
             __func__, recordedReplaceLocalId));
     }
 }

@@ -192,7 +192,7 @@ void CcuContextReduceMeshMem2Mem2D::ReduceStep1()
             } else {
                 chkId = (i + rmtId - 1) % (localSize_ - 1);
             }
-            // 计算一下offset 0~(chikd-1)
+            // 计算一下offset 0~(child-1)
             for (uint16_t j = 0; j < chkId; ++j) {
                 chunkOffset_ += chunkSize_[j];
             }
@@ -251,7 +251,7 @@ void CcuContextReduceMeshMem2Mem2D::ReduceStep2()
             } else {
                 chkId = (i + rmtId - 1) % (localSize_ - 1);
             }
-            // 计算一下offset 0~(chikd-1)
+            // 计算一下offset 0~(child-1)
             for (uint16_t j = 0; j < chkId; ++j) {
                 chunkOffset_ += chunkSize_[j];
             }

@@ -253,7 +253,7 @@ HcclResult hcclImpl::InitMultiStreamResource(
         streamInfo.ringNum = 2;
     }
 
-    if (piplineSliceNum_ > 0) {
+    if (pipelineSliceNum_ > 0) {
         streamInfo.ringNum++; // 流水并行算法, Server间需要额外一条从流
     }
     streamInfo.ringNum = std::max(streamInfo.ringNum, ringNum);

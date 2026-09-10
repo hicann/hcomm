@@ -27,7 +27,7 @@
 #include "../json_utils.h"
 
 namespace hccl {
-class TopoInfoExchangeDispather {
+class TopoInfoExchangeDispatcher {
     // avoid the struct name pollution hccl namespace, so use the struct in class
 public:
     struct SendState {
@@ -66,12 +66,12 @@ public:
     static constexpr s32 LAST_EPOLL_TIMEOUT_MS = 5; // 5ms
     static constexpr s32 RANK_CAPACITY_PER_THREAD = 512;
 
-    explicit TopoInfoExchangeDispather(
+    explicit TopoInfoExchangeDispatcher(
         TopoInfoExchangeServer* topoInfoExchangeServer, u32 threadNum = DEFAULT_THREAD_NUM)
         : topoInfoExchangeServer_(topoInfoExchangeServer),
           threadNum_(threadNum)
     {}
-    ~TopoInfoExchangeDispather();
+    ~TopoInfoExchangeDispatcher();
 
     HcclResult BroadcastRankTable(
         const std::map<std::string, std::shared_ptr<HcclSocket>> connectSockets, const RankTable_t& clusterInfo,

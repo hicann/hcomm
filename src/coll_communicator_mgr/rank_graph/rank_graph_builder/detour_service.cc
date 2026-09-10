@@ -42,7 +42,7 @@ GetLinks(NodeId srcId, NodeId dstId, const shared_ptr<Graph<PhyTopo::Node, PhyTo
 {
     vector<shared_ptr<PhyTopo::Link>> links;
     if (phyTopoGraph == nullptr) {
-        THROW<NullPtrException>(StringFormat("[GetLinks] phyTopoGraphis nullptr"));
+        THROW<NullPtrException>(StringFormat("[GetLinks] phyTopoGraph is nullptr"));
     }
     phyTopoGraph->TraverseEdge(srcId, dstId, [&](shared_ptr<PhyTopo::Link> link) {
         if (link != nullptr) {

@@ -184,7 +184,7 @@ bool Is310P3Common(bool isHaveCpuRank, DevType deviceType)
 u64 CalculatePiplineSliceNum(
     HcclCMDType opType, u64 dataSize, AlgType algType, DevType deviceType, u32 deviceNumPerAggregation, u32 moduleNum)
 {
-    u64 piplineSliceNum = 0;
+    u64 pipelineSliceNum = 0;
     bool isInterRing = false;
     if (algType.algoLevel1 == AlgTypeLevel1::ALG_LEVEL1_RING) {
         isInterRing = true;
@@ -203,13 +203,14 @@ u64 CalculatePiplineSliceNum(
             break;
         }
         // 支持的算子和算法场景
-        if (opType != HcclCMDType::HCCL_CMD_ALLREDUCE || (isInterRing && moduleNum > MAX_RING_PIPLINE_SERVER_NUM)) {
+        if (opType != HcclCMDType::HCCL_CMD_ALLREDUCE || (isInterRing && moduleNum > MAX_RING_PIPELINE_SERVER_NUM)) {
             break;
         }
-        u64 sliceNumTemp = std::min(dataSize / deviceNumPerAggregation / MIN_PER_LINK_DATA_SIZE, MAX_PIPLINE_SLICE_NUM);
+        u64 sliceNumTemp
+            = std::min(dataSize / deviceNumPerAggregation / MIN_PER_LINK_DATA_SIZE, MAX_PIPELINE_SLICE_NUM);
         // 图模式切分数量 <= 1时, 不做切分
         if (GetWorkflowMode() == HcclWorkflowMode::HCCL_WORKFLOW_MODE_OPS_KERNEL_INFO_LIB
-            && sliceNumTemp <= MIN_PIPLINE_SLICE_NUM) {
+            && sliceNumTemp <= MIN_PIPELINE_SLICE_NUM) {
             break;
         }
 
@@ -219,9 +220,9 @@ u64 CalculatePiplineSliceNum(
             sliceNumTemp = 1;
         }
         // 支持pipeline但数据量不满足切分条件时, 返回1, 用于单算子场景预申请流资源
-        piplineSliceNum = (sliceNumTemp == 0) ? 1 : sliceNumTemp;
+        pipelineSliceNum = (sliceNumTemp == 0) ? 1 : sliceNumTemp;
     } while (0);
-    return piplineSliceNum;
+    return pipelineSliceNum;
 }
 
 bool HcclOpInplaceDefaultCase(const OpParam& param, u8& isInplaceStatus)

@@ -110,7 +110,7 @@ struct ExternalInput {
     bool enableFfts;
     u8 hcclDeterministic;
     bool isDeterministic;
-    bool enablePipline;
+    bool enablePipeline;
     bool enableEntryLog;
     bool interHccsDisable;
     bool aicpuUnfold;
@@ -173,7 +173,7 @@ struct ExternalInput {
         hcclDeterministic
             = DETERMINISTIC_DISABLE; // 确定性配置 0：不支持；1：支持确定性不支持规约保序；2：支持确定性&规约保序
         isDeterministic = false; // 兼容性考虑，提供确定性bool
-        enablePipline = false;
+        enablePipeline = false;
         enableEntryLog = false;
         interHccsDisable = false;
         aicpuCacheEnable = 1; // 默认开启aicpu cache (只有当aicpuUnfold为true时才生效)
@@ -230,7 +230,7 @@ HcclResult ParseCclBufferSize();
 
 HcclResult ParseDeterministic();
 
-HcclResult ParseHcclPiplineModeEnable();
+HcclResult ParseHcclPipelineModeEnable();
 
 HcclResult ParseTaskExceptionSwitch();
 

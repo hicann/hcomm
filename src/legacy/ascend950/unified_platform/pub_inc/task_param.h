@@ -148,7 +148,7 @@ struct TaskParam {
     union {
         ParaDMA DMA;       // taskType = SDMA/RDMA使用, 包括rtRDMASend写notify
         ParaReduce Reduce; // taskType = inline/CCE Reduce使用
-        ParaNotify Notify; // taskType = Noitfy Record/Wait使用
+        ParaNotify Notify; // taskType = Notify Record/Wait使用
         ParaCcu Ccu;
         ParaAiv Aiv; // aiv param
     } taskPara;

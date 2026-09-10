@@ -305,12 +305,12 @@ void CcuContextReduceScatterMeshMem2Mem2D::Step1Reduce()
     CcuRep::Memory tempDst = CreateMemory();
     CcuRep::Memory tempSrc = CreateMemory();
 
-    for (uint32_t oppsiteIdx = 0; oppsiteIdx < oppsiteSize_; oppsiteIdx++) {
-        // 由 oppsiteIdx 造成的地址偏移
+    for (uint32_t oppositeIdx = 0; oppositeIdx < oppsiteSize_; oppositeIdx++) {
+        // 由 oppositeIdx 造成的地址偏移
         for (uint32_t localIdx = 0; localIdx < localSize_; localIdx++) {
-            src[localIdx].addr += (oppsiteIdx == 0) ? step0BaseOffset_ : step0AddOffset_;
+            src[localIdx].addr += (oppositeIdx == 0) ? step0BaseOffset_ : step0AddOffset_;
         }
-        dst.addr += (oppsiteIdx == 0) ? step0BaseOffset_ : step0AddOffset_;
+        dst.addr += (oppositeIdx == 0) ? step0BaseOffset_ : step0AddOffset_;
 
         bool isXAxis = (axisId_ == X_AXIS_ID);
         CcuRep::Variable len = isXAxis ? xAxisSize_ : yAxisSize_;

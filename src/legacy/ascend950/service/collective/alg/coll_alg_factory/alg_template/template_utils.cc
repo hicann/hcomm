@@ -13,7 +13,7 @@
 #include "buffer.h"
 
 namespace Hccl {
-HcclResult GetUnitAllignSize(const AllignInfo& allignInfo, u64& unitAllignSize)
+HcclResult GetUnitAllignSize(const AllignInfo& allignInfo, u64& unitAlignSize)
 {
     u32 dataSizePerVolume = DataTypeSizeGet(allignInfo.dataType);
 
@@ -22,10 +22,10 @@ HcclResult GetUnitAllignSize(const AllignInfo& allignInfo, u64& unitAllignSize)
             allignInfo.allignSize < dataSizePerVolume,
             HCCL_ERROR("[CollAlgFactory] Invalid input alignSize [%u].", allignInfo.allignSize),
             HcclResult::HCCL_E_PARA);
-        unitAllignSize = (allignInfo.allignSize % dataSizePerVolume == 0) ? allignInfo.allignSize :
-                                                                            allignInfo.allignSize * dataSizePerVolume;
+        unitAlignSize = (allignInfo.allignSize % dataSizePerVolume == 0) ? allignInfo.allignSize :
+                                                                           allignInfo.allignSize * dataSizePerVolume;
     } else {
-        unitAllignSize = dataSizePerVolume;
+        unitAlignSize = dataSizePerVolume;
     }
     return HcclResult::HCCL_SUCCESS;
 }
@@ -45,13 +45,13 @@ HcclResult CalcRsAgSliceInfoConcurrMesh(
     const u64 dataSize, RankSliceInfo& sliceInfoVec)
 {
     // multi-dimensional mesh
-    u64 unitAllignSize;
-    CHK_RET(GetUnitAllignSize(allignInfo, unitAllignSize));
+    u64 unitAlignSize;
+    CHK_RET(GetUnitAllignSize(allignInfo, unitAlignSize));
 
     u32 dimSize0 = tempVTopo[0].size();
     u32 dimSize1 = tempVTopo[1].size();
     u64 sliceSize0
-        = min(dataSize, RoundUp(dataSize, ((dimSize0 + dimSize1) * unitAllignSize)) * dimSize0 * unitAllignSize);
+        = min(dataSize, RoundUp(dataSize, ((dimSize0 + dimSize1) * unitAlignSize)) * dimSize0 * unitAlignSize);
     u64 sliceSize1 = dataSize - sliceSize0;
     u64 accumOff = 0;
     u32 tempRankSize = dimSize0 * dimSize1;
@@ -96,10 +96,10 @@ HcclResult CalcRsAgSliceInfoRing(
 {
     u32 queNum = tempVTopo.size();
     u32 tempRankSize = tempVTopo[0].size();
-    u64 unitAllignSize;
-    CHK_RET(GetUnitAllignSize(allignInfo, unitAllignSize));
+    u64 unitAlignSize;
+    CHK_RET(GetUnitAllignSize(allignInfo, unitAlignSize));
 
-    u64 queSliceSize = RoundUp(dataSize, (queNum * unitAllignSize)) * unitAllignSize;
+    u64 queSliceSize = RoundUp(dataSize, (queNum * unitAlignSize)) * unitAlignSize;
 
     u64 resChunkSize = dataSize;
     std::vector<u64> queSlice;
@@ -432,10 +432,10 @@ HcclResult CalcSliceInfoAllReduce(
     sliceInfoVec.resize(rankSize);
 
     u32 dataSizePerVolume = DataTypeSizeGet(allignInfo.dataType);
-    u64 unitAllignSize;
-    CHK_RET(GetUnitAllignSize(allignInfo, unitAllignSize));
-    u64 unitPerSlice = dataSize / unitAllignSize / rankSize;
-    HCCL_DEBUG("unitAllignSize[%llu] unitPerSlice[%llu]", unitAllignSize, unitPerSlice);
+    u64 unitAlignSize;
+    CHK_RET(GetUnitAllignSize(allignInfo, unitAlignSize));
+    u64 unitPerSlice = dataSize / unitAlignSize / rankSize;
+    HCCL_DEBUG("unitAlignSize[%llu] unitPerSlice[%llu]", unitAlignSize, unitPerSlice);
 
     u64 accumOff = 0;
     SliceInfo currSlice;
@@ -445,7 +445,7 @@ HcclResult CalcSliceInfoAllReduce(
             currSlice.size = dataSize - accumOff;
         } else {
             currSlice.offset = accumOff;
-            currSlice.size = unitPerSlice * unitAllignSize;
+            currSlice.size = unitPerSlice * unitAlignSize;
         }
         CHK_PRT_RET(
             currSlice.size % dataSizePerVolume != 0,

@@ -63,7 +63,7 @@ HcclResult ReduceScatterNHRV1::RunAsync(const u32 rank, const u32 rankSize, cons
     当前的做法是：{0,1}、{3,4}、{6、7}做水平Ring，0/3/6/7拿到各自的那份结果，1拿到1和2的结果，4拿到4和5的结果，
                  最后1把2的结果发给2，4把5的结果发给5
     一种可能的更优做法是：以ReduceOp=Sum为例，首先把2和5的数据都置为0，
-                        然后直接{0,1,2}、{3,4,5}、{6,7}做水平Ring，避免不等分Ring和额外的拷贝步骤，但需要调用TBE-asign
+                        然后直接{0,1,2}、{3,4,5}、{6,7}做水平Ring，避免不等分Ring和额外的拷贝步骤，但需要调用TBE-assign
     */
     CHK_RET(RunLastCopyStep(rank, links, info));
 

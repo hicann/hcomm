@@ -1721,7 +1721,7 @@ HcclResult AicpuKfcProcess::RunRpcServerApi(AicpuComContext* ctx, AicpuKfcRpcSer
             return HCCL_E_TIMEOUT;
         }
         GetCommonHcclMsg(&hcclMsg, &commonHcclMsg, tilingBase);
-        // 处理finalzie消息
+        // 处理finalize消息
         if (commonHcclMsg.commType == HcclCMDType::HCCL_CMD_FINALIZE) {
             AicpuKfcProf::GetProInst(*ctx).receiveFinalizeTime = GetCurCpuTimestamp(true);
             if (ctx->debugMode == MC2_DEBUG_PRINT_BUFF) {

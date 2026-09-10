@@ -78,8 +78,8 @@ HcclResult InsTempAllReduceMesh1DTwoShot::CalcSlice(const u64 dataSize, const u6
     std::vector<SliceInfo> tmp(tempVTopo_.size());
     sliceInfoVec.resize(tempRankSize_, tmp);
 
-    u64 unitAllignSize = DataTypeSizeGet(dataType_);
-    u64 chunkSize = RoundUp(dataSize, (tempRankSize_ * unitAllignSize)) * unitAllignSize;
+    u64 unitAlignSize = DataTypeSizeGet(dataType_);
+    u64 chunkSize = RoundUp(dataSize, (tempRankSize_ * unitAlignSize)) * unitAlignSize;
 
     u64 accumOff = 0;
     for (u32 rankIdx = 0; rankIdx < tempRankSize_; rankIdx++) {

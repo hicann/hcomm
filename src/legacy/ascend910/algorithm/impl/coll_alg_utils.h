@@ -21,11 +21,11 @@
 
 namespace hccl {
 constexpr u64 MAX_ALLTOALL_MESH_ALGO_RANK_INTRA_MESH = 32;
-constexpr u32 MAX_RING_PIPLINE_SERVER_NUM = 128; // 防止qp耗尽, Ring算法下Server间流水并行最多支持128 Server
+constexpr u32 MAX_RING_PIPELINE_SERVER_NUM = 128; // 防止qp耗尽, Ring算法下Server间流水并行最多支持128 Server
 constexpr u32 MIN_PER_LINK_DATA_SIZE = 4 * 1024 * 1024; // Server间流水并行分到每条链路上的最小数据量
 constexpr u32 MIN_RING_DATA_SIZE = 64 * 1024;           // Ring算法下, Server间支持流水并行的最小数据量
-constexpr u64 MAX_PIPLINE_SLICE_NUM = 4;                // 流水并行算法最大切分次数
-constexpr u64 MIN_PIPLINE_SLICE_NUM = 2;                // 流水并行算法最小切分次数
+constexpr u64 MAX_PIPELINE_SLICE_NUM = 4;               // 流水并行算法最大切分次数
+constexpr u64 MIN_PIPELINE_SLICE_NUM = 2;               // 流水并行算法最小切分次数
 constexpr u64 TINY_MEM_SIZE = 2 * 1024 * 1024;          // AlltoAll算子的tinyMem size
 constexpr u64 MAX_ALLTOALLV_DIRECT_FULLMESH_RANKSIZE = 64;  // alltoallv在A2支持directfulmesh的最大ranksize
 constexpr u64 MAX_ALLTOALLV_DIRECT_FULLMESH_SERVER_NUM = 8; // alltoallv在A2支持directfulmesh的最大server数

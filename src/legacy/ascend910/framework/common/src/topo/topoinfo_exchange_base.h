@@ -79,7 +79,7 @@ protected:
 private:
     HcclResult GetCommonTopoInfo(RankTable_t& rankTable, const RankTable_t& orginRankTable);
     HcclResult SortRankList(RankTable_t& rankTable);
-    friend class TopoInfoExchangeDispather;
+    friend class TopoInfoExchangeDispatcher;
 };
 } // namespace hccl
 #endif /* TOPOINFO_EXCHANGE_BASE_H */

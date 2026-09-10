@@ -185,7 +185,7 @@ HcclResult CollAlltoAllExecutor::CheckNeedCreateVirtualLinks([[maybe_unused]] Al
     return HCCL_SUCCESS;
 }
 
-HcclResult CollAlltoAllExecutor::SetExcutorExtraInfo(
+HcclResult CollAlltoAllExecutor::SetExecutorExtraInfo(
     const std::vector<SendRecvInfo>& allMeshAggregationSendRecvInfo, u64 cclbufferSize)
 {
     allMeshAggregationSendRecvInfo_.clear();

@@ -196,7 +196,7 @@ void CcuContextReduceMeshMem2Mem1D::DoRepeatReduce(
                 "[ReadReduceRmtToLoc] debug rankId[%llu], root[%llu] chkId[%llu], rmtId[%llu] transId[%llu]", rankId_,
                 rootId_, chkId, rmtId, transId);
 
-            // 计算一下offset 0~(chikd-1)
+            // 计算一下offset 0~(child-1)
             for (uint16_t j = 0; j < chkId; ++j) {
                 chunkOffset_ += chunkSize_[j];
             }

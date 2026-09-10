@@ -693,7 +693,7 @@ HcclResult AicpuHcclProcess::AicpuIndOpNotifyInit(NotifyMgrAicpuParam* param)
         CHK_PRT_RET(
             ret != HCCL_SUCCESS,
             HCCL_ERROR(
-                "[AicpuHcclProcess][%s]errNo[0x%016llx] Failed to free notifys group[%s]", __func__,
+                "[AicpuHcclProcess][%s]errNo[0x%016llx] Failed to free notify group[%s]", __func__,
                 HCCL_ERROR_CODE(ret), group.c_str()),
             ret);
     } else {
@@ -701,7 +701,7 @@ HcclResult AicpuHcclProcess::AicpuIndOpNotifyInit(NotifyMgrAicpuParam* param)
         CHK_PRT_RET(
             ret != HCCL_SUCCESS,
             HCCL_ERROR(
-                "[AicpuHcclProcess][%s]errNo[0x%016llx] Failed to alloc notifys group[%s]", __func__,
+                "[AicpuHcclProcess][%s]errNo[0x%016llx] Failed to alloc notify group[%s]", __func__,
                 HCCL_ERROR_CODE(ret), group.c_str()),
             ret);
     }

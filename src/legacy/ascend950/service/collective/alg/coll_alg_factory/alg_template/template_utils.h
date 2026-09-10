@@ -161,7 +161,7 @@ using LinkDataIterator = std::vector<LinkData>::const_iterator;
 
 u32 GetNHRStepNum(u32 rankSize);
 
-HcclResult GetUnitAllignSize(const AllignInfo& allignInfo, u64& unitAllignSize);
+HcclResult GetUnitAllignSize(const AllignInfo& allignInfo, u64& unitAlignSize);
 
 // convert virtualRank (rankIdx of virtual Topo) to algRank (rankIdx of Alg Template)
 HcclResult GetAlgRank(const RankId virtRank, const std::vector<RankId>& tempVTopo, u32& algRank);

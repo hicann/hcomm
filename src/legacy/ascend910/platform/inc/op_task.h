@@ -20,8 +20,8 @@ namespace hccl {
 enum class OpTaskType {
     SEND,
     RECV,
-    ISEND, // immediatily return send
-    IRECV, // immediatily return send
+    ISEND, // immediately return send
+    IRECV, // immediately return send
     WAIT,  // 等待数据收发完成
 
     PROBE,      // 探测

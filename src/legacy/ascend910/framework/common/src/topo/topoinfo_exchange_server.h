@@ -128,7 +128,7 @@ private:
     HcclNetDevCtx netDevCtx_{nullptr};
     std::shared_ptr<HcclSocket> listenSocket_;
     std::shared_ptr<HcclSocket> grpLeaderToRoot_;
-    friend class TopoInfoExchangeDispather;
+    friend class TopoInfoExchangeDispatcher;
     std::map<std::string, std::shared_ptr<HcclSocket>> connectSockets_;
     std::map<std::string, std::shared_ptr<HcclSocket>> grpLeaderSockets_;
     std::map<u32, std::shared_ptr<HcclSocket>> connectSocketsWithRankID_;

@@ -379,7 +379,7 @@ void HcclOneSidedService::UnloadAICPUKernel(void)
         aclError aclRet = aclrtBinaryUnLoad(binHandle_);
         if (aclRet != ACL_SUCCESS) {
             HCCL_ERROR(
-                "[UnloadAICPUKernel]errNo[0x%016llx] unload binary from binHandel[%p] error.", aclRet, binHandle_);
+                "[UnloadAICPUKernel]errNo[0x%016llx] unload binary from binHandle[%p] error.", aclRet, binHandle_);
         }
         binHandle_ = nullptr;
     }

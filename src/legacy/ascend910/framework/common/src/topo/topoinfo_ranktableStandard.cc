@@ -242,30 +242,30 @@ HcclResult TopoinfoRanktableStandard::GetSingleServer(
     serverInfo.networkInfo.clear();
 
     for (u32 innerIndex = 0; innerIndex < rankTable.nicNames.size(); innerIndex++) {
-        NetworkInfo_t networdInfo;
-        networdInfo.ethName = rankTable.nicNames[innerIndex];
+        NetworkInfo_t networkInfo;
+        networkInfo.ethName = rankTable.nicNames[innerIndex];
 
         // 依照nicNames来搜索
         for (u32 i = 0; i < paraPlaneInfo.size(); i++) {
-            auto findEth = paraPlaneInfo.at(i).find(networdInfo.ethName);
+            auto findEth = paraPlaneInfo.at(i).find(networkInfo.ethName);
             if (findEth != paraPlaneInfo.at(i).end()) { // 找到ethName
                 std::string ethIp = findEth->get<std::string>();
                 CHK_RET(CheckUniqueAndInsertPool(
                     JsonUniqueInfoType::UNIQUE_INFO_TYPE_ETH_IP, ethIp, JsonCheckOpType::CHECK_OP_TYPE_INSERT));
-                CHK_RET(ConvertIpAddress(ethIp, networdInfo.ipAddr));
+                CHK_RET(ConvertIpAddress(ethIp, networkInfo.ipAddr));
                 break;
             }
         }
-        if (networdInfo.ipAddr.IsInvalid()) {
+        if (networkInfo.ipAddr.IsInvalid()) {
             HCCL_ERROR(
-                "[Get][SingleServer]errNo[0x%016llx] networdInfo [%s] ipAddr is invalid", HCOM_ERROR_CODE(HCCL_E_PARA),
-                networdInfo.ethName.c_str());
+                "[Get][SingleServer]errNo[0x%016llx] networkInfo [%s] ipAddr is invalid", HCOM_ERROR_CODE(HCCL_E_PARA),
+                networkInfo.ethName.c_str());
             return HCCL_E_PARA;
         }
         HCCL_DEBUG(
-            "networdInfo[%u] [%s] ipAddr[%s]", objIndex, networdInfo.ethName.c_str(),
-            networdInfo.ipAddr.GetReadableAddress());
-        serverInfo.networkInfo.push_back(networdInfo);
+            "networkInfo[%u] [%s] ipAddr[%s]", objIndex, networkInfo.ethName.c_str(),
+            networkInfo.ipAddr.GetReadableAddress());
+        serverInfo.networkInfo.push_back(networkInfo);
     }
 
     rankTable.serverList.push_back(serverInfo);

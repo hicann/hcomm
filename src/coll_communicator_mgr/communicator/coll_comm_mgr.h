@@ -30,8 +30,8 @@ namespace hccl {
 class CollCommMgr {
 public:
     static CollCommMgr& GetInstance();
-    void RegisteCollComm(CollComm* collComm);
-    void UnRegisteCollComm(CollComm* collComm);
+    void RegisterCollComm(CollComm* collComm);
+    void UnregisterCollComm(CollComm* collComm);
     const std::unordered_map<std::string, CollComm*>& GetAllCollComms() const;
     hcomm::ClusterMonitor& GetClusterMonitor(s32 deviceLogicId);
     HcclResult TryReserveCcuMsComm(s32 deviceLogicId, const std::string& commId, bool& reserved);

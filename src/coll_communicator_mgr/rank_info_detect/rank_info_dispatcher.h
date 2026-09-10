@@ -27,7 +27,7 @@
 
 namespace Hccl {
 
-class RankInfoDispather {
+class RankInfoDispatcher {
 public:
     struct SendState {
         u32 rankId;
@@ -60,11 +60,11 @@ public:
     static constexpr s32 LAST_EPOLL_TIMEOUT_MS = 5; // 5ms
     static constexpr s32 RANK_CAPACITY_PER_THREAD = 512;
 
-    explicit RankInfoDispather(RankInfoDetectService* rankInfoDetectServer, u32 threadNum = DEFAULT_THREAD_NUM)
+    explicit RankInfoDispatcher(RankInfoDetectService* rankInfoDetectServer, u32 threadNum = DEFAULT_THREAD_NUM)
         : rankInfoDetectServer_(rankInfoDetectServer),
           threadNum_(threadNum)
     {}
-    ~RankInfoDispather();
+    ~RankInfoDispatcher();
 
     void BroadcastRankTable(
         const std::unordered_map<std::string, std::shared_ptr<Socket>>& connectSockets,

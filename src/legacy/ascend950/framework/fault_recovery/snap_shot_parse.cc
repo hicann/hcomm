@@ -24,7 +24,7 @@ SnapShotParser& SnapShotParser::GetInstance()
 // 保持快照，需要确保快照保持的是二进制流，需要确保换节点后能够继续使用，做save是使用，读出来dump，之后清空
 BinaryStream& SnapShotParser::GetSnapShotBuf() { return snapShotStream_; }
 
-// 恢复通信域，recorver调用，把传入的备份流流反序列化到本地结构
+// 恢复通信域，recover调用，把传入的备份流流反序列化到本地结构
 HcclResult SnapShotParser::ParseSnapshotToLocalBuff(void* snapshotBuf, uint32_t snapshotBufSize, SnapShotBuf& localBuff)
 {
     try {

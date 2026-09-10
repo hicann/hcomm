@@ -224,7 +224,7 @@ TEST_F(RankInfoDetectServiceTest, St_GetRankTable_When_Normal_Expect_Success)
 
 TEST_F(RankInfoDetectServiceTest, St_BroadcastRankTable_When_Normal_Expect_Success)
 {
-    MOCKER_CPP(&RankInfoDispather::BroadcastRankTable)
+    MOCKER_CPP(&RankInfoDispatcher::BroadcastRankTable)
         .stubs()
         .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any())
         .will(returnValue(true));

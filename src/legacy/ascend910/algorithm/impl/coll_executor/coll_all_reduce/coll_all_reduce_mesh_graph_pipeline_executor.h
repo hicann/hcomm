@@ -8,8 +8,8 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
-#ifndef COLL_ALLREDUCE_MESH_GRAPH_PIPLINE_EXECUTOR_H
-#define COLL_ALLREDUCE_MESH_GRAPH_PIPLINE_EXECUTOR_H
+#ifndef COLL_ALLREDUCE_MESH_GRAPH_PIPELINE_EXECUTOR_H
+#define COLL_ALLREDUCE_MESH_GRAPH_PIPELINE_EXECUTOR_H
 
 #include "coll_all_reduce_executor.h"
 

@@ -59,7 +59,7 @@ struct TaskData {
 
     TaskParaDMA DMA;       // taskType = SDMA/RDMA使用, 包括rtRDMASend写notify
     TaskParaReduce Reduce; // taskType = inline/CCE Reduce使用
-    TaskParaNotify Notify; // taskType = Noitfy Record/Wait使用
+    TaskParaNotify Notify; // taskType = Notify Record/Wait使用
     TaskParaAiv Aiv;       // taskType = Aiv   使用
 
     TaskData() : streamID(-1), taskID(-1), taskType(TaskType::TASK_SDMA) {}

@@ -37,7 +37,7 @@ constexpr u32 ALLTOALL_DEFAULT_COM_STEP = 14; // alltoall taskNum, 每个对端�
 constexpr u32 TASK_NUM_DEVICE_FOUR = 4;
 constexpr s32 TASK_NUM_DEVICE_ONE = 1;
 constexpr u32 ALG_8P_RING_COMM_STEP = 7;
-constexpr u32 PIPLINE_STREAM_EVENT_NUM = 2;
+constexpr u32 PIPELINE_STREAM_EVENT_NUM = 2;
 constexpr u32 MINUS_MESH_STREAM_NUM = 2;
 
 enum class GeDeterministicOption { DISABLE = 0, ENABLE = 1, STRICT = 2 };

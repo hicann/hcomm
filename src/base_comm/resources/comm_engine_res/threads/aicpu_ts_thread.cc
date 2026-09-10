@@ -198,7 +198,7 @@ LocalNotify* AicpuTsThread::GetNotify(uint32_t index) const
 {
     if (UNLIKELY(index >= notifyNum_ || index >= notifys_.size() || notifys_[index] == nullptr)) {
         HCCL_ERROR(
-            "[AicpuTsThread][GetNotify] this[%p], streamId[%d], notifyNum[%u], index[%u], notifysSize[%zu], "
+            "[AicpuTsThread][GetNotify] this[%p], streamId[%d], notifyNum[%u], index[%u], notifySize[%zu], "
             "index out of range[0, %u) or notify is null",
             this, stream_ ? stream_->id() : -1, notifyNum_, index, notifys_.size(), notifyNum_);
         return nullptr;

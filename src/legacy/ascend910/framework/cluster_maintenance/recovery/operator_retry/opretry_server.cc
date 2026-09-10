@@ -68,7 +68,7 @@ HcclResult CreateOpRetryServerByState(RetryState state, RetryContext* retryCtx)
             EXCEPTION_CATCH((retryPtr = std::make_shared<OpRetryServerCheckOp>()), return HCCL_E_PTR);
             break;
         }
-        // 检查各agennt主动接轨信息，并发送cmd命令
+        // 检查各agent主动接轨信息，并发送cmd命令
         case RETRY_STATE_CMD_PLAN_SWITCH_NIC: {
             EXCEPTION_CATCH((retryPtr = std::make_shared<SwitchNicServerCheckAllSwitchRanks>()), return HCCL_E_PTR);
             break;

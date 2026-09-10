@@ -51,17 +51,17 @@ HcclResult CcuContext::Init()
 HcclResult CcuContext::GeneTaskParam(const CcuTaskArg& arg, std::vector<CcuTaskParam>& taskParams)
 {
     auto args = GeneArgs(arg);
-    auto agrsNum = args.size();
-    if (agrsNum != loadArgIndex) {
+    auto argsNum = args.size();
+    if (argsNum != loadArgIndex) {
         HCCL_ERROR(
-            "Args number does not match the Load instruction, agrsNum = %lu, loadArgInstr= %u", agrsNum, loadArgIndex);
+            "Args number does not match the Load instruction, argsNum = %lu, loadArgInstr= %u", argsNum, loadArgIndex);
         return HCCL_E_PARA;
     }
 
     // 如果args数量超过sqe arg的最大数量，则返回多个TaskParam，前面几个只从sqe中加载args;
     // args数量大于等于0、小于等于最大值时，返回1个TaskParam
     uint32_t seqNum
-        = (agrsNum / CCU_SQE_ARGS_LEN) + ((agrsNum % CCU_SQE_ARGS_LEN) == 0 ? 0 : 1) + (agrsNum == 0 ? 1 : 0);
+        = (argsNum / CCU_SQE_ARGS_LEN) + ((argsNum % CCU_SQE_ARGS_LEN) == 0 ? 0 : 1) + (argsNum == 0 ? 1 : 0);
     taskParams.resize(seqNum);
     for (uint32_t index = 0; index < seqNum; index++) {
         taskParams[index].dieId = GetDieId();
@@ -931,7 +931,7 @@ void CcuContext::CreateMultiOpReduce(
             Read(*transports[i], bufs[i], src[i], len, sem, 1 << i);
         }
         if (size > DATAT_SIZE_U32) {
-            THROW<CcuApiException>("CcuContext::CreateMultiOpReduce size is invalide ,size[%u]", size);
+            THROW<CcuApiException>("CcuContext::CreateMultiOpReduce size is invalid ,size[%u]", size);
         }
         LocalCopy(bufs[size - 1], src[size - 1], len, sem, 1 << (size - 1));
         LocalWait(sem, (1 << size) - 1);

@@ -1752,12 +1752,12 @@ HcclResult GetTopoDetectInfo(
     std::shared_ptr<TopoInfoDetect>& topoDetectMember)
 {
     HcclResult ret = HCCL_SUCCESS;
-    ret = topoDetectMember->GetCluterInfo(rankTable);
+    ret = topoDetectMember->GetClusterInfo(rankTable);
     CHK_PRT_RET(
         ret != HCCL_SUCCESS,
         HCCL_ERROR(
             "[Init][CommRootInfo][GetTopoDetectInfo]errNo[0x%016llx] "
-            "GetCluterInfo error",
+            "GetClusterInfo error",
             HCCL_ERROR_CODE(ret)),
         ret);
 

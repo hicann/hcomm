@@ -47,7 +47,7 @@ public:
         OpParam& preProcessOpParam, const std::unique_ptr<PreProcessMetaInfo>& preMetaInfo, Stream& preProcessStream);
     bool JudgeIfNeedPreProcessAndGetParam(const OpParam& param, std::unique_ptr<PreProcessMetaInfo>& preMetaInfo);
     void SetPreProcessResult(HostMem hostCollectBuffer);
-    HcclResult SetExcutorExtraInfo(const std::string& algName, const OpParam& param);
+    HcclResult SetExecutorExtraInfo(const std::string& algName, const OpParam& param);
 
     virtual HcclResult CheckNeedRecreateComm(
         const std::string& algName, const OpParam& param, u64 lastScratchMemSize, bool& needRecreateAlltoallComm);

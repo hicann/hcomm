@@ -680,7 +680,7 @@ namespace CcuRep {
             // 使用 StringFormat 格式化字符串
             if (instr->v2.operate.parMode == 0) {
                 return Hccl::StringFormat(
-                    "AddI:xdId[%u] = xnId[%u] + immediata[%u], Set CKE[%u:%04x], parMode[%u]", xdId, xnId, xmId,
+                    "AddI:xdId[%u] = xnId[%u] + immediate[%u], Set CKE[%u:%04x], parMode[%u]", xdId, xnId, xmId,
                     setCKEId, setCKEMask, parMode);
             } else {
                 return Hccl::StringFormat(
@@ -701,7 +701,7 @@ namespace CcuRep {
             // 使用 StringFormat 格式化字符串
             if (instr->v2.operate.parMode == 0) {
                 return Hccl::StringFormat(
-                    "SubI:xdId[%u] = xnId[%u] - immediata[%u], Set CKE[%u:%04x], parMode[%u]", xdId, xnId, xmId,
+                    "SubI:xdId[%u] = xnId[%u] - immediate[%u], Set CKE[%u:%04x], parMode[%u]", xdId, xnId, xmId,
                     setCKEId, setCKEMask, parMode);
             } else {
                 return Hccl::StringFormat(
@@ -722,7 +722,7 @@ namespace CcuRep {
             // 使用 StringFormat 格式化字符串
             if (instr->v2.operate.parMode == 0) {
                 return Hccl::StringFormat(
-                    "MulI:xdId[%u] = xnId[%u] * immediata[%u], Set CKE[%u:%04x], parMode[%u]", xdId, xnId, xmId,
+                    "MulI:xdId[%u] = xnId[%u] * immediate[%u], Set CKE[%u:%04x], parMode[%u]", xdId, xnId, xmId,
                     setCKEId, setCKEMask, parMode);
             } else {
                 return Hccl::StringFormat(
