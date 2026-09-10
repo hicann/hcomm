@@ -82,6 +82,7 @@ private:
     bool IsAlltoallvType(const HcclCMDType opType);                           // 是否为alltoallv类型的算子
     HcclResult IsSmallDataAlltoallv(
         const OpParam& param, bool& isSmallData, const HcclTopoInfo& topoinfo); // 是否为小数据量的alltoallv类型的算子
+    HcclResult HasRemoteDataAlltoallv(const OpParam& param, bool& hasRemoteData, const HcclTopoInfo& topoinfo);
 
     // 为第一个可能被cache的alltoallv算子计算metadata
     HcclResult CalcMetadataForFirstAlltoallv(
