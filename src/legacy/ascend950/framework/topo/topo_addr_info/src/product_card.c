@@ -17,6 +17,7 @@
 #include "hal.h"
 #include "topo.h"
 #include "eid_util.h"
+#include "topo_addr_info_log.h"
 
 #define MAX_CARD_ROOTINFO_LEN (2048)
 #define MAX_MESH_PORT_ID (9)
@@ -142,15 +143,17 @@ int GetCardRankInfo(int phyId, unsigned int mainboardId, void* buf, size_t* len)
     RootInfoAddRank(&rootinfo, &rank);
     char* rootinfo_buf = RootInfoToString(&rootinfo);
     if (rootinfo_buf == NULL) {
+        TOPO_ERR("NPU phy id %d RootInfoToString failed, MainBoardId %u", phyId, mainboardId);
         return -1;
     }
-    if (*len < strlen(rootinfo_buf)) {
-        *len = strlen(rootinfo_buf);
-        free(rootinfo_buf);
-        return -1;
-    }
+
     errno_t ret = strcpy_s(buf, *len, rootinfo_buf);
-    (*len) = strlen(buf);
+    if (ret != EOK) {
+        TOPO_ERR(
+            "NPU phy id %d strcpy_s failed MainBoardId %u space %ld actually size %ld", phyId, mainboardId, *len,
+            strlen(rootinfo_buf));
+    }
+    (*len) = strlen(rootinfo_buf) + 1;
     free(rootinfo_buf);
     return ret;
 }

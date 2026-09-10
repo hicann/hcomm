@@ -17,17 +17,24 @@
 #include "topo.h"
 #include "eid_util.h"
 #include "securec.h"
+#include "topo_addr_info_log.h"
 
-#define MAX_SERVER_ROOTINFO_LEN (2048)
+#define MAX_SERVER_ROOTINFO_LEN (4096)
 #define PRODUCT_MESH_LEVEL (0)
 #define PRODUCT_CLOS_LEVEL (1)
 #define IP_ADDR_LEN (32)
+#define MAX_MAIN_BOARD_ID_NUM (16)
+#define NPU_NUM_PER_BOARD (8)
+#define NET_LAYER_ROCE (3)
 
 /* 用于识别FE*/
 #define MAX_UE_ID_IN_LEVEL (4)
 #define MAX_LEVEL_NUM (4)
 #define SERVER_NPU_NUM (8)
-#define CLOS_LEVEL3 {.level = 3, .netType = NET_TYPE_CLOS, .ueNum = 0, .instanceIdFunc = GetNetInstanceIdForCluster}
+#define CLOS_LEVEL3 \
+    {.level = NET_LAYER_ROCE, .netType = NET_TYPE_CLOS, .ueNum = 0, .instanceIdFunc = GetNetInstanceIdForCluster}
+#define UBOE_CLUSTER_PLANE_ID "plane_uboe"
+#define UB_RTP_CLUSTER_PLANE_ID "plane_ub_rtp"
 
 enum UbEntityType {
     UE_TYPE_MESH = 0,
@@ -56,7 +63,7 @@ typedef struct stLevelInfo {
 } LevelInfo;
 
 typedef struct _stUBRule {
-    unsigned int mainBoardId;
+    unsigned int mainBoardId[MAX_MAIN_BOARD_ID_NUM];
     unsigned int spodType;
     int levelNum;
     LevelInfo levelInfos[MAX_LEVEL_NUM];
@@ -74,6 +81,13 @@ int GetNetInstanceIdForPod(
     int npu_id, const struct dcmi_spod_info* spodInfo, char* netInstanceId, int netInstanceIdLen);
 
 /**
+ *  获取Pod Flex机型的的net instance id
+ * 该机型OS内存在2个8P mesh，8pmesh间无直连通道，因此net instance id需要分开
+ */
+int GetNetInstanceIdForPodFlex(
+    int npu_id, const struct dcmi_spod_info* spodInfo, char* netInstanceId, int netInstanceIdLen);
+
+/**
  *  获取超节点的net instance id
  */
 int GetNetInstanceIdForSuperPod(
@@ -85,7 +99,7 @@ int GetNetInstanceIdForCluster(
 #define MAX_UE_ID (99) // 定义一个MAX_UE_ID， mesh必须使用最大的UE
 static const NetInfo g_netInfoList[] = {
     {
-        .mainBoardId = MAIN_BOARD_ID_SERVER_UBX,
+        .mainBoardId = {MAIN_BOARD_ID_SERVER_350L, MAIN_BOARD_INVALID},
         .spodType = TOPO_TYPE_IGNORE,
         .levelNum = 2, 
         {
@@ -104,7 +118,7 @@ static const NetInfo g_netInfoList[] = {
         },
    },
    {
-        .mainBoardId = MAIN_BOARD_ID_SERVER_8PMESH,
+        .mainBoardId = {MAIN_BOARD_ID_SERVER_8PMESH, MAIN_BOARD_INVALID},
         .spodType = TOPO_TYPE_IGNORE,
         .levelNum = 3, 
         {
@@ -130,7 +144,7 @@ static const NetInfo g_netInfoList[] = {
         },
    },
    {
-        .mainBoardId = MAIN_BOARD_ID_SERVER_8PMESH_UBOE,
+        .mainBoardId = {MAIN_BOARD_ID_SERVER_8PMESH_UBOE, MAIN_BOARD_INVALID},
         .spodType = TOPO_TYPE_IGNORE,
         .levelNum = 4, 
         {
@@ -152,7 +166,7 @@ static const NetInfo g_netInfoList[] = {
         },
    },
    {// 由两个8 NPU服务器组成一个16NPU的小超节点，共16个NPU组成fullmesh组网
-        .mainBoardId = MAIN_BOARD_ID_SERVER_8PMESH_UBOE,
+        .mainBoardId = {MAIN_BOARD_ID_SERVER_8PMESH_UBOE, MAIN_BOARD_INVALID},
         .spodType = TOPO_TYPE_SERVER_16FM,  // 两个服务器组16p fullmesh
         .levelNum = 3, 
         {
@@ -172,7 +186,7 @@ static const NetInfo g_netInfoList[] = {
         },
    },
    {
-        .mainBoardId = MAIN_BOARD_ID_SERVER_8PMESH_NOSP_UBOE, // 这种形态无超平面，但是有UBOE
+        .mainBoardId = { MAIN_BOARD_ID_SERVER_8PMESH_NOSP_UBOE, MAIN_BOARD_INVALID}, // 这种形态无超平面，但是有UBOE
         .spodType = TOPO_TYPE_IGNORE,
         .levelNum = 3, 
         {
@@ -193,7 +207,7 @@ static const NetInfo g_netInfoList[] = {
         },
    },
    {
-        .mainBoardId = MAIN_BOARD_ID_SERVER_8PMESH_NOSP, // 无超平面，无UBOE
+        .mainBoardId = {MAIN_BOARD_ID_SERVER_8PMESH_NOSP, MAIN_BOARD_INVALID}, // 无超平面，无UBOE
         .spodType = TOPO_TYPE_IGNORE,
         .levelNum = 2,
         {
@@ -206,7 +220,7 @@ static const NetInfo g_netInfoList[] = {
         },
    },
    {
-        .mainBoardId = MAIN_BOARD_ID_SERVER_TYPE1,
+        .mainBoardId = {MAIN_BOARD_ID_SERVER_TYPE1, MAIN_BOARD_INVALID},
         .spodType = TOPO_TYPE_IGNORE,
         .levelNum = 3, 
         {
@@ -223,6 +237,90 @@ static const NetInfo g_netInfoList[] = {
                 .ueList = {
                     {.dieId = 0, .feId = 3, .type =UE_TYPE_CLOS },
                     {.dieId = 1, .feId = 2, .type =UE_TYPE_CLOS },
+                }
+            },
+            CLOS_LEVEL3,
+        },
+   },
+   {
+        .mainBoardId = {MAIN_BOARD_ID_POD_FLEX, MAIN_BOARD_ID_POD_FLEX_RTP, MAIN_BOARD_INVALID},
+        .spodType = TOPO_TYPE_IGNORE,
+        .levelNum = 4, 
+        {
+            {
+                .level = 0,
+                .ueNum = 1,
+                .netType = NET_TYPE_TOPO_FILE_DESC,
+                .instanceIdFunc = GetNetInstanceIdForPodFlex,
+                .ueList = {
+                    {.dieId = 0, .feId = MAX_UE_ID, .type = UE_TYPE_MESH},
+                }
+            },
+            {
+                .level = 1,
+                .ueNum = 1,
+                .netType = NET_TYPE_CLOS,
+                .instanceIdFunc = GetNetInstanceIdForSuperPod,
+                .ueList = {
+                    {.dieId = 1, .feId = 2, .type =UE_TYPE_CLOS },
+                }
+            },
+            { 
+                .level = 2, .netType = NET_TYPE_CLOS, .ueNum = 1, .instanceIdFunc = GetNetInstanceIdForCluster,
+                .ueList = { {.dieId = UDIE_0, .feId = 0, .type = UE_TYPE_UB_RTP, .ports = "0/8"} } 
+            },
+            CLOS_LEVEL3, // level2 and level3 will not exist at same time
+        },
+   },
+   {
+        .mainBoardId = {MAIN_BOARD_ID_SERVER_550EL_100, MAIN_BOARD_INVALID},
+        .spodType = TOPO_TYPE_IGNORE,
+        .levelNum = 3, 
+        {
+            {
+                .level = 0,
+                .ueNum = 1,
+                .netType = NET_TYPE_CLOS,
+                .instanceIdFunc = GetNetInstanceIdForPod,
+                .ueList = {
+                    {.dieId = 1, .feId = 2, .type = UE_TYPE_CLOS},
+                }
+            },
+            {
+                .level = 1,
+                .ueNum = 1,
+                .netType = NET_TYPE_CLOS,
+                .instanceIdFunc = GetNetInstanceIdForSuperPod,
+                .ueList = {
+                    {.dieId = 1, .feId = 2, .type = UE_TYPE_CLOS },
+                }
+            },
+            CLOS_LEVEL3,
+        },
+   },
+   {
+        .mainBoardId = {MAIN_BOARD_ID_SERVER_550EL_200, MAIN_BOARD_INVALID},
+        .spodType = TOPO_TYPE_IGNORE,
+        .levelNum = 3, 
+        {
+            {
+                .level = 0,
+                .ueNum = 2,
+                .netType = NET_TYPE_CLOS,
+                .instanceIdFunc = GetNetInstanceIdForPod,
+                .ueList = {
+                    {.dieId = 0, .feId = 2, .type = UE_TYPE_CLOS},
+                    {.dieId = 1, .feId = 2, .type = UE_TYPE_CLOS},
+                }
+            },
+            {
+                .level = 1,
+                .ueNum = 2,
+                .netType = NET_TYPE_CLOS,
+                .instanceIdFunc = GetNetInstanceIdForSuperPod,
+                .ueList = {
+                    {.dieId = 0, .feId = 2, .type = UE_TYPE_CLOS},
+                    {.dieId = 1, .feId = 2, .type = UE_TYPE_CLOS},
                 }
             },
             CLOS_LEVEL3,
@@ -246,14 +344,22 @@ int GetNetInstanceIdForOS(int npu_id, const struct dcmi_spod_info* spodInfo, cha
 int GetNetInstanceIdForPod(int npu_id, const struct dcmi_spod_info* spodInfo, char* netInstanceId, int netInstanceIdLen)
 {
     (void)npu_id;
-    return sprintf_s(netInstanceId, netInstanceIdLen, "sp_%ld_srv_%ld", spodInfo->super_pod_id, spodInfo->server_index);
+    return sprintf_s(netInstanceId, netInstanceIdLen, "sp_%u_srv_%u", spodInfo->super_pod_id, spodInfo->server_index);
+}
+
+int GetNetInstanceIdForPodFlex(
+    int npu_id, const struct dcmi_spod_info* spodInfo, char* netInstanceId, int netInstanceIdLen)
+{
+    return sprintf_s(
+        netInstanceId, netInstanceIdLen, "sp_%u_srv_%u_board%d", spodInfo->super_pod_id, spodInfo->server_index,
+        npu_id / NPU_NUM_PER_BOARD);
 }
 
 int GetNetInstanceIdForSuperPod(
     int npu_id, const struct dcmi_spod_info* spodInfo, char* netInstanceId, int netInstanceIdLen)
 {
     (void)npu_id;
-    return sprintf_s(netInstanceId, netInstanceIdLen, "sp_%ld", spodInfo->super_pod_id);
+    return sprintf_s(netInstanceId, netInstanceIdLen, "sp_%u", spodInfo->super_pod_id);
 }
 
 int GetNetInstanceIdForCluster(
@@ -264,17 +370,30 @@ int GetNetInstanceIdForCluster(
     return sprintf_s(netInstanceId, netInstanceIdLen, "cluster");
 }
 
-const NetInfo* GetNetInfo(unsigned int mainBoardId, unsigned int spodType)
+static int IsMainBoardIdInList(unsigned int mainBoardId, const NetInfo* netInfo)
+{
+    for (int i = 0; i < MAX_MAIN_BOARD_ID_NUM; ++i) {
+        if (netInfo->mainBoardId[i] == MAIN_BOARD_INVALID) {
+            break;
+        }
+        if (netInfo->mainBoardId[i] == mainBoardId) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+static const NetInfo* GetNetInfo(unsigned int mainBoardId, unsigned int spodType)
 {
     // 优先匹配满足mainboard id和 super pod type的情况
     for (size_t i = 0; i < sizeof(g_netInfoList) / sizeof(g_netInfoList[0]); ++i) {
-        if (g_netInfoList[i].mainBoardId == mainBoardId && g_netInfoList[i].spodType == spodType) {
+        if (IsMainBoardIdInList(mainBoardId, &g_netInfoList[i]) && g_netInfoList[i].spodType == spodType) {
             return &g_netInfoList[i];
         }
     }
     //  忽略spod type，只匹配mainboard id
     for (size_t i = 0; i < sizeof(g_netInfoList) / sizeof(g_netInfoList[0]); ++i) {
-        if (g_netInfoList[i].mainBoardId == mainBoardId) {
+        if (IsMainBoardIdInList(mainBoardId, &g_netInfoList[i])) {
             return &g_netInfoList[i];
         }
     }
@@ -358,17 +477,42 @@ static int LayerAddUBOE(const UBEntity* ue, const UEInfo* ueInfo, NetLayer* laye
         char port[MAX_PORT_LEN] = {0};
         int ret = sprintf_s(port, MAX_PORT_LEN, "%s", ueInfo->ports);
         if (ret < 0) {
+            TOPO_ERR("set uboe port failed, ret = %d", ret);
             break;
         }
         AddrAddPort(&addr, port);
         result = 0;
     }
-    char planeId[MAX_PLANE_ID_LEN] = {0};
-    int ret = sprintf_s(planeId, sizeof(planeId), "plane_uboe");
-    if (ret < 0) {
-        return -1;
+    if (result != 0) {
+        TOPO_ERR("Find UBOE address failed, UE eid num = %d", ue->eidNum);
+        return result;
     }
-    AddrSetPlaneId(&addr, planeId);
+    AddrSetPlaneId(&addr, UBOE_CLUSTER_PLANE_ID);
+    NetLayerAddAddr(layer, &addr);
+    return result;
+}
+
+static int LayerAddUbRtp(const UBEntity* ue, const UEInfo* ueInfo, NetLayer* layer)
+{
+    Addr addr;
+    (void)memset_s(&addr, sizeof(Addr), 0x00, sizeof(Addr));
+    int result = -1;
+    for (unsigned int i = 0; i < ue->eidNum; ++i) {
+        AddrSetEID(&addr, &ue->eidList[i].eid);
+        char port[MAX_PORT_LEN] = {0};
+        int ret = sprintf_s(port, MAX_PORT_LEN, "%s", ueInfo->ports);
+        if (ret < 0) {
+            TOPO_ERR("set ub rtp port failed, ret = %d", ret);
+            break;
+        }
+        AddrAddPort(&addr, port);
+        result = 0;
+    }
+    if (result != 0) {
+        TOPO_ERR("Find UB RTP EID failed, UE eid num = %d", ue->eidNum);
+        return result;
+    }
+    AddrSetPlaneId(&addr, UB_RTP_CLUSTER_PLANE_ID);
     NetLayerAddAddr(layer, &addr);
     return result;
 }
@@ -434,7 +578,7 @@ static int ProcessLayer(
     int npuId, NetLayer* layer, UEList* ueList, const LevelInfo* levelInfo, const struct dcmi_spod_info* spodInfo)
 {
     /* RoCE 层（level 3）走独立路径，不查 UEList */
-    if (levelInfo->level == 3) {
+    if (levelInfo->level == NET_LAYER_ROCE) {
         return ProcessLayerRoce(npuId, layer);
     }
 
@@ -450,6 +594,14 @@ static int ProcessLayer(
         int type = levelInfo->ueList[i].type;
         const UBEntity* ue = GetUBEntityByFilter(ueList, die, fe, type);
         if (ue == NULL) {
+            TOPO_INFO(
+                "NPU %d UB Entity not found for NetLayer %d, dieId = %d, UB Entity Id = %d, type = %d", npuId,
+                levelInfo->level, die, fe, type);
+            continue;
+        }
+        if (ue->eidNum == 0) {
+            // UBOE, UBRTP not configured yet
+            TOPO_INFO("NPU %d die %d UB Entity id %d has no EID", npuId, die, fe);
             continue;
         }
         if (type == UE_TYPE_MESH || type == UE_TYPE_CLOS_PORTS) {
@@ -458,6 +610,14 @@ static int ProcessLayer(
             ret = LayerAddClos(ue, layer);
         } else if (type == UE_TYPE_UBOE) {
             ret = LayerAddUBOE(ue, &levelInfo->ueList[i], layer);
+        } else if (type == UE_TYPE_UB_RTP) {
+            ret = LayerAddUbRtp(ue, &levelInfo->ueList[i], layer);
+        }
+        if (ret != 0) {
+            TOPO_INFO(
+                "Unable to add UB Entity to NetLayer %d  dieId = %d feId = %d type = %d, maybe not configured",
+                levelInfo->level, die, fe, type);
+            break;
         }
     }
     return ret;
@@ -485,6 +645,9 @@ int ServerGetRootinfo(int npu_id, unsigned mainboard_id, void* buf, size_t* len)
 
     const NetInfo* netInfo = GetNetInfo(mainboard_id, spod_info.super_pod_type);
     if (netInfo == NULL) {
+        TOPO_ERR(
+            "NPU phy id %d Get NetInfo Failed, MainBoardId %u, super pod type %d", npu_id, mainboard_id,
+            spod_info.super_pod_type);
         return -1;
     }
 
@@ -492,21 +655,27 @@ int ServerGetRootinfo(int npu_id, unsigned mainboard_id, void* buf, size_t* len)
         NetLayer layer;
         if (ProcessLayer(npu_id, &layer, &ueList, &netInfo->levelInfos[i], &spod_info) == 0) {
             RankAddNetLayer(&rank, &layer);
+        } else {
+            TOPO_ERR(
+                "NPU phy id %d ProcessLayer %d failed, MainBoardId %u", npu_id, netInfo->levelInfos[i].level,
+                mainboard_id);
         }
     }
 
     RootInfoAddRank(&rootinfo, &rank);
     char* rootinfo_buf = RootInfoToString(&rootinfo);
     if (rootinfo_buf == NULL) {
+        TOPO_ERR("NPU phy id %d RootInfoToString failed, MainBoardId %u", npu_id, mainboard_id);
         return -1;
     }
-    if ((*len) < strlen(rootinfo_buf)) {
-        (*len) = strlen(rootinfo_buf);
-        free(rootinfo_buf);
-        return -1;
-    }
+
     errno_t ret = strcpy_s(buf, *len, rootinfo_buf);
-    (*len) = strlen(buf);
+    if (ret != EOK) {
+        TOPO_ERR(
+            "NPU phy id %d strcpy_s failed MainBoardId %u space %ld actually size %ld", npu_id, mainboard_id, *len,
+            strlen(rootinfo_buf));
+    }
+    (*len) = strlen(rootinfo_buf) + 1;
     free(rootinfo_buf);
     return ret;
 }

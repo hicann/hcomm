@@ -19,6 +19,7 @@
 #include "product_card.h"
 #include "product_server.h"
 #include "product_pod.h"
+#include "topo_addr_info_log.h"
 
 #define MAX_DUMP_FILE_LEN (256)
 #define DEFAULT_RANKINFO_FILE_PATH "/etc/hccl_rootinfo.json"
@@ -44,12 +45,16 @@ static GetSizeFuncTable g_get_size_func_table[] = {
     {MAIN_BOARD_ID_CARD_4PMESH, GetCardRankInfoLen},
     {MAIN_BOARD_ID_SERVER_8PMESH, ServerGetRootinfoLen},
     {MAIN_BOARD_ID_SERVER_TYPE1, ServerGetRootinfoLen},
+    {MAIN_BOARD_ID_SERVER_550EL_100, ServerGetRootinfoLen},
+    {MAIN_BOARD_ID_SERVER_550EL_200, ServerGetRootinfoLen},
     {MAIN_BOARD_ID_SERVER_8PMESH_UBOE, ServerGetRootinfoLen},
     {MAIN_BOARD_ID_SERVER_8PMESH_NOSP, ServerGetRootinfoLen},
     {MAIN_BOARD_ID_SERVER_8PMESH_NOSP_UBOE, ServerGetRootinfoLen},
-    {MAIN_BOARD_ID_SERVER_UBX, ServerGetRootinfoLen},
+    {MAIN_BOARD_ID_SERVER_350L, ServerGetRootinfoLen},
     {MAIN_BOARD_ID_POD, PodGetRootinfoLen},
     {MAIN_BOARD_ID_POD_2D, PodGetRootinfoLen},
+    {MAIN_BOARD_ID_POD_FLEX, ServerGetRootinfoLen},
+    {MAIN_BOARD_ID_POD_FLEX_RTP, ServerGetRootinfoLen},
 };
 
 static GetRootinfoFuncTable g_get_rootinfo_func_table[] = {
@@ -58,12 +63,16 @@ static GetRootinfoFuncTable g_get_rootinfo_func_table[] = {
     {MAIN_BOARD_ID_CARD_4PMESH, GetCardRankInfo},
     {MAIN_BOARD_ID_SERVER_8PMESH, ServerGetRootinfo},
     {MAIN_BOARD_ID_SERVER_TYPE1, ServerGetRootinfo},
+    {MAIN_BOARD_ID_SERVER_550EL_100, ServerGetRootinfo},
+    {MAIN_BOARD_ID_SERVER_550EL_200, ServerGetRootinfo},
     {MAIN_BOARD_ID_SERVER_8PMESH_UBOE, ServerGetRootinfo},
     {MAIN_BOARD_ID_SERVER_8PMESH_NOSP, ServerGetRootinfo},
     {MAIN_BOARD_ID_SERVER_8PMESH_NOSP_UBOE, ServerGetRootinfo},
-    {MAIN_BOARD_ID_SERVER_UBX, ServerGetRootinfo},
+    {MAIN_BOARD_ID_SERVER_350L, ServerGetRootinfo},
     {MAIN_BOARD_ID_POD, PodGetRootinfo},
     {MAIN_BOARD_ID_POD_2D, PodGetRootinfo},
+    {MAIN_BOARD_ID_POD_FLEX, ServerGetRootinfo},
+    {MAIN_BOARD_ID_POD_FLEX_RTP, ServerGetRootinfo},
 };
 
 int TopoAddrInfoGetSize(int phyId, size_t* size)
@@ -81,6 +90,7 @@ int TopoAddrInfoGetSize(int phyId, size_t* size)
     uint32_t mainboard_id = 0;
     int ret = hal_get_mainboard_id(phyId, &mainboard_id);
     if (ret != 0) {
+        TOPO_ERR("hal_get_mainboard_id failed, NPU phyId %d", phyId);
         return ret;
     }
 
@@ -90,13 +100,14 @@ int TopoAddrInfoGetSize(int phyId, size_t* size)
             return g_get_size_func_table[i].get_size_func(size);
         }
     }
+    TOPO_ERR("MainBoardId %d not found in g_get_size_func_table, use default", mainboard_id);
     (*size) = DEFAULT_RANKINFO_SIZE;
     return 0;
 }
 
 static int PassThroughTopoFilePath(char* filePath, size_t bufSize)
 {
-    return GetTopoFilePathFromFile("/etc/hccl_rootinfo.json", filePath, bufSize);
+    return GetTopoFilePathFromFile(DEFAULT_RANKINFO_FILE_PATH, filePath, bufSize);
 }
 
 /**
@@ -115,6 +126,7 @@ int TopoAddrInfoGetTopoFilePath(int phyId, char* filePath, size_t bufSize)
     uint32_t mainboard_id = 0;
     ret = hal_get_mainboard_id(phyId, &mainboard_id);
     if (ret != 0) {
+        TOPO_ERR("hal_get_mainboard_id failed, NPU phyId %d", phyId);
         return ret;
     }
     struct dcmi_spod_info spod_info;
@@ -163,6 +175,7 @@ int TopoAddrInfoGet(int phyId, char* rankInfo, size_t* bufSize)
     uint32_t mainboard_id = 0;
     int ret = hal_get_mainboard_id(phyId, &mainboard_id);
     if (ret != 0) {
+        TOPO_ERR("hal_get_mainboard_id failed, NPU phyId %d", phyId);
         TOPO_PERF_END(TopoAddrInfoGet);
         return ret;
     }
@@ -171,9 +184,13 @@ int TopoAddrInfoGet(int phyId, char* rankInfo, size_t* bufSize)
     for (size_t i = 0; i < sizeof(g_get_rootinfo_func_table) / sizeof(GetRootinfoFuncTable); ++i) {
         if (g_get_rootinfo_func_table[i].mainboard_id == mainboard_id) {
             ret = g_get_rootinfo_func_table[i].get_rootinfo_func(phyId, mainboard_id, rankInfo, bufSize);
-            break;
+            if (ret != 0) {
+                TOPO_ERR("Get AddrInfo Failed, NPU phyId %d MainBoardId %d", phyId, mainboard_id);
+            }
+            TOPO_PERF_END(TopoAddrInfoGet);
+            return ret;
         }
     }
-    TOPO_PERF_END(TopoAddrInfoGet);
+    TOPO_ERR("MainBoardId %d not found for TopoAddrInfoGet", mainboard_id);
     return ret;
 }

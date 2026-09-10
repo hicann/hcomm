@@ -141,6 +141,10 @@ int TopoGetFilePath(unsigned mainboard_id, unsigned int spod_type, char* buf_siz
         case MAIN_BOARD_ID_POD_2D:
             ret = sprintf_s(buf_size, buf_len, "%s/%s", driver_install_path, "driver/topo/950/atlas_950_1.json");
             break;
+        case MAIN_BOARD_ID_POD_FLEX:
+        case MAIN_BOARD_ID_POD_FLEX_RTP:
+            ret = sprintf_s(buf_size, buf_len, "%s/%s", driver_install_path, "driver/topo/950/atlas_950_2.json");
+            break;
         case MAIN_BOARD_ID_SERVER_TYPE1:
         case MAIN_BOARD_ID_SERVER_8PMESH:
         case MAIN_BOARD_ID_SERVER_8PMESH_UBOE:
@@ -152,8 +156,14 @@ int TopoGetFilePath(unsigned mainboard_id, unsigned int spod_type, char* buf_siz
                 ret = sprintf_s(buf_size, buf_len, "%s/%s", driver_install_path, "driver/topo/950/atlas_850_1.json");
             }
             break;
-        case MAIN_BOARD_ID_SERVER_UBX:
+        case MAIN_BOARD_ID_SERVER_350L:
             ret = sprintf_s(buf_size, buf_len, "%s/%s", driver_install_path, "driver/topo/950/atlas_850_3.json");
+            break;
+        case MAIN_BOARD_ID_SERVER_550EL_100:
+            ret = sprintf_s(buf_size, buf_len, "%s/%s", driver_install_path, "driver/topo/950/atlas_550EL_100.json");
+            break;
+        case MAIN_BOARD_ID_SERVER_550EL_200:
+            ret = sprintf_s(buf_size, buf_len, "%s/%s", driver_install_path, "driver/topo/950/atlas_550EL_200.json");
             break;
         default:
             break;

@@ -70,6 +70,7 @@ struct dcmi_spod_info {
     unsigned int reserve[6];
 };
 
+#define MAIN_BOARD_INVALID (0)
 #define MAIN_BOARD_ID_CARD_NOMESH (0x68)
 #define MAIN_BOARD_ID_CARD_2PMESH (0x6a)
 #define MAIN_BOARD_ID_CARD_4PMESH (0x6c)
@@ -78,10 +79,13 @@ struct dcmi_spod_info {
 #define MAIN_BOARD_ID_SERVER_8PMESH_UBOE (0x27)
 #define MAIN_BOARD_ID_SERVER_8PMESH_NOSP (0x29)
 #define MAIN_BOARD_ID_SERVER_8PMESH_NOSP_UBOE (0x2B)
-#define MAIN_BOARD_ID_SERVER_16PMESH (0x44)
-#define MAIN_BOARD_ID_SERVER_UBX (0x44)
+#define MAIN_BOARD_ID_SERVER_350L (0x44)
+#define MAIN_BOARD_ID_SERVER_550EL_100 (0x46)
+#define MAIN_BOARD_ID_SERVER_550EL_200 (0x48)
 #define MAIN_BOARD_ID_POD (0x07)
 #define MAIN_BOARD_ID_POD_2D (0x03)
+#define MAIN_BOARD_ID_POD_FLEX (0x2D)
+#define MAIN_BOARD_ID_POD_FLEX_RTP (0x2F)
 
 /* 定义拓扑类型 */
 #define TOPO_TYPE_IGNORE (99)     // 忽略该拓扑类型
