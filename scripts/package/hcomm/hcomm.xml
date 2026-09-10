@@ -36,7 +36,6 @@
     </file_info>
     <block_info dependtree="false" dst_path="" block_conf_path="ascend">
         <block name="EngineeringCommon"/>
-        <block name="EngineeringFiles"/>
         <block name="CommLib"/>
         <block name="../../../../experimental/ExperimentalNicPlugin"/>
     </block_info>
