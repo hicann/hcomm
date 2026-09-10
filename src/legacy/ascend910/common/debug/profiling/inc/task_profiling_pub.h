@@ -59,7 +59,7 @@ struct TaskData {
 
     TaskParaDMA DMA;       // taskType = SDMA/RDMA使用, 包括rtRDMASend写notify
     TaskParaReduce Reduce; // taskType = inline/CCE Reduce使用
-    TaskParaNotify Notify; // taskType = Noitfy Record/Wait使用
+    TaskParaNotify Notify; // taskType = Notify Record/Wait使用
     TaskParaAiv Aiv;       // taskType = Aiv   使用
 
     TaskData() : streamID(-1), taskID(-1), taskType(TaskType::TASK_SDMA) {}
@@ -268,7 +268,7 @@ inline std::string GetProfOpName(HcclCMDType cmdType)
 
 class TaskProfiling : public ProfilerBase {
 public:
-    /* * 当前Profling只有注册接口, 生命期需要贯穿整个进程, 故选择静态成员变量
+    /* * 当前Profiling只有注册接口, 生命期需要贯穿整个进程, 故选择静态成员变量
         多线程操作相同reporter_对象需要加锁 */
     static std::mutex mutex_;
 

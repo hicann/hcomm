@@ -875,7 +875,7 @@ void HrtRaSocketSetWhiteListStatus(u32 enable)
     if (ret != 0) {
         MACRO_THROW(
             NetworkApiException, StringFormat(
-                                     "[Set][WhiteListStatus]errNo[0x%016llx] ra socekt set white list fail, call "
+                                     "[Set][WhiteListStatus]errNo[0x%016llx] ra socket set white list fail, call "
                                      "RaSocketSetWhiteListStatus failed, params: enable[%u], return: ret[%d]",
                                      HCCL_ERROR_CODE(HcclResult::HCCL_E_TCP_CONNECT), enable, ret));
     }
@@ -890,7 +890,7 @@ u32 HrtRaSocketGetWhiteListStatus()
     if (ret != 0) {
         MACRO_THROW(
             NetworkApiException, StringFormat(
-                                     "[Get][WhiteListStatus]errNo[0x%016llx] ra socekt get whilte list fail, call "
+                                     "[Get][WhiteListStatus]errNo[0x%016llx] ra socket get white list fail, call "
                                      "RaSocketGetWhiteListStatus failed, return: ret[%d]",
                                      HCCL_ERROR_CODE(HcclResult::HCCL_E_TCP_CONNECT), ret));
     }

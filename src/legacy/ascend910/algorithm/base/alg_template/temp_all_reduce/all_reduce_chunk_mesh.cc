@@ -231,7 +231,7 @@ HcclResult AllReduceChunkMesh::RunReduceScatter(u32 rank, u32 rankSize, const st
 
         CHK_RET(HcclD2DMemcpyAsync(dispatcher_, emptyDst, emptySrc, stream_));
 
-        // 跨片reduceinline写
+        // 跨片reduce inline写
         for (u32 peer = 1; peer < rankSize; peer++) {
             u32 gap = (peer + round) > rankSize ? (peer + round - 1) % (rankSize - 1) : (peer + round - 1);
             u32 dstRank = (gap + rank) % rankSize;

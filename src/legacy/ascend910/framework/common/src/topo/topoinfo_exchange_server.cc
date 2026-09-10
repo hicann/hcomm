@@ -104,7 +104,7 @@ HcclResult TopoInfoExchangeServer::Setup()
             HCCL_INFO("cluster topo exchange server get rank basic info from all agent success.");
 
             g_broadcastStage.store(BroadcastStage::Started, std::memory_order_release);
-            TopoInfoExchangeDispather dispatcher(this);
+            TopoInfoExchangeDispatcher dispatcher(this);
             ret = dispatcher.BroadcastRankTable(connectSockets_, rankTable, failedAgentIdList);
             {
                 g_broadcastStage.store(BroadcastStage::Completed, std::memory_order_release);
@@ -142,9 +142,9 @@ HcclResult TopoInfoExchangeServer::Setup()
 
 HcclResult TopoInfoExchangeServer::HierarchicalSendRecv()
 {
-    TopoInfoExchangeDispather dispatcherGrpLeader(this);
-    TopoInfoExchangeDispather dispatcherGrpLeaderPortInfo(this);
-    TopoInfoExchangeDispather dispatcherRankTable(this);
+    TopoInfoExchangeDispatcher dispatcherGrpLeader(this);
+    TopoInfoExchangeDispatcher dispatcherGrpLeaderPortInfo(this);
+    TopoInfoExchangeDispatcher dispatcherRankTable(this);
 
     // get Group Leader info
     GroupLeader_t groupLeader;
@@ -250,7 +250,7 @@ HcclResult TopoInfoExchangeServer::SetupGroupLeader()
     HcclResult error = HCCL_SUCCESS;
 
     do {
-        TopoInfoExchangeDispather dispatcher(this);
+        TopoInfoExchangeDispatcher dispatcher(this);
 
         ret = GroupLeaderConnect(connectSockets_);
         CHK_PRT_BREAK(

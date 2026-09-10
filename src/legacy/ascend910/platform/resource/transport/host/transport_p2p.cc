@@ -383,16 +383,16 @@ HcclResult TransportP2p::ConstructExchangeForSend()
                 ConstructIntraProcMemInfoForSend(ipcMem.ptr(), ipcMem.size(), exchangeDataPtr, exchangeDataBlankSize));
         }
     }
-    CHK_RET(SumCheckSizeAndConsisten(
+    CHK_RET(SumCheckSizeAndConsistent(
         ExInfoType::EX_IPCMEN_SIZE, exchangeInfoSize_.ipcMenSize, blankSizeRecord, exchangeDataBlankSize));
 
     CHK_RET(ConstructNotifyInfoForSend(exchangeDataPtr, exchangeDataBlankSize));
     CHK_RET(ConstructNotifyVectorInfoForSend(exchangeDataPtr, exchangeDataBlankSize)); // 新增notify资源的创建
-    CHK_RET(SumCheckSizeAndConsisten(
+    CHK_RET(SumCheckSizeAndConsistent(
         ExInfoType::EX_NOTIFY_SIZE, exchangeInfoSize_.notifySize, blankSizeRecord, exchangeDataBlankSize));
 
     CHK_RET(ConstructExchangeDataForSend(exchangeDataPtr, exchangeDataBlankSize));
-    CHK_RET(SumCheckSizeAndConsisten(
+    CHK_RET(SumCheckSizeAndConsistent(
         ExInfoType::EX_EXDATA_SIZE, exchangeInfoSize_.exDataSize, blankSizeRecord, exchangeDataBlankSize));
 
     // 独立算子内存资源，无需检查大小
@@ -1784,13 +1784,13 @@ TransportP2p::ReadAsync(struct Transport::Buffer& localBuf, struct Transport::Bu
         dispatcher_, dstDevMem, srcDevMem, stream, machinePara_.remoteWorldRank, transportAttr_.linkType);
 }
 
-HcclResult TransportP2p::SumCheckSizeAndConsisten(
+HcclResult TransportP2p::SumCheckSizeAndConsistent(
     ExInfoType exInfoType, u32 rightInfoSize, u64& blankSizeRecord, u64 exchangeDataBlankSize)
 {
     u32 checkInfoSize = blankSizeRecord - exchangeDataBlankSize;
     if (checkInfoSize != rightInfoSize) {
         HCCL_ERROR(
-            "[SumCheckSizeAndConsisten] ExInfoType[%d] check size failed, checkInfoSize[%u] rightInfoSize[%u]",
+            "[SumCheckSizeAndConsistent] ExInfoType[%d] check size failed, checkInfoSize[%u] rightInfoSize[%u]",
             exInfoType, checkInfoSize, rightInfoSize);
         return HCCL_E_INTERNAL;
     }

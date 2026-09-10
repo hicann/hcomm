@@ -1244,11 +1244,11 @@ HcclResult TopoInfoDetect::GetSuperPodInfo(s32 deviceLogicId, std::string& super
     return HCCL_SUCCESS;
 }
 
-HcclResult TopoInfoDetect::GetCluterInfo(RankTable_t& clusterInfo)
+HcclResult TopoInfoDetect::GetClusterInfo(RankTable_t& clusterInfo)
 {
     CHK_PRT_RET(
         (clusterTopoInfo_.rankList.size() == 0),
-        HCCL_ERROR("[Get][ClusterInfo]GetCluterInfo failed, topo detect has not started."), HCCL_E_INTERNAL);
+        HCCL_ERROR("[Get][ClusterInfo]GetClusterInfo failed, topo detect has not started."), HCCL_E_INTERNAL);
     clusterInfo = clusterTopoInfo_;
     return HCCL_SUCCESS;
 }

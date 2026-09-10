@@ -55,7 +55,7 @@ rtError_t CommandHandle(uint32_t rtType, void* data, uint32_t len)
                 profilingManager.PluginUnInit();
                 break;
             default:
-                HCCL_RUN_INFO("[Profiling][CommandHandle] Unexpected behaviour.");
+                HCCL_RUN_INFO("[Profiling][CommandHandle] Unexpected behavior.");
         }
     }
 
@@ -95,7 +95,7 @@ rtError_t EsCommandHandle(uint32_t rtType, void* data, uint32_t len)
         case PROF_COMMANDHANDLE_TYPE_FINALIZE:
             break;
         default:
-            HCCL_ERROR("[Profiling][EsCommandHandle] Unexpected behaviour.");
+            HCCL_ERROR("[Profiling][EsCommandHandle] Unexpected behavior.");
     }
 
     return SUCCESS;

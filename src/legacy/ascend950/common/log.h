@@ -65,9 +65,9 @@ bool CheckInfoLogLevel();
 
 int HcclCheckLogLevel(int logLevel);
 
-#define LOG_FUNC(moudle, level, fmt, ...)              \
+#define LOG_FUNC(module, level, fmt, ...)              \
     do {                                               \
-        DlogRecord(moudle, level, fmt, ##__VA_ARGS__); \
+        DlogRecord(module, level, fmt, ##__VA_ARGS__); \
     } while (0)
 
 #define HCCL_LOG_PRINT(moduleId, logType, format, ...)                                                              \

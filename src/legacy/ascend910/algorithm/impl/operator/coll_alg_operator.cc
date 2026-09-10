@@ -522,7 +522,7 @@ HcclResult CollAlgOperator::GetDefaultAlgoLevel1V2(
     HcclCMDType hcclCMDType, u64 curSize, u64 cclBufferSize, AlgTypeLevel1& algType, bool isInlineReduce,
     bool isRdmaReduce, bool isAivMode)
 {
-    // pipeline mode is deployed,where there is multi-sever multi-device(insever) now,
+    // pipeline mode is deployed,where there is multi-server multi-device(in server) now,
     // since RDMA is not reduced by normal serial orchestration of tasks.
     // So pipeline mode is more dominant than normal serial orchestration now.
     auto originalAlgTypeLevel0 = algType_.algoLevel0;

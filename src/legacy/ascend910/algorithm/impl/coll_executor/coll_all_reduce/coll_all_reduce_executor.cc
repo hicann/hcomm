@@ -400,7 +400,7 @@ bool CollAllReduceExecutor::IsAllReduceSmallData(u64 size)
 }
 
 HcclResult CollAllReduceExecutor::PrepareSliceDataWithAlignSize(
-    u64 totalSize, u32 sliceNum, u64 piplineOffset, std::vector<Slice>& dataSlice, u64 alignSize) const
+    u64 totalSize, u32 sliceNum, u64 pipelineOffset, std::vector<Slice>& dataSlice, u64 alignSize) const
 {
     Slice temp;
     dataSlice.clear();
@@ -416,7 +416,7 @@ HcclResult CollAllReduceExecutor::PrepareSliceDataWithAlignSize(
     while (residueSize > 0) {
         u64 sliceSize = sizePerSlice < residueSize ? sizePerSlice : residueSize;
         temp.size = sliceSize;
-        temp.offset = totalSize - residueSize + piplineOffset;
+        temp.offset = totalSize - residueSize + pipelineOffset;
         i++;
         CHK_PRT_RET(
             (sliceSize <= 0), HCCL_ERROR("[Prepare][SliceData]data_slice_prepare sliceSize[%llu].", sliceSize),
@@ -427,7 +427,7 @@ HcclResult CollAllReduceExecutor::PrepareSliceDataWithAlignSize(
     HCCL_DEBUG("[%s] PrepareSliceDataWithAlignSize for data_slice_prepare", __func__);
     while (i < sliceNum) {
         temp.size = 0;
-        temp.offset = totalSize + piplineOffset;
+        temp.offset = totalSize + pipelineOffset;
         i++;
         dataSlice.push_back(temp);
     }

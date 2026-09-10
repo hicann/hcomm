@@ -171,7 +171,7 @@ HcclResult ExecutorBase::Prepare([[maybe_unused]] u32 interRank, [[maybe_unused]
 }
 
 /* 3个参数 */
-// for AllGatherHalvingDoubling based on intput_scratch_Mem_nicRankList Prepare
+// for AllGatherHalvingDoubling based on input_scratch_Mem_nicRankList Prepare
 // and should be called soon template AllGatherHalvingDoubling created
 HcclResult ExecutorBase::Prepare(
     [[maybe_unused]] u32 blockSize, [[maybe_unused]] UserMemType hdInputMemType,
@@ -786,7 +786,7 @@ std::vector<bool> ExecutorBase::CalcLinksRelation(
 
 // 将数据均分，最小单位是128
 HcclResult ExecutorBase::PrepareSliceData(
-    u64 dataCount, u32 unitSize, u32 sliceNum, u64 piplineOffset, std::vector<Slice>& dataSlice)
+    u64 dataCount, u32 unitSize, u32 sliceNum, u64 pipelineOffset, std::vector<Slice>& dataSlice)
 {
     Slice temp;
     u64 totalSize = dataCount * unitSize;
@@ -803,7 +803,7 @@ HcclResult ExecutorBase::PrepareSliceData(
     while (residueSize > 0) {
         u64 sliceSize = sizePerSlice < residueSize ? sizePerSlice : residueSize;
         temp.size = sliceSize;
-        temp.offset = totalSize - residueSize + piplineOffset;
+        temp.offset = totalSize - residueSize + pipelineOffset;
         i++;
         CHK_PRT_RET(
             (sliceSize <= 0), HCCL_ERROR("[Prepare][SliceData]data_slice_prepare sliceSize[%llu]", sliceSize),
@@ -813,7 +813,7 @@ HcclResult ExecutorBase::PrepareSliceData(
     }
     while (i < sliceNum) {
         temp.size = 0;
-        temp.offset = totalSize + piplineOffset;
+        temp.offset = totalSize + pipelineOffset;
         i++;
         dataSlice.push_back(temp);
     }
@@ -822,14 +822,14 @@ HcclResult ExecutorBase::PrepareSliceData(
 
 // 数据切分到每个stream上，最小单位是128
 HcclResult ExecutorBase::PrepareSliceMeshStreams(
-    const std::vector<Slice>& rankSegsSlice, u32 streamCount, std::vector<std::vector<Slice>>& mutliStreamsSlices)
+    const std::vector<Slice>& rankSegsSlice, u32 streamCount, std::vector<std::vector<Slice>>& multiStreamsSlices)
 {
     std::vector<u64> rankStreamSize;
     std::vector<u64> rankResidueSize;
     rankStreamSize.reserve(rankSegsSlice.size());
     rankResidueSize.reserve(rankSegsSlice.size());
-    mutliStreamsSlices.clear();
-    mutliStreamsSlices.reserve(streamCount);
+    multiStreamsSlices.clear();
+    multiStreamsSlices.reserve(streamCount);
     if (streamCount == 0) {
         HCCL_ERROR("[Prepare][SliceMeshStreams]data slice mesh prepare, streamCount is 0");
         return HCCL_E_PARA;
@@ -837,8 +837,8 @@ HcclResult ExecutorBase::PrepareSliceMeshStreams(
     for (u32 rankId = 0; rankId < rankSegsSlice.size(); rankId++) {
         u64 rankDataSize = rankSegsSlice[rankId].size;
         u64 sizePerStream = (rankDataSize + streamCount - 1) / streamCount;
-        u64 sizeAlgin = ExecutorBase::RoundUpWithDivisor(sizePerStream, HCCL_MIN_SLICE_ALIGN);
-        rankStreamSize.push_back(sizeAlgin);
+        u64 sizeAlign = ExecutorBase::RoundUpWithDivisor(sizePerStream, HCCL_MIN_SLICE_ALIGN);
+        rankStreamSize.push_back(sizeAlign);
         rankResidueSize.push_back(rankDataSize);
     }
 
@@ -860,7 +860,7 @@ HcclResult ExecutorBase::PrepareSliceMeshStreams(
             }
             singleStreamSlices.push_back(rankSliceTemp);
         }
-        mutliStreamsSlices.push_back(singleStreamSlices);
+        multiStreamsSlices.push_back(singleStreamSlices);
     }
     return HCCL_SUCCESS;
 }

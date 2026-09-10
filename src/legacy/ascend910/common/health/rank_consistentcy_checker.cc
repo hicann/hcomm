@@ -127,7 +127,7 @@ HcclResult RankConsistentcyChecker::RecordVerInfo(const std::string& versionInfo
     // Only record once, in case of multiple calls while other process is reading CANN version information
     // in CompareFrame func and get the intermediate state.
     if (cannVerInfoRecordFlag_) {
-        HCCL_INFO("[RankConsistentcyChecker][RecordVerInfo]Cann version information has been recorded.");
+        HCCL_INFO("[RankConsistentcyChecker][RecordVerInfo]CANN version information has been recorded.");
         return HCCL_SUCCESS;
     }
 

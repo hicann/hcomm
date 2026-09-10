@@ -180,7 +180,8 @@ void CcuContextScatterMesh2D::Sync(uint32_t ckeId)
 void CcuContextScatterMesh2D::AxisSync(uint32_t signalIndex)
 {
     if (signalIndex > 1) {
-        THROW<InvalidParamsException>(StringFormat("[CcuContextScatterMesh2D] Unexpected SignalInex[%u]", signalIndex));
+        THROW<InvalidParamsException>(
+            StringFormat("[CcuContextScatterMesh2D] Unexpected SignalIndex[%u]", signalIndex));
     }
     LocalCtxPost(anotherAxisSignal_, 1 << (axisId_ + signalIndex * DIM_NUM));
     LocalWait(localAxisSignal_, 1 << (1 - axisId_ + signalIndex * DIM_NUM));

@@ -849,7 +849,7 @@ void TransportBase::DestroyHostSignal()
             remoteSendReadyNotify_->Close();
             remoteSendReadyNotify_ = nullptr;
         }
-        /* 销毁creat的signal资源 */
+        /* 销毁create的signal资源 */
         localSendDoneNotify_ = nullptr;
     }
     if (machinePara_.linkMode != LinkMode::LINK_SIMPLEX_MODE
@@ -872,7 +872,7 @@ void TransportBase::DestroyDeviceSignal()
             remoteSendReadyDeviceNotify_->Close();
             remoteSendReadyDeviceNotify_ = nullptr;
         }
-        /* 销毁creat的signal资源 */
+        /* 销毁create的signal资源 */
         localSendDoneDeviceNotify_ = nullptr;
     }
     if ((machinePara_.linkMode != LinkMode::LINK_SIMPLEX_MODE

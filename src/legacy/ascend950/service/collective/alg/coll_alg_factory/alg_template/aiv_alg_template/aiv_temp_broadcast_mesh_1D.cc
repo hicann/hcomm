@@ -55,7 +55,7 @@ HcclResult AivTempBroadcastMesh1D::GenExtIns(
     aivBroadcastArgs.count = templateDataParams.sliceSize / DataTypeSizeGet(dataType_);
     aivBroadcastArgs.dataType = dataType_;
     aivBroadcastArgs.root = root_;
-    aivBroadcastArgs.aivTag = sliceId_; // 传入aivTag，Lauch时重新组装为aivTag
+    aivBroadcastArgs.aivTag = sliceId_; // 传入aivTag，Launch时重新组装为aivTag
     aivBroadcastArgs.isOpBase = (tempFuncs.opMode == OpMode::OPBASE);
     aivBroadcastArgs.xRankSize = tempVTopo_[0].size();
     aivBroadcastArgs.yRankSize = 0;

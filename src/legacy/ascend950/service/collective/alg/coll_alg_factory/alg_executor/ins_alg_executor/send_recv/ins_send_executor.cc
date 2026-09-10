@@ -104,7 +104,7 @@ HcclResult InsSendExecutor::CalcResOffload(const RankGraph* rankGraph, const u64
 {
     (void)rankGraph;
     (void)dataSize;
-    resReq.requiredScratchMemSize = 0; // 图模式不用scratchmemory
+    resReq.requiredScratchMemSize = 0; // 图模式不用scratch memory
     resReq.requiredSubQueNum = 0;
 
     return HcclResult::HCCL_SUCCESS;

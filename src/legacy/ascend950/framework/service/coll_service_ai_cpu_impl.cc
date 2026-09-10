@@ -408,7 +408,7 @@ void CollServiceAiCpuImpl::AicpuKernelLaunch(HcclKernelLaunchParam& param, Strea
     attr.id = ACL_RT_LAUNCH_KERNEL_ATTR_TIMEOUT;
     auto timeoutCheck = EnvConfig::GetInstance().GetRtsConfig().GetExecTimeOut();
     attr.value.timeout
-        = static_cast<u16>((timeoutCheck == 0) ? timeoutCheck : (timeoutCheck + 30)); // aicpu kernal超时时间: X+30s
+        = static_cast<u16>((timeoutCheck == 0) ? timeoutCheck : (timeoutCheck + 30)); // aicpu kernel超时时间: X+30s
     cfg.numAttrs = 1;
     cfg.attrs = &attr;
     TRY_CATCH_THROW(
@@ -620,7 +620,7 @@ u64 CollServiceAiCpuImpl::CalcOpDynamicDataSize(const CollOperator& op, const Op
     return dynamicDataSize;
 }
 
-// 功能说明：根据输入的LinkData信息，恢复Tansport对象
+// 功能说明：根据输入的LinkData信息，恢复Transport对象
 // 输入说明：vector<LinkData> &links：linkData数据
 void CollServiceAiCpuImpl::RecoverTransport(
     vector<LinkData>& links, [[maybe_unused]] vector<std::pair<LinkGroup, u32>> linkGroupPair) // communicatorLinkData

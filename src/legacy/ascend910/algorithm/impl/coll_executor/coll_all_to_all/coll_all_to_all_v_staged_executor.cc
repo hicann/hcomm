@@ -451,7 +451,7 @@ HcclResult CollRunAlltoAllVStaged::KernelRun(const OpParam& param, ExecMem& exec
          || alltoallMeshReadOnly)
         && topoAttr_.isSingleMeshAggregation) {
         HCCL_DEBUG("we don't need to do stage 2 when there is only one mesh aggregation");
-        // we don't need to do stage 2 when there is only one mesh aggregation
+        // we don't needtodo stage 2 when there is only one mesh aggregation
     } else {
         HCCL_INFO("[hcclImpl][RunAlltoAllVStaged] stage1 run starts!");
         CHK_RET(CheckCommSize(COMM_MESH_L1, COMM_INDEX_0 + 1));

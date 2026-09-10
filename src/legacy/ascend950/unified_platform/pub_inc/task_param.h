@@ -58,7 +58,7 @@ struct CcuProfilingInfo {
     uint32_t mask;
     uint16_t channelId[CCU_MAX_CHANNEL_NUM];     // LoopGroup所包含的搬运指令使用的ChannelId
     uint32_t remoteRankId[CCU_MAX_CHANNEL_NUM];  // LoopGroup所包含的搬运指令的对端
-    uint64_t channelHandle[CCU_MAX_CHANNEL_NUM]; // channelhandle句柄
+    uint64_t channelHandle[CCU_MAX_CHANNEL_NUM]; // channel handle句柄
 
     CcuProfilingInfo()
         : name(""),
@@ -148,7 +148,7 @@ struct TaskParam {
     union {
         ParaDMA DMA;       // taskType = SDMA/RDMA使用, 包括rtRDMASend写notify
         ParaReduce Reduce; // taskType = inline/CCE Reduce使用
-        ParaNotify Notify; // taskType = Noitfy Record/Wait使用
+        ParaNotify Notify; // taskType = Notify Record/Wait使用
         ParaCcu Ccu;
         ParaAiv Aiv; // aiv param
     } taskPara;

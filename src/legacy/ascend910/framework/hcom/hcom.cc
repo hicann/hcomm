@@ -321,8 +321,8 @@ HcclResult HcomGenerteRanktable(std::string& rankTableM, std::string& rankId)
         HCCL_ERROR("[Init][CommMasterInfo]setup topo detect error"), HCCL_E_INTERNAL);
     RankTable_t rankTable;
     CHK_PRT_RET(
-        topoDetectAgent->GetCluterInfo(rankTable) != HCCL_SUCCESS,
-        HCCL_ERROR("[Init][CommMasterInfo]GetCluterInfo error"), HCCL_E_INTERNAL);
+        topoDetectAgent->GetClusterInfo(rankTable) != HCCL_SUCCESS,
+        HCCL_ERROR("[Init][CommMasterInfo]GetClusterInfo error"), HCCL_E_INTERNAL);
     u32 rankIdNum = 0;
     CHK_PRT_RET(
         topoDetectAgent->GetRankId(rankIdNum) != HCCL_SUCCESS,
@@ -1984,7 +1984,7 @@ HcclResult GetRankListHeterog(u32 rankNum, const u32* rankIds, HcclGroupParams& 
     }
     // groupRanks 个数已经校验非0
     std::string serverId = hcomInfo.rankTable.rankList[params.groupRanks[0]].serverId;
-    u32 serverNum = 1; // severNum初始值应为1，代表groupId为0的serverId;
+    u32 serverNum = 1; // serverNum初始值应为1，代表groupId为0的serverId;
     RankInfo_t rankInfo;
     for (u32 i = 0; i < rankNum; i++) {
         rankInfo = hcomInfo.rankTable.rankList[params.groupRanks[i]];
@@ -3768,7 +3768,7 @@ HcclResult GetOpScratchMemSize(
 
     // 是否需要额外申请scratch mem
     if (hcclOpType == HCCL_CMD_REDUCE_SCATTER_V) {
-        CHK_RET(GetRedcueScatterVScratchMemSize(hcomOpParam, opMemSize));
+        CHK_RET(GetReduceScatterVScratchMemSize(hcomOpParam, opMemSize));
     } else if (hcclOpType == HCCL_CMD_REDUCE_SCATTER) {
         // ReduceScatter 所需workspace memory: count * 单个数据的size * rank_size
         opMemSize = count * dataTypeSize * rankSize;
@@ -3917,7 +3917,7 @@ HcclResult GetAlltoAllvcStagedScratchMemSize(HcomOpParam* hcomOpParam, u32 rankS
     return HCCL_SUCCESS;
 }
 
-HcclResult GetRedcueScatterVScratchMemSize(HcomOpParam* hcomOpParam, u64& getMemSize)
+HcclResult GetReduceScatterVScratchMemSize(HcomOpParam* hcomOpParam, u64& getMemSize)
 {
     DevType devType;
     std::string socVerStr(hcomOpParam->socVersion);
@@ -3937,14 +3937,14 @@ HcclResult GetRedcueScatterVScratchMemSize(HcomOpParam* hcomOpParam, u64& getMem
             maxCount = std::max(maxCount, static_cast<u64*>(hcomOpParam->All2AllDataDes.sendCounts)[i]);
         }
         getMemSize = (maxCount * dataTypeSize + paddingLen) * ranksize;
-        HCCL_INFO("[GetRedcueScatterVScratchMemSize] maxCount[%llu], getMemSize[%llu]", maxCount, getMemSize);
+        HCCL_INFO("[GetReduceScatterVScratchMemSize] maxCount[%llu], getMemSize[%llu]", maxCount, getMemSize);
     } else if (devType == DevType::DEV_TYPE_910B && ranksize <= deviceEight) {
         getMemSize = hcomOpParam->count * dataTypeSize * ranksize;
-        HCCL_INFO("[GetRedcueScatterVScratchMemSize] getMemSize[%llu]", getMemSize);
+        HCCL_INFO("[GetReduceScatterVScratchMemSize] getMemSize[%llu]", getMemSize);
     } else {
         getMemSize = hcomOpParam->count * dataTypeSize;
     }
-    HCCL_DEBUG("[GetRedcueScatterVScratchMemSize] rankSize[%llu] getMemSize[%llu]", ranksize, getMemSize);
+    HCCL_DEBUG("[GetReduceScatterVScratchMemSize] rankSize[%llu] getMemSize[%llu]", ranksize, getMemSize);
     return HCCL_SUCCESS;
 }
 
@@ -4187,7 +4187,8 @@ HcclResult GetDfxTaskNum(const std::string& sCollectiveType, u32& taskNum)
     return HCCL_SUCCESS;
 }
 
-HcclResult GetToSlaveStreamTaskNum(const std::string& sCollectiveType, u64 streamNum, u64 piplineSliceNum, u32& taskNum)
+HcclResult
+GetToSlaveStreamTaskNum(const std::string& sCollectiveType, u64 streamNum, u64 pipelineSliceNum, u32& taskNum)
 {
     u32 taskNumTmp = 0;
     if (sCollectiveType == HCCL_KERNEL_OP_TYPE_ALLREDUCE) {
@@ -4195,8 +4196,8 @@ HcclResult GetToSlaveStreamTaskNum(const std::string& sCollectiveType, u64 strea
     } else {
         taskNumTmp = streamNum * MASTER_STREAM_EVENT_NUM;
     }
-    if (piplineSliceNum >= MIN_PIPLINE_SLICE_NUM) {
-        taskNumTmp += piplineSliceNum * PIPLINE_STREAM_EVENT_NUM * COM_STEP_NUM;
+    if (pipelineSliceNum >= MIN_PIPELINE_SLICE_NUM) {
+        taskNumTmp += pipelineSliceNum * PIPELINE_STREAM_EVENT_NUM * COM_STEP_NUM;
     }
     taskNum += taskNumTmp;
     HCCL_DEBUG("[GetToSlaveStreamTaskNum] cur task num[%u].", taskNum);
@@ -4361,7 +4362,7 @@ HcclResult CalcTaskNum(
 {
     u32 masterTaskNum = 0;
     u32 slaveTaskNum = 0;
-    u32 piplineTaskNum = 0;
+    u32 pipelineTaskNum = 0;
 
     std::string sCollectiveType(hcomOpParam->opType);
 
@@ -4416,7 +4417,7 @@ HcclResult CalcTaskNum(
         if ((deviceNumPerServer == 0) && (serverNum == 0)) {
             taskNum = OP_DEFAULT_TASK_NUM;
         } else {
-            // 计算Server间pipline切分数量
+            // 计算Server间pipeline切分数量
             u32 dataTypeSize;
             u64 totalSize = 0;
             ret = SalGetDataTypeSize(hcomOpParam->dataType, dataTypeSize);
@@ -4428,19 +4429,19 @@ HcclResult CalcTaskNum(
 
             totalSize = hcomOpParam->count * dataTypeSize;
 
-            u64 piplineSliceNum
+            u64 pipelineSliceNum
                 = CalculatePiplineSliceNum(hcclOpType, totalSize, algType, devType, deviceNumPerServer, serverNum);
 
             // 计算DFX校验task数量
             CHK_RET(GetDfxTaskNum(sCollectiveType, masterTaskNum));
             // 计算与从stream同步task数量
-            CHK_RET(GetToSlaveStreamTaskNum(sCollectiveType, streamNum, piplineSliceNum, masterTaskNum));
+            CHK_RET(GetToSlaveStreamTaskNum(sCollectiveType, streamNum, pipelineSliceNum, masterTaskNum));
             // 计算与主stream同步task数量
             CHK_RET(GetToMasterStreamTaskNum(sCollectiveType, slaveTaskNum));
-            // 计算Server间Pipline从stream和主stream同步的task数量
-            piplineTaskNum += (piplineSliceNum >= MIN_PIPLINE_SLICE_NUM) ?
-                                  piplineSliceNum * PIPLINE_STREAM_EVENT_NUM * COM_STEP_NUM :
-                                  0;
+            // 计算Server间Pipeline从stream和主stream同步的task数量
+            pipelineTaskNum += (pipelineSliceNum >= MIN_PIPELINE_SLICE_NUM) ?
+                                   pipelineSliceNum * PIPELINE_STREAM_EVENT_NUM * COM_STEP_NUM :
+                                   0;
 
             u32 intraTaskNum = 0;
             u32 interTaskNum = 0;
@@ -4460,10 +4461,10 @@ HcclResult CalcTaskNum(
             }
 
             // 计算通信task
-            if (piplineSliceNum >= MIN_PIPLINE_SLICE_NUM) {
-                masterTaskNum += intraTaskNum * piplineSliceNum;
-                slaveTaskNum += intraTaskNum * piplineSliceNum;
-                piplineTaskNum += interTaskNum * piplineSliceNum;
+            if (pipelineSliceNum >= MIN_PIPELINE_SLICE_NUM) {
+                masterTaskNum += intraTaskNum * pipelineSliceNum;
+                slaveTaskNum += intraTaskNum * pipelineSliceNum;
+                pipelineTaskNum += interTaskNum * pipelineSliceNum;
             } else {
                 masterTaskNum += intraTaskNum + interTaskNum;
                 slaveTaskNum += intraTaskNum;
@@ -4471,7 +4472,7 @@ HcclResult CalcTaskNum(
         }
     }
     if (taskNum == 0) {
-        taskNum = std::max(masterTaskNum, std::max(slaveTaskNum, piplineTaskNum));
+        taskNum = std::max(masterTaskNum, std::max(slaveTaskNum, pipelineTaskNum));
     }
 
     HCCL_INFO("GetAndSetTaskNum success, cost time[%lld]us taskNum[%u]", DURATION_US(TIME_NOW() - startut), taskNum);

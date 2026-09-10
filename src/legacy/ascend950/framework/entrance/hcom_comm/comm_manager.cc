@@ -269,7 +269,7 @@ HcclResult GetHcomRankListV2(u32 rankNum, const u32* rankIds, HcclGroupParamsV2&
         }
     }
 
-    u32 serverNum = 1; // severNum初始值应为1，代表groupId为0的serverId;
+    u32 serverNum = 1; // serverNum初始值应为1，代表groupId为0的serverId;
     params.serverNum = serverNum;
 
     return HCCL_SUCCESS;

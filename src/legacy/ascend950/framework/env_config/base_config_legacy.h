@@ -41,14 +41,14 @@ public:
     const std::vector<SocketPortRange>& GetDeviceSocketPortRange() const;
 
 private:
-    static constexpr u32 HCCL_INVALIED_IF_BASE_PORT = 65536;     // HCCL默认无效端口号
-    static constexpr u32 HCCL_INVALIED_IF_BASE_PORT_MAX = 65520; // HCCL端口号最大值
-    static constexpr u32 HCCL_INVALIED_IF_BASE_PORT_MIN = 1024;  // HCCL端口号最小值
+    static constexpr u32 HCCL_INVALID_IF_BASE_PORT = 65536;     // HCCL默认无效端口号
+    static constexpr u32 HCCL_INVALID_IF_BASE_PORT_MAX = 65520; // HCCL端口号最大值
+    static constexpr u32 HCCL_INVALID_IF_BASE_PORT_MIN = 1024;  // HCCL端口号最小值
 
     CfgField<IpAddress> hcclIfIp{"HCCL_IF_IP", {}, Str2T<IpAddress>};
     CfgField<u32> hcclIfBasePort{
-        "HCCL_IF_BASE_PORT", u32(HCCL_INVALIED_IF_BASE_PORT), Str2T<u32>,
-        CHK_RANGE_CLOSED<u32>(HCCL_INVALIED_IF_BASE_PORT_MIN, HCCL_INVALIED_IF_BASE_PORT_MAX)};
+        "HCCL_IF_BASE_PORT", u32(HCCL_INVALID_IF_BASE_PORT), Str2T<u32>,
+        CHK_RANGE_CLOSED<u32>(HCCL_INVALID_IF_BASE_PORT_MIN, HCCL_INVALID_IF_BASE_PORT_MAX)};
     CfgField<SocketIfName> hcclSocketIfName{"HCCL_SOCKET_IFNAME", SocketIfName({}, false, false), CastSocketIfName};
     CfgField<bool> whitelistDisable{"HCCL_WHITELIST_DISABLE", true, CastBin2Bool};
     CfgField<std::string> hcclWhiteListFile{"HCCL_WHITELIST_FILE", "", Str2T<std::string>, CheckFilePath, SetRealPath};

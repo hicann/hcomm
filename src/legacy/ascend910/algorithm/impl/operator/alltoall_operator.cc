@@ -365,7 +365,7 @@ HcclResult AlltoAllOperator::SelectAlg(
         newTag = tag;
     }
     if ((!useA2AAiv && !useDirectFullmesh && !param.aicpuUnfoldMode) || aicpuUnfoldModeFor910B) {
-        CHK_RET(SetExcutorExtraInfo(algName, param));
+        CHK_RET(SetExecutorExtraInfo(algName, param));
     }
     return ret;
 }
@@ -461,9 +461,9 @@ void AlltoAllOperator::SetPreProcessResult(HostMem hostCollectBuffer)
     hostCollectBuffer_ = std::move(hostCollectBuffer);
 }
 
-HcclResult AlltoAllOperator::SetExcutorExtraInfo(const std::string& algName, const OpParam& param)
+HcclResult AlltoAllOperator::SetExecutorExtraInfo(const std::string& algName, const OpParam& param)
 {
-    HCCL_DEBUG("[AlltoAllOperator][SetExcutorExtraInfo]algName[%s]", algName.c_str());
+    HCCL_DEBUG("[AlltoAllOperator][SetExecutorExtraInfo]algName[%s]", algName.c_str());
     if (executor_.get() == nullptr) {
         executor_ = CollAlgExecRegistry::Instance().GetAlgExec(algName, dispatcher_, topoMatcher_);
         CHK_PRT_RET(
@@ -481,7 +481,7 @@ HcclResult AlltoAllOperator::SetExcutorExtraInfo(const std::string& algName, con
     }
 
     CollAlltoAllExecutor* alltoAllExecutor = dynamic_cast<CollAlltoAllExecutor*>(executor_.get());
-    HcclResult ret = alltoAllExecutor->SetExcutorExtraInfo(
+    HcclResult ret = alltoAllExecutor->SetExecutorExtraInfo(
         allMeshAggregationSendRecvInfo_, cclBufferManager_.GetInCCLbufferSize());
 
     if (needForceOpBase) {
@@ -508,8 +508,8 @@ HcclResult AlltoAllOperator::SetExecutorAttr([[maybe_unused]] const OpParam& par
             param.All2AllDataDes.sendCountMatrix, param.All2AllDataDes.sendType, param.All2AllDataDes.recvType));
     }
 
-    CHK_RET(
-        alltoAllExecutor->SetExcutorExtraInfo(allMeshAggregationSendRecvInfo_, cclBufferManager_.GetInCCLbufferSize()));
+    CHK_RET(alltoAllExecutor->SetExecutorExtraInfo(
+        allMeshAggregationSendRecvInfo_, cclBufferManager_.GetInCCLbufferSize()));
 #endif
     return HCCL_SUCCESS;
 }

@@ -124,10 +124,10 @@ HcclResult TempReduceScatterMesh::CalcSliceInfo(
 HcclResult TempReduceScatterMesh::CalcSliceInfoAllReduce(
     const AllignInfo& allignInfo, const u64 dataSize, RankSliceInfo& sliceInfoVec) const
 {
-    u64 unitAllignSize;
-    CHK_RET(GetUnitAllignSize(allignInfo, unitAllignSize));
+    u64 unitAlignSize;
+    CHK_RET(GetUnitAllignSize(allignInfo, unitAlignSize));
 
-    u64 chunkSize = RoundUp(dataSize, (tempRankSize_ * unitAllignSize)) * unitAllignSize;
+    u64 chunkSize = RoundUp(dataSize, (tempRankSize_ * unitAlignSize)) * unitAlignSize;
 
     u64 accumOff = 0;
     for (u32 rankIdx = 0; rankIdx < tempRankSize_; rankIdx++) {

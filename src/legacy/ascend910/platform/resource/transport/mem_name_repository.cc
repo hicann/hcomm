@@ -306,7 +306,7 @@ void MemNameRepository::DestroyIpcMem(void* ptr, u64 size, bool isSioToHccs)
         return;
     } else {
         if (setNameMapRef_[ipcMemInfo].Unref() == 0) {
-            // 找到相同ipc 名字, 并且引用计数减为0再detroy
+            // 找到相同ipc 名字, 并且引用计数减为0再destroy
             SecIpcName_t memName = iter->second;
             ret = hrtIpcDestroyMemoryName(memName.ipcName);
             if (ret != HCCL_SUCCESS) {

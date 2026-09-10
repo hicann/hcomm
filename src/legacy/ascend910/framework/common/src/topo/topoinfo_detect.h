@@ -43,7 +43,7 @@ public:
     HcclResult SetupServerByMasterInfo(const HcclIpAddress& masterIP, u32 masterPort, const HcclRootHandle& rootInfo);
     HcclResult Teardown();
     HcclResult WaitComplete(const HcclRootHandle& rootInfo);
-    HcclResult GetCluterInfo(RankTable_t& clusterInfo);
+    HcclResult GetClusterInfo(RankTable_t& clusterInfo);
     HcclResult GetLocalRankInfo(HcclBasicRankInfo& rankInfo);
     HcclResult GetRankId(u32& rankId);
     HcclResult TransformRankTableStr(const RankTable_t& clusterInfo, std::string& ranktableStr);

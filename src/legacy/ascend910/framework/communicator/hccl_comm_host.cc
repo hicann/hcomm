@@ -373,7 +373,7 @@ HcclResult hcclComm::InitCollComm(
     }
 
     // 注册通信域到 CollCommMgr，由 owner(hcclComm) 负责注册/注销，避免 CollComm 反向依赖 CollCommMgr
-    CollCommMgr::GetInstance().RegisteCollComm(collComm_.get());
+    CollCommMgr::GetInstance().RegisterCollComm(collComm_.get());
 
     CHK_RET(collComm_->GetHDCommunicate(
         commAicpuParam_.kfcControlTransferH2DParams, commAicpuParam_.kfcStatusTransferD2HParams));

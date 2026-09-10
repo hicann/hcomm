@@ -181,7 +181,7 @@ void CcuContextReduceMeshMem2Mem2D::ReduceStep1()
             src.token = token_[rmtId];
             tmpDst.addr = dst.addr;
             tmpDst.token = dst.token;
-            if (isYAxis) { // 第一步yslicesize要在y轴方向reduce
+            if (isYAxis) { // 第一步y slice size要在y轴方向reduce
                 src.addr += yAxisOffset_;
                 tmpDst.addr += yAxisOffset_;
             }
@@ -192,7 +192,7 @@ void CcuContextReduceMeshMem2Mem2D::ReduceStep1()
             } else {
                 chkId = (i + rmtId - 1) % (localSize_ - 1);
             }
-            // 计算一下offset 0~(chikd-1)
+            // 计算一下offset 0~(child-1)
             for (uint16_t j = 0; j < chkId; ++j) {
                 chunkOffset_ += chunkSize_[j];
             }
@@ -226,7 +226,7 @@ void CcuContextReduceMeshMem2Mem2D::ReduceStep2()
     src.token = token_[localId_];
     bool isXAxis = (axisId_ == X_AXIS_ID);
     chunkSize_ = isXAxis ? yChunkSize_ : xChunkSize_;
-    if (isXAxis) // 第二步yslicesize要在x轴方向reduce
+    if (isXAxis) // 第二步y slice size要在x轴方向reduce
     {
         src.addr += yAxisOffset_;
         dst.addr += yAxisOffset_;
@@ -251,7 +251,7 @@ void CcuContextReduceMeshMem2Mem2D::ReduceStep2()
             } else {
                 chkId = (i + rmtId - 1) % (localSize_ - 1);
             }
-            // 计算一下offset 0~(chikd-1)
+            // 计算一下offset 0~(child-1)
             for (uint16_t j = 0; j < chkId; ++j) {
                 chunkOffset_ += chunkSize_[j];
             }
@@ -322,7 +322,7 @@ std::vector<uint64_t> CcuContextReduceMeshMem2Mem2D::GeneArgs(const CcuTaskArg& 
         "[CcuContextReduceMeshMem2Mem2D] ReduceMeshMem2Mem2D inputAddr [%llu] outputAddr [%llu] "
         "xAxisSize [%llu] yAxisSize [%llu],yAxisOffset[%llu],",
         inputAddr, outputAddr, xAxisSize, yAxisSize, yAxisOffset);
-    // mesh chunk for xslicesize
+    // mesh chunk for x slice size
     std::vector<uint64_t> xChunkVec = CalMeshChunkSlice(xAxisSize, localSize_ - 1);
     for (uint64_t i = 0; i < xChunkVec[0]; i++) {
         processReturn.push_back(xChunkVec[1]);
@@ -330,7 +330,7 @@ std::vector<uint64_t> CcuContextReduceMeshMem2Mem2D::GeneArgs(const CcuTaskArg& 
     for (uint64_t i = 0; i < xChunkVec[2]; i++) {
         processReturn.push_back(xChunkVec[3]);
     }
-    // mesh chunk for yslicesize
+    // mesh chunk for y slice size
     std::vector<uint64_t> yChunkVec = CalMeshChunkSlice(yAxisSize, localSize_ - 1);
     for (uint64_t i = 0; i < yChunkVec[0]; i++) {
         processReturn.push_back(yChunkVec[1]);

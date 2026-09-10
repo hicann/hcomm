@@ -322,7 +322,7 @@ HcclResult InsV2BatchSendRecvExecutor<AlgTopoMatch>::ExecAiv()
     aivBatchSendRecvArgs.count
         = maxScratchDataSize; // 把整个 CCLBuffer的size发过去，因为这里没法确认单次send/recv的dataType
     aivBatchSendRecvArgs.dataType = dataType_;
-    aivBatchSendRecvArgs.aivTag = sliceId_; // 传入aivTag，Lauch时重新组装为aivTag
+    aivBatchSendRecvArgs.aivTag = sliceId_; // 传入aivTag，Launch时重新组装为aivTag
     aivBatchSendRecvArgs.isOpBase = (opMode_ == OpMode::OPBASE);
     aivBatchSendRecvArgs.xRankSize = rankSize_;
     aivBatchSendRecvArgs.yRankSize = 0;

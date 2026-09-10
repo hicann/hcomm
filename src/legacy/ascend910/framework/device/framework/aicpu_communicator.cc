@@ -933,7 +933,7 @@ HcclResult HcclCommAicpu::InitConfigInfo(const HcclOpResParam* commParam)
     SetExternalInputDebugConfig(commParam->debugConfig);
     InitDebugConfigByValue(commParam->debugConfig);
     HCCL_INFO(
-        "[HcclCommAicpu][Init]success, group[%s] reserve noipc notifys[%lu], slave streams[%lu].", identifier_.c_str(),
+        "[HcclCommAicpu][Init]success, group[%s] reserve noipc notify[%lu], slave streams[%lu].", identifier_.c_str(),
         LOCAL_NOTIFY_MAX_NUM, LOCAL_STREAM_MAX_NUM);
     return HCCL_SUCCESS;
 }
@@ -1476,7 +1476,7 @@ HcclResult HcclCommAicpu::RefreshTransportsResForRank(
     // 1. init公共参数（对应remoteWorldRank，remoteUsrRankId暂不处理：windowsIn，windowsOut）
     rankData_[rankId].remoteWorldRank = rankRelationResPtr->remoteWorldRank;
     rankData_[rankId].remoteUsrRankId = rankRelationResPtr->remoteUsrRankId;
-    // 2. 遍历链表，获取HccltagRemoteResV2创建Tranport对象
+    // 2. 遍历链表，获取HccltagRemoteResV2创建Transport对象
     if (reinterpret_cast<ListCommon*>(rankRelationResPtr->nextTagRes.nextDevice) != &(rankRelationResPtr->nextTagRes)) {
         HCCL_DEBUG(
             "[%s] Start to parse rankId[%u] tag resources, head[%p], nextDevice[%p], pre Device[%p], group[%s]",
@@ -2219,7 +2219,7 @@ HcclResult HcclCommAicpu::CalSendRecvInfoFor910B(
         CHK_RET(CalSendRecvInfoForAlltoall(param));
         CollAlltoAllExecutor* alltoAllExecutor = dynamic_cast<CollAlltoAllExecutor*>(executor.get());
         CHK_PTR_NULL(alltoAllExecutor);
-        CHK_RET(alltoAllExecutor->SetExcutorExtraInfo(allMeshAggregationSendRecvInfo_, cclbufferSize_));
+        CHK_RET(alltoAllExecutor->SetExecutorExtraInfo(allMeshAggregationSendRecvInfo_, cclbufferSize_));
         HCCL_DEBUG("[HcclCommAicpu][%s] running algName[%s], prepare SendRecvInfo.", __func__, algName.c_str());
         return HCCL_SUCCESS;
     }
@@ -2419,7 +2419,7 @@ HcclResult HcclCommAicpu::Orchestrate(
             HCCL_DEBUG("[HcclCommAicpu][Orchestrate] running RunAlltoAllVTwoLevelPipeline, prepare SendRecvInfo.");
             CollAlltoAllExecutor* alltoAllExecutor = dynamic_cast<CollAlltoAllExecutor*>(executor.get());
             CHK_PTR_NULL(alltoAllExecutor);
-            CHK_RET(alltoAllExecutor->SetExcutorExtraInfo(allMeshAggregationSendRecvInfo_, cclbufferSize_));
+            CHK_RET(alltoAllExecutor->SetExecutorExtraInfo(allMeshAggregationSendRecvInfo_, cclbufferSize_));
         }
         if (algName == "RunAlltoAllVContinuousPipeline" || algName == "RunAlltoAllVPipelineFor91093") {
             CollAlltoAllExecutor* alltoAllExecutor = dynamic_cast<CollAlltoAllExecutor*>(executor.get());
@@ -5953,7 +5953,7 @@ HcclResult HcclCommAicpu::NotifyAlloc(NotifyMgrAicpuParam* param)
     std::string hcomId(param->hcomId);
     size_t notifySize = notifys_.size();
     HCCL_INFO(
-        "[HcclCommAicpu][%s] comm identifier[%s], alloc notifys num[%u] begin, before notifySize[%u]", __func__,
+        "[HcclCommAicpu][%s] comm identifier[%s], alloc notify num[%u] begin, before notifySize[%u]", __func__,
         hcomId.c_str(), notifyNum, notifySize);
     if (UNLIKELY(HcclCheckLogLevel(HCCL_LOG_INFO))) {
         std::ostringstream oss;
@@ -5967,12 +5967,12 @@ HcclResult HcclCommAicpu::NotifyAlloc(NotifyMgrAicpuParam* param)
     HcclResult ret = NotifyManager::ParseBinNotifys(notifysStr, notifys_);
     if (ret != HCCL_SUCCESS) {
         HCCL_ERROR(
-            "[HcclCommAicpu][%s] comm identifier[%s], alloc notifys num[%u] failed %u", __func__, hcomId.c_str(),
+            "[HcclCommAicpu][%s] comm identifier[%s], alloc notify num[%u] failed %u", __func__, hcomId.c_str(),
             notifyNum, ret);
         return ret;
     }
     HCCL_INFO(
-        "[HcclCommAicpu][%s] comm identifier[%s], alloc notifys num[%u] end, after notifySize[%u]", __func__,
+        "[HcclCommAicpu][%s] comm identifier[%s], alloc notify num[%u] end, after notifySize[%u]", __func__,
         hcomId.c_str(), notifyNum, notifys_.size());
     NotifyHandle* notifyArray = static_cast<NotifyHandle*>(param->deviceHandle);
     CHK_PTR_NULL(notifyArray);
@@ -5983,7 +5983,7 @@ HcclResult HcclCommAicpu::NotifyAlloc(NotifyMgrAicpuParam* param)
     }
 
     HCCL_INFO(
-        "[HcclCommAicpu][%s] comm identifier[%s], alloc notifys num[%u] success", __func__, hcomId.c_str(), notifyNum);
+        "[HcclCommAicpu][%s] comm identifier[%s], alloc notify num[%u] success", __func__, hcomId.c_str(), notifyNum);
     return HCCL_SUCCESS;
 }
 
@@ -6002,7 +6002,7 @@ HcclResult HcclCommAicpu::NotifyFree(NotifyMgrAicpuParam* param)
         });
         if (it != notifys_.end()) {
             HCCL_INFO(
-                "[HcclCommAicpu][%s] comm identifier[%s], free notifys[%u] success", __func__, hcomId.c_str(),
+                "[HcclCommAicpu][%s] comm identifier[%s], free notify[%u] success", __func__, hcomId.c_str(),
                 notifyArray[i]);
             notifys_.erase(it);
         } else {
@@ -6011,7 +6011,7 @@ HcclResult HcclCommAicpu::NotifyFree(NotifyMgrAicpuParam* param)
     }
 
     HCCL_INFO(
-        "[HcclCommAicpu][%s] comm identifier[%s], free notifys num[%u] success", __func__, hcomId.c_str(), notifyNum);
+        "[HcclCommAicpu][%s] comm identifier[%s], free notify num[%u] success", __func__, hcomId.c_str(), notifyNum);
     return HCCL_SUCCESS;
 }
 

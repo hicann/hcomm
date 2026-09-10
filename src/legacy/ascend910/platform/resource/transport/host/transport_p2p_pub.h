@@ -140,8 +140,8 @@ protected:
     void SetTransportRelationship();
     HcclResult SetLinkType();
     HcclResult CreateNotifyValueBuffer();
-    HcclResult
-    SumCheckSizeAndConsisten(ExInfoType exInfoType, u32 rightInfoSize, u64& blankSizeRecord, u64 exchangeDataBlankSize);
+    HcclResult SumCheckSizeAndConsistent(
+        ExInfoType exInfoType, u32 rightInfoSize, u64& blankSizeRecord, u64 exchangeDataBlankSize);
     void SetUseSdmaToSignalRecord();
 
     void* remoteInputPtr_;

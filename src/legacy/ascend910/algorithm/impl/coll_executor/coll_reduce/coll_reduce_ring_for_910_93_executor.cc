@@ -302,7 +302,7 @@ HcclResult CollReduceRingFor91093Executor::KernelRun(const OpParam& param, ExecM
         }
     }
 
-    // step3: 节点内的gatherring，只有在root所在server内进行gather操作
+    // step3: 节点内的gathering，只有在root所在server内进行gather操作
     SingleSubCommTransport& level0TransportInfo
         = const_cast<SingleSubCommTransport&>(algResResp_->opTransportResponse[COMM_LEVEL0][COMM_INDEX_0]);
 

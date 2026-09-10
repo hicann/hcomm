@@ -513,7 +513,7 @@ inline void CheckLocalReduceIns(const InsLocalReduce& ins)
 {
     if (ins.GetDataType() == DataType::INT64) {
         THROW<InvalidParamsException>(StringFormat(
-            "%s LocalReduce SDMAInlineReduce dose not support INT64, "
+            "%s LocalReduce SDMAInlineReduce does not support INT64, "
             "need use TBE reduce.",
             __func__));
     }

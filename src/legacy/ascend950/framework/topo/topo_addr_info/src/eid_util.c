@@ -140,7 +140,7 @@ int UrmaEidIsPortGroup(const dcmi_urma_eid_t* eid)
 
 /**
  * 判断是否是UBOE
- * 在第7 btye位置上
+ * 在第7 byte位置上
  * 11000000 为UBOE, 使用0xc0判断
  * 10000000 为UBOE, 使用0x80判断
  * @param eid URMA eid结构体指针

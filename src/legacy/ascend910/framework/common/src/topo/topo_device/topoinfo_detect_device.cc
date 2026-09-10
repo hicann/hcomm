@@ -248,7 +248,7 @@ HcclResult TopoInfoDetect::GetSuperPodInfo(
     return HCCL_E_NOT_SUPPORT;
 }
 
-HcclResult TopoInfoDetect::GetCluterInfo([[maybe_unused]] RankTable_t& clusterInfo) { return HCCL_E_NOT_SUPPORT; }
+HcclResult TopoInfoDetect::GetClusterInfo([[maybe_unused]] RankTable_t& clusterInfo) { return HCCL_E_NOT_SUPPORT; }
 HcclResult TopoInfoDetect::GetRankId(u32& rankId)
 {
     rankId = identifierNum_;

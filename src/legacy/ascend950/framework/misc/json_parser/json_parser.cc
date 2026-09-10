@@ -54,7 +54,7 @@ u32 GetJsonPropertyUInt(const nlohmann::json& obj, const char* propName, bool re
             std::vector<std::string>({std::to_string(value), std::string(propName), "0 ~ UINT32_MAX"}));
         THROW<InvalidParamsException>(StringFormat(
             "[Get][JsonPropertyUInt]errNo[0x%016llx]:json object "
-            "property value of Name[%s] should be an unsigned 32-bit integer but acutally not!",
+            "property value of Name[%s] should be an unsigned 32-bit integer but actually not!",
             HCOM_ERROR_CODE(HcclResult::HCCL_E_PARA), propName));
     }
     return static_cast<u32>(value);

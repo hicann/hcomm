@@ -423,7 +423,7 @@ HcclResult CtxMgrImp::InstantiationTranslator(uint16_t dieId)
         translators[dieId][i] = std::make_shared<CcuRepTranslator>(
             deviceLogicId_, dieId, referenceMgrs[dieId][i], tmpChannelId, ccuTokenInfo, hbmTokenInfo);
 
-        // 统计&合并refManager和translaotr所有资源REQ
+        // 统计&合并refManager和translator所有资源REQ
         auto refMangerResReq = CcuRep::CcuRepReferenceManager::GetResReq(dieId);
         auto transLatorResReq = CcuRep::CcuRepTranslator::GetResReq(dieId);
         MergeCcuResReq(totalResReq, refMangerResReq);
@@ -432,7 +432,7 @@ HcclResult CtxMgrImp::InstantiationTranslator(uint16_t dieId)
 
     DumpResReqInfo(totalResReq);
 
-    // 为refManager和translaotr申请物理资源
+    // 为refManager和translator申请物理资源
     CcuResHandle handle;
     CHK_RET_UNAVAIL(CcuDeviceManager::AllocResHandle(deviceLogicId_, totalResReq, handle));
     translatorResPack.handles.push_back(handle);

@@ -95,7 +95,7 @@ HcclResult AllReduceLocalReduceBcast::SubRecordMain(u32 streamNum)
 
 // 将数据均分，最小单位是128
 
-// ringallreduce算法的函数入口
+// ring allreduce算法的函数入口
 HcclResult AllReduceLocalReduceBcast::RunAsync(const u32 rank, const u32 rankSize, const std::vector<LINK>& links)
 {
     HcclResult ret = HCCL_SUCCESS;

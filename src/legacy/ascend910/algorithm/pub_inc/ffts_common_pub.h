@@ -38,7 +38,7 @@ using HcclOpMetaInfo = struct HcclOpMetaInfoDef {
     CopyPattern copyPattern = CopyPattern::BCOPY;
     u64 alltoallvSendDataSize = 0;
     u64 alltoallvcSendDataSize = 0;
-    u32 piplineSliceNum = 1;
+    u32 pipelineSliceNum = 1;
     HcclDataType dataType = HCCL_DATA_TYPE_RESERVED;
     u32 algolevel1Type = 0;
     bool hugeData = false;
@@ -69,7 +69,7 @@ using HcclOpMetaInfo = struct HcclOpMetaInfoDef {
 
     static HcclOpMetaInfoDef GetOneForAllReduce(
         u32 algolevel1Type = 0, HcclDataType dataType = HCCL_DATA_TYPE_RESERVED,
-        ReduceType reduceType = ReduceType::INLINE_REDUCE, bool isSmallCount = false, u32 piplineSliceNum = 1,
+        ReduceType reduceType = ReduceType::INLINE_REDUCE, bool isSmallCount = false, u32 pipelineSliceNum = 1,
         bool hugeData = false, CopyPattern copyPattern = CopyPattern::BCOPY, u64 sliceNum = 1,
         bool isAivModeConfig = false, bool isDefaultPathConfig = true, bool dataSplitConfig = false,
         u8 deterministicConfig = 0)
@@ -80,7 +80,7 @@ using HcclOpMetaInfo = struct HcclOpMetaInfoDef {
         meta.reduceType = reduceType;
         meta.dataType = dataType;
         meta.isSmallCount = isSmallCount;
-        meta.piplineSliceNum = piplineSliceNum;
+        meta.pipelineSliceNum = pipelineSliceNum;
         meta.algolevel1Type = algolevel1Type;
         meta.hugeData = hugeData;
         meta.sliceNum = sliceNum;
@@ -235,7 +235,7 @@ using HcclOpMetaInfo = struct HcclOpMetaInfoDef {
         return meta;
     }
 
-    static HcclOpMetaInfoDef GetOneForRecieve()
+    static HcclOpMetaInfoDef GetOneForReceive()
     {
         HcclOpMetaInfoDef meta;
         meta.opType = HcclCMDType::HCCL_CMD_RECEIVE;
@@ -289,7 +289,7 @@ using HcclOpMetaInfo = struct HcclOpMetaInfoDef {
         key.append(1, '_');
         key.append(1, isDefaultPath ? '1' : '0');
         key.append(1, '_');
-        key.append(std::to_string(piplineSliceNum));
+        key.append(std::to_string(pipelineSliceNum));
         key.append(1, '_');
         key.append(std::to_string(algolevel1Type));
         key.append(1, '_');

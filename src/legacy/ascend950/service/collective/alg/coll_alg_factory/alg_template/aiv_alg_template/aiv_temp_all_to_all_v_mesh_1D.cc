@@ -65,7 +65,7 @@ HcclResult AivTempAlltoAllVMesh1D::GenExtIns(
     aivAlltoAllVArgs.dataType = dataType_;
     aivAlltoAllVArgs.op = reduceOp_;
     aivAlltoAllVArgs.root = root_;
-    aivAlltoAllVArgs.aivTag = sliceId_; // 传入aivTag，Lauch时重新组装为aivTag
+    aivAlltoAllVArgs.aivTag = sliceId_; // 传入aivTag，Launch时重新组装为aivTag
     aivAlltoAllVArgs.isOpBase = (tempFuncs.opMode == OpMode::OPBASE);
     aivAlltoAllVArgs.xRankSize = tempVTopo_[0].size();
     aivAlltoAllVArgs.yRankSize = 0;

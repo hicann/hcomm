@@ -140,7 +140,7 @@ void RankTableInfo::Check()
                  "failed with configuring same local_id with replaced one simultaneously"}));
         THROW<InvalidParamsException>(StringFormat(
             "[Parse][ClusterInfo][RankTableInfo::%s] failed with configuring "
-            "same local_id[%u] with replaced one simutaneously",
+            "same local_id[%u] with replaced one simultaneously",
             __func__, recordedReplaceLocalId));
     }
 }

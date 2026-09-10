@@ -56,7 +56,7 @@ hcclComm::~hcclComm()
     // collComm_ 为 fullMode 时由 owner(hcclComm) 负责注销，避免在 ~CollComm 中反向依赖 CollCommMgr；
     // 此时 collComm_ 尚未析构（成员析构发生在函数体之后），指针有效
     if (collComm_ != nullptr && collComm_->IsFullMode()) {
-        CollCommMgr::GetInstance().UnRegisteCollComm(collComm_.get());
+        CollCommMgr::GetInstance().UnregisterCollComm(collComm_.get());
     }
 #endif
     RealeaseBarrierMemory();
@@ -1188,10 +1188,10 @@ HcclResult hcclComm::GetandClearOverFlowTasks(std::vector<HcclDumpInfo>& hcclDum
 
 HcclResult hcclComm::SetCommDispatcherCtx()
 {
-    DispatcherCtxPtr dispatherCtx = GetDispatcherCtx(identifier_.c_str());
-    CHK_PTR_NULL(dispatherCtx);
-    HCCL_INFO("[%s] dispatherCtx = [%p]", __func__, dispatherCtx);
-    CHK_RET(SetDispatcherCtx(dispatherCtx));
+    DispatcherCtxPtr dispatcherCtx = GetDispatcherCtx(identifier_.c_str());
+    CHK_PTR_NULL(dispatcherCtx);
+    HCCL_INFO("[%s] dispatcherCtx = [%p]", __func__, dispatcherCtx);
+    CHK_RET(SetDispatcherCtx(dispatcherCtx));
     return HCCL_SUCCESS;
 }
 

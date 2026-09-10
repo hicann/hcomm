@@ -251,7 +251,7 @@ inline void AicpuCheckLocalReduceIns(const InsLocalReduce& ins)
 {
     if (UNLIKELY(ins.GetDataType() == DataType::INT64)) {
         THROW<InvalidParamsException>(
-            StringFormat("%s LocalReduce SDMA InlineReduce dose not support INT64, need use TBE.", __func__));
+            StringFormat("%s LocalReduce SDMA InlineReduce does not support INT64, need use TBE.", __func__));
     }
 }
 

@@ -114,7 +114,7 @@ HcclResult CollCommAicpuKernelAdptInitNotify(NotifyMgrAicpuParam* param)
     }
     CHK_PRT_CONT(
         ret != HCCL_SUCCESS, HCCL_ERROR(
-                                 "[%s]errNo[0x%016llx] Failed to %s notifys group[%s]", __func__, HCCL_ERROR_CODE(ret),
+                                 "[%s]errNo[0x%016llx] Failed to %s notify group[%s]", __func__, HCCL_ERROR_CODE(ret),
                                  opName, group.c_str()));
     HCCL_INFO(
         "[%s] comm identifier[%s], notify op[%u] end, num[%u]", __func__, group.c_str(), param->freeFlag,

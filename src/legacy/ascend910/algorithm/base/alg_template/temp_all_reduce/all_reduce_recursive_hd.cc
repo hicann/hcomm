@@ -349,7 +349,7 @@ HcclResult AllReduceRecursiveHalvingDoubling::GetCommonNslbAdjInfo(
     while ((rankSize >> (stepNum + 1)) != 0) {
         stepNum++;
     }
-    // 执行reducscatter流程
+    // 执行reducescatter流程
     for (u32 step = 0; step < stepNum; step++) {
         u32 peerRankBitmask = 1 << (stepNum - step - 1);
         u32 peerRank = rank ^ peerRankBitmask;

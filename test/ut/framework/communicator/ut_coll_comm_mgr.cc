@@ -147,7 +147,7 @@ TEST_F(CollCommMgrTest, Ut_InitBaseCommRes_When_Called_Expect_InvokeHcommResMgrI
     EXPECT_EQ(g_ut_capturedHcommResMgrInitDevId, devId);
 }
 
-// ===== RegisteCollComm / UnRegisteCollComm =====
+// ===== RegisterCollComm / UnregisterCollComm =====
 // taskAbortHandler_ 收编进 CollCommMgr 后，注册/注销为统一入口，同时维护 allCollComms_ 与 taskAbortHandler_。
 // 使用 simpleMode 轻量桩验证 map 状态与往返安全：simpleMode 桩构造不解引用 null comm，析构短路返回；
 // taskAbortHandler Register/UnRegister 全程仅存指针/指针比较；UnRegisterToClusterMonitor 在 initialized_==false 下
@@ -158,10 +158,10 @@ TEST_F(CollCommMgrTest, Ut_RegisteCollComm_When_NewComm_Expect_AddedToMap)
     const std::string commId = "ut_reg_stub";
     CollComm stub(nullptr, 0, commId, ManagerCallbacks{}, CollCommInitMode::simpleMode);
     EXPECT_EQ(CollCommMgr::GetInstance().GetAllCollComms().count(commId), 0U);
-    CollCommMgr::GetInstance().RegisteCollComm(&stub);
+    CollCommMgr::GetInstance().RegisterCollComm(&stub);
     EXPECT_EQ(CollCommMgr::GetInstance().GetAllCollComms().count(commId), 1U);
     EXPECT_EQ(CollCommMgr::GetInstance().GetAllCollComms().at(commId), &stub);
-    CollCommMgr::GetInstance().UnRegisteCollComm(&stub);
+    CollCommMgr::GetInstance().UnregisterCollComm(&stub);
     EXPECT_EQ(CollCommMgr::GetInstance().GetAllCollComms().count(commId), 0U);
 }
 
@@ -169,10 +169,10 @@ TEST_F(CollCommMgrTest, Ut_RegisteCollComm_When_DuplicateRegister_Expect_Overwri
 {
     const std::string commId = "ut_reg_dup";
     CollComm stub(nullptr, 0, commId, ManagerCallbacks{}, CollCommInitMode::simpleMode);
-    CollCommMgr::GetInstance().RegisteCollComm(&stub);
-    CollCommMgr::GetInstance().RegisteCollComm(&stub);
+    CollCommMgr::GetInstance().RegisterCollComm(&stub);
+    CollCommMgr::GetInstance().RegisterCollComm(&stub);
     EXPECT_EQ(CollCommMgr::GetInstance().GetAllCollComms().count(commId), 1U);
-    CollCommMgr::GetInstance().UnRegisteCollComm(&stub);
+    CollCommMgr::GetInstance().UnregisterCollComm(&stub);
     EXPECT_EQ(CollCommMgr::GetInstance().GetAllCollComms().count(commId), 0U);
 }
 
@@ -182,7 +182,7 @@ TEST_F(CollCommMgrTest, Ut_UnRegisteCollComm_When_NotRegistered_Expect_NoCrashNo
     CollComm stub(nullptr, 0, commId, ManagerCallbacks{}, CollCommInitMode::simpleMode);
     EXPECT_EQ(CollCommMgr::GetInstance().GetAllCollComms().count(commId), 0U);
     // 未注册直接注销：map erase no-op，taskAbortHandler UnRegister 仅告警，clusterMonitor initialized_==false no-op
-    CollCommMgr::GetInstance().UnRegisteCollComm(&stub);
+    CollCommMgr::GetInstance().UnregisterCollComm(&stub);
     EXPECT_EQ(CollCommMgr::GetInstance().GetAllCollComms().count(commId), 0U);
 }
 

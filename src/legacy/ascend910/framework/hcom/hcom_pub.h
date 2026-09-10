@@ -150,7 +150,7 @@ HcclResult GetOpScratchMemSize(
     s32 rankSize, s32 serverNum);
 HcclResult GetAlltoAllvStagedScratchMemSize(HcomOpParam* hcomOpParam, u32 rankSize, u64& getMemSize);
 HcclResult GetAlltoAllvcStagedScratchMemSize(HcomOpParam* hcomOpParam, u32 rankSize, u64& getMemSize);
-HcclResult GetRedcueScatterVScratchMemSize(HcomOpParam* hcomOpParam, u64& getMemSize);
+HcclResult GetReduceScatterVScratchMemSize(HcomOpParam* hcomOpParam, u64& getMemSize);
 HcclResult GetAllReduceScratchMemSize(
     bool isOfflineCompilation, HcomOpParam* hcomOpParam, s32 serverNum, s32 rankSize, u64& getMemSize);
 HcclResult GetAllReduceScratchSizeWithoutDev(HcomOpParam* hcomOpParam, s32 serverNum, s32 rankSize, u64& scratchSize);
@@ -164,7 +164,7 @@ HcclResult
 GetAlgType(s32 deviceNumPerServer, s32 serverNum, std::string opType, std::string socVersionStr, AlgType& algType);
 HcclResult GetDfxTaskNum(const std::string& sCollectiveType, u32& taskNum);
 HcclResult
-GetToSlaveStreamTaskNum(const std::string& sCollectiveType, u64 streamNum, u64 piplineSliceNum, u32& taskNum);
+GetToSlaveStreamTaskNum(const std::string& sCollectiveType, u64 streamNum, u64 pipelineSliceNum, u32& taskNum);
 HcclResult GetToMasterStreamTaskNum(const std::string& sCollectiveType, u32& taskNum);
 HcclResult GetCombineComTaskNum(
     const std::string& sCollectiveType, s32 serverNum, s32 deviceNumPerServer, u32& intraTaskNum, u32& interTaskNum);

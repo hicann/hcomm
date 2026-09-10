@@ -2047,7 +2047,7 @@ const bool& GetExternalInputHcclDeterministic()
     return g_externalInput.isDeterministic;
 }
 
-const bool& GetExternalInputHcclEnablePipline() { return g_externalInput.enablePipline; }
+const bool& GetExternalInputHcclEnablePipline() { return g_externalInput.enablePipeline; }
 
 const bool& GetExternalInputHcclEnableEntryLog() { return g_externalInput.enableEntryLog; }
 

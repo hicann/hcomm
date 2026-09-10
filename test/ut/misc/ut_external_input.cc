@@ -228,7 +228,7 @@ TEST_F(ExternalInputTest, ut_external_input_env_variables_port)
     u32 baseport;
     HcclResult ret;
 
-    // eg1：不初始化环境变量，为默认值，port=HCCL_INVALIED_IF_BASE_PORT
+    // eg1：不初始化环境变量，为默认值，port=HCCL_INVALID_IF_BASE_PORT
     baseport = GetExternalInputHcclIfBasePort();
     HCCL_INFO("the base port is %u", baseport);
     ret = ((baseport == HCCL_INVALID_PORT) ? HCCL_SUCCESS : HCCL_E_PARA);
@@ -304,7 +304,7 @@ TEST_F(ExternalInputTest, ut_external_input_env_variables_port)
     ret = InitEnvVarParam();
     EXPECT_EQ(ret, HCCL_E_PARA);
 
-    // eg13：取消环境变量，则默认走port=HCCL_INVALIED_IF_BASE_PORT
+    // eg13：取消环境变量，则默认走port=HCCL_INVALID_IF_BASE_PORT
     unsetenv("HCCL_IF_BASE_PORT");
     ret = InitEnvVarParam();
     EXPECT_EQ(ret, HCCL_SUCCESS);

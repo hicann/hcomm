@@ -80,7 +80,7 @@ HcclResult AivTempAllReduceMesh1DTwoShot::GenExtIns(
     aivAllreduceArgs.dataType = dataType_;
     aivAllreduceArgs.op = reduceOp_;
     aivAllreduceArgs.root = root_;
-    aivAllreduceArgs.aivTag = sliceId_; // 传入aivTag，Lauch时重新组装为aivTag
+    aivAllreduceArgs.aivTag = sliceId_; // 传入aivTag，Launch时重新组装为aivTag
     aivAllreduceArgs.isOpBase = (tempFuncs.opMode == OpMode::OPBASE);
     aivAllreduceArgs.xRankSize = tempVTopo_[0].size();
     CalNumBlocks(aivAllreduceArgs.numBlocks, templateDataParams.sliceSize, op_.numBlocksLimit);

@@ -1720,7 +1720,7 @@ HcclResult AicpuKfcProcess::RunRpcServerApi(AicpuComContext* ctx, AicpuKfcRpcSer
             return HCCL_E_TIMEOUT;
         }
         GetCommonHcclMsg(&hcclMsg, &commonHcclMsg, tilingBase);
-        // 处理finalzie消息
+        // 处理finalize消息
         if (commonHcclMsg.commType == HcclCMDType::HCCL_CMD_FINALIZE) {
             AicpuKfcProf::GetProInst(*ctx).receiveFinalizeTime = GetCurCpuTimestamp(true);
             if (ctx->debugMode == MC2_DEBUG_PRINT_BUFF) {
@@ -1865,7 +1865,7 @@ AicpuKfcProcess::AicpuCcOpExe(AivAicpuOpParam* commParam, AivAicpuOpParam* commP
     ctx->commLen = ctx->unitSize * commParam->count;
     ctx->commType = commParam->commType;
     ctx->reducekind = commParam->opType;
-    ctx->commOpType = GetCcOpType(ctx->commLen, ctx->rankNum); // twoshot.onshot...
+    ctx->commOpType = GetCcOpType(ctx->commLen, ctx->rankNum); // twoshot.oneshot...
     ctx->totalTurnCnt = commParam->totalTurnCnt;
     ctx->useBufferType = commParam->useBufferType;
     ctx->winOffset = commParam->winOffset;

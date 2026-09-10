@@ -128,7 +128,7 @@ protected:
     HcclResult CreateDestLink(
         const ErrContextPub& error_context, const MachineType machineType, const std::string& serverId,
         const u32 dstRank, const std::string& threadStr,
-        const std::vector<std::shared_ptr<HcclSocket>>& sockets); // 创建transhport
+        const std::vector<std::shared_ptr<HcclSocket>>& sockets); // 创建transport
     HcclResult TransportInit(const u32 dstRank, MachinePara& machinePara);
     HcclResult SetRankMap(); // 获取rank->userrank以及userrank->rank的映射关系
     HcclResult GetBuildStatus(u32& status);

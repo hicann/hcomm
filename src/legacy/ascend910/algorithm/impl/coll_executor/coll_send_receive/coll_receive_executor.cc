@@ -118,7 +118,7 @@ HcclResult CollReceiveExecutor::RunLoop(OpParam& param, AlgResourceResponse& alg
 
     u32 unitSize = SIZE_TABLE[param.DataDes.dataType];
 
-    auto meta = HcclOpMetaInfo::GetOneForRecieve();
+    auto meta = HcclOpMetaInfo::GetOneForReceive();
     u8* curOutputPtr = static_cast<u8*>(param.outputPtr);
     CHK_PTR_NULL(curOutputPtr);
 

@@ -409,7 +409,7 @@ void HcclOneSidedService::OneSidedAicpuKernelLaunch(HcclKernelLaunchParam& param
     aclrtLaunchKernelAttr attr;
     attr.id = ACL_RT_LAUNCH_KERNEL_ATTR_TIMEOUT;
     auto timeoutCheck = EnvConfig::GetInstance().GetRtsConfig().GetExecTimeOut();
-    // aicpu kernal超时时间: X+30s
+    // aicpu kernel超时时间: X+30s
     attr.value.timeout = static_cast<u16>((timeoutCheck == 0) ? timeoutCheck : (timeoutCheck + 30));
     cfg.numAttrs = 1;
     cfg.attrs = &attr;

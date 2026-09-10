@@ -56,7 +56,7 @@ HcclResult AivTempScatterMesh1D::GenExtIns(
     aivScatterArgs.dataType = dataType_;
     aivScatterArgs.op = reduceOp_;
     aivScatterArgs.root = root_;
-    aivScatterArgs.aivTag = sliceId_; // 传入aivTag，Lauch时重新组装为aivTag
+    aivScatterArgs.aivTag = sliceId_; // 传入aivTag，Launch时重新组装为aivTag
     aivScatterArgs.isOpBase = (tempFuncs.opMode == OpMode::OPBASE);
     aivScatterArgs.xRankSize = tempVTopo_[0].size();
     aivScatterArgs.yRankSize = 0;

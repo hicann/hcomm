@@ -346,7 +346,7 @@ void Mc2Compont::GenerateAlgoTemplates(Mc2Tiling* mc2TilingPtr, std::unordered_s
         ccuInstruction.Translate(taskParams);
         if (taskParams.empty()) {
             THROW<Hccl::InternalException>(
-                StringFormat("CcuInstruction translate faild, index = [%u], algName = [%s]", index, algName.c_str()));
+                StringFormat("CcuInstruction translate failed, index = [%u], algName = [%s]", index, algName.c_str()));
         }
         algoTemplateMap[templateSign] = taskParams;
         SaveAlgoInfo(index, templateSign, commConfig.opType, comm->GetAlgorithmType());
@@ -414,7 +414,7 @@ void Mc2Compont::GenerateAlgoTemplatesV2(
         ccuInstruction.Translate(taskParams);
         if (taskParams.empty()) {
             THROW<Hccl::InternalException>(
-                StringFormat("CcuInstruction translate faild, index = [%u], algName = [%s]", index, algName.c_str()));
+                StringFormat("CcuInstruction translate failed, index = [%u], algName = [%s]", index, algName.c_str()));
         }
         algoTemplateMap[templateSign] = taskParams;
         SaveAlgoInfo(index, templateSign, commConfig.opType, comm->GetAlgorithmType());

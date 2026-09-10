@@ -20,9 +20,9 @@
 #include "topoinfo_exchange_dispatcher.h"
 
 namespace hccl {
-TopoInfoExchangeDispather::~TopoInfoExchangeDispather() { CleanResource(); }
+TopoInfoExchangeDispatcher::~TopoInfoExchangeDispatcher() { CleanResource(); }
 
-HcclResult TopoInfoExchangeDispather::BroadcastRankTable(
+HcclResult TopoInfoExchangeDispatcher::BroadcastRankTable(
     const std::map<std::string, std::shared_ptr<HcclSocket>> connectSockets, const RankTable_t& clusterInfo,
     const std::string& failedAgentIdList)
 {
@@ -35,7 +35,7 @@ HcclResult TopoInfoExchangeDispather::BroadcastRankTable(
     return HCCL_SUCCESS;
 }
 
-HcclResult TopoInfoExchangeDispather::BroadcastGroupLeaderInfo(
+HcclResult TopoInfoExchangeDispatcher::BroadcastGroupLeaderInfo(
     const std::map<std::string, std::shared_ptr<HcclSocket>> connectSockets, const GroupLeader_t& leaderInfo)
 {
     CHK_RET(PrepareLeaderResource(connectSockets, leaderInfo));
@@ -47,19 +47,19 @@ HcclResult TopoInfoExchangeDispather::BroadcastGroupLeaderInfo(
     return HCCL_SUCCESS;
 }
 
-void TopoInfoExchangeDispather::InitWorkerThread()
+void TopoInfoExchangeDispatcher::InitWorkerThread()
 {
     threadNum_ = std::max(1, std::min(int(rankNum_ / RANK_CAPACITY_PER_THREAD), int(MAX_THREAD_NUM)));
     HCCL_INFO(
         "[TopoInfoExchangeDispatcher][InitWorkerThread]calculate threadNum[%u], rankNum[%d]", threadNum_, rankNum_);
     for (u32 i = 0; i < threadNum_; ++i) {
-        auto th = std::thread(&TopoInfoExchangeDispather::RunWorkerThread, this, i);
+        auto th = std::thread(&TopoInfoExchangeDispatcher::RunWorkerThread, this, i);
         workerThreads_.emplace_back(std::move(th));
         HCCL_DEBUG("[TopoInfoExchangeDispatcher][InitWorkerThread]create thread[%u]", i);
     }
 }
 
-void TopoInfoExchangeDispather::WorkerWait(int workId)
+void TopoInfoExchangeDispatcher::WorkerWait(int workId)
 {
     HCCL_DEBUG("[TopoInfoExchangeDispatcher][WorkerWait]start wait! workId[%d]", workId);
     std::unique_lock<std::mutex> lck(wakeMutex_);
@@ -69,7 +69,7 @@ void TopoInfoExchangeDispather::WorkerWait(int workId)
     HCCL_DEBUG("[TopoInfoExchangeDispatcher][WorkerWait]finish wait! workId[%d]", workId);
 }
 
-bool TopoInfoExchangeDispather::GetTask(WorkerTask& workTask)
+bool TopoInfoExchangeDispatcher::GetTask(WorkerTask& workTask)
 {
     auto& taskQueue = taskQueue_;
     std::unique_lock<std::mutex> lckForGetTask(taskQueueMutex_);
@@ -82,7 +82,7 @@ bool TopoInfoExchangeDispather::GetTask(WorkerTask& workTask)
     return true;
 }
 
-void TopoInfoExchangeDispather::RunWorkerThread(int workId)
+void TopoInfoExchangeDispatcher::RunWorkerThread(int workId)
 {
     // 给当前线程添加名字
     SetThreadName("Hccl_RunWorker");
@@ -101,7 +101,7 @@ void TopoInfoExchangeDispather::RunWorkerThread(int workId)
     HCCL_DEBUG("[TopoInfoExchangeDispatcher][RunWorkerThread]finish thread! workId[%d]", workId);
 }
 
-HcclResult TopoInfoExchangeDispather::PrepareResource(
+HcclResult TopoInfoExchangeDispatcher::PrepareResource(
     const std::map<std::string, std::shared_ptr<HcclSocket>> connectSockets, const RankTable_t& clusterInfo,
     const std::string& failedAgentIdList)
 {
@@ -149,7 +149,7 @@ HcclResult TopoInfoExchangeDispather::PrepareResource(
     return HCCL_SUCCESS;
 }
 
-HcclResult TopoInfoExchangeDispather::PrepareLeaderResource(
+HcclResult TopoInfoExchangeDispatcher::PrepareLeaderResource(
     const std::map<std::string, std::shared_ptr<HcclSocket>> connectSockets, const GroupLeader_t& leaderInfo)
 {
     rankNum_ = connectSockets.size();
@@ -192,14 +192,14 @@ HcclResult TopoInfoExchangeDispather::PrepareLeaderResource(
     return HCCL_SUCCESS;
 }
 
-void TopoInfoExchangeDispather::WakeWoker()
+void TopoInfoExchangeDispatcher::WakeWoker()
 {
     std::unique_lock<std::mutex> lck(wakeMutex_);
     ready_ = true;
     wakeManager_.notify_all();
 }
 
-void TopoInfoExchangeDispather::CleanResource()
+void TopoInfoExchangeDispatcher::CleanResource()
 {
     // 主线程广播结束，结束从线程（不确定是否存在出于wait状态的线程，统一全部唤醒）
     stop_ = true;
@@ -214,7 +214,7 @@ void TopoInfoExchangeDispather::CleanResource()
     workerThreads_.clear();
 }
 
-HcclResult TopoInfoExchangeDispather::CloseEpollFd()
+HcclResult TopoInfoExchangeDispatcher::CloseEpollFd()
 {
     HcclResult ret = hrtRaDestroyEventHandle(epollFds_);
     if (ret != HCCL_SUCCESS) {
@@ -227,7 +227,7 @@ HcclResult TopoInfoExchangeDispather::CloseEpollFd()
     return HCCL_SUCCESS;
 }
 
-HcclResult TopoInfoExchangeDispather::ProcessOneSendEvent([[maybe_unused]] s32 epollFd, FdHandle& fdHandle)
+HcclResult TopoInfoExchangeDispatcher::ProcessOneSendEvent([[maybe_unused]] s32 epollFd, FdHandle& fdHandle)
 {
     std::unique_lock<std::mutex> lckForMap(fdHandleMapMutex_);
     if (fdHandleToFdContextMap_.find(fdHandle) == fdHandleToFdContextMap_.end()) {
@@ -262,7 +262,7 @@ HcclResult TopoInfoExchangeDispather::ProcessOneSendEvent([[maybe_unused]] s32 e
     return HCCL_SUCCESS;
 }
 
-HcclResult TopoInfoExchangeDispather::SendOnce()
+HcclResult TopoInfoExchangeDispatcher::SendOnce()
 {
     HcclResult ret;
     for (auto& it : fdHandleToFdContextMap_) {
@@ -289,7 +289,7 @@ HcclResult TopoInfoExchangeDispather::SendOnce()
     return HCCL_SUCCESS;
 }
 
-HcclResult TopoInfoExchangeDispather::ProcessSend()
+HcclResult TopoInfoExchangeDispatcher::ProcessSend()
 {
     HcclResult ret = SendOnce(); // 先尝试发送数据
     CHK_RET(ret);
@@ -334,7 +334,7 @@ HcclResult TopoInfoExchangeDispather::ProcessSend()
         for (u32 i = 0; i < eventsNum; ++i) {
             std::unique_lock<std::mutex> lck(taskQueueMutex_);
             taskQueue_.push(
-                std::bind(&TopoInfoExchangeDispather::ProcessOneSendEvent, this, epollFds_, eventInfos[i].fdHandle));
+                std::bind(&TopoInfoExchangeDispatcher::ProcessOneSendEvent, this, epollFds_, eventInfos[i].fdHandle));
             lck.unlock();
         }
         // 唤醒处理
@@ -344,7 +344,7 @@ HcclResult TopoInfoExchangeDispather::ProcessSend()
     return HCCL_SUCCESS;
 }
 
-HcclResult TopoInfoExchangeDispather::SendState::Send(std::shared_ptr<HcclSocket> socket)
+HcclResult TopoInfoExchangeDispatcher::SendState::Send(std::shared_ptr<HcclSocket> socket)
 {
     if (headerSended != headerLen) {
         header = bodyLen;
@@ -363,22 +363,22 @@ HcclResult TopoInfoExchangeDispather::SendState::Send(std::shared_ptr<HcclSocket
     return HCCL_SUCCESS;
 }
 
-HcclResult TopoInfoExchangeDispather::SendState::SendHeader(std::shared_ptr<HcclSocket> socket)
+HcclResult TopoInfoExchangeDispatcher::SendState::SendHeader(std::shared_ptr<HcclSocket> socket)
 {
     return SendHelper(socket, reinterpret_cast<char*>(&header), headerLen, headerSended);
 }
 
-HcclResult TopoInfoExchangeDispather::SendState::SendBody(std::shared_ptr<HcclSocket> socket)
+HcclResult TopoInfoExchangeDispatcher::SendState::SendBody(std::shared_ptr<HcclSocket> socket)
 {
     return SendHelper(socket, reinterpret_cast<char*>(data), bodyLen, bodySended);
 }
 
-HcclResult TopoInfoExchangeDispather::SendState::SendIdentify(std::shared_ptr<HcclSocket> socket)
+HcclResult TopoInfoExchangeDispatcher::SendState::SendIdentify(std::shared_ptr<HcclSocket> socket)
 {
     return SendHelper(socket, reinterpret_cast<char*>(&identify), identifyLen, identifySended);
 }
 
-HcclResult TopoInfoExchangeDispather::SendState::SendHelper(
+HcclResult TopoInfoExchangeDispatcher::SendState::SendHelper(
     std::shared_ptr<HcclSocket> socket, char* buf, size_t dataLen, size_t& sendedLen)
 {
     CHK_SMART_PTR_NULL(socket);

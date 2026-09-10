@@ -935,7 +935,7 @@ bool TaskExceptionHandler::ProcessContext(
         if (exceptionInfo->taskid == queIt->back().first->taskID) {
             fftsOpInfo = *(queIt->back().first);
             if (exceptionInfo->expandInfo.u.fftsPlusInfo.contextId == invalidCtxid) {
-                // 子图任务粒度下，RTS返回的异常task不包含contexId时的处理，约定contextId为65535。只记录算子信息
+                // 子图任务粒度下，RTS返回的异常task不包含contextId时的处理，约定contextId为65535。只记录算子信息
                 HCCL_WARNING(
                     "%sTask run failed, invalid contextId, "
                     "base opInformation is %s",

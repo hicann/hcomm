@@ -111,8 +111,8 @@ union RpingIpHead {
 struct RpingEidHead {
     u32 version;       // 32bit version
     u32 type;          // 32bit type
-    u32 ser_version;   // 32bit serversion
-    u32 padding1;      // 32bitpadding
+    u32 ser_version;   // 32bit ser_version
+    u32 padding1;      // 32bit padding
     u8 info_size1;     // 8bit的info_size
     u8 srcEid[16];     // sip的Eid，128bit
     u32 uasid1;        // 32bit的uasid

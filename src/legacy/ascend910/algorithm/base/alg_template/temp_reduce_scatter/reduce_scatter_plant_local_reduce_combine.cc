@@ -28,7 +28,7 @@ HcclResult ReduceScatterPlantLocalReduceCombine::Prepare(
     bool isLevel0LastRank, bool isNeedSpaceBorrow)
 {
     inputMem_ = cclInMem;   // 空拷贝 & 存放最后一块数据（Allreduce非整除场景）
-    outputMem_ = outputMem; // 单算子CclOut 图模式Scrach/UserOut，LocalReduce使用
+    outputMem_ = outputMem; // 单算子CclOut 图模式Scratch/UserOut，LocalReduce使用
     stream_ = stream;
     subStreams_ = subStreams;
     meshSignalPtr_ = &meshSignal;

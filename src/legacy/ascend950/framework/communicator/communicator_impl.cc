@@ -631,7 +631,7 @@ void CommunicatorImpl::ExecuteFastCcuLaunch(
     SetCommStatus(CommStatus::COMM_READY);
 }
 
-HcclResult CommunicatorImpl::SetAivControledCoreNum(bool isAiv)
+HcclResult CommunicatorImpl::SetAivControlledCoreNum(bool isAiv)
 {
     if (isAiv) {
         u32 numBlocksLimit = MAX_NUM_BLOCKS;
@@ -639,15 +639,15 @@ HcclResult CommunicatorImpl::SetAivControledCoreNum(bool isAiv)
         CHK_PRT_RET(
             acl_ret != ACL_SUCCESS,
             HCCL_ERROR(
-                "[CommunicatorImpl::SetAivControledCoreNum] aclrtGetResInCurrentThread failed, ret=[%d]", acl_ret),
+                "[CommunicatorImpl::SetAivControlledCoreNum] aclrtGetResInCurrentThread failed, ret=[%d]", acl_ret),
             HCCL_E_PARA);
         CHK_PRT_RET(
             numBlocksLimit < 1,
             HCCL_ERROR(
-                "[CommunicatorImpl::SetAivControledCoreNum] block num less than 1, block num[%u]", numBlocksLimit),
+                "[CommunicatorImpl::SetAivControlledCoreNum] block num less than 1, block num[%u]", numBlocksLimit),
             HCCL_E_PARA);
         currentCollOperator->numBlocksLimit = numBlocksLimit;
-        HCCL_INFO("[CommunicatorImpl::SetAivControledCoreNum] Aiv core limit is [%u].", numBlocksLimit);
+        HCCL_INFO("[CommunicatorImpl::SetAivControlledCoreNum] Aiv core limit is [%u].", numBlocksLimit);
     }
     return HCCL_SUCCESS;
 }
@@ -721,7 +721,7 @@ HcclResult CommunicatorImpl::LoadOpbasedCollOp(const CollOpParams& opParams, voi
                 "[CommunicatorImpl][%s]current op support zero copy in aicpu aclgraph, change to offload", __func__);
             return LoadOffloadCollOp(tag, opParams, stream);
         }
-        CHK_RET(SetAivControledCoreNum(isAiv));
+        CHK_RET(SetAivControlledCoreNum(isAiv));
 
         // 避免transport建链前，通讯域被摧毁
         SetCommStatus(CommStatus::COMM_INUSE);

@@ -113,7 +113,7 @@ IndividualTransSlicesLists(const LinkData& link, InsQuePtr queue, const TransSli
         } else if (
             IsContinuousSlice(slices.srcSlices[sliceIdx + 1], tmpSrcSlice)
             && IsContinuousSlice(slices.dstSlices[sliceIdx + 1], tmpDstSlice)) {
-            // nxtSlice is continuous with tmpSlice, updata tmpSlice
+            // nxtSlice is continuous with tmpSlice, update tmpSlice
             u64 newTmpSize = tmpSrcSlice.GetSize() + slices.srcSlices[sliceIdx + 1].GetSize();
             tmpSrcSlice = DataSlice(tmpSrcSlice.GetType(), tmpSrcSlice.GetOffset(), newTmpSize);
             tmpDstSlice = DataSlice(tmpDstSlice.GetType(), tmpDstSlice.GetOffset(), newTmpSize);
@@ -175,7 +175,7 @@ IndividualWriteSlicesListsWithFin(const LinkData& link, InsQuePtr queue, const T
         } else if (
             IsContinuousSlice(slices.srcSlices[sliceIdx + 1], tmpSrcSlice)
             && IsContinuousSlice(slices.dstSlices[sliceIdx + 1], tmpDstSlice)) {
-            // nxtSlice is continuous with tmpSlice, updata tmpSlice
+            // nxtSlice is continuous with tmpSlice, update tmpSlice
             u64 newTmpSize = tmpSrcSlice.GetSize() + slices.srcSlices[sliceIdx + 1].GetSize();
             tmpSrcSlice = DataSlice(tmpSrcSlice.GetType(), tmpSrcSlice.GetOffset(), newTmpSize);
             tmpDstSlice = DataSlice(tmpDstSlice.GetType(), tmpDstSlice.GetOffset(), newTmpSize);

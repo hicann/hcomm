@@ -90,7 +90,7 @@ TEST_F(FftsCtxProviderTest, should_get_an_valid_ctx_given_the_op_is_send)
 
 TEST_F(FftsCtxProviderTest, should_get_an_valid_ctx_given_the_op_is_recieve)
 {
-    HcclOpMetaInfo meta = HcclOpMetaInfo::GetOneForRecieve();
+    HcclOpMetaInfo meta = HcclOpMetaInfo::GetOneForReceive();
     auto ctx = fftsCtxProvider->GetFftsCtx(meta.isEnableCache, meta.GetCacheKey());
     EXPECT_NE(ctx, nullptr);
 }

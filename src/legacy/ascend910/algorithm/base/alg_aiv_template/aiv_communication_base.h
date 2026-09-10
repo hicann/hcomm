@@ -428,7 +428,7 @@ public:
         multiOffset = MAX_NUM_BLOCKS * DOUBLE * FLAG_SIZE + localOffset;
         pingpongOffset = multiOffset + DOUBLE * DOUBLE * NUM_BLOCKS_FOUR_PER_RANK_A3 * ATOMIC_FLAG_SIZE * DOUBLE;
         countOffset = DOUBLE * pingpongOffset;
-        seperateOffset = countOffset + NUM_BLOCKS_FOUR_PER_RANK_A3 * rankSize_ * FLAG_SIZE;
+        separateOffset = countOffset + NUM_BLOCKS_FOUR_PER_RANK_A3 * rankSize_ * FLAG_SIZE;
         logLevel_ = GetLogLevel();
         uint64_t offset = (logLevel_ == 1) ? (tag_ & 1 ? INFO_EVEN_BUFFER_OFFSET : INFO_ODD_BUFFER_OFFSET) :
                                              INFO_EVEN_BUFFER_OFFSET;
@@ -484,7 +484,7 @@ public:
         multiOffset = MAX_NUM_BLOCKS * DOUBLE * FLAG_SIZE + localOffset;
         pingpongOffset = multiOffset + DOUBLE * DOUBLE * NUM_BLOCKS_FOUR_PER_RANK_A3 * ATOMIC_FLAG_SIZE * DOUBLE;
         countOffset = DOUBLE * pingpongOffset;
-        seperateOffset = countOffset + NUM_BLOCKS_FOUR_PER_RANK_A3 * rankSize_ * FLAG_SIZE;
+        separateOffset = countOffset + NUM_BLOCKS_FOUR_PER_RANK_A3 * rankSize_ * FLAG_SIZE;
 
         useDoubleBuffer_ = useDoubleBuffer;
         if ((args->devType == DEV_TYPE_910_93) && (len_ * (unitSize_) > threshold)) {
@@ -565,7 +565,7 @@ public:
         multiOffset = MAX_NUM_BLOCKS * DOUBLE * FLAG_SIZE + localOffset;
         pingpongOffset = multiOffset + DOUBLE * DOUBLE * NUM_BLOCKS_FOUR_PER_RANK_A3 * ATOMIC_FLAG_SIZE * DOUBLE;
         countOffset = DOUBLE * pingpongOffset;
-        seperateOffset = countOffset + NUM_BLOCKS_FOUR_PER_RANK_A3 * rankSize_ * FLAG_SIZE;
+        separateOffset = countOffset + NUM_BLOCKS_FOUR_PER_RANK_A3 * rankSize_ * FLAG_SIZE;
 
         pipe.InitBuffer(localFlagBuf, UB_FLAG_SIZE_7);
         localSetTensor = localFlagBuf.GetWithOffset<int32_t>(UB_FLAG_PAD_COUNT, FLAG_ONE_OFFSET);
@@ -757,7 +757,7 @@ public:
     uint32_t multiOffset;
     uint32_t pingpongOffset;
     uint32_t countOffset;
-    uint32_t seperateOffset;
+    uint32_t separateOffset;
 };
 
 __aicore__ inline void AivCommBase::Barrier(uint32_t step)
@@ -1169,7 +1169,7 @@ __aicore__ inline void AivCommBase::AIVRDMAPostSend(
     PipeBarrier<PIPE_ALL>();
 
     // Make sure we don't overflow the SQ in an infinite loop - no need to mitigate endless loop as the host
-    // will timeout and kill the kernel, same as all2all krenel if it fails to complete (e.g. in case of link loss)
+    // will timeout and kill the kernel, same as all2all kernel if it fails to complete (e.g. in case of link loss)
     while (1) {
         cacheWriteThrough((__gm__ uint8_t*)curHardwareTailAddr, 8);
         if ((curHead - *(__gm__ uint32_t*)(curHardwareTailAddr)) < QP_DEPTH - 1) {

@@ -52,12 +52,12 @@ HcclResult InsTempBroadcastNHR::CalcDataSliceInfo(const u64 dataSize, RankSliceI
 {
     AllignInfo allignInfo = {false, 0, dataType_};
 
-    u64 unitAllignSize;
-    CHK_RET(GetUnitAllignSize(allignInfo, unitAllignSize));
+    u64 unitAlignSize;
+    CHK_RET(GetUnitAllignSize(allignInfo, unitAlignSize));
     sliceInfoVec.clear();
     sliceInfoVec.resize(tempRankSize_);
 
-    u64 chunkSize = RoundUp(dataSize, (tempRankSize_ * unitAllignSize)) * unitAllignSize;
+    u64 chunkSize = RoundUp(dataSize, (tempRankSize_ * unitAlignSize)) * unitAlignSize;
 
     u64 accumOff = 0;
     for (u32 rankIdx = 0; rankIdx < tempRankSize_; rankIdx++) {

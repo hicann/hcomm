@@ -166,7 +166,7 @@ void RankInfoDetectService::BroadcastRankTable()
     HCCL_INFO("[RankInfoDetectService::%s] start.", __func__);
 
     // 广播全局ranktable
-    std::shared_ptr<RankInfoDispather> dispatcher = std::make_shared<RankInfoDispather>(this);
+    std::shared_ptr<RankInfoDispatcher> dispatcher = std::make_shared<RankInfoDispatcher>(this);
     dispatcher->BroadcastRankTable(connSockets_, rankTable_, failedAgentIdList_, currentStep_);
 
     HCCL_INFO("[RankInfoDetectService::%s] end.", __func__);

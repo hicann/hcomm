@@ -299,7 +299,7 @@ HcclResult ReduceScatterMultiDeterPipeline::RunFinalReduce()
     reduceMem.resize(serverSize_);
 
     HCCL_DEBUG("[%s] intra-server retIndex[%u], interRankSize[%u]", __func__, retIndex, serverSize_);
-    // 收集每个机子的数据进行最后的redeuce
+    // 收集每个机子的数据进行最后的reduce
     for (u32 i = 0; i < serverSize_; ++i) {
         if (i == serverId_) {
             isReduceBlock[i] = true;

@@ -108,7 +108,7 @@ HcclResult TransportIpcMem::FillRmaBufferSlice(
     void* remoteAddr = remoteMem.addr;
     void* localAddr = localMem.addr;
     u64 byteSize = std::min(remoteMem.len, localMem.len);
-    //  local-handle还在map中获取，remote-hanle从外部传入
+    //  local-handle还在map中获取，remote-handle从外部传入
     auto localKey = BufferKey<uintptr_t, u64>(reinterpret_cast<uintptr_t>(localAddr), byteSize);
 
     NetDevContext* netDevCtx = static_cast<NetDevContext*>(netDevCtx_);

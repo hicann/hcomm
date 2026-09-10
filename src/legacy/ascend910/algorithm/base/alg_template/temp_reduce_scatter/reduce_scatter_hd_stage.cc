@@ -68,7 +68,7 @@ HcclResult ReduceScatterHDStage::SubRecordMain(u32 streamNum)
     return HCCL_SUCCESS;
 }
 
-// ringallreduce算法的函数入口
+// ring allreduce算法的函数入口
 HcclResult ReduceScatterHDStage::RunAsync(const u32 rank, const u32 rankSize, const std::vector<LINK>& links)
 {
     HcclResult ret = HCCL_SUCCESS;

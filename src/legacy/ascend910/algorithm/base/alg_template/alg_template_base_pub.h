@@ -36,7 +36,7 @@ constexpr u32 TWO_RANK_SIZE = 2;
 constexpr u32 DMA_REDUCE_TWO_OFFSET = 2;
 constexpr u32 DMA_REDUCE_THREE_OFFSET = 3;
 constexpr u64 HCCL_CHUNK_SIZE = 1024 * 1024 * 1024; // 1024*1024*1024的size
-constexpr u64 HCCL_MIN_PIPLINE_SLICE_ALIGN = 512;
+constexpr u64 HCCL_MIN_PIPELINE_SLICE_ALIGN = 512;
 constexpr u64 HCCL_MIN_SLICE_ALIGN_910B = 16384;
 constexpr u64 HCCL_MIN_SLICE_ALIGN_910_93 = 16384;
 constexpr u64 HCCL_MIN_SLICE_ALIGN_ONCHIP = 512;
@@ -603,9 +603,9 @@ public:
         HalvingDoublingType algorithmType = HalvingDoublingType::RECURSIVE_HALVING_DOUBLING);
 
     static HcclResult
-    PrepareSliceData(u64 dataCount, u32 unitSize, u32 sliceNum, u64 piplineOffset, std::vector<Slice>& dataSlice);
+    PrepareSliceData(u64 dataCount, u32 unitSize, u32 sliceNum, u64 pipelineOffset, std::vector<Slice>& dataSlice);
     static HcclResult PrepareSliceMeshStreams(
-        const std::vector<Slice>& rankSegsSlice, u32 streamCount, std::vector<std::vector<Slice>>& mutliStreamsSlices);
+        const std::vector<Slice>& rankSegsSlice, u32 streamCount, std::vector<std::vector<Slice>>& multiStreamsSlices);
 
     static inline u64 RoundUpWithDivisor(u64 value, u64 divisor)
     {
@@ -670,7 +670,7 @@ protected:
     std::vector<u32> nicRankList_;
     std::vector<std::vector<u32>> rankSliceLists_;
     bool barrierSwitchOn_;
-    // 用于91093 aligend double ring算法
+    // 用于91093 aligned double ring算法
     std::vector<std::vector<Slice>> multRingsSlices_;
     AlgOpContext algOpContext_;
 

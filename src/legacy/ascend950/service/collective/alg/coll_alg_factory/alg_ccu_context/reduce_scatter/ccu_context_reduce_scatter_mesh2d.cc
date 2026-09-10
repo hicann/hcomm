@@ -176,15 +176,15 @@ void CcuContextReduceScatterMesh2D::Step1Reduce()
     }
     dst.addr = input_[localId_];
     dst.token = token_[localId_];
-    for (uint32_t oppsiteIdx = 0; oppsiteIdx < oppsiteSize_; oppsiteIdx++) {
+    for (uint32_t oppositeIdx = 0; oppositeIdx < oppsiteSize_; oppositeIdx++) {
         for (uint32_t localIdx = 0; localIdx < localSize_; localIdx++) {
-            if (oppsiteIdx == 0) {
+            if (oppositeIdx == 0) {
                 src[localIdx].addr += step0BaseOffset_;
             } else {
                 src[localIdx].addr += step0AddOffset_;
             }
         }
-        if (oppsiteIdx == 0) {
+        if (oppositeIdx == 0) {
             dst.addr += step0BaseOffset_;
         } else {
             dst.addr += step0AddOffset_;

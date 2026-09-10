@@ -163,7 +163,7 @@ struct AicpuComContext {
     HcclCMDType commType;    // AllReduce, scatter..
     HcclReduceOp reducekind; // ADD,MAX,MIN,EQUAL
 
-    AicpuCCExecOp commOpType; // twoshot.onshot...
+    AicpuCCExecOp commOpType; // twoshot.oneshot...
     u32 unitSize;
     u64 commLen;
     u64 totalCnt; // 发送总数据个数

@@ -125,9 +125,9 @@ HcclResult MultiDeterPipeline::RunIntraAlltoall(u32 step)
         LINK sendIntraLink = intraLinks_[sendIntraRankId];
         DeviceMem srcMem;
         DeviceMem dstMem;
-        // 从usrin收集发给下一个cclbufer的数据, 收集的所有数据需要发送给机间序号为sendServerId的server
+        // 从usrin收集发给下一个cclbuffer的数据, 收集的所有数据需要发送给机间序号为sendServerId的server
         u32 needSendInputndex = GetRankIdx(sendServerId, localUsrInIndex[i]);
-        // 发送数据到cclbufer 索引为[intraRankId_, localUsrInIndex[i]]
+        // 发送数据到cclbuffer 索引为[intraRankId_, localUsrInIndex[i]]
         u32 recvIntraRankIdx = alltoallRecvBlockIdxMap_[intraRankId_][localUsrInIndex[i]];
         u32 recvCclbufferIndex = GetRankIdx(recvServerId, recvIntraRankIdx);
         CHK_RET(GetLocalUserInDeviceMem(needSendInputndex, srcMem));

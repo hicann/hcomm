@@ -27,13 +27,13 @@
 
 namespace Hccl {
 
-RankInfoDispather::~RankInfoDispather()
+RankInfoDispatcher::~RankInfoDispatcher()
 {
-    DECTOR_TRY_CATCH("RankInfoDispather", CleanResource());
-    DECTOR_TRY_CATCH("RankInfoDispather", CloseEpollFd());
+    DECTOR_TRY_CATCH("RankInfoDispatcher", CleanResource());
+    DECTOR_TRY_CATCH("RankInfoDispatcher", CloseEpollFd());
 }
 
-void RankInfoDispather::BroadcastRankTable(
+void RankInfoDispatcher::BroadcastRankTable(
     const std::unordered_map<std::string, std::shared_ptr<Socket>>& connectSockets, const RankTableInfo& clusterInfo,
     const std::string& failedAgentIdList, u32 step)
 {
@@ -44,27 +44,27 @@ void RankInfoDispather::BroadcastRankTable(
         threadNum_);
 }
 
-void RankInfoDispather::InitWorkerThread()
+void RankInfoDispatcher::InitWorkerThread()
 {
     threadNum_ = std::max(1, std::min(s32(rankNum_ / RANK_CAPACITY_PER_THREAD), s32(MAX_THREAD_NUM)));
     for (u32 i = 0; i < threadNum_; ++i) {
-        auto th = std::thread(&RankInfoDispather::RunWorkerThread, this, i);
+        auto th = std::thread(&RankInfoDispatcher::RunWorkerThread, this, i);
         workerThreads_.emplace_back(std::move(th));
     }
-    HCCL_INFO("[RankInfoDispather::%s]calculate threadNum[%u], rankNum[%u]", __func__, threadNum_, rankNum_);
+    HCCL_INFO("[RankInfoDispatcher::%s]calculate threadNum[%u], rankNum[%u]", __func__, threadNum_, rankNum_);
 }
 
-void RankInfoDispather::WorkerWait(s32 workId)
+void RankInfoDispatcher::WorkerWait(s32 workId)
 {
-    HCCL_DEBUG("[RankInfoDispather::%s]start wait! workId[%d]", __func__, workId);
+    HCCL_DEBUG("[RankInfoDispatcher::%s]start wait! workId[%d]", __func__, workId);
     std::unique_lock<std::mutex> lck(wakeMutex_);
     while (!ready_ && !stop_) {
         wakeManager_.wait(lck);
     }
-    HCCL_DEBUG("[RankInfoDispather::%s]finish wait! workId[%d]", __func__, workId);
+    HCCL_DEBUG("[RankInfoDispatcher::%s]finish wait! workId[%d]", __func__, workId);
 }
 
-bool RankInfoDispather::GetTask(WorkerTask& workTask)
+bool RankInfoDispatcher::GetTask(WorkerTask& workTask)
 {
     auto& taskQueue = taskQueue_;
     std::unique_lock<std::mutex> lckForGetTask(taskQueueMutex_);
@@ -77,7 +77,7 @@ bool RankInfoDispather::GetTask(WorkerTask& workTask)
     return true;
 }
 
-void RankInfoDispather::RunWorkerThread(s32 workId)
+void RankInfoDispatcher::RunWorkerThread(s32 workId)
 {
     // 给当前线程添加名字
     SetThreadName("Hccl_RunWorker");
@@ -93,10 +93,10 @@ void RankInfoDispather::RunWorkerThread(s32 workId)
             }
         }
     }
-    HCCL_DEBUG("[RankInfoDispather::%s]finish thread! workId[%d]", __func__, workId);
+    HCCL_DEBUG("[RankInfoDispatcher::%s]finish thread! workId[%d]", __func__, workId);
 }
 
-void RankInfoDispather::PrepareResource(
+void RankInfoDispatcher::PrepareResource(
     const std::unordered_map<std::string, std::shared_ptr<Socket>> connectSockets, const RankTableInfo& clusterInfo,
     const std::string& failedAgentIdList, u32 step)
 {
@@ -105,7 +105,7 @@ void RankInfoDispather::PrepareResource(
 
     s32 res = RaCreateEventHandle(&epollFds_);
     CHK_PRT_THROW(
-        res != 0, HCCL_ERROR("[RankInfoDispather::%s] create epoll event failed, res[%d].", __func__, res),
+        res != 0, HCCL_ERROR("[RankInfoDispatcher::%s] create epoll event failed, res[%d].", __func__, res),
         NetworkApiException, "create epoll event error.");
     epollCreate_ = true;
 
@@ -123,30 +123,30 @@ void RankInfoDispather::PrepareResource(
         fdcontext.txState.data = rankTableMsg_.data();
         CHK_RET_THROW(
             InvalidParamsException,
-            StringFormat("[RankInfoDispather::%s] ranid[%s] strToULong fail.", __func__, it.first.c_str()),
+            StringFormat("[RankInfoDispatcher::%s] ranid[%s] strToULong fail.", __func__, it.first.c_str()),
             SalStrToULong(it.first, HCCL_BASE_DECIMAL, fdcontext.txState.rankId));
         HCCL_DEBUG(
-            "[RankInfoDispather::%s]rankId:%u, bodyLen:%u", __func__, fdcontext.txState.rankId,
+            "[RankInfoDispatcher::%s]rankId:%u, bodyLen:%u", __func__, fdcontext.txState.rankId,
             fdcontext.txState.bodyLen);
         fdHandleToFdContextMap_.emplace(it.second->GetFdHandle(), fdcontext);
     }
 
-    HCCL_INFO("[RankInfoDispather::%s]fdHandleToFdContextMap_ size[%d]", __func__, fdHandleToFdContextMap_.size());
+    HCCL_INFO("[RankInfoDispatcher::%s]fdHandleToFdContextMap_ size[%d]", __func__, fdHandleToFdContextMap_.size());
 }
 
-void RankInfoDispather::WakeWoker()
+void RankInfoDispatcher::WakeWoker()
 {
     std::unique_lock<std::mutex> lck(wakeMutex_);
     ready_ = true;
     wakeManager_.notify_all();
 }
 
-void RankInfoDispather::CleanResource()
+void RankInfoDispatcher::CleanResource()
 {
     // 主线程广播结束，结束从线程（不确定是否存在出于wait状态的线程，统一全部唤醒）
     stop_ = true;
     WakeWoker();
-    HCCL_INFO("[RankInfoDispather::%s]wake all workers.", __func__);
+    HCCL_INFO("[RankInfoDispatcher::%s]wake all workers.", __func__);
     for (auto& th : workerThreads_) {
         if (th.joinable()) {
             th.join();
@@ -156,14 +156,14 @@ void RankInfoDispather::CleanResource()
     workerThreads_.clear();
 }
 
-void RankInfoDispather::ProcessOneSendEvent([[maybe_unused]] s32 epollFd, FdHandle& fdHanlde)
+void RankInfoDispatcher::ProcessOneSendEvent([[maybe_unused]] s32 epollFd, FdHandle& fdHanlde)
 {
     std::unique_lock<std::mutex> lckForMap(fdHandleMapMutex_);
     bool noFdHandle = (fdHandleToFdContextMap_.find(fdHanlde) == fdHandleToFdContextMap_.end());
     if (noFdHandle) {
         stop_ = true;
     }
-    CHK_PRT_RET(noFdHandle, HCCL_ERROR("[RankInfoDispather::%s]no fdhandle[%p]", __func__, fdHanlde), );
+    CHK_PRT_RET(noFdHandle, HCCL_ERROR("[RankInfoDispatcher::%s]no fdhandle[%p]", __func__, fdHanlde), );
     auto ctx = &(fdHandleToFdContextMap_.at(fdHanlde));
     bool sendFailed = !ctx->txState.Send(ctx->socket);
     if (sendFailed) {
@@ -171,7 +171,7 @@ void RankInfoDispather::ProcessOneSendEvent([[maybe_unused]] s32 epollFd, FdHand
     }
     CHK_PRT_RET(
         sendFailed,
-        HCCL_ERROR("[RankInfoDispather::%s]send data to rank[%u] failed.", __func__, ctx->txState.rankId), );
+        HCCL_ERROR("[RankInfoDispatcher::%s]send data to rank[%u] failed.", __func__, ctx->txState.rankId), );
 
     s32 ctlType = EPOLL_CTL_DEL;
     if (ctx->txState.IsOk()) {
@@ -185,16 +185,16 @@ void RankInfoDispather::ProcessOneSendEvent([[maybe_unused]] s32 epollFd, FdHand
     if (ctlFailed) {
         stop_ = true;
     }
-    CHK_PRT_RET(ctlFailed, HCCL_ERROR("[RankInfoDispather::%s]epoll_ctl failed, ctlType[%d]", __func__, ctlType), );
+    CHK_PRT_RET(ctlFailed, HCCL_ERROR("[RankInfoDispatcher::%s]epoll_ctl failed, ctlType[%d]", __func__, ctlType), );
 }
 
-void RankInfoDispather::SendOnce()
+void RankInfoDispatcher::SendOnce()
 {
     for (auto& it : fdHandleToFdContextMap_) {
         auto fdCtx = &(it.second);
         CHK_PRT_THROW(
             !fdCtx->txState.Send(fdCtx->socket),
-            HCCL_ERROR("[RankInfoDispather::%s]Send data to rank[%u] failed.", __func__, fdCtx->txState.rankId),
+            HCCL_ERROR("[RankInfoDispatcher::%s]Send data to rank[%u] failed.", __func__, fdCtx->txState.rankId),
             InvalidParamsException, "send data error.");
 
         // 数据未发送完成，添加epoll事件
@@ -202,7 +202,7 @@ void RankInfoDispather::SendOnce()
             // EPOLLOUT_LET_ONESHOT -> EPOLLOUT | EPOLLET | EPOLLONESHOT, 防止多个线程同时操作同一个fd（fd重复触发）
             s32 ret = RaCtlEventHandle(epollFds_, it.first, EPOLL_CTL_ADD, RaEpollEvent::RA_EPOLLOUT_LET_ONESHOT);
             CHK_PRT_THROW(
-                ret != 0, HCCL_ERROR("[RankInfoDispather::%s]epoll_ctl add fd failed.", __func__),
+                ret != 0, HCCL_ERROR("[RankInfoDispatcher::%s]epoll_ctl add fd failed.", __func__),
                 InvalidParamsException, "send data error.");
         } else {
             sendDoneCount_++;
@@ -210,11 +210,11 @@ void RankInfoDispather::SendOnce()
     }
 }
 
-void RankInfoDispather::ProcessSend()
+void RankInfoDispatcher::ProcessSend()
 {
     SendOnce(); // 先尝试发送数据
     HCCL_INFO(
-        "[RankInfoDispather::%s]sendOnce success, start epoll_wait. sendDoneCount[%d], rankNum[%u].", __func__,
+        "[RankInfoDispatcher::%s]sendOnce success, start epoll_wait. sendDoneCount[%d], rankNum[%u].", __func__,
         sendDoneCount_.load(), rankNum_);
     const s32 sendEvsCount = 20; // epoll_wait 缓冲区大小（单次触发的事件个数）
     std::vector<SocketEventInfo> eventInfos(sendEvsCount);
@@ -224,7 +224,7 @@ void RankInfoDispather::ProcessSend()
     HcclResult ret;
     while (sendDoneCount_ != rankNum_) {
         CHK_PRT_THROW(
-            stop_, HCCL_ERROR("[RankInfoDispather::%s] process stop.", __func__), InvalidParamsException,
+            stop_, HCCL_ERROR("[RankInfoDispatcher::%s] process stop.", __func__), InvalidParamsException,
             "process stop.");
 
         if (rankNum_ - sendDoneCount_ < sendEvsCount && !lastEpollWaitFlag) { // 最后一轮epoll_wait
@@ -254,7 +254,7 @@ void RankInfoDispather::ProcessSend()
         CHK_PRT_RET(
             (eventsNum == 0 && ret == HCCL_SUCCESS && sendDoneCount_ == rankNum_),
             HCCL_WARNING(
-                "[RankInfoDispather::%s]hrtRaWaitEventHandle is timeout[%d] ms, eventsNum[%u], "
+                "[RankInfoDispatcher::%s]hrtRaWaitEventHandle is timeout[%d] ms, eventsNum[%u], "
                 "sendDoneCount_[%d]",
                 __func__, epollTimeout, eventsNum, sendDoneCount_.load()), );
 
@@ -263,13 +263,13 @@ void RankInfoDispather::ProcessSend()
         CHK_PRT_THROW(
             ret != HCCL_SUCCESS,
             HCCL_ERROR(
-                "[RankInfoDispather::%s] HrtRaWaitEventHandle failed ret[%d], eventsNum[%u].", __func__, ret,
+                "[RankInfoDispatcher::%s] HrtRaWaitEventHandle failed ret[%d], eventsNum[%u].", __func__, ret,
                 eventsNum),
             InvalidParamsException, "epoll_wait fail");
         for (u32 i = 0; i < eventsNum; ++i) {
             std::unique_lock<std::mutex> lck(taskQueueMutex_);
             taskQueue_.push(std::bind(
-                &RankInfoDispather::ProcessOneSendEvent, this, epollFds_, static_cast<void*>(eventInfos[i].fdHandle)));
+                &RankInfoDispatcher::ProcessOneSendEvent, this, epollFds_, static_cast<void*>(eventInfos[i].fdHandle)));
             lck.unlock();
         }
         // 唤醒处理
@@ -278,22 +278,22 @@ void RankInfoDispather::ProcessSend()
 
     CloseEpollFd();
     HCCL_INFO(
-        "[RankInfoDispather::%s]ProcessSend success, sendDoneCount[%d], rankNum[%d].", __func__, sendDoneCount_.load(),
+        "[RankInfoDispatcher::%s]ProcessSend success, sendDoneCount[%d], rankNum[%d].", __func__, sendDoneCount_.load(),
         rankNum_);
 }
 
-void RankInfoDispather::CloseEpollFd()
+void RankInfoDispatcher::CloseEpollFd()
 {
     if (epollCreate_) {
         s32 ret = RaDestroyEventHandle(&epollFds_);
         CHK_PRT_THROW(
-            ret != 0, HCCL_ERROR("[RankInfoDispather::%s] destroy epoll event failed, res[%d].", __func__, ret),
+            ret != 0, HCCL_ERROR("[RankInfoDispatcher::%s] destroy epoll event failed, res[%d].", __func__, ret),
             NetworkApiException, "destroy epoll event error.");
         epollCreate_ = false;
     }
 }
 
-bool RankInfoDispather::SendState::Send(std::shared_ptr<Socket> socket)
+bool RankInfoDispatcher::SendState::Send(std::shared_ptr<Socket> socket)
 {
     if (headerSended != headerLen) {
         header = bodyLen;
@@ -307,17 +307,17 @@ bool RankInfoDispather::SendState::Send(std::shared_ptr<Socket> socket)
     return true;
 }
 
-bool RankInfoDispather::SendState::SendHeader(std::shared_ptr<Socket> socket)
+bool RankInfoDispatcher::SendState::SendHeader(std::shared_ptr<Socket> socket)
 {
     return SendHelper(socket, &header, headerLen, headerSended);
 }
 
-bool RankInfoDispather::SendState::SendBody(std::shared_ptr<Socket> socket)
+bool RankInfoDispatcher::SendState::SendBody(std::shared_ptr<Socket> socket)
 {
     return SendHelper(socket, data, bodyLen, bodySended);
 }
 
-bool RankInfoDispather::SendState::SendHelper(
+bool RankInfoDispatcher::SendState::SendHelper(
     std::shared_ptr<Socket> socket, void* buf, size_t dataLen, size_t& sendedLen)
 {
     u64 needSend = dataLen - sendedLen;

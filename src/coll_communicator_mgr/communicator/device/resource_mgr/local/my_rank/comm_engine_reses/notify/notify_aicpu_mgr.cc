@@ -39,7 +39,7 @@ HcclResult NotifyAicpuMgr::NotifyFree(NotifyMgrAicpuParam* param)
               });
         if (it != notifys_.end()) {
             HCCL_INFO(
-                "[NotifyAicpuMgr][%s] comm identifier[%s], free notifys[%llu] success", __func__, hcomId.c_str(),
+                "[NotifyAicpuMgr][%s] comm identifier[%s], free notify[%llu] success", __func__, hcomId.c_str(),
                 static_cast<unsigned long long>(notifyArray[i]));
             notifys_.erase(it);
         } else {
@@ -48,7 +48,7 @@ HcclResult NotifyAicpuMgr::NotifyFree(NotifyMgrAicpuParam* param)
     }
 
     HCCL_INFO(
-        "[NotifyAicpuMgr][%s] comm identifier[%s], free notifys num[%u] success", __func__, hcomId.c_str(), notifyNum);
+        "[NotifyAicpuMgr][%s] comm identifier[%s], free notify num[%u] success", __func__, hcomId.c_str(), notifyNum);
     return HCCL_SUCCESS;
 }
 
@@ -60,7 +60,7 @@ HcclResult NotifyAicpuMgr::NotifyAlloc(NotifyMgrAicpuParam* param)
     std::string hcomId(param->hcomId);
     size_t notifySize = notifys_.size();
     HCCL_INFO(
-        "[NotifyAicpuMgr][%s] comm identifier[%s], alloc notifys num[%u] begin, before notifySize[%zu]", __func__,
+        "[NotifyAicpuMgr][%s] comm identifier[%s], alloc notify num[%u] begin, before notifySize[%zu]", __func__,
         hcomId.c_str(), notifyNum, notifySize);
     if (UNLIKELY(HcclCheckLogLevel(HCCL_LOG_INFO))) {
         std::ostringstream oss;
@@ -75,13 +75,13 @@ HcclResult NotifyAicpuMgr::NotifyAlloc(NotifyMgrAicpuParam* param)
     HcclResult ret = hccl::NotifyManager::ParseBinNotifys(notifysStr, notifys_);
     if (ret != HCCL_SUCCESS || notifys_.size() < notifyNum + notifySize) {
         HCCL_ERROR(
-            "[NotifyAicpuMgr][%s] alloc notifys failed, comm identifier[%s], ret[%d], "
+            "[NotifyAicpuMgr][%s] alloc notify failed, comm identifier[%s], ret[%d], "
             "alloc notify num[%u], expect num[%u], actual[%u]",
             __func__, hcomId.c_str(), static_cast<int>(ret), notifyNum, notifyNum + notifySize, notifys_.size());
         return HCCL_E_INTERNAL;
     }
     HCCL_INFO(
-        "[NotifyAicpuMgr][%s] comm identifier[%s], alloc notifys num[%u] end, after notifySize[%zu]", __func__,
+        "[NotifyAicpuMgr][%s] comm identifier[%s], alloc notify num[%u] end, after notifySize[%zu]", __func__,
         hcomId.c_str(), notifyNum, notifys_.size());
     NotifyHandle* notifyArray = static_cast<NotifyHandle*>(param->deviceHandle);
     CHK_PTR_NULL(notifyArray);
@@ -93,6 +93,6 @@ HcclResult NotifyAicpuMgr::NotifyAlloc(NotifyMgrAicpuParam* param)
     }
 
     HCCL_INFO(
-        "[NotifyAicpuMgr][%s] comm identifier[%s], alloc notifys num[%u] success", __func__, hcomId.c_str(), notifyNum);
+        "[NotifyAicpuMgr][%s] comm identifier[%s], alloc notify num[%u] success", __func__, hcomId.c_str(), notifyNum);
     return HCCL_SUCCESS;
 }

@@ -69,7 +69,7 @@ HcclResult ReduceRecursiveHalvingDoubling::RunAsync(
     // 结果完成需要放在input
     CHK_RET(ReduceInPartOne(rank, links));
 
-    // 此步骤完成后，结果放在ouput中
+    // 此步骤完成后，结果放在output中
     CHK_RET(ReduceScatterInBlock(rank, rankSize, links));
 
     // 使用output进行gather

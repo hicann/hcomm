@@ -95,7 +95,7 @@ struct TaskInfo {
     union {
         ParaDMA DMA;       // taskType = SDMA/RDMA使用, 包括rtRDMASend写notify
         ParaReduce Reduce; // taskType = inline/CCE Reduce使用
-        ParaNotify Notify; // taskType = Noitfy Record/Wait使用
+        ParaNotify Notify; // taskType = Notify Record/Wait使用
         ParaAiv Aiv;       // taskType = Aiv 使用
     } taskPara;
     TaskInfo(
@@ -136,7 +136,7 @@ struct CtxInfo {
     union {
         ParaDMA DMA;       // taskType = SDMA/RDMA使用, 包括rtRDMASend写notify
         ParaReduce Reduce; // taskType = inline/CCE Reduce使用
-        ParaNotify Notify; // taskType = Noitfy Record/Wait使用
+        ParaNotify Notify; // taskType = Notify Record/Wait使用
     } ctxPara;
     CtxInfo(TaskType& taskType, const TaskParaDMA& para);
     CtxInfo(TaskType& taskType, const TaskParaReduce& para);

@@ -758,7 +758,7 @@ HcclResult ThreadMgr::HcclDedicatedThreadAcquire(
     } else if (useType == HCCL_DED_THREAD_TYPE_AICPU_ORDER_LAUNCH_DEVICE) {
         CHK_RET(HcclDeviceOrderThreadCreate(useType, notifyNumPerThread, thread));
     } else {
-        HCCL_ERROR("[%s] unsupport dedThreadType[%u]", __func__, useType);
+        HCCL_ERROR("[%s] unsupported dedThreadType[%u]", __func__, useType);
         return HCCL_E_NOT_SUPPORT;
     }
 

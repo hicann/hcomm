@@ -113,7 +113,7 @@ OrderLaunchThreadMgr& CollCommMgr::GetOrderLaunchThreadMgr(s32 deviceLogicId)
     return orderLaunchThreadMgrs_[deviceLogicId];
 }
 
-void CollCommMgr::RegisteCollComm(CollComm* collComm)
+void CollCommMgr::RegisterCollComm(CollComm* collComm)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     allCollComms_[collComm->GetCommId()] = collComm;
@@ -122,7 +122,7 @@ void CollCommMgr::RegisteCollComm(CollComm* collComm)
     (void)GetOrderLaunchThreadMgr(collComm->GetDeviceLogicId()).RegisterOrderLaunch(collComm->GetCommId());
 }
 
-void CollCommMgr::UnRegisteCollComm(CollComm* collComm)
+void CollCommMgr::UnregisterCollComm(CollComm* collComm)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     allCollComms_.erase(collComm->GetCommId());

@@ -87,10 +87,10 @@ HcclResult TempReduceScatterConcurrMesh::CalcSliceInfo(
 HcclResult TempReduceScatterConcurrMesh::CalcSliceInfoAllReduce(
     const AllignInfo& allignInfo, const u64 dataSize, RankSliceInfo& sliceInfoVec)
 {
-    u64 unitAllignSize;
-    CHK_RET(GetUnitAllignSize(allignInfo, unitAllignSize));
+    u64 unitAlignSize;
+    CHK_RET(GetUnitAllignSize(allignInfo, unitAlignSize));
 
-    u64 rankDataSize = RoundUp(dataSize, (tempRankSize_ * unitAllignSize)) * unitAllignSize;
+    u64 rankDataSize = RoundUp(dataSize, (tempRankSize_ * unitAlignSize)) * unitAlignSize;
 
     if (sliceInfoVec[0].size() == 1) {
         // one dimensional mesh
@@ -118,7 +118,7 @@ HcclResult TempReduceScatterConcurrMesh::CalcSliceInfoAllReduce(
             u64 currChunkSize = (resDataSize > rankDataSize) ? rankDataSize : resDataSize;
             u64 sliceSize0 = min(
                 currChunkSize,
-                RoundUp(currChunkSize, (dimSize0 + dimSize1) * unitAllignSize) * dimSize0 * unitAllignSize);
+                RoundUp(currChunkSize, (dimSize0 + dimSize1) * unitAlignSize) * dimSize0 * unitAlignSize);
             SliceInfo slice0 = {dataSize - resDataSize, sliceSize0};
             sliceInfoVec[rankIdx][0] = slice0;
             resDataSize -= sliceSize0;

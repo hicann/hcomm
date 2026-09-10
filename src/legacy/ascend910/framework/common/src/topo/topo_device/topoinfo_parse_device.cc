@@ -67,7 +67,7 @@ HcclResult TopoInfoParse::CheckRankTableNicInfo([[maybe_unused]] std::vector<u32
     return HCCL_E_NOT_SUPPORT;
 }
 
-// 校验server内4p场景下deivce选取是否合法，2p与标卡场景重合
+// 校验server内4p场景下device选取是否合法，2p与标卡场景重合
 HcclResult TopoInfoParse::CheckServerInnerRankInfo() { return HCCL_E_NOT_SUPPORT; }
 
 HcclResult TopoInfoParse::IsAllRankSamePlane([[maybe_unused]] bool& isAllRankSamePlane) { return HCCL_E_NOT_SUPPORT; }

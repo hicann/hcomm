@@ -369,7 +369,7 @@ void CcuInsPreprocessor::Preprocess(std::shared_ptr<InsQueue>& insQueue, bool is
     // 若本地资源申请成功, 则进行握手
     // 资源确认
     TRY_CATCH_PROCESS_THROW(
-        InternalException, Confirm(), "[CCU Confirm] Comfirm Resources Error",
+        InternalException, Confirm(), "[CCU Confirm] Confirm Resources Error",
         // 建链失败时，清除临时创建的资源
         ClearTmpResRecords());
 

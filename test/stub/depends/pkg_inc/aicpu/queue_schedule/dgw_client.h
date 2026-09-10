@@ -536,7 +536,7 @@ private:
     // dgw client group id
     uint32_t curGroupId_;
     // dgw client and qs server pipeline queue id
-    uint32_t piplineQueueId_;
+    uint32_t pipelineQueueId_;
     // dgw initialized flag
     bool initFlag_;
     std::mutex eventMutex_;

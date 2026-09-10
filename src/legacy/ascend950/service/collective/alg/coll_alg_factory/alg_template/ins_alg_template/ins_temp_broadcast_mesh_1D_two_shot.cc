@@ -55,12 +55,12 @@ u32 InsTempBroadcastMesh1DTwoShot::CalcScratchMultiple(BufferType inBuffType, Bu
 HcclResult InsTempBroadcastMesh1DTwoShot::CalcDataSliceInfo(const u64 dataSize, RankSliceInfo& sliceInfoVec)
 {
     // 一般情况下，mesh的temp是单级的
-    u64 unitAllignSize;
+    u64 unitAlignSize;
     AllignInfo allignInfo = {false, 0, dataType_};
-    CHK_RET(GetUnitAllignSize(allignInfo, unitAllignSize));
+    CHK_RET(GetUnitAllignSize(allignInfo, unitAlignSize));
     sliceInfoVec.resize(tempRankSize_);
 
-    u64 chunkSize = RoundUp(dataSize, (tempRankSize_ * unitAllignSize)) * unitAllignSize;
+    u64 chunkSize = RoundUp(dataSize, (tempRankSize_ * unitAlignSize)) * unitAlignSize;
 
     u64 accumOff = 0;
     for (u32 rankIdx = 0; rankIdx < tempRankSize_; rankIdx++) {

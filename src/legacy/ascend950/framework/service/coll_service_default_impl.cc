@@ -115,7 +115,7 @@ void CollServiceDefaultImpl::LoadWithOffloadModeNoRegister(CollOperator& op)
 
     comm->GetMemTransportManager()->BatchBuildOffloadTransports(op.opTag, links);
     WaitOffloadTransportReady(op.opTag);
-    HCCL_INFO("Offload Interprete start");
+    HCCL_INFO("Offload Interpret start");
 
     SaveMirrorDfxOpInfo();
 
@@ -124,7 +124,7 @@ void CollServiceDefaultImpl::LoadWithOffloadModeNoRegister(CollOperator& op)
 
     Interpreter interpreter(*comm);
     interpreter.Submit(*insQueue);
-    HCCL_INFO("Offload Interprete end");
+    HCCL_INFO("Offload Interpret end");
 
     // 下发tail算子执行计数器task
     AddCountTask(false);

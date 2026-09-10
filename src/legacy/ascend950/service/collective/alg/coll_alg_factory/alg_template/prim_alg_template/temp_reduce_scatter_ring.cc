@@ -63,10 +63,10 @@ HcclResult TempReduceScatterRing::CalcSliceInfoAllReduce(
     const AllignInfo& allignInfo, const u64 dataSize, RankSliceInfo& sliceInfoVec)
 {
     u32 queNum = tempVTopo_.size();
-    u64 unitAllignSize;
-    CHK_RET(GetUnitAllignSize(allignInfo, unitAllignSize));
+    u64 unitAlignSize;
+    CHK_RET(GetUnitAllignSize(allignInfo, unitAlignSize));
 
-    u64 queDataSize = RoundUp(dataSize, (queNum * unitAllignSize)) * unitAllignSize;
+    u64 queDataSize = RoundUp(dataSize, (queNum * unitAlignSize)) * unitAlignSize;
 
     u64 resDataSize = dataSize;
     std::vector<u64> resQueData;
@@ -78,7 +78,7 @@ HcclResult TempReduceScatterRing::CalcSliceInfoAllReduce(
         resDataSize -= currQueDataSize;
 
         // support ReduceScatterV and AllGatherV for better data alignment when enable Data Align
-        u64 currQueChunkSize = RoundUp(currQueDataSize, (tempRankSize_ * unitAllignSize)) * unitAllignSize;
+        u64 currQueChunkSize = RoundUp(currQueDataSize, (tempRankSize_ * unitAlignSize)) * unitAlignSize;
         queChunkSize.push_back(currQueChunkSize);
     }
     CHK_PRT_RET(

@@ -149,7 +149,7 @@ void CcuContextScatterMesh1D::RunSendScatter()
     uint16_t fullBit = ((1 << rankSize_) - 1);
     HCCL_INFO(
         "[CcuContextScatterMesh1D] RunSendScatter local rank[%u], root rank[%u], start send data", rankId_, rootId_);
-    std::vector<CcuRep::Memory>& dst = remoteMem_; // 在initresource里面pushback
+    std::vector<CcuRep::Memory>& dst = remoteMem_; // 在initresource里面push_back
     std::vector<CcuRep::Memory>& src = localMem_;
 
     for (uint64_t curId = 0; curId < rankSize_; curId++) {
