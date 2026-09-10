@@ -2,16 +2,16 @@
 
 ## 错误信息
 
-报错格式如下，占位符%s的含义依次为算子名、通信域组、参数名、本端ID、对端ID：
+报错格式如下，占位符%s的含义依次为算子名、参数名、本端参数值、对端参数值：
 
 ```text
-The arguments for collective communication are inconsistent between ranks, operator %s, group %s, parameter %s, local rank %s, remote rank %s.
+The parameters of operator %s are inconsistent between ranks, parameter %s is %s on the local rank and %s on the remote rank.
 ```
 
 报错示例如下：
 
 ```text
-The arguments for collective communication are inconsistent between ranks, operator HcomAllReduce, group hccl_world_group, parameter count, local rank 2176, remote rank 4224.
+The parameters of operator HcomAllReduce are inconsistent between ranks, parameter count is 2176 on the local rank and 4224 on the remote rank.
 ```
 
 ## 解决方法

@@ -125,9 +125,8 @@ bool RankConsistencyCheckerV2::CompareCrcArrayV2(
                 LOG_KEYWORDS_PARAMETER_CONFLICT.c_str(), categoryLabel.c_str(), name.c_str(), localArray[i],
                 remoteArray[i]);
             RPT_INPUT_ERR(
-                true, "EI0005", std::vector<std::string>({"ccl_op", "group", "para_name", "local_para", "remote_para"}),
-                std::vector<std::string>(
-                    {"N/A", "N/A", name, std::to_string(localArray[i]), std::to_string(remoteArray[i])}));
+                true, "EI0005", std::vector<std::string>({"ccl_op", "para_name", "local_para", "remote_para"}),
+                std::vector<std::string>({"N/A", name, std::to_string(localArray[i]), std::to_string(remoteArray[i])}));
             isDiff = true;
         }
     }

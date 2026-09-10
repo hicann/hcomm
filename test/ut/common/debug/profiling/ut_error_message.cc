@@ -172,7 +172,7 @@ TEST_F(ErrorMessageTest, Ut_BuildGroupedDetectMessage_SingleEntry_FormatsCorrect
     EXPECT_NE(result.find("serverA"), string::npos);
     EXPECT_NE(result.find("device ID 0"), string::npos);
     EXPECT_NE(result.find("serverB"), string::npos);
-    EXPECT_NE(result.find("[1]"), string::npos);
+    EXPECT_NE(result.find("device ID 1"), string::npos);
     // 单条记录无换行分隔符
     EXPECT_EQ(result.find("\n"), string::npos);
 }
@@ -187,8 +187,8 @@ TEST_F(ErrorMessageTest, Ut_BuildGroupedDetectMessage_DupDevices_SortedAndDedupe
     dca.recvErrorInfoMap_["k3"] = MakeDetectInfo("serverA", 0, "serverB", 2); // 重复
 
     string result = dca.BuildGroupedDetectMessage();
-    // 排序+去重后应为 [2,5]
-    EXPECT_NE(result.find("[2,5]"), string::npos);
+    // 排序+去重后应为 device ID 2,5
+    EXPECT_NE(result.find("device ID 2,5"), string::npos);
 }
 
 TEST_F(ErrorMessageTest, Ut_BuildGroupedDetectMessage_MultiGroups_SeparatedByNewline)

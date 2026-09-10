@@ -64,11 +64,11 @@ const std::string hcomm_g_msg = R"(
       "errClass": "HCCL Errors ",
       "errTitle": "Invalid_Argument",
       "ErrCode": "EI0005",
-      "ErrMessage": "The arguments for collective communication are inconsistent between ranks, operator %s, group %s, parameter %s, local rank %s, remote rank %s.",
-      "Arglist": "ccl_op, group, para_name,local_para,remote_para",
+      "ErrMessage": "The parameters of operator %s are inconsistent between ranks, parameter %s is %s on the local rank and %s on the remote rank.",
+      "Arglist": "ccl_op,para_name,local_para,remote_para",
       "suggestion": {
         "Possible Cause": "N/A",
-        "Solution": "N/A"
+        "Solution": "For detailed troubleshooting guidance, search for the keyword \"EI0005\" on https://www.hiascend.com/document/."
       }
     },
     {
@@ -134,7 +134,7 @@ const std::string hcomm_g_msg = R"(
       "Arglist": "memory_size",
       "suggestion": {
         "Possible Cause": "Allocation failure due to insufficient NPU memory.",
-        "Solution": "Stop unnecessary processes and ensure the required memory is available."
+        "Solution": "Stop unnecessary processes and ensure the required memory is available. For detailed troubleshooting guidance, search for the keyword \"EI0011\" on https://www.hiascend.com/document/."
       }
     },
     {
@@ -145,7 +145,7 @@ const std::string hcomm_g_msg = R"(
       "Arglist": "remote_rankid, base_information, task_information, group_rank_content",
       "suggestion": {
         "Possible Cause": "1. Network connection exception occurred during the SDMA task execution.\n2. The peer process exits abnormally.\n3. The input or output memory address is not allocated, the actual allocated size is smaller than the input data size, or the memory is freed before the operator execution is complete.",
-        "Solution": "1. Check whether the network link is abnormal during the execution.\n2. Check whether a process in the cluster exits before an error is reported. If yes, locate the cause of the process exit.\n3. Check whether the input/output memory size is correct and whether the memory or communicator is released prematurely."
+        "Solution": "1. Check whether the network link is abnormal during the execution.\n2. Check whether a process in the cluster exits before an error is reported. If yes, locate the cause of the process exit.\n3. Check whether the input/output memory size is correct and whether the memory or communicator is released prematurely.\n4. For detailed troubleshooting guidance, search for the keyword \"EI0012\" on https://www.hiascend.com/document/."
       }
     },
     {
@@ -156,7 +156,7 @@ const std::string hcomm_g_msg = R"(
       "Arglist": "localServerId,localDeviceId,localDeviceIp,remoteServerId,remoteDeviceId,remoteDeviceIp",
       "suggestion": {
         "Possible Cause": "1. The network between two devices is abnormal. For example, the network port is intermittently disconnected. \r\n2. The peer process exits abnormally in advance. As a result, the local end cannot receive the response from the peer end.",
-        "Solution": "1. Check whether the network devices between the two ends are abnormal. \r\n2. Check whether the peer process exits first. If yes, check the cause of the process exit."
+        "Solution": "1. Check whether the network devices between the two ends are abnormal. \r\n2. Check whether the peer process exits first. If yes, check the cause of the process exit. \r\n3. For detailed troubleshooting guidance, search for the keyword \"EI0013\" on https://www.hiascend.com/document/."
       }
     },
     {
@@ -178,7 +178,7 @@ const std::string hcomm_g_msg = R"(
       "Arglist": "error_reason",
       "suggestion": {
         "Possible Cause": "N/A",
-        "Solution":"1. Check whether all ranks in the communicator have delivered the communicator creation interface. \r\n2. Check the connectivity between the host networks of all nodes and the server node. \r\n3. Check whether the HCCL_SOCKET_IFNAME environment variable of all nodes is correctly configured. \r\n4. Increase the timeout by configuring the HCCL_CONNECT_TIMEOUT environment variable."
+        "Solution":"1. Check whether all ranks in the communicator have delivered the communicator creation interface. \r\n2. Check the connectivity between the host networks of all nodes and the server node. \r\n3. Check whether the HCCL_SOCKET_IFNAME environment variable of all nodes is correctly configured. \r\n4. Increase the timeout by configuring the HCCL_CONNECT_TIMEOUT environment variable. \r\n5. For detailed troubleshooting guidance, search for the keyword \"EI0015\" on https://www.hiascend.com/document/."
       }
     },
     {
@@ -222,7 +222,7 @@ const std::string hcomm_g_msg = R"(
       "Arglist": "reason",
       "suggestion": {
         "Possible Cause": "N/A",
-        "Solution": "1. Check whether this port has been occupied by another process. If yes, you can make adjustment using the environment variable HCCL_IF_BASE_PORT and use sysctl -w net.ipv4.ip_local_reserved_ports=****-**** to adjust the scope of reserved ports. \r\n2. Check whether the service process is started multiple times on a device during this service."
+        "Solution": "1. Check whether this port has been occupied by another process. If yes, you can make adjustment using the environment variable HCCL_IF_BASE_PORT and use sysctl -w net.ipv4.ip_local_reserved_ports=****-**** to adjust the scope of reserved ports. \r\n2. Check whether the service process is started multiple times on a device during this service. \r\n3. For detailed troubleshooting guidance, search for the keyword \"EI0019\" on https://www.hiascend.com/document/."
       }
     },
     {

@@ -2104,9 +2104,9 @@ HcclResult Heartbeat::CheckOpInconsistentError(const std::string& identifier, Hc
         HCCL_ERROR(
             "[%s]find inconsistent op [%s] error [%d], in comm [%s]", __func__, opInfo, result, identifier.c_str());
         RPT_INPUT_ERR(
-            true, "EI0005", std::vector<std::string>({"ccl_op", "group", "para_name", "local_para", "remote_para"}),
+            true, "EI0005", std::vector<std::string>({"ccl_op", "para_name", "local_para", "remote_para"}),
             std::vector<std::string>(
-                {opInfo, identifier, GetInconsistentTypeStr(search->second.inconsistentType), search->second.localInfo,
+                {opInfo, GetInconsistentTypeStr(search->second.inconsistentType), search->second.localInfo,
                  search->second.remoteInfo}));
     }
     return HCCL_SUCCESS;
