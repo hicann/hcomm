@@ -155,6 +155,9 @@ HcommResult HcommTeamWindowSetSelfInfo(
 /* ===== team 资源绑定 ===== */
 HcommResult HcommTeamBindChannels(HcommTeamHandle team, const HcommTeamBindChannelsDesc* desc);
 HcommResult HcommTeamBindRemoteSyncMem(HcommTeamHandle team, const HcommTeamBindSyncMemDesc* remoteDesc);
+HcommResult HcommTeamBindUbSymmetricWindow(
+    HcclCommSymWindow handle, HcommTeamHandle lsaTeam, uint32_t netLayer, const CommMem* memberMems, uint32_t memberNum,
+    void* baseVa, size_t stride, size_t userSize);
 HcommResult HcommTeamUpdateWindowRemoteMemByRank(
     HcclCommSymWindow handle, const uint32_t* sizes, uint32_t sizeNum, const uint32_t* slots, uint32_t slotNum,
     const CommMem* remoteMem);

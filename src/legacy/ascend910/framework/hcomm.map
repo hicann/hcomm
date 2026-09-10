@@ -224,6 +224,9 @@ global:
     HcclTaskUnRegister;
     HcclTeamCreate;
     HcclTeamDestroy;
+    HcclTeamGetLsaTeam;
+    HcclTeamMemberToRank;
+    HcclTeamRankToMember;
     HcclThreadAcquire;
     HcclThreadAcquireWithConfig;
     HcclThreadAcquireWithStream;

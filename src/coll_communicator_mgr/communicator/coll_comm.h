@@ -42,6 +42,13 @@ class DevBuffer;
 } // namespace Hccl
 namespace hccl {
 class SymmetricMemory;
+class UbMemSymmetricMemory;
+
+// 记录A5 FullMode统一HcommWindow所属通信域，用于解注册时定位CollComm。
+HcclResult RecordHcommWindowOwner(HcclCommSymWindow winHandle, HcclComm comm);
+HcclResult GetHcommWindowComm(HcclCommSymWindow winHandle, HcclComm& comm);
+void EraseHcommWindowOwner(HcclCommSymWindow winHandle);
+
 struct SymmetricMemoryResource;
 struct SymmetricMemoryDeleter {
     void operator()(SymmetricMemory* ptr) const;
@@ -124,7 +131,7 @@ public:
     HcclResult Suspend();
     HcclResult Clean();
     HcclResult Resume();
-    HcclResult RegisterWindow(void* ptr, size_t size, HcclCommSymWindow* winHandle);
+    HcclResult RegisterWindow(HcclComm comm, void* ptr, size_t size, HcclCommSymWindow* winHandle);
     HcclResult DeregisterWindow(HcclCommSymWindow winHandle);
     HcclResult GetCommSymWin(void* ptr, size_t size, HcclCommSymWindow* winHandle, size_t* offset);
     HcclResult RegisterPendingSymmetricMemHandles();
@@ -140,24 +147,41 @@ public:
     std::shared_ptr<class GroupScheduleMgr> groupScheduleMgr{nullptr}; // for group
 
 private:
+    using ProtocolRankMap = std::unordered_map<CommProtocol, std::vector<uint32_t>>;
+
+    struct UbWorldTeamCandidate {
+        uint32_t netLayer{0};
+        uint32_t selfMemberId{0};
+        std::vector<uint32_t> ranks;
+    };
+
     HcclResult DestroyAicpuComm();
     HcclResult InitHDCommunicate();
     HcclResult InitTaskExceptionHandler();
     HcclResult InitKfcAndRegisterCollComm();
     HcclResult GetRankIpPortMap();
     HcclResult InitSymmetricMemory();
+    HcclResult PrepareSharedSymmetricWindow(void* ptr, size_t size, void*& devLegacySymWin, HcclCommSymWindow& devWin);
+    // 维护HcommWindow与URMA底层Window的双向索引。
+    HcclResult RegisterHcommWindowMapping(HcclCommSymWindow devWin, void* devLegacySymWin);
+    HcclResult FindLegacySymmetricWindow(HcclCommSymWindow devWin, void*& devLegacySymWin);
+    HcclResult UnregisterHcommWindowMapping(HcclCommSymWindow devWin, void*& devLegacySymWin);
+    void RemoveHcommWindow(HcclCommSymWindow devWin);
     HcclResult RegisterSymmetricMemoryResource(void* ptr, size_t size, SymmetricMemoryResource& resource);
     void UnregisterSymmetricMemoryResource(const SymmetricMemoryResource& resource);
 
-    // 通信域初始化时按protocol+netLayer创建预制worldTeam（仅 A5 fullMode + URMA 场景）
+    // 通信域初始化时按 protocol + netLayer 创建 A5 URMA/UB Memory 预制 worldTeam。
     HcclResult InitWorldTeams();
-    // 单层可达rank收集：遍历本rank到该层所有rank的全部link，按协议分别记录（同协议多条link只记一次）
+    HcclResult InitWorldTeamLayer(uint32_t netLayer, uint32_t selfRankId, UbWorldTeamCandidate& ubCandidate);
+    // 按协议收集本 Rank 在指定 NetLayer 内的可达 Rank，不在收集阶段创建 WorldTeam。
     void CollectLayerReachableRanks(
-        uint32_t netLayer, const uint32_t* ranks, uint32_t rankNum,
-        std::unordered_map<CommProtocol, std::vector<uint32_t>>& protoReachableRanks);
-    // 创建并注册预制worldTeam（worldTeam不通信，不创建syncMem）
+        uint32_t netLayer, const uint32_t* ranks, uint32_t rankNum, ProtocolRankMap& reachableRanksByProtocol);
+    // 使用各 URMA 协议自己的可达成员集合预制 WorldTeam。
     HcclResult
-    CreatePrebuiltWorldTeam(CommProtocol protocol, uint32_t netLayer, const std::vector<uint32_t>& reachableRanks);
+    CreateUrmaWorldTeams(uint32_t netLayer, uint32_t selfRankId, const ProtocolRankMap& reachableRanksByProtocol);
+    // 创建并注册预制worldTeam（worldTeam不通信，不创建syncMem）
+    HcclResult CreatePrebuiltWorldTeam(
+        CommProtocol protocol, uint32_t netLayer, const uint32_t* ranks, uint32_t rankNum, uint32_t selfMemberId);
     // window后注册补交换：对该通信域下所有已建链Team重新调HcclChannelAcquire，把新window的memHandle
     // 带入交换并回填（syncMem已交换不重复）。无已建链Team（常规时序window先于Team）为空操作。
     HcclResult ReExchangeWindowsForBoundTeams();
@@ -209,6 +233,7 @@ private:
 
     CollCommInitMode initMode_{CollCommInitMode::fullMode}; // 初始化模式
     std::unique_ptr<SymmetricMemory, SymmetricMemoryDeleter> symmetricMemory_{nullptr};
+    std::unique_ptr<UbMemSymmetricMemory> ubMemSymmetricMemory_;
     // 保护registeredSymMemHandleMap_：查询时加共享锁，注册和注销时加独占锁。
     mutable std::shared_mutex registeredSymMemHandleMapMtx_;
     // 本地已注册对称内存索引：memTag -> memHandle，供建链时查询全部或远端缺失的句柄。

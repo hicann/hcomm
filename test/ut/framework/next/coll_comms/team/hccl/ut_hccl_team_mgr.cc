@@ -129,6 +129,7 @@ TEST_F(TestHcclTeamMgr, Ut_RegisterPrebuiltWorldTeam_When_Invalid_Expect_ReturnP
     EXPECT_EQ(mgr.RegisterPrebuiltWorldTeam(nullptr, collComm, COMM_PROTOCOL_UB_CTP, 1, rankIds, 2), HCCL_E_PTR);
     EXPECT_EQ(mgr.RegisterPrebuiltWorldTeam(h1, nullptr, COMM_PROTOCOL_UB_CTP, 1, rankIds, 2), HCCL_E_PTR);
     EXPECT_EQ(mgr.RegisterPrebuiltWorldTeam(h1, collComm, COMM_PROTOCOL_UB_CTP, 1, nullptr, 2), HCCL_E_PTR);
+    EXPECT_TRUE(mgr.GetPrebuiltWorldTeamRanks(nullptr, COMM_PROTOCOL_UB_CTP, 1).empty());
 
     // 正常登记 1 个
     ASSERT_EQ(mgr.RegisterPrebuiltWorldTeam(h1, collComm, COMM_PROTOCOL_UB_CTP, 1, rankIds, 2), HCCL_SUCCESS);

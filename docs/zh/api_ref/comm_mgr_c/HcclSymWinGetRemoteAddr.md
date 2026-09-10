@@ -52,7 +52,7 @@ HcclResult HcclSymWinGetRemoteAddr(HcclCommSymWindow winHandle, size_t offset, u
   - 调用该接口前需确保对称内存窗口已完成注册，且相关URMA通信通道已完成建链和远端内存信息更新。
 
     使用集合通信接口时，相关通道创建和远端内存信息更新由集合通信内部完成；使用独立通信通道资源接口时，需在通道创建成功后再调用该接口。
-  - 传入的winHandle必须为已注册的有效对称内存窗口句柄。若通过[HcclCommSymWinGet](HcclCommSymWinGet.md)获取窗口句柄时未命中，返回的winHandle为空，不能继续传入本接口；若对应peerRank的远端内存信息尚未完成更新，本接口将返回错误。
+  - 传入的winHandle必须为已注册的有效对称内存窗口句柄。若通过[HcclCommSymWinGet](HcclCommSymWinGet.md)获取窗口句柄时未命中，该接口返回HCCL_E_NOT_FOUND，不能继续调用本接口；若对应peerRank的远端内存信息尚未完成更新，本接口将返回错误。
   - 若窗口非URMA模式，本接口将返回错误并将*ptr置为nullptr，此时应改用[HcclSymWinGetPeerPointer](HcclSymWinGetPeerPointer.md)获取地址。
 <!-- end id7 -->
 - 该接口仅支持通信算子展开模式为AI CPU的场景。

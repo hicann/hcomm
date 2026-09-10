@@ -37,7 +37,11 @@ HcommResult HcommTeamCreate(
             desc->requirement.counterCount),
         HCOMM_E_PARA);
     CHK_PRT_RET(
-        desc->requirement.barrierCount == 0, HCCL_ERROR("[%s] barrierCount must be >= 1", __func__), HCOMM_E_PARA);
+        desc->protocol != COMM_PROTOCOL_UB_MEM && desc->requirement.barrierCount == 0,
+        HCCL_ERROR("[%s] barrierCount must be >= 1 for protocol[%d]", __func__, desc->protocol), HCOMM_E_PARA);
+    CHK_PRT_RET(
+        desc->protocol == COMM_PROTOCOL_UB_MEM && desc->requirement.barrierCount != 0,
+        HCCL_ERROR("[%s] UB Memory team does not use barrier sync memory", __func__), HCOMM_E_PARA);
     CHK_PRT_RET(
         worldTeam != nullptr && desc->worldMemberIds == nullptr,
         HCCL_ERROR("[%s] sub team worldMemberIds is null", __func__), HCOMM_E_PTR);
@@ -67,6 +71,22 @@ HcommResult HcommTeamBindRemoteSyncMem(HcommTeamHandle team, const HcommTeamBind
     CHK_PRT_RET(remoteDesc->remoteMems == nullptr, HCCL_ERROR("[%s] remoteMems is nullptr", __func__), HCOMM_E_PTR);
     CHK_PRT_RET(remoteDesc->remoteMemNum == 0, HCCL_ERROR("[%s] remoteMemNum is zero", __func__), HCOMM_E_PARA);
     return HcommTeamMgr::GetInstance().BindSyncMem(team, remoteDesc);
+}
+
+HcommResult HcommTeamBindUbSymmetricWindow(
+    HcclCommSymWindow handle, HcommTeamHandle lsaTeam, uint32_t netLayer, const CommMem* memberMems, uint32_t memberNum,
+    void* baseVa, size_t stride, size_t userSize)
+{
+    CHK_PRT_RET(
+        handle == nullptr || lsaTeam == nullptr || memberMems == nullptr || baseVa == nullptr,
+        HCCL_ERROR("[%s] nullptr parameter", __func__), HCOMM_E_PTR);
+    CHK_PRT_RET(
+        memberNum == 0 || stride == 0 || userSize == 0,
+        HCCL_ERROR(
+            "[%s] invalid layout, memberNum[%u], stride[%zu], userSize[%zu]", __func__, memberNum, stride, userSize),
+        HCOMM_E_PARA);
+    return HcommTeamMgr::GetInstance().BindUbSymmetricWindow(
+        handle, lsaTeam, netLayer, memberMems, memberNum, baseVa, stride, userSize);
 }
 
 HcommResult HcommTeamWindowRegister(void* devLegacySymWin, HcclCommSymWindow* handle)

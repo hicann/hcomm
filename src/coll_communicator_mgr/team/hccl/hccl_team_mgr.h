@@ -54,6 +54,8 @@ public:
         const uint32_t* rankIds, uint32_t rankNum);
     // 在指定通信域内按 (protocol, netLayer) 查找预制的 worldTeam，未找到返回 nullptr。
     HcommTeamHandle FindWorldTeamByProtoLayer(CollComm* collComm, CommProtocol protocol, uint32_t netLayer);
+    // 取预制 worldTeam 的 rankIds 拷贝，未找到返回空。
+    std::vector<uint32_t> GetPrebuiltWorldTeamRanks(CollComm* collComm, CommProtocol protocol, uint32_t netLayer);
 
     // —— 创建/销毁 team 时调用 ——
     // 注册 sub team：校验 worldTeam 存在，建父子关系，存 syncMem + rankIds（collComm 取自 worldTeam 条目）。
@@ -69,6 +71,9 @@ public:
     HcommTeamHandle FindWorldTeam(HcommTeamHandle team);
     // 取 team 的 rankIds（memberId→rankId 映射）拷贝，未找到返回空。
     std::vector<uint32_t> GetRankIds(HcommTeamHandle team);
+    HcclResult GetLsaTeam(CollComm* collComm, HcommTeamHandle& lsaTeam);
+    HcclResult MemberToRank(CollComm* collComm, HcommTeamHandle team, uint32_t memberId, uint32_t& rankId);
+    HcclResult RankToMember(CollComm* collComm, HcommTeamHandle team, uint32_t rankId, uint32_t& memberId);
 
     // —— syncMem ——
     void* GetSyncMemPtr(HcommTeamHandle team);

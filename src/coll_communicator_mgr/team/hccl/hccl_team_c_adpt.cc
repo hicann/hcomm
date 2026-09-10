@@ -74,6 +74,17 @@ static HcclResult FindSelfMemberId(const HcclTeamCreateDesc* desc, uint32_t& sel
     return HCCL_E_NOT_FOUND;
 }
 
+static HcclResult GetTeamQueryCollComm(HcclComm comm, CollComm*& collComm)
+{
+    CHK_PTR_NULL(comm);
+    auto* hcclComm = static_cast<hccl::hcclComm*>(comm);
+    CHK_PRT_RET(
+        !hcclComm->IsCommunicatorV2(), HCCL_ERROR("[%s] only supports communicator V2", __func__), HCCL_E_NOT_SUPPORT);
+    collComm = hcclComm->GetCollComm();
+    CHK_PTR_NULL(collComm);
+    return HCCL_SUCCESS;
+}
+
 /* 从 HcclTeamCreateDesc 填充 HcommTeamCreateDesc。
  * worldMemberIds：worldTeam 传 nullptr（L3 生成 [0,memberNum)）；subTeam 传 worldTeam 的 memberId 列表。 */
 static void FillHcommTeamCreateDesc(
@@ -517,4 +528,31 @@ HcclResult HcclTeamDestroy(HcommTeamHandle team)
 
     HCCL_INFO("[%s] success", __func__);
     return HCCL_SUCCESS;
+}
+
+HcclResult HcclTeamGetLsaTeam(HcclComm comm, HcommTeamHandle* lsaTeam)
+{
+    CHK_PTR_NULL(lsaTeam);
+    *lsaTeam = nullptr;
+    CollComm* collComm = nullptr;
+    CHK_RET(GetTeamQueryCollComm(comm, collComm));
+    return HcclTeamMgr::GetInstance().GetLsaTeam(collComm, *lsaTeam);
+}
+
+HcclResult HcclTeamMemberToRank(HcclComm comm, HcommTeamHandle team, uint32_t memberId, uint32_t* rankId)
+{
+    CHK_PTR_NULL(team);
+    CHK_PTR_NULL(rankId);
+    CollComm* collComm = nullptr;
+    CHK_RET(GetTeamQueryCollComm(comm, collComm));
+    return HcclTeamMgr::GetInstance().MemberToRank(collComm, team, memberId, *rankId);
+}
+
+HcclResult HcclTeamRankToMember(HcclComm comm, HcommTeamHandle team, uint32_t rankId, uint32_t* memberId)
+{
+    CHK_PTR_NULL(team);
+    CHK_PTR_NULL(memberId);
+    CollComm* collComm = nullptr;
+    CHK_RET(GetTeamQueryCollComm(comm, collComm));
+    return HcclTeamMgr::GetInstance().RankToMember(collComm, team, rankId, *memberId);
 }

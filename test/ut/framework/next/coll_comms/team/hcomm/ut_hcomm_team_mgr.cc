@@ -366,3 +366,142 @@ TEST_F(TestHcommTeamMgr, Ut_UpdateWindowRemoteMemByRank_When_InvalidParams_Expec
 
     free(devSymWin);
 }
+
+TEST_F(TestHcommTeamMgr, Ut_BindUbSymmetricWindow_When_LayoutValid_Expect_OnlyLsaFieldsUpdated)
+{
+    constexpr uint32_t memberNum = 4U;
+    constexpr uint32_t netLayer = 1U;
+    constexpr size_t stride = 0x10000U;
+    constexpr size_t userSize = 0x2000U;
+    constexpr uintptr_t baseAddress = 0x100000U;
+    constexpr uint64_t legacySymWindow = 0x400000U;
+    HcclCommSymWindow window = nullptr;
+    ASSERT_EQ(HcommTeamWindowRegister(reinterpret_cast<void*>(legacySymWindow), &window), HCOMM_SUCCESS);
+    auto* deviceWindow = static_cast<HcommWindow*>(window);
+    constexpr uint64_t remoteMemAddr = 0x500000U;
+    constexpr uint64_t remoteWindowSize = 0x3000U;
+    auto& mgr = HcommTeamMgr::GetInstance();
+    {
+        std::unique_lock<std::shared_mutex> lock(mgr.windowsRwMutex_);
+        auto* entry = mgr.FindWindowByHandleLocked(window);
+        ASSERT_NE(entry, nullptr);
+        entry->hostWindow.netWin.baseRemoteMemAddr = remoteMemAddr;
+        entry->hostWindow.netWin.windowSize = remoteWindowSize;
+    }
+
+    std::vector<CommMem> memberMems(memberNum);
+    for (uint32_t member = 0; member < memberNum; ++member) {
+        memberMems[member].addr = reinterpret_cast<void*>(baseAddress + member * stride);
+        memberMems[member].size = userSize;
+        memberMems[member].type = COMM_MEM_TYPE_DEVICE;
+    }
+    auto worldTeam = reinterpret_cast<HcommTeamHandle>(0x300000U);
+    auto teamEntry = std::make_unique<TeamEntry>();
+    teamEntry->hostTeam.memberNum = memberNum;
+    teamEntry->hostTeam.netLayer = netLayer;
+    {
+        std::unique_lock<std::shared_mutex> lock(mgr.teamsRwMutex_);
+        mgr.teams_[worldTeam] = std::move(teamEntry);
+    }
+    ASSERT_EQ(
+        mgr.BindUbSymmetricWindow(
+            window, worldTeam, netLayer, memberMems.data(), memberNum, reinterpret_cast<void*>(baseAddress), stride,
+            userSize),
+        HCOMM_SUCCESS);
+
+    std::shared_lock<std::shared_mutex> lock(mgr.windowsRwMutex_);
+    auto* entry = mgr.FindWindowByHandleLocked(window);
+    ASSERT_NE(entry, nullptr);
+    EXPECT_EQ(entry->hostRemoteAddrs, nullptr);
+    EXPECT_EQ(entry->devRemoteAddrs, nullptr);
+    EXPECT_EQ(entry->hostWindow.netWin.worldTeamAccumulateId, nullptr);
+    EXPECT_EQ(entry->remoteMemsTotal, 0U);
+    EXPECT_EQ(entry->hostWindow.netWin.baseRemoteMemAddr, remoteMemAddr);
+    EXPECT_EQ(entry->hostWindow.netWin.windowSize, remoteWindowSize);
+    EXPECT_EQ(entry->hostWindow.lsaWin.baseVa, baseAddress);
+    EXPECT_EQ(entry->hostWindow.lsaWin.stride, stride);
+    EXPECT_EQ(entry->hostWindow.lsaWin.userSize, userSize);
+    EXPECT_EQ(entry->hostWindow.legacySymWindow, legacySymWindow);
+    lock.unlock();
+    EXPECT_EQ(deviceWindow->netWin.baseRemoteMemAddr, remoteMemAddr);
+    EXPECT_EQ(deviceWindow->netWin.windowSize, remoteWindowSize);
+    EXPECT_EQ(deviceWindow->lsaWin.baseVa, baseAddress);
+    EXPECT_EQ(deviceWindow->legacySymWindow, legacySymWindow);
+
+    EXPECT_EQ(HcommTeamWindowDeregister(window), HCOMM_SUCCESS);
+}
+
+TEST_F(TestHcommTeamMgr, Ut_BindUbSymmetricWindow_When_LayoutInvalid_Expect_ParaError)
+{
+    constexpr size_t stride = 0x10000U;
+    constexpr size_t userSize = 0x2000U;
+    constexpr uintptr_t baseAddress = 0x100000U;
+    std::vector<CommMem> memberMems(2U);
+    memberMems[0] = {COMM_MEM_TYPE_DEVICE, reinterpret_cast<void*>(baseAddress), userSize};
+    memberMems[1] = {COMM_MEM_TYPE_DEVICE, reinterpret_cast<void*>(baseAddress + stride + 1U), userSize};
+
+    auto& mgr = HcommTeamMgr::GetInstance();
+    EXPECT_EQ(
+        mgr.BindUbSymmetricWindow(
+            reinterpret_cast<void*>(0x200000U), reinterpret_cast<HcommTeamHandle>(0x300000U), 0U, memberMems.data(),
+            static_cast<uint32_t>(memberMems.size()), reinterpret_cast<void*>(baseAddress), stride, userSize),
+        HCOMM_E_PARA);
+    EXPECT_EQ(
+        mgr.BindUbSymmetricWindow(
+            reinterpret_cast<void*>(0x200000U), reinterpret_cast<HcommTeamHandle>(0x300000U), 0U, memberMems.data(),
+            static_cast<uint32_t>(memberMems.size()), reinterpret_cast<void*>(baseAddress), stride, stride + 1U),
+        HCOMM_E_PARA);
+}
+
+TEST_F(TestHcommTeamMgr, Ut_BindUbSymmetricWindow_When_LsaTeamInvalid_Expect_Error)
+{
+    constexpr uint32_t memberNum = 2U;
+    constexpr uint32_t netLayer = 1U;
+    constexpr size_t stride = 0x10000U;
+    constexpr size_t userSize = 0x2000U;
+    constexpr uintptr_t baseAddress = 0x100000U;
+    std::vector<CommMem> memberMems(memberNum);
+    for (uint32_t member = 0; member < memberNum; ++member) {
+        memberMems[member] = {COMM_MEM_TYPE_DEVICE, reinterpret_cast<void*>(baseAddress + member * stride), userSize};
+    }
+
+    auto& mgr = HcommTeamMgr::GetInstance();
+    auto lsaTeam = reinterpret_cast<HcommTeamHandle>(0x300000U);
+    auto window = reinterpret_cast<HcclCommSymWindow>(0x200000U);
+    EXPECT_EQ(
+        mgr.BindUbSymmetricWindow(
+            window, lsaTeam, netLayer, memberMems.data(), memberNum, reinterpret_cast<void*>(baseAddress), stride,
+            userSize),
+        HCOMM_E_NOT_FOUND);
+
+    auto teamEntry = std::make_unique<TeamEntry>();
+    TeamEntry* teamEntryPtr = teamEntry.get();
+    teamEntryPtr->hostTeam.memberNum = memberNum;
+    teamEntryPtr->hostTeam.netLayer = netLayer;
+    teamEntryPtr->isSubTeam = true;
+    {
+        std::unique_lock<std::shared_mutex> lock(mgr.teamsRwMutex_);
+        mgr.teams_[lsaTeam] = std::move(teamEntry);
+    }
+    EXPECT_EQ(
+        mgr.BindUbSymmetricWindow(
+            window, lsaTeam, netLayer, memberMems.data(), memberNum, reinterpret_cast<void*>(baseAddress), stride,
+            userSize),
+        HCOMM_E_PARA);
+
+    teamEntryPtr->isSubTeam = false;
+    teamEntryPtr->hostTeam.netLayer = netLayer + 1U;
+    EXPECT_EQ(
+        mgr.BindUbSymmetricWindow(
+            window, lsaTeam, netLayer, memberMems.data(), memberNum, reinterpret_cast<void*>(baseAddress), stride,
+            userSize),
+        HCOMM_E_PARA);
+
+    teamEntryPtr->hostTeam.netLayer = netLayer;
+    teamEntryPtr->hostTeam.memberNum = memberNum + 1U;
+    EXPECT_EQ(
+        mgr.BindUbSymmetricWindow(
+            window, lsaTeam, netLayer, memberMems.data(), memberNum, reinterpret_cast<void*>(baseAddress), stride,
+            userSize),
+        HCOMM_E_PARA);
+}

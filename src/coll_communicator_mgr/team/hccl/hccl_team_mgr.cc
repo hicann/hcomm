@@ -94,6 +94,26 @@ HcommTeamHandle HcclTeamMgr::FindWorldTeamByProtoLayer(CollComm* collComm, CommP
     return it->second;
 }
 
+std::vector<uint32_t>
+HcclTeamMgr::GetPrebuiltWorldTeamRanks(CollComm* collComm, CommProtocol protocol, uint32_t netLayer)
+{
+    if (collComm == nullptr) {
+        HCCL_ERROR("[HcclTeamMgr][%s] collComm is nullptr", __func__);
+        return {};
+    }
+    std::shared_lock<std::shared_mutex> lock(mutex_);
+    auto commIt = worldTeamIndex_.find(collComm);
+    if (commIt == worldTeamIndex_.end()) {
+        return {};
+    }
+    auto indexIt = commIt->second.find(MakeProtoLayerKey(protocol, netLayer));
+    if (indexIt == commIt->second.end()) {
+        return {};
+    }
+    auto teamIt = teamMap_.find(indexIt->second);
+    return teamIt == teamMap_.end() ? std::vector<uint32_t>() : teamIt->second.rankIds;
+}
+
 void HcclTeamMgr::GetWorldTeamSizesPerNetLayer(CollComm* collComm, std::vector<uint32_t>& sizes)
 {
     sizes.clear();
@@ -245,6 +265,84 @@ std::vector<uint32_t> HcclTeamMgr::GetRankIds(HcommTeamHandle team)
     }
     result = it->second.rankIds;
     return result;
+}
+
+HcclResult HcclTeamMgr::GetLsaTeam(CollComm* collComm, HcommTeamHandle& lsaTeam)
+{
+    CHK_PRT_RET(collComm == nullptr, HCCL_ERROR("[HcclTeamMgr][%s] collComm is nullptr", __func__), HCCL_E_PTR);
+    lsaTeam = nullptr;
+    std::shared_lock<std::shared_mutex> lock(mutex_);
+    auto commIt = worldTeamIndex_.find(collComm);
+    if (commIt == worldTeamIndex_.end()) {
+        HCCL_DEBUG("[HcclTeamMgr][%s] communicator has no prebuilt world team", __func__);
+        return HCCL_E_NOT_FOUND;
+    }
+    for (const auto& indexEntry : commIt->second) {
+        auto teamIt = teamMap_.find(indexEntry.second);
+        CHK_PRT_RET(
+            teamIt == teamMap_.end(), HCCL_ERROR("[HcclTeamMgr][%s] invalid world team index", __func__),
+            HCCL_E_INTERNAL);
+        if (teamIt->second.protocol != COMM_PROTOCOL_UB_MEM) {
+            continue;
+        }
+        CHK_PRT_RET(
+            lsaTeam != nullptr,
+            HCCL_ERROR("[HcclTeamMgr][%s] communicator has multiple UB Memory world teams", __func__), HCCL_E_INTERNAL);
+        CHK_PRT_RET(
+            teamIt->second.collComm != collComm || teamIt->second.worldTeam != nullptr,
+            HCCL_ERROR("[HcclTeamMgr][%s] invalid UB Memory world team metadata", __func__), HCCL_E_INTERNAL);
+        lsaTeam = indexEntry.second;
+    }
+    if (lsaTeam == nullptr) {
+        HCCL_DEBUG("[HcclTeamMgr][%s] communicator has no LSA team", __func__);
+        return HCCL_E_NOT_FOUND;
+    }
+    return HCCL_SUCCESS;
+}
+
+HcclResult HcclTeamMgr::MemberToRank(CollComm* collComm, HcommTeamHandle team, uint32_t memberId, uint32_t& rankId)
+{
+    CHK_PRT_RET(
+        collComm == nullptr || team == nullptr, HCCL_ERROR("[HcclTeamMgr][%s] invalid parameter", __func__),
+        HCCL_E_PTR);
+    std::shared_lock<std::shared_mutex> lock(mutex_);
+    auto teamIt = teamMap_.find(team);
+    CHK_PRT_RET(
+        teamIt == teamMap_.end(), HCCL_ERROR("[HcclTeamMgr][%s] team[%p] not registered", __func__, team),
+        HCCL_E_NOT_FOUND);
+    CHK_PRT_RET(
+        teamIt->second.collComm != collComm,
+        HCCL_ERROR("[HcclTeamMgr][%s] team[%p] does not belong to communicator", __func__, team), HCCL_E_PARA);
+    CHK_PRT_RET(
+        memberId >= teamIt->second.rankIds.size(),
+        HCCL_ERROR(
+            "[HcclTeamMgr][%s] memberId[%u] exceeds team size[%zu]", __func__, memberId, teamIt->second.rankIds.size()),
+        HCCL_E_PARA);
+    rankId = teamIt->second.rankIds[memberId];
+    return HCCL_SUCCESS;
+}
+
+HcclResult HcclTeamMgr::RankToMember(CollComm* collComm, HcommTeamHandle team, uint32_t rankId, uint32_t& memberId)
+{
+    CHK_PRT_RET(
+        collComm == nullptr || team == nullptr, HCCL_ERROR("[HcclTeamMgr][%s] invalid parameter", __func__),
+        HCCL_E_PTR);
+    std::shared_lock<std::shared_mutex> lock(mutex_);
+    auto teamIt = teamMap_.find(team);
+    CHK_PRT_RET(
+        teamIt == teamMap_.end(), HCCL_ERROR("[HcclTeamMgr][%s] team[%p] not registered", __func__, team),
+        HCCL_E_NOT_FOUND);
+    CHK_PRT_RET(
+        teamIt->second.collComm != collComm,
+        HCCL_ERROR("[HcclTeamMgr][%s] team[%p] does not belong to communicator", __func__, team), HCCL_E_PARA);
+    const auto& rankIds = teamIt->second.rankIds;
+    auto rankIt = std::find(rankIds.begin(), rankIds.end(), rankId);
+    CHK_PRT_RET(
+        rankIt == rankIds.end(),
+        HCCL_ERROR("[HcclTeamMgr][%s] rankId[%u] is not a member of team[%p]", __func__, rankId, team),
+        HCCL_E_NOT_FOUND);
+    memberId = static_cast<uint32_t>(rankIt - rankIds.begin());
+    return HCCL_SUCCESS;
 }
 
 void* HcclTeamMgr::GetSyncMemPtr(HcommTeamHandle team)

@@ -90,6 +90,37 @@ extern HcclResult HcclTeamCreate(HcclComm comm, const HcclTeamCreateDesc* desc, 
  * @see HcclTeamCreate()
  */
 extern HcclResult HcclTeamDestroy(HcommTeamHandle team);
+
+/**
+ * @brief Get the prebuilt LSA world team of a communicator.
+ *
+ * @param comm A pointer identifying the initialized communication resource.
+ * @param lsaTeam A pointer to the returned LSA world team handle. The handle is owned by comm.
+ * @return HcclResult
+ */
+extern HcclResult HcclTeamGetLsaTeam(HcclComm comm, HcommTeamHandle* lsaTeam);
+
+/**
+ * @brief Convert a team member ID to its communicator rank ID.
+ *
+ * @param comm A pointer identifying the initialized communication resource.
+ * @param team A team handle owned by comm.
+ * @param memberId The member ID in team.
+ * @param rankId A pointer to the returned communicator rank ID.
+ * @return HcclResult
+ */
+extern HcclResult HcclTeamMemberToRank(HcclComm comm, HcommTeamHandle team, uint32_t memberId, uint32_t* rankId);
+
+/**
+ * @brief Convert a communicator rank ID to its member ID in a team.
+ *
+ * @param comm A pointer identifying the initialized communication resource.
+ * @param team A team handle owned by comm.
+ * @param rankId The communicator rank ID.
+ * @param memberId A pointer to the returned member ID in team.
+ * @return HcclResult
+ */
+extern HcclResult HcclTeamRankToMember(HcclComm comm, HcommTeamHandle team, uint32_t rankId, uint32_t* memberId);
 #ifdef __cplusplus
 }
 #endif // __cplusplus
