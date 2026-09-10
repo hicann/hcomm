@@ -83,7 +83,7 @@ This document is positioned from the ACL Graph API perspective—readers who wan
 
 The core ACL Graph APIs (`aclmdlRICaptureBegin` / `aclmdlRICaptureEnd` / `aclmdlRIExecuteAsync` / `aclmdlRIDestroy`), capture modes (`ACL_MODEL_RI_CAPTURE_MODE_GLOBAL` / `RELAXED`), and extended APIs (task group / update group / mode switching) — their function signatures, parameter descriptions, and type definitions are in the cann/runtime repository header file [`include/external/acl/acl_rt.h`](https://gitcode.com/cann/runtime/blob/master/include/external/acl/acl_rt.h).
 
-> **Complete example**: The cann/runtime repository [`example/2_advanced_features/model_ri/0_simple_model/main.cpp`](https://gitcode.com/cann/runtime/blob/master/example/2_advanced_features/model_ri/0_simple_model/main.cpp) demonstrates the complete 4-step lifecycle (CaptureBegin → submit operators → CaptureEnd → ExecuteAsync x N → Destroy), including GLOBAL/RELAXED mode switching, async memcpy into the graph, and `aclmdlRIDebugJsonPrint` debug output.
+> **Complete example**: The cann/runtime repository [`example/2_advanced_features/model_ri/0_simple_model/main.cpp`](https://gitcode.com/cann/runtime/blob/9.2.0/example/2_advanced_features/model_ri/0_simple_model/main.cpp) demonstrates the complete 4-step lifecycle (CaptureBegin → submit operators → CaptureEnd → ExecuteAsync x N → Destroy), including GLOBAL/RELAXED mode switching, async memcpy into the graph, and `aclmdlRIDebugJsonPrint` debug output.
 
 **The following sections discuss only constraints related to HCCL collective communication coordination; basic ACL Graph usage is not repeated.**
 
@@ -96,7 +96,7 @@ Two things:
 
 ### 2.3 Constraints During Capture (HCCL Perspective)
 
-Basic ACL Graph constraints (same-stream capture, cross-stream event/notify introduction, synchronization API restrictions during capture, etc.) are demonstrated in the cann/runtime example [`0_simple_model/main.cpp`](https://gitcode.com/cann/runtime/blob/master/example/2_advanced_features/model_ri/0_simple_model/main.cpp). The following only supplements constraints that require special attention in HCCL coordination scenarios.
+Basic ACL Graph constraints (same-stream capture, cross-stream event/notify introduction, synchronization API restrictions during capture, etc.) are demonstrated in the cann/runtime example [`0_simple_model/main.cpp`](https://gitcode.com/cann/runtime/blob/9.2.0/example/2_advanced_features/model_ri/0_simple_model/main.cpp). The following only supplements constraints that require special attention in HCCL coordination scenarios.
 
 #### Cross-Stream Capture Must "Join Then Return to Main Stream"
 
@@ -140,7 +140,7 @@ After tasks have been captured and buffered into `aclmdlRI`, if you need to upda
 
 Applicable scenario: **a small number of tasks need updating** (e.g., varlen attention's seq_len changes every forward).
 
-> **Complete example**: cann/runtime repository [`example/2_advanced_features/model_ri/1_model_update/main.cpp`](https://gitcode.com/cann/runtime/blob/master/example/2_advanced_features/model_ri/1_model_update/main.cpp).
+> **Complete example**: cann/runtime repository [`example/2_advanced_features/model_ri/1_model_update/main.cpp`](https://gitcode.com/cann/runtime/blob/9.2.0/example/2_advanced_features/model_ri/1_model_update/main.cpp).
 
 ![Recapture Flow (large number of tasks)](https://www.hiascend.com/doc_center/source/en/CANNCommunityEdition/900/programug/acldevg/figure/en-us_image_0000002562269291.png)
 
@@ -148,7 +148,7 @@ Applicable scenario: **a small number of tasks need updating** (e.g., varlen att
 
 Applicable scenario: **a large number of tasks need updating** (e.g., a model has multiple different input Shapes).
 
-> **Complete example**: cann/runtime repository [`example/2_advanced_features/model_ri/2_model_switch/`](https://gitcode.com/cann/runtime/tree/master/example/2_advanced_features/model_ri/2_model_switch) (Stream binding/jumping/switching), [`3_cond_model/`](https://gitcode.com/cann/runtime/tree/master/example/2_advanced_features/model_ri/3_cond_model) (IF/WHILE/SWITCH conditional operations).
+> **Complete example**: cann/runtime repository [`example/2_advanced_features/model_ri/2_model_switch/`](https://gitcode.com/cann/runtime/tree/9.2.0/example/2_advanced_features/model_ri/2_model_switch) (Stream binding/jumping/switching), [`3_cond_model/`](https://gitcode.com/cann/runtime/tree/9.2.0/example/2_advanced_features/model_ri/3_cond_model) (IF/WHILE/SWITCH conditional operations).
 
 ![In-Place Update Flow (update then execute)](https://www.hiascend.com/doc_center/source/en/CANNCommunityEdition/900/programug/acldevg/figure/en-us_image_0000002562429279.png)
 
@@ -244,7 +244,7 @@ Runtime and HCCL have 4 coordination points during capture:
 
 All ACL Graph API function signatures, parameter descriptions, and type definitions are in the cann/runtime repository header file [`include/external/acl/acl_rt.h`](https://gitcode.com/cann/runtime/blob/master/include/external/acl/acl_rt.h).
 
-Complete examples are in the cann/runtime repository [`example/2_advanced_features/model_ri/`](https://gitcode.com/cann/runtime/tree/master/example/2_advanced_features/model_ri) directory (4 examples: basic capture, task update, stream switching, conditional operations).
+Complete examples are in the cann/runtime repository [`example/2_advanced_features/model_ri/`](https://gitcode.com/cann/runtime/tree/9.2.0/example/2_advanced_features/model_ri) directory (4 examples: basic capture, task update, stream switching, conditional operations).
 
 ## Appendix B: torch_npu Source Code Integration
 

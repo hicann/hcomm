@@ -83,7 +83,7 @@ ACL Graph是CANN Runtime提供的"**捕获—重放**"机制，对应CUDA Graph�
 
 ACL Graph的核心API（`aclmdlRICaptureBegin` / `aclmdlRICaptureEnd` / `aclmdlRIExecuteAsync` / `aclmdlRIDestroy`）、捕获模式（`ACL_MODEL_RI_CAPTURE_MODE_GLOBAL` / `RELAXED`）、扩展API（任务组 / 更新组 / 模式切换）的函数签名、参数说明与类型定义见cann/runtime仓头文件 [`include/external/acl/acl_rt.h`](https://gitcode.com/cann/runtime/blob/master/include/external/acl/acl_rt.h)。
 
-> **完整示例**：cann/runtime仓 [`example/2_advanced_features/model_ri/0_simple_model/main.cpp`](https://gitcode.com/cann/runtime/blob/master/example/2_advanced_features/model_ri/0_simple_model/main.cpp) 演示了完整的4步生命周期（CaptureBegin → 下发算子 → CaptureEnd → ExecuteAsync × N → Destroy），包括GLOBAL/RELAXED模式切换、异步memcpy入图、以及 `aclmdlRIDebugJsonPrint` 调试输出。
+> **完整示例**：cann/runtime仓 [`example/2_advanced_features/model_ri/0_simple_model/main.cpp`](https://gitcode.com/cann/runtime/blob/9.2.0/example/2_advanced_features/model_ri/0_simple_model/main.cpp) 演示了完整的4步生命周期（CaptureBegin → 下发算子 → CaptureEnd → ExecuteAsync × N → Destroy），包括GLOBAL/RELAXED模式切换、异步memcpy入图、以及 `aclmdlRIDebugJsonPrint` 调试输出。
 
 **下文仅讨论与HCCL集合通信协同相关的约束，ACL Graph基础用法不再重复。**
 
@@ -96,7 +96,7 @@ ACL Graph的核心API（`aclmdlRICaptureBegin` / `aclmdlRICaptureEnd` / `aclmdlR
 
 ### 2.3捕获中约束（HCCL视角）
 
-ACL Graph基础约束（同一stream捕获、跨流event/notify引入、捕获期同步API限制等）在cann/runtime示例 [`0_simple_model/main.cpp`](https://gitcode.com/cann/runtime/blob/master/example/2_advanced_features/model_ri/0_simple_model/main.cpp) 中已有代码演示。以下仅补充HCCL协同场景下需特别注意的约束。
+ACL Graph基础约束（同一stream捕获、跨流event/notify引入、捕获期同步API限制等）在cann/runtime示例 [`0_simple_model/main.cpp`](https://gitcode.com/cann/runtime/blob/9.2.0/example/2_advanced_features/model_ri/0_simple_model/main.cpp) 中已有代码演示。以下仅补充HCCL协同场景下需特别注意的约束。
 
 #### 跨流捕获必须"加入后回到主流"
 
@@ -118,7 +118,7 @@ ACL Graph基础约束（同一stream捕获、跨流event/notify引入、捕获�
 | 需要时间戳 | 不支持 | 支持 |
 | Wait后状态 | **自动重置**（一次性） | **不自动重置**（可重用） |
 
-> 设计含义：notify的"一次性自动重置"特性正好匹配HCCL内部"通知从stream → 等从stream → 通知依赖方"的有状态机；event的"多对多可重用"则适合业务/通信语义切换点。Event与Notify的创建、等待、查询等基础API详见cann/runtime仓 [Event 管理](https://gitcode.com/cann/runtime/blob/master/docs/zh/dev_guide/03-05_event_management.md)与 [Notify 管理](https://gitcode.com/cann/runtime/blob/master/docs/zh/dev_guide/03-06_notify_management.md)。
+> 设计含义：notify的"一次性自动重置"特性正好匹配HCCL内部"通知从stream → 等从stream → 通知依赖方"的有状态机；event的"多对多可重用"则适合业务/通信语义切换点。Event与Notify的创建、等待、查询等基础API详见cann/runtime仓 [Event 管理](https://gitcode.com/cann/runtime/blob/9.2.0/docs/zh/dev_guide/03-05_event_management.md)与 [Notify 管理](https://gitcode.com/cann/runtime/blob/9.2.0/docs/zh/dev_guide/03-06_notify_management.md)。
 
 ### 2.4 capture之后：replay与销毁
 
@@ -140,7 +140,7 @@ ACL Graph基础约束（同一stream捕获、跨流event/notify引入、捕获�
 
 适用场景：**少量任务需要更新**（如varlen attention每次forward的seq_len变化）。
 
-> **完整示例**：cann/runtime仓 [`example/2_advanced_features/model_ri/1_model_update/main.cpp`](https://gitcode.com/cann/runtime/blob/master/example/2_advanced_features/model_ri/1_model_update/main.cpp)。
+> **完整示例**：cann/runtime仓 [`example/2_advanced_features/model_ri/1_model_update/main.cpp`](https://gitcode.com/cann/runtime/blob/9.2.0/example/2_advanced_features/model_ri/1_model_update/main.cpp)。
 
 ![原地更新任务流程（重新捕获方式）](https://www.hiascend.com/doc_center/source/zh/CANNCommunityEdition/900/programug/acldevg/figure/zh-cn_image_0000002562269291.png)
 
@@ -148,7 +148,7 @@ ACL Graph基础约束（同一stream捕获、跨流event/notify引入、捕获�
 
 适用场景：**大量任务需要更新**（如一个模型有多种不同Shape的input）。
 
-> **完整示例**：cann/runtime仓 [`example/2_advanced_features/model_ri/2_model_switch/`](https://gitcode.com/cann/runtime/tree/master/example/2_advanced_features/model_ri/2_model_switch)（Stream绑定/跳转/切换）、[`3_cond_model/`](https://gitcode.com/cann/runtime/tree/master/example/2_advanced_features/model_ri/3_cond_model)（IF/WHILE/SWITCH条件操作）。
+> **完整示例**：cann/runtime仓 [`example/2_advanced_features/model_ri/2_model_switch/`](https://gitcode.com/cann/runtime/tree/9.2.0/example/2_advanced_features/model_ri/2_model_switch)（Stream绑定/跳转/切换）、[`3_cond_model/`](https://gitcode.com/cann/runtime/tree/9.2.0/example/2_advanced_features/model_ri/3_cond_model)（IF/WHILE/SWITCH条件操作）。
 
 ![原地更新任务流程（先更新再执行）](https://www.hiascend.com/doc_center/source/zh/CANNCommunityEdition/900/programug/acldevg/figure/zh-cn_image_0000002562429279.png)
 
@@ -203,7 +203,7 @@ ACL Graph基础约束（同一stream捕获、跨流event/notify引入、捕获�
 
 Runtime不感知通信语义——它只接收stream上的任务。HCCL作为ACL之上的"通信层"，按"控制面/数据面分离"和"并行流水"的硬件设计原则，把一次collective拆分到多条内部stream。
 
-> ACLGraph的捕获原理与跨stream捕获用法详见cann/runtime仓 [ACL-Graph 开发指南](https://gitcode.com/cann/runtime/blob/master/docs/zh/dev_guide/04_ACL-Graph.md)与 [跨流捕获](https://gitcode.com/cann/runtime/blob/master/docs/zh/dev_guide/04-02_cross_stream_capture.md)。
+> ACLGraph的捕获原理与跨stream捕获用法详见cann/runtime仓 [ACL-Graph 开发指南](https://gitcode.com/cann/runtime/blob/9.2.0/docs/zh/dev_guide/04_ACL-Graph.md)与 [跨流捕获](https://gitcode.com/cann/runtime/blob/9.2.0/docs/zh/dev_guide/04-02_cross_stream_capture.md)。
 
 | Stream | 角色 | 设备 | 设计目的 |
 | ------ | ------ | ------ | --------- |
@@ -244,7 +244,7 @@ Runtime与HCCL在捕获期有4个协同点：
 
 ACL Graph全部API的函数签名、参数说明与类型定义见cann/runtime仓头文件 [`include/external/acl/acl_rt.h`](https://gitcode.com/cann/runtime/blob/master/include/external/acl/acl_rt.h)。
 
-完整示例见cann/runtime仓 [`example/2_advanced_features/model_ri/`](https://gitcode.com/cann/runtime/tree/master/example/2_advanced_features/model_ri) 目录（4个示例：基础捕获、任务更新、Stream切换、条件操作）。
+完整示例见cann/runtime仓 [`example/2_advanced_features/model_ri/`](https://gitcode.com/cann/runtime/tree/9.2.0/example/2_advanced_features/model_ri) 目录（4个示例：基础捕获、任务更新、Stream切换、条件操作）。
 
 ## 附录B torch_npu源码对接
 
