@@ -60,14 +60,13 @@ std::string UbMemTransport::Describe() const
 HcclResult UbMemTransport::BuildDrainResource()
 {
     // notify作为read的落点
-    if (drainNotify_ == nullptr) {
-        bool devUsed = true;
-        EXCEPTION_CATCH(drainNotify_ = std::make_unique<Hccl::UbLocalNotify>(rdmaHandle, devUsed), return HCCL_E_PTR);
+    if (drainNotify_ == nullptr && !isHost_) {
+        EXCEPTION_CATCH(drainNotify_ = std::make_unique<Hccl::UbLocalNotify>(rdmaHandle, !isHost_), return HCCL_E_PTR);
         HCCL_INFO("[UbMemTransport][%s] drain notify created: %s", __func__, drainNotify_->Describe().c_str());
     }
 
     // 常量1内存供远端读取
-    if (drainBuffer_ == nullptr) {
+    if (drainBuffer_ == nullptr && !isHost_) {
         u32 notifySize = Hccl::DevCapability::GetInstance().GetNotifySize();
 
         std::shared_ptr<Hccl::DevBuffer> constMem;
