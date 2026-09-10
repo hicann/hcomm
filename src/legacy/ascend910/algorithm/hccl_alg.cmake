@@ -101,6 +101,11 @@ target_include_directories(hccl_alg PRIVATE
     ${HCOMM_DIR}/src/legacy/ascend910/common/launch_aicpu
 )
 
+target_sources(hccl_alg PRIVATE
+    ${HCOMM_DIR}/src/legacy/ascend910/framework/common/src/config/env_config.cc
+    ${HCOMM_DIR}/src/legacy/ascend910/framework/common/src/config/env_config_host.cc
+)
+
 if(BUILD_OPEN_PROJECT)
     target_compile_definitions(hccl_alg PRIVATE
         OPEN_BUILD_PROJECT
