@@ -495,6 +495,7 @@ void* HrtMalloc(u64 size, aclrtMemType_t memType)
             "[Malloc][Mem]errNo[0x%016llx] aclrtMallocWithCfg failed, "
             "Reason: out of memory, return[%d], para: devPtrAddr[%p], size[%llu]",
             HCCL_ERROR_CODE(HcclResult::HCCL_E_RUNTIME), ret, devPtr, size);
+        HCCL_ERROR("[%s][%s] %s", LOG_KEYWORDS_INIT_GROUP.c_str(), LOG_KEYWORDS_RESOURCE.c_str(), msg.c_str());
         MACRO_THROW(RuntimeApiException, msg);
     }
     if (ret != ACL_SUCCESS) {
@@ -506,6 +507,7 @@ void* HrtMalloc(u64 size, aclrtMemType_t memType)
             "[Malloc][Mem]errNo[0x%016llx] aclrtMallocWithCfg failed, "
             "return[%d], para: devPtrAddr[%p], size[%llu]",
             HCCL_ERROR_CODE(HcclResult::HCCL_E_RUNTIME), ret, devPtr, size);
+        HCCL_ERROR("[%s][%s] %s", LOG_KEYWORDS_INIT_GROUP.c_str(), LOG_KEYWORDS_RESOURCE.c_str(), msg.c_str());
         MACRO_THROW(RuntimeApiException, msg);
     }
     return devPtr;
@@ -730,6 +732,7 @@ void* HrtMallocHost(u64 size)
             "[Malloc][Host]errNo[0x%016llx] rt malloc host fail. return[%d], "
             "para: size[%llu].",
             HCCL_ERROR_CODE(HcclResult::HCCL_E_RUNTIME), ret, size);
+        HCCL_ERROR("[%s][%s] %s", LOG_KEYWORDS_INIT_GROUP.c_str(), LOG_KEYWORDS_RESOURCE.c_str(), msg.c_str());
         MACRO_THROW(RuntimeApiException, msg);
     }
     return hostPtr;

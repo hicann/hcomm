@@ -19,6 +19,8 @@
 #include "exception_util.h"
 #include "adapter_error_manager_pub.h"
 #include "rank_table_report_macro.h"
+#include "hccl_log_keywords.h"
+
 namespace Hccl {
 using namespace std;
 
@@ -49,10 +51,18 @@ void AddressInfo::DeserializeAddrTypeAndAddr(const nlohmann::json& addressInfoJs
             RPT_INPUT_ERR(
                 true, "EI0014", std::vector<std::string>({"value", "variable", "expect"}),
                 std::vector<std::string>({"N/A", "addr", "addr is required and should not be empty"}));
+            HCCL_ERROR(
+                "[%s][%s] errNo[0x%016llx] addr is required and should not be empty", LOG_KEYWORDS_INIT_GROUP.c_str(),
+                LOG_KEYWORDS_RANKTABLE_CHECK.c_str(), HCOM_ERROR_CODE(HcclResult::HCCL_E_PARA));
         } else {
             RPT_INPUT_ERR(
                 true, "EI0014", std::vector<std::string>({"value", "variable", "expect"}),
                 std::vector<std::string>({address, "addr", "A ip address"}));
+            HCCL_ERROR(
+                "[%s][%s] errNo[0x%016llx] addr[%s] length is out of range [%u] to [%u]",
+                LOG_KEYWORDS_INIT_GROUP.c_str(), LOG_KEYWORDS_RANKTABLE_CHECK.c_str(),
+                HCOM_ERROR_CODE(HcclResult::HCCL_E_PARA), address.c_str(), MIN_VALUE_ADDR_LENGRH,
+                MAX_VALUE_ADDR_LENGRH);
         }
         THROW<InvalidParamsException>(StringFormat(
             "addr [%.*s] length is out of range [%u] to [%u]", MAX_DISPLAY_LEN, address.c_str(), MIN_VALUE_ADDR_LENGRH,

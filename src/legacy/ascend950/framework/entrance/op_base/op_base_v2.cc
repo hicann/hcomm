@@ -2218,7 +2218,12 @@ HcclResult HcclAllGatherVV2(
     RPT_INPUT_ERR(
         recvBuf == nullptr, "EI0003", std::vector<std::string>({"ccl_op", "value", "parameter", "expect"}),
         std::vector<std::string>({"HcclAllGatherVV2", "nullptr", "recvBuf", "not nullptr"}));
-    CHK_PTR_NULL(recvBuf);
+    if (recvBuf == nullptr) {
+        HCCL_ERROR(
+            "[%s][%s] errNo[0x%016llx] recvBuf is nullptr.", LOG_KEYWORDS_TASK_EXEC.c_str(),
+            LOG_KEYWORDS_INVALID_ARGUMENT.c_str(), HCCL_ERROR_CODE(HCCL_E_PTR));
+        return HCCL_E_PTR;
+    }
     // opParams组装
     Hccl::CollOpParams opParams;
     opParams.opType = Hccl::OpType::ALLGATHERV;
@@ -2523,7 +2528,12 @@ HcclResult HcclReduceScatterVV2(
     RPT_INPUT_ERR(
         sendBuf == nullptr, "EI0003", std::vector<std::string>({"ccl_op", "value", "parameter", "expect"}),
         std::vector<std::string>({"HcclReduceScatterVV2", "nullptr", "sendBuf", "not nullptr"}));
-    CHK_PTR_NULL(sendBuf);
+    if (sendBuf == nullptr) {
+        HCCL_ERROR(
+            "[%s][%s] errNo[0x%016llx] sendBuf is nullptr.", LOG_KEYWORDS_TASK_EXEC.c_str(),
+            LOG_KEYWORDS_INVALID_ARGUMENT.c_str(), HCCL_ERROR_CODE(HCCL_E_PTR));
+        return HCCL_E_PTR;
+    }
     if (op == HCCL_REDUCE_PROD) {
         HCCL_ERROR("[Check][ReductionOp] Op:[HCCL_REDUCE_PROD] not supported, tag[%s]", tag.c_str());
         return HCCL_E_NOT_SUPPORT;

@@ -68,6 +68,7 @@ public:
     unsigned int GetTrailingZeros(uint8_t num) const;
     std::string StringLogicCqReportInfo(const rtLogicCqReport_t& reportOfOne) const;
     uint32_t GetReporterInfo(const StreamLite* curStream, std::shared_ptr<halReportRecvInfo> recvInfo);
+    std::string ErrorType2Str(uint8_t errorType) const;
 
 private:
     // 私有构造函数，防止外部实例化
@@ -77,7 +78,6 @@ private:
     // 禁用赋值运算符
     TaskExceptionFunc& operator=(const TaskExceptionFunc&) = delete;
 
-    std::string ErrorType2Str(uint8_t errorType) const;
     std::string CqeStatus2Str(uint32_t errorCode) const;
 
 private:

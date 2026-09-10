@@ -596,7 +596,7 @@ void ClusterMonitor::SetStatus(
         }
         HCCL_RUN_INFO(
             "[%s][%s]local rank [%s]: crimer rank [%s] status[%s] by informer rank [%s]",
-            LOG_KEYWORDS_TASK_EXEC.c_str(), LOG_KEYWORDS_HEARTBEAT_EVETN.c_str(), GetUID(myRankUID_).c_str(),
+            LOG_KEYWORDS_TASK_EXEC.c_str(), LOG_KEYWORDS_HEARTBEAT_EVENT.c_str(), GetUID(myRankUID_).c_str(),
             GetUID(crimer).c_str(), GetClusterMonitorStatusStr(status).c_str(), GetUID(informer).c_str());
     }
 }
@@ -947,12 +947,12 @@ void ClusterMonitor::GetCqeErrInfoFromTaskException(
     if (now == nullptr) {
         HCCL_ERROR(
             "[%s][%s][%s]localtime fail, cqe error status[%u], %s", LOG_KEYWORDS_TASK_EXEC.c_str(),
-            LOG_KEYWORDS_HEARTBEAT_EVETN.c_str(), LOG_KEYWORDS_CQE_ERROR.c_str(), cqeErrInfo_.cqeStatus,
+            LOG_KEYWORDS_HEARTBEAT_EVENT.c_str(), LOG_KEYWORDS_CQE_ERROR.c_str(), cqeErrInfo_.cqeStatus,
             errorLinkLogBuffer);
     } else {
         HCCL_ERROR(
             "[%s][%s][%s]cqe error status[%u], time:[%04d-%02d-%02d %02d:%02d:%02d.%06lld], %s",
-            LOG_KEYWORDS_TASK_EXEC.c_str(), LOG_KEYWORDS_HEARTBEAT_EVETN.c_str(), LOG_KEYWORDS_CQE_ERROR.c_str(),
+            LOG_KEYWORDS_TASK_EXEC.c_str(), LOG_KEYWORDS_HEARTBEAT_EVENT.c_str(), LOG_KEYWORDS_CQE_ERROR.c_str(),
             cqeErrInfo_.cqeStatus, now->tm_year + BASE_YEAR, now->tm_mon + 1, now->tm_mday, now->tm_hour, now->tm_min,
             now->tm_sec, microseconds, errorLinkLogBuffer);
     }
@@ -967,7 +967,7 @@ void ClusterMonitor::MakeErrMsg(
         std::string crimerStr = GetUID(tmp.crimer);
         std::string informerStr = GetUID(tmp.informer);
 
-        std::string headStr = "[" + LOG_KEYWORDS_TASK_EXEC + "][" + LOG_KEYWORDS_HEARTBEAT_EVETN + "]"
+        std::string headStr = "[" + LOG_KEYWORDS_TASK_EXEC + "][" + LOG_KEYWORDS_HEARTBEAT_EVENT + "]"
                               + "Cluster Exception Location[IP/ID]:[";
 
         time_t tm = std::chrono::system_clock::to_time_t(tmp.TOASystem);

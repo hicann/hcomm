@@ -15,6 +15,7 @@
 #include "dlhal_function_v2.h"
 #include "task_param.h"
 #include "adapter_error_manager_pub.h"
+#include "hccl_log_keywords.h"
 
 #include "task_struct_v2.h"
 #include "hcomm_task_scheduler_error.h"
@@ -27,6 +28,7 @@ using namespace std;
 
 constexpr uint32_t TASK_CONTEXT_SIZE = 50;
 constexpr uint32_t TASK_CONTEXT_INFO_SIZE = LOG_TMPBUF_SIZE - 50; // task 执行失败时打印前序task信息的长度限制
+constexpr uint32_t UB_CQE_STATUS_MASK = 0xFF;                     // ubCqeStatus取低8位
 
 TaskExceptionHandlerLite& TaskExceptionHandlerLite::GetInstance()
 {
@@ -47,7 +49,7 @@ void GetUbErrMsgInfo(TaskInfo* taskInfo, ErrorMessageReport& errMsgInfo, const r
         || taskInfo->taskParam_.taskType == TaskParamType::TASK_UB) {
         errMsgInfo.locEid = taskInfo->taskParam_.taskPara.DMA.locEid;
         errMsgInfo.rmtEid = taskInfo->taskParam_.taskPara.DMA.rmtEid;
-        errMsgInfo.ubCqeStatus = exceptionInfo->errorCode & 0xFF;
+        errMsgInfo.ubCqeStatus = exceptionInfo->errorCode & UB_CQE_STATUS_MASK;
         errMsgInfo.linkType = taskInfo->taskParam_.taskPara.DMA.linkType;
         errMsgInfo.size = taskInfo->taskParam_.taskPara.DMA.size;
         errMsgInfo.taskSrcAddr = reinterpret_cast<u64>(taskInfo->taskParam_.taskPara.DMA.src);
@@ -57,7 +59,7 @@ void GetUbErrMsgInfo(TaskInfo* taskInfo, ErrorMessageReport& errMsgInfo, const r
         || taskInfo->taskParam_.taskType == TaskParamType::TASK_WRITE_REDUCE_WITH_NOTIFY) {
         errMsgInfo.locEid = taskInfo->taskParam_.taskPara.Reduce.locEid;
         errMsgInfo.rmtEid = taskInfo->taskParam_.taskPara.Reduce.rmtEid;
-        errMsgInfo.ubCqeStatus = exceptionInfo->errorCode & 0xFF;
+        errMsgInfo.ubCqeStatus = exceptionInfo->errorCode & UB_CQE_STATUS_MASK;
         errMsgInfo.linkType = taskInfo->taskParam_.taskPara.Reduce.linkType;
         errMsgInfo.size = taskInfo->taskParam_.taskPara.Reduce.size;
         errMsgInfo.taskSrcAddr = reinterpret_cast<u64>(taskInfo->taskParam_.taskPara.Reduce.src);
@@ -183,6 +185,15 @@ static void ReportSdmaError(
         true, "EI0012",
         std::vector<std::string>({"remote_rankid", "base_information", "task_information", "group_rank_content"}),
         std::vector<std::string>({remoteRankId, baseInfo, taskInfo, groupRankContent}));
+    HCCL_ERROR(
+        "[%s][%s][%s] sdma error, base information is %s, remote rank[%s].", LOG_KEYWORDS_TASK_EXEC.c_str(),
+        LOG_KEYWORDS_RUN_FAILED.c_str(), LOG_KEYWORDS_AICPU.c_str(), baseInfo.c_str(), remoteRankId.c_str());
+    HCCL_ERROR(
+        "[%s][%s][%s] sdma error, task information is %s.", LOG_KEYWORDS_TASK_EXEC.c_str(),
+        LOG_KEYWORDS_RUN_FAILED.c_str(), LOG_KEYWORDS_AICPU.c_str(), taskInfo.c_str());
+    HCCL_ERROR(
+        "[%s][%s][%s] sdma error, groupRank information is %s.", LOG_KEYWORDS_TASK_EXEC.c_str(),
+        LOG_KEYWORDS_RUN_FAILED.c_str(), LOG_KEYWORDS_AICPU.c_str(), groupRankContent.c_str());
 }
 
 HcclResult SendTaskExceptionByMBox(
@@ -209,11 +220,15 @@ HcclResult SendTaskExceptionByMBox(
 
     aicpuSqe.u.aicpu_record.fault_task_id = 0xffffffff;
 
+    std::string errorTypeStr = TaskExceptionFunc::GetInstance().ErrorType2Str(exceptionInfo->errorType);
+    if (errorTypeStr.empty()) {
+        errorTypeStr = "unknown";
+    }
     HCCL_ERROR(
-        "[SendTaskExceptionByMBox] exceptionInfo errorType[%u], errorCode[%u]",
-        static_cast<u32>(exceptionInfo->errorType), exceptionInfo->errorCode);
+        "[SendTaskExceptionByMBox] exceptionInfo errorType[%u][%s], errorCode[0x%x]",
+        static_cast<u32>(exceptionInfo->errorType), errorTypeStr.c_str(), exceptionInfo->errorCode);
     if (exceptionInfo->errorType == 1) { // ub类型为1
-        aicpuSqe.u.aicpu_record.ret_code = SwitchUBCqeErrCodeToTsErrCode(exceptionInfo->errorCode & 0xFF);
+        aicpuSqe.u.aicpu_record.ret_code = SwitchUBCqeErrCodeToTsErrCode(exceptionInfo->errorCode & UB_CQE_STATUS_MASK);
     } else {
         aicpuSqe.u.aicpu_record.ret_code = SwitchSdmaCqeErrCodeToTsErrCode(exceptionInfo->errorCode);
     }
@@ -352,7 +367,11 @@ void TaskExceptionHandlerLite::Process(CommunicatorImplLite* aicpuComm, rtLogicC
         aicpuComm->SetErrorReported();
     }
 
-    HCCL_ERROR("[TaskExceptionHandlerLite][%s]Task from HCCL run failed.", __func__);
+    const auto& logKeywordL2 = curTask->taskParam_.taskType == TaskParamType::TASK_NOTIFY_WAIT ?
+                                   LOG_KEYWORDS_TIMEOUT :
+                                   LOG_KEYWORDS_RUN_FAILED;
+    auto stageErrInfo = "[" + LOG_KEYWORDS_TASK_EXEC + "][" + logKeywordL2 + "][" + LOG_KEYWORDS_AICPU + "]";
+    HCCL_ERROR("%s Task from HCCL run failed.", stageErrInfo.c_str());
     if (curTask->taskParam_.taskType == TaskParamType::TASK_NOTIFY_WAIT) {
         PrintTaskContextInfo(aicpuComm, exceptionInfo->sqId, sqeId);
     }
@@ -361,22 +380,24 @@ void TaskExceptionHandlerLite::Process(CommunicatorImplLite* aicpuComm, rtLogicC
         || curTask->taskParam_.taskType == TaskParamType::TASK_UB_INLINE_WRITE
         || curTask->taskParam_.taskType == TaskParamType::TASK_UB_REDUCE_INLINE
         || curTask->taskParam_.taskType == TaskParamType::TASK_UB) {
-        HCCL_ERROR("[TaskExceptionHandlerLite] ubCqeStatus[%u]", static_cast<u32>(exceptionInfo->errorCode & 0xFF));
+        HCCL_ERROR(
+            "%s ubCqeStatus[%u]", stageErrInfo.c_str(),
+            static_cast<u32>(exceptionInfo->errorCode & UB_CQE_STATUS_MASK));
     }
     PrintEid(curTask);
-    HCCL_ERROR("[TaskExceptionHandlerLite]Task run failed, base information is %s.", curTask->GetBaseInfo().c_str());
-    HCCL_ERROR("[TaskExceptionHandlerLite]Task run failed, para information is %s.", curTask->GetParaInfo().c_str());
+    HCCL_ERROR("%s Task run failed, base information is %s.", stageErrInfo.c_str(), curTask->GetBaseInfo().c_str());
+    HCCL_ERROR("%s Task run failed, para information is %s.", stageErrInfo.c_str(), curTask->GetParaInfo().c_str());
     HCCL_ERROR(
-        "[TaskExceptionHandlerLite]Task run failed, groupRank information is %s.", GetGroupRankInfo(*curTask).c_str());
+        "%s Task run failed, groupRank information is %s.", stageErrInfo.c_str(), GetGroupRankInfo(*curTask).c_str());
     if (curTask->dfxOpInfo_ != nullptr && curTask->dfxOpInfo_->headOpCounterAddr_ != 0
         && curTask->dfxOpInfo_->tailOpCounterAddr_ != 0) {
         HCCL_ERROR(
-            "[TaskExceptionHandlerLite]Task run failed, headOpCounter[%u] tailOpCounter[%u] opIndex[%u].",
+            "%s Task run failed, headOpCounter[%u] tailOpCounter[%u] opIndex[%u].", stageErrInfo.c_str(),
             static_cast<u32>(*(reinterpret_cast<float*>(curTask->dfxOpInfo_->headOpCounterAddr_))),
             static_cast<u32>(*(reinterpret_cast<float*>(curTask->dfxOpInfo_->tailOpCounterAddr_))),
             curTask->dfxOpInfo_->opIndex_);
     }
-    HCCL_ERROR("[TaskExceptionHandlerLite]Task run failed, opData information is %s.", GetOpDataInfo(*curTask).c_str());
+    HCCL_ERROR("%s Task run failed, opData information is %s.", stageErrInfo.c_str(), GetOpDataInfo(*curTask).c_str());
 }
 
 string TaskExceptionHandlerLite::GetGroupRankInfo(const TaskInfo& taskInfo)

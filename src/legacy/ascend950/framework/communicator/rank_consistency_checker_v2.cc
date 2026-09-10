@@ -121,8 +121,9 @@ bool RankConsistencyCheckerV2::CompareCrcArrayV2(
         if (localArray[i] != remoteArray[i]) {
             const std::string& name = nameSource[i].name;
             HCCL_ERROR(
-                "[RankConsistencyCheckerV2::CompareCheckFrameV2] %s mismatch: [%s], local[%u], remote[%u].",
-                categoryLabel.c_str(), name.c_str(), localArray[i], remoteArray[i]);
+                "[%s][%s] CMD information %s check fail, %s local[%u], remote[%u].", LOG_KEYWORDS_INIT_CHANNEL.c_str(),
+                LOG_KEYWORDS_PARAMETER_CONFLICT.c_str(), categoryLabel.c_str(), name.c_str(), localArray[i],
+                remoteArray[i]);
             RPT_INPUT_ERR(
                 true, "EI0005", std::vector<std::string>({"ccl_op", "group", "para_name", "local_para", "remote_para"}),
                 std::vector<std::string>(
@@ -200,8 +201,8 @@ RankConsistencyCheckerV2::CompareVersionV2(const CheckFrameV2& local, const Chec
             true, "EI0008", std::vector<std::string>({"inconsistent_package", "local_version", "remote_version"}),
             std::vector<std::string>({versionErrMessage[0], versionErrMessage[1], versionErrMessage[2]}));
         HCCL_ERROR(
-            "[RankConsistencyCheckerV2::CompareVersionV2] CANN version mismatch: local[%s], remote[%s].",
-            localVer.c_str(), remoteVer.c_str());
+            "[%s][%s] CANN version mismatch: local[%s], remote[%s].", LOG_KEYWORDS_INIT_CHANNEL.c_str(),
+            LOG_KEYWORDS_VERSION_CONFLICT.c_str(), localVer.c_str(), remoteVer.c_str());
         isDiff = true;
     }
     return HCCL_SUCCESS;

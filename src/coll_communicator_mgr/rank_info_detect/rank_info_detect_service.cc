@@ -20,6 +20,7 @@
 #include "preempt_port_manager_v2.h"
 #include "host_socket_handle_manager.h"
 #include "adapter_error_manager_pub.h"
+#include "hccl_log_keywords.h"
 
 namespace Hccl {
 
@@ -76,7 +77,12 @@ void RankInfoDetectService::GetConnections()
                     "Timeout was set to %lld seconds. expected %u nodes, received %u nodes. "
                     "Check whether worker nodes are reachable and report errors.",
                     static_cast<long long>(timeout.count()), expectedSocketNum + previousRankNum, previousRankNum)}));
-            HCCL_ERROR("[RankInfoDetectService::%s] server get sockets timeout[%lld s]", __func__, timeout);
+            HCCL_ERROR(
+                "[%s][%s] errNo[0x%016llx] topo exchange server get socket timeout[%lld s], "
+                "expected[%u] nodes, received[%u] nodes",
+                LOG_KEYWORDS_INIT_GROUP.c_str(), LOG_KEYWORDS_RANKTABLE_DETECT.c_str(),
+                HCOM_ERROR_CODE(HcclResult::HCCL_E_TIMEOUT), static_cast<long long>(timeout.count()),
+                expectedSocketNum + previousRankNum, previousRankNum);
             break;
         }
 
@@ -114,7 +120,8 @@ void RankInfoDetectService::GetConnections()
                 continue;
             }
             HCCL_ERROR(
-                "[RankInfoDetectService::%s] rank info detect server get socket timeout[%lld s]", __func__, timeout);
+                "[%s][%s] topo exchange server get socket timeout[%lld s]", LOG_KEYWORDS_INIT_GROUP.c_str(),
+                LOG_KEYWORDS_RANKTABLE_DETECT.c_str(), static_cast<long long>(timeout.count()));
             DisplayConnectingStatus(previousRankNum, expectedSocketNum);
             isFirstAcceptTimeOut = true;
         } else {

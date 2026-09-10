@@ -9,16 +9,16 @@
  */
 
 #include "base_config.h"
-
 #include "log.h"
+#include "hccl_log_keywords.h"
 
 namespace hcomm {
 
 // 环境变量错误上报：输出日志 + 上报故障码，返回错误码
 HcclResult ReportEnvError(const char* envName, const std::string& envValue, const std::string& reason)
 {
-    std::string errMsg = std::string("[HCCL_ENV] Env config \"") + envName + "\" value \"" + envValue + "\" " + reason;
-    HCCL_ERROR("%s", errMsg.c_str());
+    std::string errMsg = std::string("Env config \"") + envName + "\" value \"" + envValue + "\" " + reason;
+    HCCL_ERROR("[%s][%s] %s", LOG_KEYWORDS_INIT_GROUP.c_str(), LOG_KEYWORDS_ENV_CONFIG.c_str(), errMsg.c_str());
     RPT_ENV_ERR(
         true, "EI0001", std::vector<std::string>({"value", "env", "expect"}),
         std::vector<std::string>({envValue, envName, errMsg}));

@@ -18,9 +18,11 @@
 #include "env_func.h"
 
 #include "sal.h"
+#include "log.h"
 #include "exception_util.h"
 #include "invalid_params_exception.h"
 #include "adapter_error_manager_pub.h"
+#include "hccl_log_keywords.h"
 
 namespace Hccl {
 
@@ -57,6 +59,10 @@ public:
                 RPT_ENV_ERR(
                     true, "EI0001", std::vector<std::string>({"value", "env", "expect"}),
                     std::vector<std::string>({str, name, e.what()}));
+                HCCL_ERROR(
+                    "[%s][%s] errNo[0x%016llx] Env config \"%s\" value \"%s\" is invalid. %s",
+                    LOG_KEYWORDS_INIT_GROUP.c_str(), LOG_KEYWORDS_ENV_CONFIG.c_str(),
+                    HCOM_ERROR_CODE(HcclResult::HCCL_E_PARA), name.c_str(), str.c_str(), e.what());
                 THROW<InvalidParamsException>(
                     StringFormat("[Init][EnvVarParam]Env config \"%s\" value is invalid.%s", name.c_str(), e.what()));
             } catch (const NotSupportException& e) { // 临时修改方案 HCCL_SOCKET_IFNAME等当前不支持配置 且需要报错
@@ -77,6 +83,10 @@ public:
                 RPT_ENV_ERR(
                     true, "EI0001", std::vector<std::string>({"value", "env", "expect"}),
                     std::vector<std::string>({str, name, e.what()}));
+                HCCL_ERROR(
+                    "[%s][%s] errNo[0x%016llx] Env config \"%s\" value \"%s\" is invalid. %s",
+                    LOG_KEYWORDS_INIT_GROUP.c_str(), LOG_KEYWORDS_ENV_CONFIG.c_str(),
+                    HCOM_ERROR_CODE(HcclResult::HCCL_E_PARA), name.c_str(), str.c_str(), e.what());
                 THROW<InvalidParamsException>(
                     StringFormat("[Init][EnvVarParam]Env config \"%s\" value is invalid.%s", name.c_str(), e.what()));
             }

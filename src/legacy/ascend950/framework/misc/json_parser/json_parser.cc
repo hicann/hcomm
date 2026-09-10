@@ -11,6 +11,7 @@
 #include <climits>
 #include "json_parser.h"
 #include "adapter_error_manager_pub.h"
+#include "hccl_log_keywords.h"
 
 namespace Hccl {
 
@@ -27,6 +28,9 @@ std::string GetJsonProperty(const nlohmann::json& obj, const char* propName, boo
     if (!obj.contains(propName)) {
         RPT_INPUT_ERR(
             true, "EI0017", std::vector<std::string>({"config"}), std::vector<std::string>({std::string(propName)}));
+        HCCL_ERROR(
+            "[%s][%s] errNo[0x%016llx] json object does not contain property[%s]", LOG_KEYWORDS_INIT_GROUP.c_str(),
+            LOG_KEYWORDS_RANKTABLE_CONFIG.c_str(), HCOM_ERROR_CODE(HcclResult::HCCL_E_PARA), propName);
         THROW<InvalidParamsException>(
             StringFormat("[Get][JsonProperty] json object does not contain property[%s].", propName));
     }
@@ -43,6 +47,9 @@ u32 GetJsonPropertyUInt(const nlohmann::json& obj, const char* propName, bool re
     if (!obj.contains(propName)) {
         RPT_INPUT_ERR(
             true, "EI0017", std::vector<std::string>({"config"}), std::vector<std::string>({std::string(propName)}));
+        HCCL_ERROR(
+            "[%s][%s] errNo[0x%016llx] json object does not contain property[%s]", LOG_KEYWORDS_INIT_GROUP.c_str(),
+            LOG_KEYWORDS_RANKTABLE_CONFIG.c_str(), HCOM_ERROR_CODE(HcclResult::HCCL_E_PARA), propName);
         THROW<InvalidParamsException>(
             StringFormat("[Get][JsonPropertyUInt] json object does not contain property[%s].", propName));
     }
@@ -52,6 +59,10 @@ u32 GetJsonPropertyUInt(const nlohmann::json& obj, const char* propName, bool re
         RPT_INPUT_ERR(
             true, "EI0014", std::vector<std::string>({"value", "variable", "expect"}),
             std::vector<std::string>({std::to_string(value), std::string(propName), "0 ~ UINT32_MAX"}));
+        HCCL_ERROR(
+            "[%s][%s] errNo[0x%016llx] json property[%s] value[%lld] should be an unsigned 32-bit integer",
+            LOG_KEYWORDS_INIT_GROUP.c_str(), LOG_KEYWORDS_RANKTABLE_CHECK.c_str(),
+            HCOM_ERROR_CODE(HcclResult::HCCL_E_PARA), propName, value);
         THROW<InvalidParamsException>(StringFormat(
             "[Get][JsonPropertyUInt]errNo[0x%016llx]:json object "
             "property value of Name[%s] should be an unsigned 32-bit integer but actually not!",
@@ -69,6 +80,9 @@ s32 GetJsonPropertySInt(const nlohmann::json& obj, const char* propName, bool re
     if (!obj.contains(propName)) {
         RPT_INPUT_ERR(
             true, "EI0017", std::vector<std::string>({"config"}), std::vector<std::string>({std::string(propName)}));
+        HCCL_ERROR(
+            "[%s][%s] errNo[0x%016llx] json object does not contain property[%s]", LOG_KEYWORDS_INIT_GROUP.c_str(),
+            LOG_KEYWORDS_RANKTABLE_CONFIG.c_str(), HCOM_ERROR_CODE(HcclResult::HCCL_E_PARA), propName);
         THROW<InvalidParamsException>(
             StringFormat("[Get][JsonPropertySInt] json object does not contain property[%s].", propName));
     }
@@ -78,6 +92,10 @@ s32 GetJsonPropertySInt(const nlohmann::json& obj, const char* propName, bool re
         RPT_INPUT_ERR(
             true, "EI0014", std::vector<std::string>({"value", "variable", "expect"}),
             std::vector<std::string>({std::to_string(value), std::string(propName), "0 ~ INT_MAX"}));
+        HCCL_ERROR(
+            "[%s][%s] errNo[0x%016llx] json property[%s] value[%lld] is not a valid signed integer",
+            LOG_KEYWORDS_INIT_GROUP.c_str(), LOG_KEYWORDS_RANKTABLE_CHECK.c_str(),
+            HCOM_ERROR_CODE(HcclResult::HCCL_E_PARA), propName, value);
         THROW<InvalidParamsException>(StringFormat(
             "[Get][JsonPropertySInt]errNo[0x%016llx]:json object "
             "property value of Name[%s] is not signed number!",
@@ -93,6 +111,9 @@ void GetJsonPropertyList(const nlohmann::json& obj, const char* propName, nlohma
     if (!obj.contains(propName)) {
         RPT_INPUT_ERR(
             true, "EI0017", std::vector<std::string>({"config"}), std::vector<std::string>({std::string(propName)}));
+        HCCL_ERROR(
+            "[%s][%s] errNo[0x%016llx] json object does not contain property[%s]", LOG_KEYWORDS_INIT_GROUP.c_str(),
+            LOG_KEYWORDS_RANKTABLE_CONFIG.c_str(), HCOM_ERROR_CODE(HcclResult::HCCL_E_PARA), propName);
         THROW<InvalidParamsException>(
             StringFormat("[Get][JsonPropertyList] json object does not contain property[%s].", propName));
     }
@@ -102,6 +123,10 @@ void GetJsonPropertyList(const nlohmann::json& obj, const char* propName, nlohma
         RPT_INPUT_ERR(
             true, "EI0014", std::vector<std::string>({"value", "variable", "expect"}),
             std::vector<std::string>({std::string(listObj.type_name()), std::string(propName), "array"}));
+        HCCL_ERROR(
+            "[%s][%s] errNo[0x%016llx] json property[%s] is not an array, actual type[%s]",
+            LOG_KEYWORDS_INIT_GROUP.c_str(), LOG_KEYWORDS_RANKTABLE_CHECK.c_str(),
+            HCOM_ERROR_CODE(HcclResult::HCCL_E_PARA), propName, listObj.type_name());
         THROW<InvalidParamsException>(StringFormat(
             "[Get][GetJsonPropertyList]errNo[0x%016llx]:json object "
             "property value of Name \"%s\" is not list!",
@@ -119,6 +144,9 @@ void JsonParser::ParseFileToJson(const std::string& filePath, nlohmann::json& pa
             std::vector<std::string>(
                 {filePath, "The rankTable file path does not exist, the permission is insufficient, or the JSON format "
                            "is incorrect."}));
+        HCCL_ERROR(
+            "[%s][%s] errNo[0x%016llx] path %s is not a valid real path", LOG_KEYWORDS_INIT_GROUP.c_str(),
+            LOG_KEYWORDS_RANKTABLE_CONFIG.c_str(), HCOM_ERROR_CODE(HcclResult::HCCL_E_PARA), filePath.c_str());
         THROW<InvalidParamsException>(StringFormat(
             "[Get][RanktableRealPath]errNo[0x%016llx] path %s is not a valid real path",
             HCOM_ERROR_CODE(HcclResult::HCCL_E_PARA), filePath.c_str()));
@@ -127,6 +155,9 @@ void JsonParser::ParseFileToJson(const std::string& filePath, nlohmann::json& pa
     HCCL_INFO("waiting for json file load complete");
     std::ifstream infoFile(resolvedPath, std::ifstream::in);
     if (!infoFile) {
+        HCCL_ERROR(
+            "[%s][%s] errNo[0x%016llx] open file %s failed", LOG_KEYWORDS_INIT_GROUP.c_str(),
+            LOG_KEYWORDS_RANKTABLE_CONFIG.c_str(), HCOM_ERROR_CODE(HcclResult::HCCL_E_OPEN_FILE_FAILURE), resolvedPath);
         THROW<InternalException>(StringFormat(
             "[Read][File]errNo[0x%016llx],open file %s failed", HCOM_ERROR_CODE(HcclResult::HCCL_E_OPEN_FILE_FAILURE),
             resolvedPath));

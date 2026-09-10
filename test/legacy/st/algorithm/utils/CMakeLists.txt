@@ -32,6 +32,7 @@ set(include_list
     ${HCOMM_CODE_LEGACY}/common/exception
     ${HCOMM_CODE_LEGACY}/include
     ${HCOMM_ROOT_PATH}/src/legacy/ascend910/pub_inc
+    ${HCOMM_ROOT_PATH}/src/base_comm/common
     ${HCOMM_DIR}/src/legacy/ascend910/common/error_manager
     ${HCOMM_DIR}/src/legacy/ascend910/pub_inc/new
     ${HCOMM_DIR}/src/legacy/ascend910/common

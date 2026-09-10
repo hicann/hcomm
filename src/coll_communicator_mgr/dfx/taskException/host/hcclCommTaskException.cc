@@ -85,7 +85,9 @@ std::string AicpuGetAndPrintClusterMonitorErr(const rtExceptionInfo* exceptionIn
         }
 
         for (int i = 0; i < errSize; i++) {
-            HCCL_ERROR("%s", errStatusVec[i].c_str());
+            HCCL_ERROR(
+                "[%s][%s][%s] %s", LOG_KEYWORDS_TASK_EXEC.c_str(), LOG_KEYWORDS_RUN_FAILED.c_str(),
+                LOG_KEYWORDS_AICPU.c_str(), errStatusVec[i].c_str());
             if (i < maxListSize) {
                 errMsg += ("\t" + errStatusVec[i] + "\n");
             }
@@ -475,10 +477,20 @@ void TaskExceptionHost::ProcessException(rtExceptionInfo_t* exceptionInfo, const
 
 void TaskExceptionHost::HandleHostErrorReport(rtExceptionInfo_t* exceptionInfo, const Hccl::TaskInfo& taskInfo) const
 {
-    HCCL_ERROR("[TaskExceptionHost][%s]Task from HCCL run failed.", __func__);
+    const auto& logKeywordL2 = taskInfo.taskParam_.taskType == Hccl::TaskParamType::TASK_NOTIFY_WAIT ?
+                                   LOG_KEYWORDS_TIMEOUT :
+                                   LOG_KEYWORDS_RUN_FAILED;
+    std::string logKeywordL3 = LOG_KEYWORDS_HOST;
+    if (taskInfo.taskParam_.taskType == Hccl::TaskParamType::TASK_AIV) {
+        logKeywordL3 = LOG_KEYWORDS_AIV;
+    } else if (taskInfo.taskParam_.taskType == Hccl::TaskParamType::TASK_CCU) {
+        logKeywordL3 = LOG_KEYWORDS_CCU;
+    }
+    auto stageErrInfo = "[" + LOG_KEYWORDS_TASK_EXEC + "][" + logKeywordL2 + "][" + logKeywordL3 + "]";
+    HCCL_ERROR("%s Task from HCCL run failed.", stageErrInfo.c_str());
     if (taskInfo.taskParam_.taskType == Hccl::TaskParamType::TASK_NOTIFY_WAIT) {
         if (ShouldReportError()) {
-            PrintTaskContextInfo(exceptionInfo->deviceid, exceptionInfo->streamid, exceptionInfo->taskid);
+            PrintTaskContextInfo(exceptionInfo->deviceid, exceptionInfo->streamid, exceptionInfo->taskid, stageErrInfo);
             RPT_INPUT_ERR(
                 true, "EI0002",
                 std::vector<std::string>(
@@ -492,14 +504,17 @@ void TaskExceptionHost::HandleHostErrorReport(rtExceptionInfo_t* exceptionInfo, 
     }
     std::string clusterMonitorErrMsg = AicpuGetAndPrintClusterMonitorErr(exceptionInfo);
     HCCL_ERROR(
-        "[TaskExceptionHost]Task run failed, base information is deviceID:[%u], %s.", exceptionInfo->deviceid,
+        "%s Task run failed, base information is deviceID:[%u], %s.", stageErrInfo.c_str(), exceptionInfo->deviceid,
         taskInfo.GetIndopBaseInfo().c_str());
-    HCCL_ERROR("[TaskExceptionHost]Task run failed, para information is %s.", taskInfo.GetParaInfo().c_str());
-    HCCL_ERROR("[TaskExceptionHost]Task run failed, groupRank information is %s.", GetGroupRankInfo(taskInfo).c_str());
-    HCCL_ERROR("[TaskExceptionHost]Task run failed, opData information is %s.", taskInfo.GetIndopDataInfo().c_str());
+    HCCL_ERROR("%s Task run failed, para information is %s.", stageErrInfo.c_str(), taskInfo.GetParaInfo().c_str());
+    HCCL_ERROR(
+        "%s Task run failed, groupRank information is %s.", stageErrInfo.c_str(), GetGroupRankInfo(taskInfo).c_str());
+    HCCL_ERROR(
+        "%s Task run failed, opData information is %s.", stageErrInfo.c_str(), taskInfo.GetIndopDataInfo().c_str());
 }
 
-void TaskExceptionHost::PrintTaskContextInfo(uint32_t deviceId, uint32_t streamId, uint32_t taskId) const
+void TaskExceptionHost::PrintTaskContextInfo(
+    uint32_t deviceId, uint32_t streamId, uint32_t taskId, const std::string& stageErrInfo) const
 {
     Hccl::TaskInfoQueue* queue = nullptr;
     try {
@@ -537,10 +552,12 @@ void TaskExceptionHost::PrintTaskContextInfo(uint32_t deviceId, uint32_t streamI
         taskContext.emplace_back((**taskIterPtr).get());
     }
 
-    HCCL_ERROR("[TaskExceptionHost]Task run failed, context sequence before error task is "
-               "[SDMA:M(rank), RDMA:RS(rank,id), SendPayload:SP(rank), InlineReduce:IR(rank), Reduce:R(rank), "
-               "NotifyRecord:NR(rank,id), NotifyWait:NW(rank,id), SendNotify:SN(rank,id), "
-               "WriteWithNotify:WN(rank,id), WriteReduceWithNotify:WRN(rank,id)]:");
+    HCCL_ERROR(
+        "%s Task run failed, context sequence before error task is "
+        "[SDMA:M(rank), RDMA:RS(rank,id), SendPayload:SP(rank), InlineReduce:IR(rank), Reduce:R(rank), "
+        "NotifyRecord:NR(rank,id), NotifyWait:NW(rank,id), SendNotify:SN(rank,id), "
+        "WriteWithNotify:WN(rank,id), WriteReduceWithNotify:WRN(rank,id)]:",
+        stageErrInfo.c_str());
 
     std::string taskContextInfo = "";
     for (auto it = taskContext.rbegin(); it != taskContext.rend(); ++it) {
@@ -548,33 +565,33 @@ void TaskExceptionHost::PrintTaskContextInfo(uint32_t deviceId, uint32_t streamI
         conciseInfo += ",";
 
         if (taskContextInfo.size() + conciseInfo.size() >= TASK_CONTEXT_INFO_SIZE) {
-            HCCL_ERROR("[TaskExceptionHost]%s", taskContextInfo.c_str());
+            HCCL_ERROR("%s %s", stageErrInfo.c_str(), taskContextInfo.c_str());
             taskContextInfo = "";
         }
 
         taskContextInfo += conciseInfo;
     }
-    HCCL_ERROR("[TaskExceptionHost]%s end.", taskContextInfo.c_str());
+    HCCL_ERROR("%s %s end.", stageErrInfo.c_str(), taskContextInfo.c_str());
 }
 
 inline void PrintBaseErrorLog(const std::string& stageErrInfo, const std::string& baseInfo)
 {
-    HCCL_ERROR("%sTask run failed, base information is %s", stageErrInfo.c_str(), baseInfo.c_str());
+    HCCL_ERROR("%s Task run failed, base information is %s", stageErrInfo.c_str(), baseInfo.c_str());
 }
 
 inline void PrintParaErrorLog(const std::string& stageErrInfo, const std::string& paraInfoStr)
 {
-    HCCL_ERROR("%sTask run failed, para information is %s.", stageErrInfo.c_str(), paraInfoStr.c_str());
+    HCCL_ERROR("%s Task run failed, para information is %s.", stageErrInfo.c_str(), paraInfoStr.c_str());
 }
 
 inline void PrintOpDataErrorLog(const std::string& stageErrInfo, const std::string& opDataContent)
 {
-    HCCL_ERROR("%sTask run failed, opData information is %s", stageErrInfo.c_str(), opDataContent.c_str());
+    HCCL_ERROR("%s Task run failed, opData information is %s", stageErrInfo.c_str(), opDataContent.c_str());
 }
 
 inline void PrintGroupErrorLog(const std::string& stageErrInfo, const std::string& groupRankContent)
 {
-    HCCL_ERROR("%sTask run failed, groupRank information is %s.", stageErrInfo.c_str(), groupRankContent.c_str());
+    HCCL_ERROR("%s Task run failed, groupRank information is %s.", stageErrInfo.c_str(), groupRankContent.c_str());
 }
 
 void TaskExceptionHost::PrintGroupErrorMessage(
@@ -681,7 +698,8 @@ void TaskExceptionHost::PrintOpDataErrorMessage(
 
 void TaskExceptionHost::ReportErrorMsg(
     const Hccl::TaskInfo& exceptionTaskInfo, [[maybe_unused]] const std::string& groupRankContent,
-    const Hccl::ErrorMessageReport& errorMessage, rtExceptionInfo_t* exceptionInfo) const
+    const Hccl::ErrorMessageReport& errorMessage, rtExceptionInfo_t* exceptionInfo,
+    const std::string& stageErrInfo) const
 {
     HCCL_RUN_INFO(
         "[ReportErrorMsg] start, taskType[%s]",
@@ -709,7 +727,7 @@ void TaskExceptionHost::ReportErrorMsg(
         || exceptionTaskInfo.taskParam_.taskType == Hccl::TaskParamType::TASK_UB_INLINE_WRITE
         || exceptionTaskInfo.taskParam_.taskType == Hccl::TaskParamType::TASK_UB_REDUCE_INLINE
         || exceptionTaskInfo.taskParam_.taskType == Hccl::TaskParamType::TASK_UB) {
-        ReportEI0018Error(exceptionTaskInfo, errorMessage);
+        ReportEI0018Error(exceptionTaskInfo, errorMessage, stageErrInfo);
     }
 }
 
@@ -724,7 +742,8 @@ bool TaskExceptionHost::ShouldReportError() const
 }
 
 void TaskExceptionHost::ReportEI0018Error(
-    const Hccl::TaskInfo& exceptionTaskInfo, const Hccl::ErrorMessageReport& errorMessage) const
+    const Hccl::TaskInfo& exceptionTaskInfo, const Hccl::ErrorMessageReport& errorMessage,
+    const std::string& stageErrInfo) const
 {
     hccl::CollComm* collComm = static_cast<hccl::CollComm*>(exceptionTaskInfo.dfxOpInfo_->comm_);
     std::string localServerId = "";
@@ -737,7 +756,6 @@ void TaskExceptionHost::ReportEI0018Error(
     GetAicpuCqeErrRemoteLocalIdByRankId(collComm, errorMessage.remoteUserRank, remoteDeviceId);
     Hccl::IpAddress localAddr(errorMessage.locEid);
     Hccl::IpAddress remoteAddr(errorMessage.rmtEid);
-    HCCL_ERROR("[ReportErrorMsg] EI0018");
     RPT_INPUT_ERR(
         true, "EI0018",
         std::vector<std::string>(
@@ -745,6 +763,11 @@ void TaskExceptionHost::ReportEI0018Error(
         std::vector<std::string>(
             {localServerId, std::to_string(localDeviceId), localAddr.GetReverseEid().Describe().c_str(), remoteServerId,
              std::to_string(remoteDeviceId), remoteAddr.GetReverseEid().Describe().c_str()}));
+    HCCL_ERROR(
+        "%s UB CQE error, localServerId[%s] deviceId[%u] ip[%s], "
+        "remoteServerId[%s] deviceId[%u] ip[%s]",
+        stageErrInfo.c_str(), localServerId.c_str(), localDeviceId, localAddr.GetReverseEid().Describe().c_str(),
+        remoteServerId.c_str(), remoteDeviceId, remoteAddr.GetReverseEid().Describe().c_str());
 }
 
 void GetTaskParam(Hccl::TaskParam& taskParam, const Hccl::ErrorMessageReport& errMsgInfo)
@@ -816,12 +839,11 @@ void TaskExceptionHost::HandleAicpuErrorReport(
     dfxOpInfo->tag_ = tag;
     dfxOpInfo->comm_ = taskInfo.dfxOpInfo_->comm_;
     Hccl::TaskInfo exceptionTaskInfo(streamId, errorMessage.taskId, errorMessage.remoteUserRank, taskParam, dfxOpInfo);
-    auto logKeywordL2 = exceptionTaskInfo.taskParam_.taskType == Hccl::TaskParamType::TASK_NOTIFY_WAIT ?
-                            Hccl::LOG_KEYWORDS_TIMEOUT :
-                            Hccl::LOG_KEYWORDS_RUN_FAILED;
-    auto stageErrInfo
-        = "[" + Hccl::LOG_KEYWORDS_TASK_EXEC + "][" + logKeywordL2 + "][" + Hccl::LOG_KEYWORDS_AICPU + "]";
-    HCCL_ERROR("%sTask from HCCL run failed.", stageErrInfo.c_str());
+    const auto& logKeywordL2 = exceptionTaskInfo.taskParam_.taskType == Hccl::TaskParamType::TASK_NOTIFY_WAIT ?
+                                   LOG_KEYWORDS_TIMEOUT :
+                                   LOG_KEYWORDS_RUN_FAILED;
+    auto stageErrInfo = "[" + LOG_KEYWORDS_TASK_EXEC + "][" + logKeywordL2 + "][" + LOG_KEYWORDS_AICPU + "]";
+    HCCL_ERROR("%s Task from HCCL run failed.", stageErrInfo.c_str());
     // 防止tag字符串过长， 信息分开打印
     PrintBaseErrorLog(stageErrInfo, exceptionTaskInfo.GetIndopBaseInfo());
     PrintParaErrorLog(stageErrInfo, exceptionTaskInfo.GetParaInfo());
@@ -833,7 +855,7 @@ void TaskExceptionHost::HandleAicpuErrorReport(
 
     // 打印UB DFX寄存器信息
     PrintUbDfxInfo(exceptionInfo, errorMessage);
-    ReportErrorMsg(exceptionTaskInfo, groupRankContent, errorMessage, exceptionInfo);
+    ReportErrorMsg(exceptionTaskInfo, groupRankContent, errorMessage, exceptionInfo, stageErrInfo);
     if (errorMessage.ubCqeStatus != 0) {
         GetAicpuCqeErrInfo(exceptionInfo, errorMessage, taskInfo);
     }

@@ -23,6 +23,7 @@
 #include "error_message_v2.h"
 #include "orion_adapter_hccp.h"
 #include "rdma_handle_manager.h"
+#include "hccl_log_keywords.h"
 
 namespace Hccl {
 using GetAicpuTaskExceptionCallBack = std::function<ErrorMessageReport()>;
@@ -43,7 +44,8 @@ public:
 private:
     static std::string GetGroupRankInfo(const TaskInfo& taskInfo);
     static void ProcessException(rtExceptionInfo_t* exceptionInfo, const TaskInfo& taskInfo);
-    static void PrintTaskContextInfo(uint32_t deviceId, uint32_t streamId, uint32_t taskId);
+    static void
+    PrintTaskContextInfo(uint32_t deviceId, uint32_t streamId, uint32_t taskId, const std::string& stageErrInfo);
     static void ProcessCcuMC2Exception(rtExceptionInfo_t* exceptionInfo);
     static std::vector<CcuTaskParam> GetMC2AlgTaskParam(const TaskInfo& taskInfo);
     static void ProcessCcuException(const rtExceptionInfo_t* exceptionInfo, const TaskInfo& taskInfo);
@@ -116,10 +118,6 @@ RegisterGetAicpuTaskExceptionCallBackV2(s32 streamId, u32 deviceLogicId, Hccl::G
 }
 #endif // __cplusplus
 
-const std::string LOG_KEYWORDS_TIMEOUT = "Timeout";         // 算子执行阶段超时
-const std::string LOG_KEYWORDS_RUN_FAILED = "RunFailed";    // 算子执行阶段失败，如SDMA ERROR
-const std::string LOG_KEYWORDS_TASK_EXEC = "TaskExecStage"; // 算子执行阶段异常
-const std::string LOG_KEYWORDS_AICPU = "AICPU";
 } // namespace Hccl
 
 #endif // HCCL_TASK_EXCEPTION_HANDLER_H

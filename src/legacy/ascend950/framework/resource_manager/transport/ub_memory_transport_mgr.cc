@@ -12,6 +12,7 @@
 #include "timeout_exception.h"
 #include "communicator_impl.h"
 #include "adapter_error_manager_pub.h"
+#include "hccl_log_keywords.h"
 
 namespace Hccl {
 
@@ -135,6 +136,10 @@ void UbMemoryTransportMgr::WaitTransportsReady(vector<std::pair<UbMemoryTranspor
                 RPT_INPUT_ERR(
                     true, "EI0006", std::vector<std::string>({"reason"}),
                     std::vector<std::string>({"UbMemoryTransport wait SOCKET_TIMEOUT."}));
+                HCCL_ERROR(
+                    "[%s][%s] wait socket establish timeout, UbMemoryTransport wait SOCKET_TIMEOUT, "
+                    "commId[%s].",
+                    LOG_KEYWORDS_INIT_CHANNEL.c_str(), LOG_KEYWORDS_TIMEOUT.c_str(), comm->GetId().c_str());
                 THROW<TimeoutException>(StringFormat(
                     "[UbMemoryTransportMgr][%s] [UbMemoryTransport]%s [LinkData]%s "
                     "socket timeout, commId[%s], please check",
@@ -150,6 +155,10 @@ void UbMemoryTransportMgr::WaitTransportsReady(vector<std::pair<UbMemoryTranspor
             RPT_INPUT_ERR(
                 true, "EI0006", std::vector<std::string>({"reason"}),
                 std::vector<std::string>({"UbMemoryTransportMgr wait transports ready timeout."}));
+            HCCL_ERROR(
+                "[%s][%s] wait socket establish timeout, UbMemoryTransportMgr wait transports ready timeout, "
+                "commId[%s].",
+                LOG_KEYWORDS_INIT_CHANNEL.c_str(), LOG_KEYWORDS_TIMEOUT.c_str(), comm->GetId().c_str());
             THROW<InternalException>(
                 "UbMemoryTransportMgr::WaitTransportReady timeout, commId[%s]", comm->GetId().c_str());
         }

@@ -12,6 +12,7 @@
 #include "aiv_ins.h"
 #include "env_config_v2.h"
 #include "local_rma_buf_manager.h"
+#include "hccl_log_keywords.h"
 
 namespace Hccl {
 
@@ -110,6 +111,9 @@ void AivInsPreprocessor::BatchBuildUrmaTransports(const vector<LinkData>& links)
             RPT_INPUT_ERR(
                 true, "EI0006", std::vector<std::string>({"reason"}),
                 std::vector<std::string>({"Aiv urma wait transports ready timeout."}));
+            HCCL_ERROR(
+                "[%s][%s] wait socket establish timeout, Aiv urma wait transports ready timeout, commId[%s].",
+                LOG_KEYWORDS_INIT_CHANNEL.c_str(), LOG_KEYWORDS_TIMEOUT.c_str(), comm->GetId().c_str());
             THROW<InternalException>("Aiv WaitTransportReady timeout, commId[%s].", comm->GetId().c_str());
             break;
         }

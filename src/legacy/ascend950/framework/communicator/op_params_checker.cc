@@ -16,6 +16,7 @@
 #include "string_util.h"
 #include "exception_util.h"
 #include "adapter_error_manager_pub.h"
+#include "hccl_log_keywords.h"
 
 namespace Hccl {
 
@@ -56,6 +57,9 @@ static void ReportOpTypeErrMsg(const std::string& callName, OpType opType)
     RPT_INPUT_ERR(
         true, "EI0003", std::vector<std::string>({"ccl_op", "value", "parameter", "expect"}),
         std::vector<std::string>({callName, opType.Describe(), "opType", "please check opType that is not supported"}));
+    HCCL_ERROR(
+        "[%s][%s] unsupported opType [%s].", LOG_KEYWORDS_TASK_EXEC.c_str(), LOG_KEYWORDS_INVALID_ARGUMENT.c_str(),
+        opType.Describe().c_str());
 }
 
 static void ReportInputDataTypeMC2HighPErrMsg(const std::string& callName, OpType opType, DataType inputDataType)
@@ -65,6 +69,9 @@ static void ReportInputDataTypeMC2HighPErrMsg(const std::string& callName, OpTyp
         std::vector<std::string>(
             {callName, "[" + opType.Describe() + "][" + inputDataType.Describe() + "]", "[opType][dataType]",
              "FP32,FP16,BF16,UINT8,INT16,INT32"}));
+    HCCL_ERROR(
+        "[%s][%s] opType [%s] not support data type [%s].", LOG_KEYWORDS_TASK_EXEC.c_str(),
+        LOG_KEYWORDS_INVALID_ARGUMENT.c_str(), opType.Describe().c_str(), inputDataType.Describe().c_str());
 }
 
 static void ReportInputDataTypeMC2LowPErrMsg(const std::string& callName, OpType opType, DataType inputDataType)
@@ -74,6 +81,9 @@ static void ReportInputDataTypeMC2LowPErrMsg(const std::string& callName, OpType
         std::vector<std::string>(
             {callName, "[" + opType.Describe() + "][" + inputDataType.Describe() + "]", "[opType][inputDataType]",
              "Mc2LowP input:HIF8,E4M3,E5M2,INT8"}));
+    HCCL_ERROR(
+        "[%s][%s] Mc2LowP opType [%s] not support input data type [%s].", LOG_KEYWORDS_TASK_EXEC.c_str(),
+        LOG_KEYWORDS_INVALID_ARGUMENT.c_str(), opType.Describe().c_str(), inputDataType.Describe().c_str());
 }
 
 static void ReportOutputDataTypeMC2LowPErrMsg(const std::string& callName, OpType opType, DataType outputDataType)
@@ -83,6 +93,9 @@ static void ReportOutputDataTypeMC2LowPErrMsg(const std::string& callName, OpTyp
         std::vector<std::string>(
             {callName, "[" + opType.Describe() + "][" + outputDataType.Describe() + "]", "[opType][outputDataType]",
              "Mc2LowP output:FP32,FP16,BF16"}));
+    HCCL_ERROR(
+        "[%s][%s] Mc2LowP opType [%s] not support output data type [%s].", LOG_KEYWORDS_TASK_EXEC.c_str(),
+        LOG_KEYWORDS_INVALID_ARGUMENT.c_str(), opType.Describe().c_str(), outputDataType.Describe().c_str());
 }
 
 static void ReportDataTypeNotTheSameErrMsg(
@@ -94,6 +107,10 @@ static void ReportDataTypeNotTheSameErrMsg(
             {callName,
              "[" + opType.Describe() + "][" + inputDataType.Describe() + "and" + outputDataType.Describe() + "]",
              "[opType][inputDataType and outputDataType]", "should be same"}));
+    HCCL_ERROR(
+        "[%s][%s] opType [%s] inputDataType [%s] != outputDataType [%s].", LOG_KEYWORDS_TASK_EXEC.c_str(),
+        LOG_KEYWORDS_INVALID_ARGUMENT.c_str(), opType.Describe().c_str(), inputDataType.Describe().c_str(),
+        outputDataType.Describe().c_str());
 }
 
 HcclResult OpParamsChecker::CheckOpDataTypeMC2(const Mc2CommConfig& config)
@@ -249,9 +266,10 @@ static void ReportErrMsg(const CollOpParams& opParams, DataType dtype)
             {"CheckOpDataTypeByMap", "[" + opParams.opType.Describe() + "][" + dtype.Describe() + "]",
              "[opType][dataType]", "please check DataType that is not supported"}));
     HCCL_ERROR(
-        "[OpParamsChecker::CheckOpDataTypeByMap] opType [%s] with not support data type [%s], please check input "
+        "[%s][%s] opType [%s] with not support data type [%s], please check input "
         "opParam.",
-        opParams.opType.Describe().c_str(), dtype.Describe().c_str());
+        LOG_KEYWORDS_TASK_EXEC.c_str(), LOG_KEYWORDS_INVALID_ARGUMENT.c_str(), opParams.opType.Describe().c_str(),
+        dtype.Describe().c_str());
 }
 
 HcclResult OpParamsChecker::CheckOpDataTypeByMap(const CollOpParams& opParams, const DataTypeSupportMap& opData2TypeMap)
@@ -264,8 +282,8 @@ HcclResult OpParamsChecker::CheckOpDataTypeByMap(const CollOpParams& opParams, c
                 {"CheckOpDataTypeByMap", opParams.opType.Describe(), "opType",
                  "please check opType that is not supported"}));
         HCCL_ERROR(
-            "[OpParamsChecker::%s] invalid opType [%s], please check input opParam.", __func__,
-            opParams.opType.Describe().c_str());
+            "[%s][%s] invalid opType [%s], please check input opParam.", LOG_KEYWORDS_TASK_EXEC.c_str(),
+            LOG_KEYWORDS_INVALID_ARGUMENT.c_str(), opParams.opType.Describe().c_str());
         return HcclResult::HCCL_E_PARA;
     }
     bool checkResult = false;

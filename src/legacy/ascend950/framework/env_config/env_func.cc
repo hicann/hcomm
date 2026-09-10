@@ -22,6 +22,7 @@
 #include "base_config_legacy.h"
 #include "orion_adapter_rts.h"
 #include "adapter_error_manager_pub.h"
+#include "hccl_log_keywords.h"
 
 namespace Hccl {
 
@@ -268,7 +269,9 @@ void CheckRDMATrafficClass(const u32& rdmaTrafficClass)
             true, "EI0001", std::vector<std::string>({"value", "env", "expect"}),
             std::vector<std::string>(
                 {std::to_string(rdmaTrafficClass), "HCCL_RDMA_TC", "value should be multiple of four"}));
-        HCCL_ERROR("rdmaTrafficClass[%u] is not a multiple of [%u]", rdmaTrafficClass, HCCL_RDMA_TC_BASE);
+        HCCL_ERROR(
+            "[%s][%s] errNo[0x%016llx] rdmaTrafficClass[%u] is not a multiple of [%u]", LOG_KEYWORDS_INIT_GROUP.c_str(),
+            LOG_KEYWORDS_ENV_CONFIG.c_str(), HCOM_ERROR_CODE(HCCL_E_PARA), rdmaTrafficClass, HCCL_RDMA_TC_BASE);
         THROW<InvalidParamsException>(
             StringFormat("rdmaTrafficClass[%u] is not a multiple of [%u]", rdmaTrafficClass, HCCL_RDMA_TC_BASE));
     }

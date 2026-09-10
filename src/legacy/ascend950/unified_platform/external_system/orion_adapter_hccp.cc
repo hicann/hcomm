@@ -24,6 +24,7 @@
 #include "hccp_common.h"
 #include "exception_util.h"
 #include "adapter_error_manager_pub.h"
+#include "hccl_log_keywords.h"
 
 using namespace std;
 
@@ -390,8 +391,16 @@ static void ReportAddrInUseError(const IpAddress& localIp, u32 port, HrtNetworkM
                          + std::to_string(port) + " have already been bound.";
     if (netMode == HrtNetworkMode::PEER) {
         RPT_INPUT_ERR(true, "EI0019", std::vector<std::string>({"reason"}), std::vector<std::string>({errMsg}));
+        HCCL_ERROR(
+            "[%s][%s] socket type[0], %s Please check the port status and whether the port is being used by other "
+            "process.",
+            LOG_KEYWORDS_INIT_CHANNEL.c_str(), LOG_KEYWORDS_RESOURCE.c_str(), errMsg.c_str());
     } else {
         RPT_INPUT_ERR(true, "EI0020", std::vector<std::string>({"reason"}), std::vector<std::string>({errMsg}));
+        HCCL_ERROR(
+            "[%s][%s] socket type[1], %s Please check the port status and whether the port is being used by other "
+            "process.",
+            LOG_KEYWORDS_INIT_CHANNEL.c_str(), LOG_KEYWORDS_RESOURCE.c_str(), errMsg.c_str());
     }
 }
 
@@ -1143,6 +1152,12 @@ RdmaHandle HrtRaRdmaInit(HrtNetworkMode netMode, RaInterface& in)
     RPT_INPUT_ERR(
         ret == HCCP_ELINKDOWN, "EI0009", vector<string>({"device_id", "reason"}),
         vector<string>({std::to_string(rdevInfo.phyId), "The network port is down"}));
+    if (ret == HCCP_ELINKDOWN) {
+        HCCL_ERROR(
+            "[%s][%s] errNo[0x%016llx] rdma init fail, device[%u] network port is down.",
+            LOG_KEYWORDS_INIT_GROUP.c_str(), LOG_KEYWORDS_RUN_FAILED.c_str(),
+            HCCL_ERROR_CODE(HcclResult::HCCL_E_NETWORK), rdevInfo.phyId);
+    }
     if (ret != 0 || (rdmaHandle == nullptr)) {
         MACRO_THROW(
             NetworkApiException, StringFormat(
@@ -1231,6 +1246,11 @@ QpHandle HrtRaQpCreate(RdmaHandle rdmaHandle, int flag, int qpMode)
             ret == ROCE_ENOMEM_RET, "EI0011",
             std::vector<std::string>({"memory_size"}), // A3是当ROCE_ENOMEM_RET才上报EI0011,内存大小取决于qp深度配置
             std::vector<std::string>({"262144~3145728"}));
+        HCCL_ERROR(
+            "[%s][%s] errNo[0x%016llx] ra qp create fail, return[%d], rdmaHandle[%p], flag[%d], qpMode[%d], "
+            "connHandle[%p]",
+            LOG_KEYWORDS_INIT_CHANNEL.c_str(), LOG_KEYWORDS_RESOURCE.c_str(),
+            HCCL_ERROR_CODE(HcclResult::HCCL_E_NETWORK), ret, rdmaHandle, flag, qpMode, connHandle);
         MACRO_THROW(
             NetworkApiException,
             StringFormat(
@@ -2860,6 +2880,13 @@ HcclResult HrtRaNormalQpCreate(RdmaHandle rdmaHandle, QpInfo& qp)
         ret == ROCE_ENOMEM_RET, "EI0011",
         std::vector<std::string>({"memory_size"}), // A3是当ROCE_ENOMEM_RET才上报EI0011,内存大小取决于qp深度配置
         std::vector<std::string>({"262144~3145728"}));
+    if (ret == ROCE_ENOMEM_RET) {
+        HCCL_ERROR(
+            "[%s][%s] errNo[0x%016llx] RaNormalQpCreate fail due to insufficient memory, "
+            "return[%d], rdmaHandle[%p], context[%p]",
+            LOG_KEYWORDS_INIT_CHANNEL.c_str(), LOG_KEYWORDS_RESOURCE.c_str(),
+            HCCL_ERROR_CODE(HcclResult::HCCL_E_NETWORK), ret, rdmaHandle, qp.context);
+    }
     CHK_PRT_RET(
         ret != 0,
         HCCL_ERROR(

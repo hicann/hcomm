@@ -15,6 +15,7 @@
 #include "../../../../../legacy/ascend950/unified_platform/resource/mem/user_remote_mem_getter.h"
 
 #include "env_config/env_config_v2.h"
+#include "hccl_log_keywords.h"
 
 namespace hcomm {
 
@@ -888,8 +889,9 @@ HcclResult CcuTransport::CheckSocketStatus()
                 = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - startTime)
                       .count();
             HCCL_ERROR(
-                "[CcuTransport][%s] channel connect timeout after %lld sec, elapsed[%lld]ms, retryCount[%u]", __func__,
-                timeout.count(), elapsed, retryCount);
+                "[%s][%s] wait socket establish timeout, channel connect timeout after %lld sec, "
+                "elapsed[%lld]ms, retryCount[%u]",
+                LOG_KEYWORDS_INIT_CHANNEL.c_str(), LOG_KEYWORDS_TIMEOUT.c_str(), timeout.count(), elapsed, retryCount);
             return HCCL_E_TIMEOUT;
         }
         EXCEPTION_HANDLE_END

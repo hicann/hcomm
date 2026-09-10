@@ -12,6 +12,7 @@
 #include "communicator_impl.h"
 #include "env_config_v2.h"
 #include "dlprof_function_v2.h"
+#include "hccl_log_keywords.h"
 namespace Hccl {
 
 constexpr u32 ADDR_SIZE = 2;
@@ -224,7 +225,9 @@ void CollServiceBase::WaitOpbasedTransportReady() const
         if ((std::chrono::steady_clock::now() - startTime) >= timeout) {
             string timeoutMsg = StringFormat("WaitOpbasedTransportReady timeout, commId[%s].", comm->GetId().c_str());
             RPT_INPUT_ERR(true, "EI0006", std::vector<std::string>({"reason"}), std::vector<std::string>({timeoutMsg}));
-            HCCL_ERROR(timeoutMsg.c_str());
+            HCCL_ERROR(
+                "[%s][%s] wait socket establish timeout, %s", LOG_KEYWORDS_INIT_CHANNEL.c_str(),
+                LOG_KEYWORDS_TIMEOUT.c_str(), timeoutMsg.c_str());
             comm->GetMemTransportManager()->DumpNotReadyTransportsOpbased();
             THROW<InternalException>(timeoutMsg);
         }
@@ -248,7 +251,9 @@ void CollServiceBase::WaitOffloadTransportReady(const std::string& opTag) const
             string timeoutMsg = StringFormat(
                 "WaitOffloadTransportReady timeout, opTag[%s] commId[%s].", opTag.c_str(), comm->GetId().c_str());
             RPT_INPUT_ERR(true, "EI0006", std::vector<std::string>({"reason"}), std::vector<std::string>({timeoutMsg}));
-            HCCL_ERROR(timeoutMsg.c_str());
+            HCCL_ERROR(
+                "[%s][%s] wait socket establish timeout, %s", LOG_KEYWORDS_INIT_CHANNEL.c_str(),
+                LOG_KEYWORDS_TIMEOUT.c_str(), timeoutMsg.c_str());
             comm->GetMemTransportManager()->DumpNotReadyTransportsOffload(opTag);
             THROW<InternalException>(timeoutMsg);
         }
@@ -279,6 +284,9 @@ void CollServiceBase::WaitTransportReady(const std::string& opTag) const
             RPT_INPUT_ERR(
                 true, "EI0006", std::vector<std::string>({"reason"}),
                 std::vector<std::string>({"WaitTransportReady timeout, SOCKET_TIMEOUT."}));
+            HCCL_ERROR(
+                "[%s][%s] wait socket establish timeout, WaitTransportReady timeout, opTag[%s] commId[%s].",
+                LOG_KEYWORDS_INIT_CHANNEL.c_str(), LOG_KEYWORDS_TIMEOUT.c_str(), opTag.c_str(), comm->GetId().c_str());
             THROW<InternalException>(
                 "WaitTransportReady timeout, opTag[%s] commId[%s].", opTag.c_str(), comm->GetId().c_str());
         }

@@ -29,6 +29,7 @@
 #include "bootstrap_ip.h"
 #include "preempt_port_manager_v2.h"
 #include "adapter_error_manager_pub.h"
+#include "hccl_log_keywords.h"
 
 namespace Hccl {
 
@@ -407,6 +408,12 @@ void RankInfoDetect::WaitComplete(u32 listenPort, u32 listenStatus) const
                         "after %lld seconds. Timeout was set to %lld seconds. Check whether node %s reports an error.",
                         static_cast<long long>(elapsed.count()), static_cast<long long>(timeout.count()),
                         identifier_.c_str())}));
+                HCCL_ERROR(
+                    "[%s][%s] errNo[0x%016llx] topo exchange server get socket timeout, listenPort[%u], "
+                    "elapsed[%lld s] > timeout[%lld s], identifier[%s]",
+                    LOG_KEYWORDS_INIT_GROUP.c_str(), LOG_KEYWORDS_RANKTABLE_DETECT.c_str(),
+                    HCOM_ERROR_CODE(HcclResult::HCCL_E_TIMEOUT), listenPort, static_cast<long long>(elapsed.count()),
+                    static_cast<long long>(timeout.count()), identifier_.c_str());
                 THROW<TimeoutException>(StringFormat(
                     "[RankInfoDetect::%s] wait port[%u] complete timeout[%lld s]", __func__, listenPort, elapsed));
             }

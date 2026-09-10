@@ -62,6 +62,7 @@ target_include_directories(ccl_dpu PRIVATE
     ${HCOMM_DIR}/pkg_inc/legacy
     ${HCOMM_DIR}/src/common
     ${HCOMM_DIR}/src/legacy/ascend910/common/error_manager
+    ${HCOMM_DIR}/src/base_comm/common
 
     ${CMAKE_CURRENT_SOURCE_DIR}/common
     ${CMAKE_CURRENT_SOURCE_DIR}/common/types

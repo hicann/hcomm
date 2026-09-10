@@ -1331,6 +1331,10 @@ void CommunicatorImpl::CheckRankGraphAddrs() const
             RPT_INPUT_ERR(
                 true, "EI0016", std::vector<std::string>({"value", "variable", "expect"}),
                 std::vector<std::string>({interface->GetAddr().GetIpStr(), "addr", "A right ip address"}));
+            HCCL_ERROR(
+                "[%s][%s] errNo[0x%016llx] the ip address %s of ranktable in rank %u is error",
+                LOG_KEYWORDS_INIT_GROUP.c_str(), LOG_KEYWORDS_RANKTABLE_CHECK.c_str(),
+                HCOM_ERROR_CODE(HcclResult::HCCL_E_PARA), interface->GetAddr().Describe().c_str(), devPhyId);
             THROW<InvalidParamsException>(StringFormat(
                 "[CommunicatorImpl][%s]"
                 "the ip address %s of ranktable in rank %u is error!",

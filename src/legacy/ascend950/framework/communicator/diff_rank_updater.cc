@@ -17,6 +17,7 @@
 #include "changed_rank_info.h"
 #include "rank_table_info.h"
 #include "json_parser.h"
+#include "hccl_log_keywords.h"
 
 using namespace Hccl;
 
@@ -100,7 +101,9 @@ static HcclResult ParseChangeInfo(const char* changeInfo, ChangedRankInfo& chang
     // 获取真实路径
     char resolvedPath[PATH_MAX] = {0};
     if (realpath(changeInfo, resolvedPath) == nullptr) {
-        HCCL_ERROR("RanktableRealPath: %s is not a valid real path.", changeInfo);
+        HCCL_ERROR(
+            "[%s][%s] errNo[0x%016llx] RanktableRealPath: %s is not a valid real path", LOG_KEYWORDS_INIT_GROUP.c_str(),
+            LOG_KEYWORDS_RANKTABLE_CONFIG.c_str(), HCOM_ERROR_CODE(HCCL_E_PARA), changeInfo);
         return HCCL_E_PARA;
     }
 

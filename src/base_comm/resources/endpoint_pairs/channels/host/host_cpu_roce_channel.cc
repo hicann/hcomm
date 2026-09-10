@@ -17,6 +17,7 @@
 #include "cpu_roce_endpoint.h"
 #include "adapter_error_manager_pub.h"
 #include "../../sockets/socket_mgr.h"
+#include "hccl_log_keywords.h"
 
 // Orion
 #include "orion_adapter_hccp.h"
@@ -953,7 +954,7 @@ HcclResult HostCpuRoceChannel::NotifyWait(const uint32_t localNotifyIdx, const u
     return HCCL_SUCCESS;
 }
 
-HcclResult HostCpuRoceChannel::ReportWcStatusError([[maybe_unused]] enum ibv_wc_status status)
+HcclResult HostCpuRoceChannel::ReportWcStatusError(enum ibv_wc_status status)
 {
     Hccl::IpAddress localIp, remoteIp;
     (void)CommAddrToIpAddress(localEp_.commAddr, localIp);
@@ -966,6 +967,14 @@ HcclResult HostCpuRoceChannel::ReportWcStatusError([[maybe_unused]] enum ibv_wc_
             {std::to_string(localEp_.loc.device.serverIdx), std::to_string(localEp_.loc.device.devPhyId),
              localIp.GetIpStr(), std::to_string(remoteEp_.loc.device.serverIdx),
              std::to_string(remoteEp_.loc.device.devPhyId), remoteIp.GetIpStr()}));
+    HCCL_ERROR(
+        "[%s][%s][%s] cqe error status[%u], localInfo{server[%s], deviceId[%s], deviceIp[%s]}, "
+        "remoteInfo{server[%s], deviceId[%s], deviceIp[%s]}",
+        LOG_KEYWORDS_TASK_EXEC.c_str(), LOG_KEYWORDS_RUN_FAILED.c_str(), LOG_KEYWORDS_CQE_ERROR.c_str(),
+        static_cast<u32>(status), std::to_string(localEp_.loc.device.serverIdx).c_str(),
+        std::to_string(localEp_.loc.device.devPhyId).c_str(), localIp.GetIpStr().c_str(),
+        std::to_string(remoteEp_.loc.device.serverIdx).c_str(), std::to_string(remoteEp_.loc.device.devPhyId).c_str(),
+        remoteIp.GetIpStr().c_str());
     return HCCL_E_NETWORK;
 }
 
