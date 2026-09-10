@@ -33,7 +33,7 @@ CcuResult HcommCcuInsResDescQueryNum(HcommCcuResDescHandle resDesc, HcommCcuResT
 | 参数名 | 输入/输出 | 描述 |
 | --- | --- | --- |
 | resDesc | 输入 | 资源描述符句柄，由`HcommCcuInsResDescCreate`创建。 |
-| resType | 输入 | 资源类型，取`HcommCcuResType`枚举值。 |
+| resType | 输入 | 资源类型，取[HcommCcuResType](../../datatype_definition/HcommCcuResType.md)枚举值。 |
 | resNum | 输出 | 查询成功后返回该资源类型已设置的数量，不能为空指针。 |
 
 ## 返回值

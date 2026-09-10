@@ -33,7 +33,7 @@ CcuResult HcommCcuInsResDescSetNum(HcommCcuResDescHandle resDesc, HcommCcuResTyp
 | 参数名 | 输入/输出 | 描述 |
 | --- | --- | --- |
 | resDesc | 输入/输出 | 资源描述符句柄，由 `HcommCcuInsResDescCreate` 创建。设置成功后，指定资源类型的数量更新为`resNum`。 |
-| resType | 输入 | 资源类型，取 `HcommCcuResType` 枚举值。合法值：`HCOMM_CCU_RES_TYPE_LOOP`、`HCOMM_CCU_RES_TYPE_CCU_BUF`、`HCOMM_CCU_RES_TYPE_VARIABLE`、`HCOMM_CCU_RES_TYPE_ADDRESS`、`HCOMM_CCU_RES_TYPE_EVENT`、`HCOMM_CCU_RES_TYPE_CCU_THREAD`、`HCOMM_CCU_RES_TYPE_INSTRUCTION`。 |
+| resType | 输入 | 资源类型，取[HcommCcuResType](../../datatype_definition/HcommCcuResType.md)枚举值。 |
 | resNum | 输入 | 期望的资源数量。设置为“0”表示不申请该类型资源。 |
 
 ## 返回值
