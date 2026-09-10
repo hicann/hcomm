@@ -13,6 +13,10 @@ set(src_list
 )
 
 if(TARGET hcomm)
+    target_sources(hcomm PRIVATE
+        ${src_list}
+        ${CMAKE_CURRENT_SOURCE_DIR}/env_config_host.cc
+    )
     target_include_directories(hcomm PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}
     )
@@ -24,15 +28,6 @@ if(TARGET ccl_kernel)
         ${CMAKE_CURRENT_SOURCE_DIR}/env_config_aicpu.cc
     )
     target_include_directories(ccl_kernel PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR}
-    )
-endif()
-
-if(TARGET hccl_alg)
-    target_sources(hccl_alg PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR}/env_config.cc
-    )
-    target_include_directories(hccl_alg PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}
     )
 endif()
