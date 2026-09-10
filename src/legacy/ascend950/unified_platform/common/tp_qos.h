@@ -12,6 +12,7 @@
 #define HCCL_TP_QOS_H
 
 #include <cstdint>
+#include <hccl/hccl_types.h>
 #include "hccp_common.h"
 
 namespace Hccl {
@@ -26,8 +27,9 @@ uint32_t TpQosResolveQosSlGroupIdx(const uint32_t qos, const uint32_t numGroups)
 /// 配置项 key 为 qos_dscp_{phyId}，value 格式为 "qos:dscp,qos:dscp,..."，最多 8 对，例如 "0:33,1:65"。
 /// @param networkMode host RoCE 用 NETWORK_PEER_ONLINE 读 /etc/hcomm.cfg；device RoCE/TP 用 NETWORK_OFFLINE 读
 /// /etc/hccl.cfg
-bool TpQosGetDscpByQosFromHccnCfg(
-    const uint32_t devPhyId, uint8_t qos, uint8_t& dscpOut, NetworkMode networkMode = NETWORK_OFFLINE);
+/// @param[out] dscp 命中时写配置值；配置为空或未命中 qos 时写 kUboeDefaultDscp 并返回 HCCL_SUCCESS；
+/// 读配置失败/格式非法时返回错误且不保证修改 dscp。
+HcclResult GetDscpByQos(const uint32_t devPhyId, uint8_t qos, uint8_t& dscp, NetworkMode networkMode = NETWORK_OFFLINE);
 
 } // namespace Hccl
 

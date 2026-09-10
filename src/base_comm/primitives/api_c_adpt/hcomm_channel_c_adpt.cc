@@ -94,7 +94,7 @@ static HcommResult ApplyRoceQosCompatToSlTc(HcommChannelDesc& channelDesc, Endpo
             "[ApplyRoceQosCompatToSlTc] get phyDevId failed, userDevId[%d], fallback to default dscp[%u].", userDevId,
             static_cast<unsigned>(dscp));
     } else {
-        (void)Hccl::TpQosGetDscpByQosFromHccnCfg(static_cast<uint32_t>(phyDevId), sl, dscp, networkMode);
+        CHK_RET(Hccl::GetDscpByQos(static_cast<uint32_t>(phyDevId), sl, dscp, networkMode));
     }
 
     channelDesc.roceAttr.sl = sl;

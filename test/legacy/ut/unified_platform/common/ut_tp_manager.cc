@@ -109,7 +109,7 @@ int StubRaGetHccnCfgDscpLegacy(struct RaInfo* info, enum HccnCfgKey key, char* v
     if (value == nullptr || valueLen == nullptr) {
         return -1;
     }
-    const char* cfg = "0,10,1,20,2,30";
+    const char* cfg = "0:10,1:20,2:30";
     const unsigned int len = static_cast<unsigned int>(strlen(cfg));
     if (*valueLen < len) {
         return -1;

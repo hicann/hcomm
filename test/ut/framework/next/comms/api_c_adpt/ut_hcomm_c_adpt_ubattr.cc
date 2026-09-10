@@ -187,7 +187,7 @@ TEST_F(CheckUbAttrTest, Ut_CheckRoceAttr_When_QosSet_MapsSlAndDefaultDscpTc)
     channelDesc.remoteEndpoint.protocol = COMM_PROTOCOL_ROCE;
     channelDesc.roceAttr.sl = 3;
     channelDesc.roceAttr.tc = 120;
-    channelDesc.qos = 4; // 未 mock HCCN 时回退默认 DSCP=33，TC=33<<2
+    channelDesc.qos = 4; // 未配置 qos_dscp 时回退默认 DSCP=33，TC=33<<2
 
     ASSERT_EQ(CheckRoceAttr(channelDesc, ENDPOINT_LOC_TYPE_HOST), HCCL_SUCCESS);
     EXPECT_EQ(channelDesc.roceAttr.sl, 4);
@@ -199,12 +199,17 @@ static uint32_t gCapturedRaGetHccnCfgMode = UINT32_MAX;
 static int StubRaGetHccnCfgCaptureMode(struct RaInfo* info, enum HccnCfgKey key, char* value, unsigned int* valueLen)
 {
     (void)key;
-    (void)value;
-    (void)valueLen;
     if (info != nullptr) {
         gCapturedRaGetHccnCfgMode = info->mode;
     }
-    return -1;
+    if (value != nullptr && valueLen != nullptr && *valueLen > 0U) {
+        value[0] = '\0';
+    }
+    if (valueLen != nullptr) {
+        *valueLen = 0U;
+    }
+    // 捕获 mode 后返回空配置，走默认 DSCP，避免 CHK_RET(GetDscpByQos) 失败。
+    return 0;
 }
 
 TEST_F(CheckUbAttrTest, Ut_CheckRoceAttr_When_LocalHostLoc_UsesPeerOnlineHccnMode)

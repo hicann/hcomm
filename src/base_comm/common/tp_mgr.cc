@@ -741,7 +741,7 @@ HcclResult TpMgr::BuildTpInfoAndCommitQosAttr(
         const uint16_t slMask = ReadSlAvailableMask16(reqCtx.tpAttr);
         const uint8_t dscpLookupQos = ResolveUboeDscpLookupQos(param, reqCtx.tpInfoNum, slMask);
         uint8_t dscp = Hccl::kUboeDefaultDscp;
-        (void)Hccl::TpQosGetDscpByQosFromHccnCfg(devPhyId_, dscpLookupQos, dscp);
+        CHK_RET(Hccl::GetDscpByQos(devPhyId_, dscpLookupQos, dscp));
         CHK_RET(CommitUboeDscpToTpAttr(devPhyId_, param.locAddr, tpInfo.tpHandle, dscp));
         HCCL_INFO(
             "[TpMgr][%s] UBOE dscp updated: tpHandle[%llu] requestQos[%u] dscpLookupQos[%u] dscpBefore[%u] "

@@ -122,7 +122,8 @@ int RaGetHccnCfg(struct RaInfo* info, enum HccnCfgKey key, char* value, unsigned
     if (valueLen != nullptr) {
         *valueLen = 0U;
     }
-    return -1;
+    // 未配置 qos_dscp：返回成功空串，由 GetDscpByQos 走默认 DSCP。
+    return 0;
 }
 
 } // extern "C"

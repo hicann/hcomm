@@ -17,13 +17,16 @@
 #include <mockcpp/mockcpp.hpp>
 
 #include "tp_mgr.h"
+#include "tp_qos.h"
 #include "orion_adpt_utils.h"
+#include "orion_adapter_hccp.h"
 #include "rdma_handle_manager.h"
 #include "hccp.h"
 #include "hcomm_res_mgr.h"
 #include "env_config/env_config_v2.h"
 
 using namespace hcomm;
+using Hccl::HrtRaSetTpAttrAsync;
 
 namespace {
 
@@ -255,7 +258,7 @@ int StubRaGetHccnCfgDscp(struct RaInfo* info, enum HccnCfgKey key, char* value, 
     if (value == nullptr || valueLen == nullptr) {
         return -1;
     }
-    const char* cfg = "0,10,1,20,2,30";
+    const char* cfg = "0:10,1:20,2:30";
     const unsigned int len = static_cast<unsigned int>(std::strlen(cfg));
     if (*valueLen < len) {
         return -1;
@@ -272,7 +275,7 @@ int StubRaGetHccnCfgDscpKeyValue(struct RaInfo* info, enum HccnCfgKey key, char*
     if (value == nullptr || valueLen == nullptr) {
         return -1;
     }
-    const char* cfg = "2,30,5,40";
+    const char* cfg = "2:30,5:40";
     const unsigned int len = static_cast<unsigned int>(std::strlen(cfg));
     if (*valueLen < len) {
         return -1;
@@ -280,6 +283,60 @@ int StubRaGetHccnCfgDscpKeyValue(struct RaInfo* info, enum HccnCfgKey key, char*
     (void)std::memcpy(value, cfg, len);
     *valueLen = len;
     return 0;
+}
+
+int StubRaGetHccnCfgInvalidFormat(struct RaInfo* info, enum HccnCfgKey key, char* value, unsigned int* valueLen)
+{
+    (void)info;
+    (void)key;
+    if (value == nullptr || valueLen == nullptr) {
+        return -1;
+    }
+    const char* cfg = "0:10,abc";
+    const unsigned int len = static_cast<unsigned int>(std::strlen(cfg));
+    if (*valueLen < len) {
+        return -1;
+    }
+    (void)std::memcpy(value, cfg, len);
+    *valueLen = len;
+    return 0;
+}
+
+int StubRaGetHccnCfgFail(struct RaInfo* info, enum HccnCfgKey key, char* value, unsigned int* valueLen)
+{
+    (void)info;
+    (void)key;
+    (void)value;
+    (void)valueLen;
+    return -1;
+}
+
+int StubRaGetHccnCfgEmpty(struct RaInfo* info, enum HccnCfgKey key, char* value, unsigned int* valueLen)
+{
+    (void)info;
+    (void)key;
+    if (value != nullptr && valueLen != nullptr && *valueLen > 0U) {
+        value[0] = '\0';
+    }
+    if (valueLen != nullptr) {
+        *valueLen = 0U;
+    }
+    return 0;
+}
+
+static uint8_t gCapturedSetTpAttrDscp = 0xFFU;
+static uint32_t gCapturedSetTpAttrBitmap = 0U;
+
+HcclResult StubHrtRaSetTpAttrAsyncCaptureDscp(
+    Hccl::RdmaHandle handle, uint64_t tpHandle, uint32_t attrBitmap, struct TpAttr& attr,
+    Hccl::RequestHandle& reqHandle)
+{
+    (void)handle;
+    (void)tpHandle;
+    gCapturedSetTpAttrBitmap = attrBitmap;
+    gCapturedSetTpAttrDscp = attr.dscp;
+    reqHandle = 0;
+    return HCCL_SUCCESS;
 }
 
 int StubRaGetTpAttrAsyncUboeDscpMode0(
@@ -562,15 +619,51 @@ TEST_F(TpMgrTest, Ut_TpMgr_GetTpInfo_Rtp_SlLevelCountCapsMapping_Expect_Success)
 
 TEST_F(TpMgrTest, Ut_TpMgr_GetTpInfo_Uboe_DscpFromHccnCfg_Expect_Success)
 {
+    gCapturedSetTpAttrDscp = 0xFFU;
+    gCapturedSetTpAttrBitmap = 0U;
     MOCKER(RaGetTpInfoListAsync).stubs().will(invoke(StubRaGetTpInfoListAsyncUboeEight));
     MOCKER(RaGetTpAttrAsync).stubs().will(invoke(StubRaGetTpAttrAsyncUboeDscpMode0));
     MOCKER(RaGetHccnCfg).stubs().will(invoke(StubRaGetHccnCfgDscp));
+    MOCKER(HrtRaSetTpAttrAsync).stubs().will(invoke(StubHrtRaSetTpAttrAsyncCaptureDscp));
 
     TpMgr& mgr = TpMgr::GetInstance(0);
     const GetTpInfoParam param = MakeParam("10.10.16.1", "10.10.16.2", TpProtocol::UBOE, 2U);
     TpInfo tpInfo{};
     ASSERT_EQ(PollGetTpInfo(mgr, param, tpInfo), HCCL_SUCCESS);
     EXPECT_EQ(tpInfo.tpHandle, 0x100ULL);
+    // "0:10,1:20,2:30" → qos=2 命中 dscp=30
+    EXPECT_EQ(gCapturedSetTpAttrDscp, 30U);
+}
+
+TEST_F(TpMgrTest, Ut_GetDscpByQos_When_Hit_Expect_DscpFromCfg)
+{
+    MOCKER(RaGetHccnCfg).stubs().will(invoke(StubRaGetHccnCfgDscp));
+    uint8_t dscp = 0U;
+    ASSERT_EQ(Hccl::GetDscpByQos(0U, 2U, dscp), HCCL_SUCCESS);
+    EXPECT_EQ(dscp, 30U);
+}
+
+TEST_F(TpMgrTest, Ut_GetDscpByQos_When_EmptyCfg_Expect_DefaultDscp)
+{
+    MOCKER(RaGetHccnCfg).stubs().will(invoke(StubRaGetHccnCfgEmpty));
+    uint8_t dscp = 0U;
+    ASSERT_EQ(Hccl::GetDscpByQos(0U, 2U, dscp), HCCL_SUCCESS);
+    EXPECT_EQ(dscp, Hccl::kUboeDefaultDscp);
+}
+
+TEST_F(TpMgrTest, Ut_GetDscpByQos_When_InvalidFormat_Expect_E_PARA)
+{
+    MOCKER(RaGetHccnCfg).stubs().will(invoke(StubRaGetHccnCfgInvalidFormat));
+    uint8_t dscp = 0U;
+    EXPECT_EQ(Hccl::GetDscpByQos(0U, 2U, dscp), HCCL_E_PARA);
+}
+
+TEST_F(TpMgrTest, Ut_GetDscpByQos_When_RaGetHccnCfgFail_Expect_E_INTERNAL)
+{
+    MOCKER(RaGetHccnCfg).stubs().will(invoke(StubRaGetHccnCfgFail));
+    uint8_t dscp = 0U;
+    // ret=-1 非 EINVAL/ENOTSUPP，映射为 HCCL_E_INTERNAL（非 NOT_FOUND）
+    EXPECT_EQ(Hccl::GetDscpByQos(0U, 2U, dscp), HCCL_E_INTERNAL);
 }
 
 TEST_F(TpMgrTest, Ut_TpMgr_GetTpInfo_Uboe_DscpKeyValueCfg_Expect_Success)

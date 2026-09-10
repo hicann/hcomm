@@ -310,7 +310,7 @@ namespace {
             }
 
             uint8_t dscp = kUboeDefaultDscp;
-            (void)TpQosGetDscpByQosFromHccnCfg(devPhyId, param.qos, dscp);
+            CHK_RET(GetDscpByQos(devPhyId, param.qos, dscp));
             CHK_RET(CommitUbRtpDscpToTpAttr(isSync, ctxHandle, tpHandle, dscp));
             HCCL_INFO(
                 "[TpManager][%s] UB_RTP dscp committed: tpHandle[%llu] dscpAfter[%u].", __func__, tpHandle,
@@ -324,7 +324,7 @@ namespace {
         }
 
         uint8_t dscp = kUboeDefaultDscp;
-        (void)TpQosGetDscpByQosFromHccnCfg(devPhyId, param.qos, dscp);
+        CHK_RET(GetDscpByQos(devPhyId, param.qos, dscp));
         CHK_RET(CommitUboeNetAttrsToTpAttr(
             isSync, ctxHandle, tpHandle, tpAttr, param.locIpv4Addr, param.rmtIpv4Addr, true, dscp));
         HCCL_INFO(
