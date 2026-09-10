@@ -140,15 +140,21 @@ HcclResult PreemptPortManager::PreemptPortInRange(
         }
     }
     // 所有端口范围内的端口都已经被占用，没有可用的端口，抢占监听失败
-    std::string errormessage
-        = "The IP address " + ipAddr + " and port " + std::to_string(usePort) + " have already been bound.";
+    std::string portRangeStr = GetRangeStr(portRange);
+    std::string errormessage;
+    if (usePort == HCCL_INVALID_PORT) {
+        errormessage = "The IP address " + ipAddr + " has no available port in range" + portRangeStr
+                       + " (all ports in the range have already been bound).";
+    } else {
+        errormessage
+            = "The IP address " + ipAddr + " and port " + std::to_string(usePort) + " have already been bound.";
+    }
     NicType socketType = listenSocket->GetSocketType();
     if (socketType == NicType::HOST_NIC_TYPE) {
         RPT_INPUT_ERR(true, "EI0019", std::vector<std::string>({"reason"}), std::vector<std::string>({errormessage}));
     } else {
         RPT_INPUT_ERR(true, "EI0020", std::vector<std::string>({"reason"}), std::vector<std::string>({errormessage}));
     }
-    std::string portRangeStr = GetRangeStr(portRange);
     HCCL_ERROR(
         "[PreemptPortManager][PreemptPortInRange] Complete polling of socket port range:%s", portRangeStr.c_str());
     HCCL_ERROR("[PreemptPortManager][PreemptPortInRange] All ports in socket port range are bound already. "
