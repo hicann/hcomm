@@ -57,3 +57,5 @@
 - [CcuLocalAddrHandle](CcuLocalAddrHandle.md)
 - [CcuRemoteAddrHandle](CcuRemoteAddrHandle.md)
 - [CcuKernelArg](CcuKernelArg.md)
+- [HcommCcuResDescHandle](HcommCcuResDescHandle.md)
+- [HcommCcuResType](HcommCcuResType.md)
