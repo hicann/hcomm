@@ -143,6 +143,7 @@ global:
     HcclCommQueryCcuIns;
     HcclCommRegCommStateCallback;
     HcclCommRegister;
+    HcclCommResPrepare; # symbol for MC2
     HcclCommResetExchangeInfo;
     HcclCommResume;
     HcclCommSetMemoryRange;
@@ -169,6 +170,7 @@ global:
     HcclEngineCtxDestroy;
     HcclEngineCtxGet;
     HcclExchangeMemDesc;
+    HcclFreeOpArgs; # symbol for MC2
     HcclGetAicpuOpStreamAndNotify;
     HcclGetAicpuOpStreamNotify;
     HcclGetCcuTaskInfo;
@@ -181,6 +183,7 @@ global:
     HcclGetHcclBufferCleared;
     HcclGetHeterogMode;
     HcclGetNotifyNumInThread;
+    HcclGetOpArgs; # symbol for MC2
     HcclGetRankId;
     HcclGetRankSize;
     HcclGetRemoteIpcHcclBuf;
@@ -214,6 +217,7 @@ global:
     HcclScatterInner;
     HcclSendInner;
     HcclSetConfig;
+    HcclSetOpCommEngine; # symbol for MC2
     HcclTaskRegister;
     HcclTaskUnRegister;
     HcclTeamCreate;

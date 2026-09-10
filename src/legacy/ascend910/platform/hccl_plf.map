@@ -41,6 +41,7 @@ global:
     HcclMemRemap;
     HcclMemcpyAsync;
     HcclNetDevClose;
+    HcclNetDevGetAddr; # symbol for business
     HcclNetDevOpen;
     HcclOneSideBatchPutByAscendQP;
     HcclPutByAscendQP;
@@ -69,6 +70,17 @@ global:
     HcclWaitPutMRByAscendQP;
     HcclWaitPutMRDoRecord;
     HcclWaitPutMRDoWait;
+    HccnRpingAddTarget; # symbol for business
+    HccnRpingAddTargetV2; # symbol for business
+    HccnRpingAddTargetWithCfg; # symbol for business
+    HccnRpingBatchPingStart; # symbol for business
+    HccnRpingBatchPingStop; # symbol for business
+    HccnRpingDeinit; # symbol for business
+    HccnRpingGetPayload; # symbol for business
+    HccnRpingGetResult; # symbol for business
+    HccnRpingGetTarget; # symbol for business
+    HccnRpingInit; # symbol for business
+    HccnRpingRemoveTarget; # symbol for business
     InitTask;
     LaunchTask;
     LaunchTaskExtend;
