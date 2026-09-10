@@ -39,6 +39,7 @@
 #include "channel_config.h"
 #include "hcclCommDfx.h"
 #include "coll_comm_res_c_adpt.h"
+#include "common/loggers/channel_logger.h"
 
 using namespace hccl;
 /**
@@ -1323,12 +1324,30 @@ static void DestroyAndClearSharedJettyChannels(
 
 constexpr uint32_t SHARED_JETTY_POLL_INTERVAL_MS = 2; // 共享jetty建链状态轮询间隔（ms）
 
-static HcclResult
-WaitForSharedJettyChannelsReady(uint32_t channelNum, ChannelHandle* channels, hccl::hcclComm* hcclComm)
+static HcclResult WaitForSharedJettyChannelsReady(
+    uint32_t channelNum, ChannelHandle* channels, hccl::hcclComm* hcclComm,
+    const std::vector<HcclChannelDesc>& channelDescFinals)
 {
     std::vector<int32_t> statusList(channelNum, 0);
     auto linkTimeout = std::chrono::seconds(Hccl::EnvConfig::GetInstance().GetSocketConfig().GetLinkTimeOut());
     auto startTime = std::chrono::steady_clock::now();
+    hccl::CollComm* collComm = hcclComm->GetCollComm();
+    uint32_t localRank = (collComm != nullptr) ? collComm->GetMyRankId() : 0;
+    hccl::MyRank* myRank = (collComm != nullptr) ? collComm->GetMyRank() : nullptr;
+
+    auto printChannelErrors = [&](int64_t elapsed) {
+        std::vector<int32_t> internalStatus(channelNum, 0);
+        (void)hcomm::ChannelProcess::ChannelGetStatus(channels, channelNum, internalStatus.data());
+        std::vector<Hccl::TlsStatus> tlsStatusList(channelNum, Hccl::TlsStatus::UNKNOWN);
+        if (myRank != nullptr) {
+            myRank->GetAbnormalChannelTlsStatus(
+                channelDescFinals.data(), internalStatus.data(), channelNum, tlsStatusList);
+        }
+        hcomm::logger::ChannelLogger::PrintChannelErrorDetails(
+            localRank, channelNum, channelDescFinals.data(), channels, internalStatus.data(),
+            static_cast<uint64_t>(elapsed), tlsStatusList.data());
+    };
+
     while (true) {
         HcclResult statusRet = static_cast<HcclResult>(HcommChannelGetStatus(channels, channelNum, statusList.data()));
         if (statusRet != HCCL_SUCCESS && statusRet != HCCL_E_AGAIN) {
@@ -1339,7 +1358,11 @@ WaitForSharedJettyChannelsReady(uint32_t channelNum, ChannelHandle* channels, hc
         for (uint32_t i = 0; i < channelNum; ++i) {
             if (statusList[i] == hcomm::HCOMM_CHANNEL_STATUS_FAILED
                 || statusList[i] == hcomm::HCOMM_CHANNEL_STATUS_TIMEOUT) {
+                auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
+                                   std::chrono::steady_clock::now() - startTime)
+                                   .count();
                 HCCL_ERROR("[%s] shared jetty channel[%u] connect failed, status[%d].", __func__, i, statusList[i]);
+                printChannelErrors(elapsed);
                 return HCCL_E_NETWORK;
             }
             if (statusList[i] != hcomm::HCOMM_CHANNEL_STATUS_READY) {
@@ -1350,8 +1373,13 @@ WaitForSharedJettyChannelsReady(uint32_t channelNum, ChannelHandle* channels, hc
             return HCCL_SUCCESS;
         }
         if ((std::chrono::steady_clock::now() - startTime) >= linkTimeout) {
+            auto elapsed
+                = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - startTime)
+                      .count();
             HCCL_ERROR(
-                "[%s] shared jetty channel connect timeout, group[%s].", __func__, hcclComm->GetIdentifier().c_str());
+                "[%s] shared jetty channel connect timeout, group[%s], elapsed[%lld]ms.", __func__,
+                hcclComm->GetIdentifier().c_str(), elapsed);
+            printChannelErrors(elapsed);
             return HCCL_E_TIMEOUT;
         }
         std::this_thread::sleep_for(std::chrono::milliseconds(SHARED_JETTY_POLL_INTERVAL_MS));
@@ -1406,7 +1434,7 @@ static HcclResult FinalizeSharedJettyAcquisition(
 {
     std::vector<ChannelHandle> channelsCopy(channels, channels + channelNum);
 
-    HcclResult waitRet = WaitForSharedJettyChannelsReady(channelNum, channels, hcclComm);
+    HcclResult waitRet = WaitForSharedJettyChannelsReady(channelNum, channels, hcclComm, channelDescFinals);
     if (waitRet != HCCL_SUCCESS) {
         DestroyAndClearSharedJettyChannels(
             hcclComm, sharedQueueTag, channelNum, channels, isNewChannel, channelsCopy, channelDescFinals);
