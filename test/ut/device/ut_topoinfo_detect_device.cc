@@ -56,3 +56,11 @@ TEST_F(TopoInfoDetectDeviceTest, Ut_StartGroupLeaderNetwork_ReturnIsHCCL_E_NOT_S
     HcclResult ret = topoDetect.StartGroupLeaderNetwork(whitelist, hostIP, bindPort, portRanges);
     EXPECT_EQ(ret, HCCL_E_NOT_SUPPORT);
 }
+
+TEST_F(TopoInfoDetectDeviceTest, Ut_CheckHostNicLinkUp_ReturnIsHCCL_E_NOT_SUPPORT)
+{
+    const TopoInfoDetect topoDetect;
+    const HcclIpAddress hostIP;
+
+    EXPECT_EQ(topoDetect.CheckHostNicLinkUp(hostIP), HCCL_E_NOT_SUPPORT);
+}

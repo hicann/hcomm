@@ -74,6 +74,7 @@ protected:
     static UniversalConcurrentMap<u32, volatile u32> g_topoExchangeServerStatus_;
 
 private:
+    HcclResult CheckHostNicFlags(const std::string& ifName, u32 flags) const;
     HcclResult TeardownAgent();
     HcclResult TeardownServer();
     HcclResult Struct2JsonRankTable(const RankTable_t& clusterInfo, nlohmann::json& ClusterJson);

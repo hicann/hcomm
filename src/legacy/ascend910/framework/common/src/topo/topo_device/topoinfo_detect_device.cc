@@ -129,6 +129,11 @@ HcclResult TopoInfoDetect::SetupAgent(
     return HCCL_E_NOT_SUPPORT;
 }
 
+HcclResult TopoInfoDetect::CheckHostNicLinkUp([[maybe_unused]] const HcclIpAddress& hostIP) const
+{
+    return HCCL_E_NOT_SUPPORT;
+}
+
 HcclResult TopoInfoDetect::SetupRank([[maybe_unused]] std::shared_ptr<HcclSocket>& agentConnRoot)
 {
     return HCCL_E_NOT_SUPPORT;

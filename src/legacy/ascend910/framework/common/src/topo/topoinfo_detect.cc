@@ -182,7 +182,15 @@ TopoInfoDetect::SetupServerByMasterInfo(const HcclIpAddress& masterIP, u32 maste
     }
     rootInfo_ = rootInfo;
     CHK_RET(HcclNetInit(NICDeployment::NIC_DEPLOYMENT_HOST, devicePhysicID_, deviceLogicID_, true));
-    HcclResult ret = StartRootNetwork(masterIP, masterPort, GetExternalInputHostSocketPortRange());
+    HcclResult ret = CheckHostNicLinkUp(masterIP);
+    CHK_PRT_RET(
+        ret != HCCL_SUCCESS,
+        HCCL_ERROR(
+            "[Setup][Server]host NIC status check failed, deviceLogicID[%d], devicePhysicID[%u], hostIP[%s], "
+            "ret[%d].",
+            deviceLogicID_, devicePhysicID_, masterIP.GetReadableAddress(), ret),
+        ret);
+    ret = StartRootNetwork(masterIP, masterPort, GetExternalInputHostSocketPortRange());
     CHK_PRT_RET(
         ret != HCCL_SUCCESS,
         HCCL_ERROR(
@@ -249,10 +257,10 @@ HcclResult TopoInfoDetect::SetupRootServerNetwork(
     SetBootstrapHostIP(hostIP);
 
     HcclResult ret = CheckHostNicLinkUp(hostIP);
-    // HrtRaRdmaInit将HCCP_ELINKDOWN转换为HCCL_E_AGAIN返回
     if (ret != HCCL_SUCCESS) {
         HCCL_ERROR(
-            "[Setup][Server]host NIC link is down, deviceLogicID[%d], devicePhysicID[%u], hostIP[%s], ret[%d].",
+            "[Setup][Server]host NIC status check failed, deviceLogicID[%d], devicePhysicID[%u], hostIP[%s], "
+            "ret[%d].",
             deviceLogicID_, devicePhysicID_, hostIP.GetReadableAddress(), ret);
         return ret;
     }
@@ -568,8 +576,18 @@ HcclResult TopoInfoDetect::CheckHostNicLinkUp(const HcclIpAddress& hostIP) const
             errno);
         return HCCL_E_SYSCALL;
     }
-    if (!(ifr.ifr_flags & IFF_UP) || !(ifr.ifr_flags & IFF_RUNNING)) {
-        return HCCL_E_NETWORK; // 网卡 down
+    return CheckHostNicFlags(ifName, static_cast<u32>(static_cast<u16>(ifr.ifr_flags)));
+}
+
+HcclResult TopoInfoDetect::CheckHostNicFlags(const string& ifName, u32 flags) const
+{
+    const bool isUp = (flags & static_cast<u32>(IFF_UP)) != 0;
+    const bool isRunning = (flags & static_cast<u32>(IFF_RUNNING)) != 0;
+    if (!isUp || !isRunning) {
+        HCCL_ERROR(
+            "[Check][HostNicLink]host NIC link is down, interface[%s], ifrFlags[0x%x], isUp[%d], isRunning[%d].",
+            ifName.c_str(), flags, static_cast<s32>(isUp), static_cast<s32>(isRunning));
+        return HCCL_E_NETWORK;
     }
     return HCCL_SUCCESS;
 }
@@ -600,7 +618,8 @@ HcclResult TopoInfoDetect::SetupAgent(
     HcclResult ret = CheckHostNicLinkUp(hostIP);
     if (ret != HCCL_SUCCESS) {
         HCCL_ERROR(
-            "[Setup][Agent]host NIC link is down, deviceLogicID[%d], devicePhysicID[%u], hostIP[%s], ret[%d].",
+            "[Setup][Agent]host NIC status check failed, deviceLogicID[%d], devicePhysicID[%u], hostIP[%s], "
+            "ret[%d].",
             deviceLogicID_, devicePhysicID_, hostIP.GetReadableAddress(), ret);
         return ret;
     }
@@ -692,8 +711,16 @@ HcclResult TopoInfoDetect::SetupAgentByMasterInfo(HcclIpAddress& localHostIp, co
     SetBootstrapHostIP(localHostIp);
     CHK_RET(hrtGetDevicePhyIdByIndex(deviceLogicID_, devicePhysicID_));
     rootInfo_ = rootInfo;
+    HcclResult ret = CheckHostNicLinkUp(localHostIp);
+    CHK_PRT_RET(
+        ret != HCCL_SUCCESS,
+        HCCL_ERROR(
+            "[Setup][Agent]host NIC status check failed, deviceLogicID[%d], devicePhysicID[%u], hostIP[%s], "
+            "ret[%d].",
+            deviceLogicID_, devicePhysicID_, localHostIp.GetReadableAddress(), ret),
+        ret);
     bool bInitDevNic = GetExternalInputMasterInfo().rankSize != 1 ? true : false;
-    HcclResult ret = StartNetwork(localHostIp, bInitDevNic);
+    ret = StartNetwork(localHostIp, bInitDevNic);
     CHK_PRT_RET(ret != HCCL_SUCCESS, HCCL_ERROR("[Setup][Agent]topo detect agent start network failed!"), ret);
 
     bool errorFlag = false;

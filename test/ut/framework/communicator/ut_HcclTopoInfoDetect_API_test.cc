@@ -114,3 +114,51 @@ TEST_F(HcclTopoInfoDetectTest, Ut_SetupServer_When_PortRange_ReturnIsHCCL_SUCCES
     ret = topoDetectServer->SetupServer(rootHandle);
     EXPECT_EQ(ret, HCCL_SUCCESS);
 }
+
+TEST_F(HcclTopoInfoDetectTest, Ut_SetupServer_When_HostNicIsDown_ReturnIsHCCL_E_NETWORK)
+{
+    MOCKER_CPP(&TopoInfoDetect::CheckHostNicLinkUp).stubs().with(mockcpp::any()).will(returnValue(HCCL_E_NETWORK));
+
+    HcclRootHandle rootHandle{};
+    TopoInfoDetect topoDetectServer;
+
+    EXPECT_EQ(topoDetectServer.SetupServer(rootHandle), HCCL_E_NETWORK);
+}
+
+TEST_F(HcclTopoInfoDetectTest, Ut_SetupAgent_When_HostNicIsDown_ReturnIsHCCL_E_NETWORK)
+{
+    const HcclIpAddress localHostIP("127.0.0.1%lo");
+    MOCKER(GetLocalHostIP).stubs().with(outBound(localHostIP), mockcpp::any()).will(returnValue(HCCL_SUCCESS));
+    MOCKER_CPP(&TopoInfoDetect::CheckHostNicLinkUp).stubs().with(mockcpp::any()).will(returnValue(HCCL_E_NETWORK));
+
+    HcclRootHandle rootHandle{};
+    ASSERT_EQ(strcpy_s(rootHandle.ip, sizeof(rootHandle.ip), "127.0.0.1"), EOK);
+    rootHandle.nicDeploy = NICDeployment::NIC_DEPLOYMENT_DEVICE;
+    HcclRankHandle rankHandle{};
+    const CommConfig commConfig;
+    TopoInfoDetect topoDetectAgent;
+
+    EXPECT_EQ(topoDetectAgent.SetupAgent(1, 0, rootHandle, rankHandle, commConfig), HCCL_E_NETWORK);
+}
+
+TEST_F(HcclTopoInfoDetectTest, Ut_SetupServerByMasterInfo_When_HostNicIsDown_ReturnIsHCCL_E_NETWORK)
+{
+    MOCKER_CPP(&TopoInfoDetect::CheckHostNicLinkUp).stubs().with(mockcpp::any()).will(returnValue(HCCL_E_NETWORK));
+
+    const HcclIpAddress hostIP("127.0.0.1%lo");
+    HcclRootHandle rootHandle{};
+    TopoInfoDetect topoDetectServer;
+
+    EXPECT_EQ(topoDetectServer.SetupServerByMasterInfo(hostIP, 60000, rootHandle), HCCL_E_NETWORK);
+}
+
+TEST_F(HcclTopoInfoDetectTest, Ut_SetupAgentByMasterInfo_When_HostNicIsDown_ReturnIsHCCL_E_NETWORK)
+{
+    MOCKER_CPP(&TopoInfoDetect::CheckHostNicLinkUp).stubs().with(mockcpp::any()).will(returnValue(HCCL_E_NETWORK));
+
+    HcclIpAddress hostIP("127.0.0.1%lo");
+    HcclRootHandle rootHandle{};
+    TopoInfoDetect topoDetectAgent;
+
+    EXPECT_EQ(topoDetectAgent.SetupAgentByMasterInfo(hostIP, rootHandle), HCCL_E_NETWORK);
+}

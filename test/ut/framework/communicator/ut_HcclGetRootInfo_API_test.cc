@@ -8,6 +8,8 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include <net/if.h>
+
 #include "hccl_api_base_test.h"
 #include "coll_comm_mgr.h"
 extern thread_local s32 g_hcclDeviceId;
@@ -41,6 +43,31 @@ TEST(TopoInfoDetectTest, Ut_CheckHostNicLinkUp_When_IPv6Loopback_Expect_ReturnIs
 
     EXPECT_EQ(hostIP.GetFamily(), AF_INET6);
     EXPECT_EQ(topoInfoDetect.CheckHostNicLinkUp(hostIP), HCCL_SUCCESS);
+}
+
+TEST(TopoInfoDetectTest, Ut_CheckHostNicLinkUp_When_IfNameIsEmpty_Expect_ReturnIsHCCL_E_PARA)
+{
+    const TopoInfoDetect topoInfoDetect;
+    const HcclIpAddress hostIP("127.0.0.1");
+
+    EXPECT_EQ(topoInfoDetect.CheckHostNicLinkUp(hostIP), HCCL_E_PARA);
+}
+
+TEST(TopoInfoDetectTest, Ut_CheckHostNicLinkUp_When_InterfaceDoesNotExist_Expect_ReturnIsHCCL_E_SYSCALL)
+{
+    const TopoInfoDetect topoInfoDetect;
+    const string ifName = "hccl_ut_missing";
+    ASSERT_EQ(if_nametoindex(ifName.c_str()), 0U);
+    const HcclIpAddress hostIP("127.0.0.1%" + ifName);
+
+    EXPECT_EQ(topoInfoDetect.CheckHostNicLinkUp(hostIP), HCCL_E_SYSCALL);
+}
+
+TEST(TopoInfoDetectTest, Ut_CheckHostNicFlags_When_NicFlagsAreDown_Expect_ReturnIsHCCL_E_NETWORK)
+{
+    const TopoInfoDetect topoInfoDetect;
+
+    EXPECT_EQ(topoInfoDetect.CheckHostNicFlags("eth0", 0), HCCL_E_NETWORK);
 }
 
 TEST_F(HcclGetRootInfoTest, Ut_HcclGetRootInfo_When_RootInfoIsNull_Expect_ReturnIsHCCL_E_PTR)
