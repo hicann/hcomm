@@ -13,6 +13,7 @@
 #include <fstream>
 #include <limits.h>
 #include "rank_info_detect_client.h"
+#include "bootstrap_ip.h"
 #include "root_handle_v2.h"
 #include "env_config/env_config_v2.h"
 #include "host_buffer.h"
@@ -37,6 +38,73 @@ namespace {
     constexpr const char* BACKUP_ADDR_FIELD = "backup_addr";
     constexpr const char* ADDR_FIELD = "addr";
     constexpr const char* ADDR_TYPE_FIELD = "addr_type";
+    // 无UB场景下level0的兜底netInstId前缀，仅用于日志辨识实例用途；
+    // 下游识别兜底层一律依据pcie_fallback标记字段，不依赖此名称。
+    // 后缀拼接本机host ip：同一服务器内rank共享同一level0实例（PCIe fullmesh），跨服务器实例隔离，
+    // 与原始level0按server划分（server mac）的语义一致，跨机流量走上层网络（RoCE等）
+    constexpr const char* PCIE_FALLBACK_NET_INST_ID = "l0_pcie_fallback";
+
+    bool IsLevel0Exist(const nlohmann::json& localDevInfoJson)
+    {
+        if (!localDevInfoJson.contains("level_list") || !localDevInfoJson.at("level_list").is_array()) {
+            return false;
+        }
+        for (const auto& levelJson : localDevInfoJson.at("level_list")) {
+            if (levelJson.value<u32>("net_layer", HOST_BACKUP_ADDR_NET_LAYER) == 0) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // 无UB场景兜底：探测不到UB时rootinfo中rank无level0，插入一个带本卡vnic地址的兜底level0，
+    // 保证rankGraph按level0建图不抛异常；链路由RankGraphBuilder按PCIE兜底合成。
+    // rank_addr_list需填入本卡vnic IP：SocketManager的端口map按各层rank_addr_list的addr索引，
+    // 缺失会导致设备端口查询返回0，server随机监听、client连0端口，建链失败。
+    void InsertPcieFallbackLevel0(nlohmann::json& localDevInfoJson, u32 devPhyId)
+    {
+        if (IsLevel0Exist(localDevInfoJson)) {
+            return;
+        }
+        const std::string fallbackNetInstId
+            = StringFormat("%s_%s", PCIE_FALLBACK_NET_INST_ID, GetBootstrapIp(devPhyId).GetIpStr().c_str());
+        HCCL_WARNING(
+            "[%s] no level0 in rootinfo (UB unavailable), insert pcie fallback level0, netInstId[%s].", __func__,
+            fallbackNetInstId.c_str());
+        IpAddress vnicIp;
+        bool vnicQueryOk = false;
+        try {
+            HrtRaSocketGetVnicIpInfos(devPhyId, DeviceIdType::DEVICE_ID_TYPE_PHY_ID, devPhyId, vnicIp);
+            vnicQueryOk = true;
+        } catch (const HcclException& e) {
+            HCCL_ERROR(
+                "[%s] get local vnic ip failed, pcie fallback level0 has no rank_addr entry, devPhyId[%u], reason[%s].",
+                __func__, devPhyId, e.what());
+        }
+        nlohmann::json fallbackLevel;
+        fallbackLevel["net_layer"] = 0;
+        fallbackLevel["net_instance_id"] = fallbackNetInstId;
+        fallbackLevel["net_type"] = "TOPO_FILE_DESC";
+        fallbackLevel["net_attr"] = "";
+        // 兜底层显式标记：下游（graph builder/communicator）凭此字段识别兜底层，
+        // 避免依赖netInstId前缀匹配而与用户自定义拓扑文件中的实例名误撞
+        fallbackLevel["pcie_fallback"] = true;
+        if (vnicQueryOk) {
+            // ports与RankGraphBuilder::BuildPcieFallbackLinks中ConnInterface的端口名保持一致（d2h）
+            nlohmann::json addrEntry;
+            addrEntry["addr_type"] = "IPV4";
+            addrEntry["addr"] = vnicIp.GetIpStr();
+            addrEntry["plane_id"] = "0";
+            addrEntry["ports"] = nlohmann::json::array({std::string("d2h")});
+            fallbackLevel["rank_addr_list"] = nlohmann::json::array({addrEntry});
+        } else {
+            fallbackLevel["rank_addr_list"] = nlohmann::json::array();
+        }
+        if (!localDevInfoJson.contains("level_list")) {
+            localDevInfoJson["level_list"] = nlohmann::json::array();
+        }
+        localDevInfoJson["level_list"].push_back(fallbackLevel);
+    }
 
     void BuildHostAddrCandidates(const nlohmann::json& addrJson, std::vector<IpAddress>& candidates)
     {
@@ -361,6 +429,9 @@ void RankInfoDetectClient::ConstructRankTable(RankTableInfo& localRankTable)
     GetLocalDevInfoJson(parseJson, localDevInfoJson);
     // 3. 在反序列化和上报本地 RankTable 前改写 addr，确保后续全局 RankTable 和 RankGraph 使用选中地址
     SelectLocalHostBackupAddr(localDevInfoJson);
+
+    // 无UB兜底：探测不到level0时插入PCIe兜底层，仅在level_list存在（RoCE主备探测已通过）后执行
+    InsertPcieFallbackLevel0(localDevInfoJson, devPhyId_);
 
     // 4. 组rankTable的json格式
     nlohmann::json localRankTableJson{};

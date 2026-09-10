@@ -43,6 +43,9 @@ private:
     RankId2PeerMap peers_;
     Level2Id2NetInst tempNetInsts_;
     RankId myRank_;
+    // 无UB兜底标记：本rank的level0为pcie fallback层（ranktable中pcie_fallback字段），
+    // BuildFromRankTable时记录，供建链/topoInst注册路径替代实例名前缀匹配
+    bool level0PcieFallback_{false};
     std::shared_ptr<TopoInfo> topoInfo_;
     UpdaterFor64Plus1 updaterFor64Plus1_{};
 
@@ -51,6 +54,7 @@ private:
     void BuildRankGraph();
     void BuildFromRankTable();
     void BuildPeer2PeerLinks();
+    void BuildPcieFallbackLinks(NetInstance* innerNetInstance);
     void AddFabricInfo(u32 level);
     void AddPeer2NetLink(
         const u32 netLayer, const std::string& netInstId, RankId rankId, const AddressInfo& addrInfo,
