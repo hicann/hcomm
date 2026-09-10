@@ -68,14 +68,12 @@ void RsAubdfxApiDeinit(void)
     RsCloseAubdfxSo();
 }
 
-STATIC void RsAubdfxPrintUbServiceErrinfo(const struct ub_service_errinfo *errInfo)
+STATIC void RsAubdfxPrintUbServiceErrinfo(struct ub_service_errinfo *errInfo)
 {
-    uint8_t *srcEid = (uint8_t *)errInfo->srceid;
-    uint8_t *dstEid = (uint8_t *)errInfo->dsteid;
-
     hccp_info("[notify][event]ubServiceErrinfo: dieid:%u ueid:%u servicetype:%u errortype:%u", errInfo->dieid,
         errInfo->ueid, errInfo->servicetype, errInfo->errortype);
-    hccp_info("[notify][event]srceid:" EID_FMT " dsteid:" EID_FMT, EID_RAW_ARGS(srcEid), EID_RAW_ARGS(dstEid));
+    hccp_info("[notify][event]srceid:" EID_FMT " dsteid:" EID_FMT, EID_RAW_ARGS(((uint8_t *)errInfo->srceid)),
+        EID_RAW_ARGS(((uint8_t *)errInfo->dsteid)));
     hccp_info("[notify][event]value:0x%llx", (unsigned long long)errInfo->value);
 }
 
