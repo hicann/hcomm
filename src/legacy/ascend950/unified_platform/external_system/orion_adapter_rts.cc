@@ -43,9 +43,13 @@ const std::unordered_map<std::string, DevType> SOC_VER_CONVERT{
     {"Ascend910B3", DevType::DEV_TYPE_910A2},
     {"Ascend910B4", DevType::DEV_TYPE_910A2},
     {"Ascend910B4-1", DevType::DEV_TYPE_910A2},
-    {"Ascend910_939", DevType::DEV_TYPE_910A3},
-    {"Ascend910_938", DevType::DEV_TYPE_910A3},
-    {"Ascend910_937", DevType::DEV_TYPE_910A3},
+    {"Ascend910_9391", DevType::DEV_TYPE_910A3},
+    {"Ascend910_9381", DevType::DEV_TYPE_910A3},
+    {"Ascend910_9392", DevType::DEV_TYPE_910A3},
+    {"Ascend910_9382", DevType::DEV_TYPE_910A3},
+    {"Ascend910_9372", DevType::DEV_TYPE_910A3},
+    {"Ascend910_9362", DevType::DEV_TYPE_910A3},
+    {"Ascend910_9363", DevType::DEV_TYPE_910A3},
     {"nosoc", DevType::DEV_TYPE_NOSOC}};
 
 // 添加编译宏，防止返回82类型芯片造成已有UT失效
