@@ -26,7 +26,7 @@
 
 namespace Hccl {
 
-static bool ParseRdmaUdpSportsDecimal(const std::string& value, u32 maxValue, u32& parsed)
+static bool ParseHostRdmaUdpPortsDecimal(const std::string& value, u32 maxValue, u32& parsed)
 {
     if (value.empty() || !std::all_of(value.begin(), value.end(), [](unsigned char ch) {
             return std::isdigit(ch) != 0;
@@ -44,41 +44,54 @@ static bool ParseRdmaUdpSportsDecimal(const std::string& value, u32 maxValue, u3
     return true;
 }
 
-static std::vector<std::uint16_t> ParseRdmaUdpSportsPorts(const std::string& value)
+static bool ParseHostRdmaUdpPorts(const std::string& value, std::vector<std::uint16_t>& ports)
 {
-    std::vector<std::uint16_t> ports;
+    if (value.empty() || value.back() == ',') {
+        HCCL_ERROR("[ParseHostRdmaUdpPorts] UDP source port list is empty or ends with a comma.");
+        return false;
+    }
+
+    std::vector<std::uint16_t> parsedPorts;
     size_t start = 0;
-    while (start <= value.size()) {
+    while (true) {
         const size_t comma = value.find(',', start);
         const std::string token = value.substr(start, comma == std::string::npos ? std::string::npos : comma - start);
         u32 port = 0;
-        if (!ParseRdmaUdpSportsDecimal(token, MultiQpSrcPortConfig::CONFIG_SRC_PORT_ID_MAX, port) || port == 0) {
-            THROW<InvalidParamsException>("The UDP source port list contains an invalid port.");
+        if (!ParseHostRdmaUdpPortsDecimal(token, MultiQpSrcPortConfig::CONFIG_SRC_PORT_ID_MAX, port) || port == 0) {
+            HCCL_ERROR(
+                "[ParseHostRdmaUdpPorts] UDP source port is invalid, expected a decimal integer in range [1, %u].",
+                MultiQpSrcPortConfig::CONFIG_SRC_PORT_ID_MAX);
+            return false;
         }
-        ports.emplace_back(static_cast<std::uint16_t>(port));
-        if (ports.size() > MultiQpSrcPortConfig::CONFIG_SRC_PORT_NUM_MAX) {
-            THROW<InvalidParamsException>(StringFormat(
-                "One phy_dev_id has UDP source ports num[%zu] more than the threshold[%u].", ports.size(),
-                MultiQpSrcPortConfig::CONFIG_SRC_PORT_NUM_MAX));
+        parsedPorts.emplace_back(static_cast<std::uint16_t>(port));
+        if (parsedPorts.size() > MultiQpSrcPortConfig::CONFIG_SRC_PORT_NUM_MAX) {
+            HCCL_ERROR(
+                "[ParseHostRdmaUdpPorts] UDP source port count[%zu] exceeds the maximum[%u].", parsedPorts.size(),
+                MultiQpSrcPortConfig::CONFIG_SRC_PORT_NUM_MAX);
+            return false;
         }
         if (comma == std::string::npos) {
             break;
         }
         start = comma + 1U;
     }
-    return ports;
+    ports = std::move(parsedPorts);
+    return true;
 }
 
 /*----------------------------- cast functions -------------------------*/
 
-RdmaUdpSportsList CastRdmaUdpSportsList(const std::string& s)
+HostRdmaUdpPortsList CastHostRdmaUdpPortsList(const std::string& s)
 {
-    RdmaUdpSportsList list;
+    HostRdmaUdpPortsList list;
     if (s.empty()) {
         return list;
     }
-    if (s.size() > RdmaUdpSportsList::CONFIG_VALUE_LEN_MAX) {
-        THROW<InvalidParamsException>("The value is too long.");
+    if (s.size() > HostRdmaUdpPortsList::CONFIG_VALUE_LEN_MAX) {
+        HCCL_ERROR(
+            "[CastHostRdmaUdpPortsList] config value length[%zu] exceeds the maximum[%u].", s.size(),
+            HostRdmaUdpPortsList::CONFIG_VALUE_LEN_MAX);
+        return {};
     }
 
     size_t start = 0;
@@ -89,17 +102,23 @@ RdmaUdpSportsList CastRdmaUdpSportsList(const std::string& s)
         const size_t colon = deviceConfig.find(':');
         if (deviceConfig.empty() || colon == std::string::npos || colon == 0U || colon + 1U >= deviceConfig.size()
             || deviceConfig.find(':', colon + 1U) != std::string::npos) {
-            THROW<InvalidParamsException>("A device group has invalid separators or an empty field.");
+            HCCL_ERROR("[CastHostRdmaUdpPortsList] device config has invalid separators or an empty field.");
+            return {};
         }
 
         u32 devicePhyId = 0;
-        if (!ParseRdmaUdpSportsDecimal(deviceConfig.substr(0, colon), std::numeric_limits<u32>::max(), devicePhyId)) {
-            THROW<InvalidParamsException>("A phy_dev_id is not a valid decimal integer.");
+        if (!ParseHostRdmaUdpPortsDecimal(
+                deviceConfig.substr(0, colon), std::numeric_limits<u32>::max(), devicePhyId)) {
+            HCCL_ERROR("[CastHostRdmaUdpPortsList] phy_dev_id is not a valid decimal integer.");
+            return {};
         }
-        const auto insertResult
-            = list.portsByPhyId.emplace(devicePhyId, ParseRdmaUdpSportsPorts(deviceConfig.substr(colon + 1U)));
-        if (!insertResult.second) {
-            THROW<InvalidParamsException>(StringFormat("Phy_dev_id[%u] already exists.", devicePhyId));
+        std::vector<std::uint16_t> ports;
+        if (!ParseHostRdmaUdpPorts(deviceConfig.substr(colon + 1U), ports)) {
+            return {};
+        }
+        if (!list.portsByPhyId.emplace(devicePhyId, std::move(ports)).second) {
+            HCCL_ERROR("[CastHostRdmaUdpPortsList] phy_dev_id[%u] is duplicated.", devicePhyId);
+            return {};
         }
         if (semicolon == std::string::npos) {
             break;
@@ -1042,7 +1061,7 @@ HcclDetourType CastDetourType(const std::string& s)
 }
 
 /*----------------------- multi qp src port config --------------------------*/
-std::vector<std::uint16_t> GetRdmaUdpSportsByPhyId(const RdmaUdpSportsList& list, u32 devicePhyId)
+std::vector<std::uint16_t> GetHostRdmaUdpPortsByPhyId(const HostRdmaUdpPortsList& list, u32 devicePhyId)
 {
     const auto iter = list.portsByPhyId.find(devicePhyId);
     if (iter == list.portsByPhyId.end()) {

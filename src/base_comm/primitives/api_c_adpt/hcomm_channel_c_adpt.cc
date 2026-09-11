@@ -243,7 +243,8 @@ HcommResult ProcessHcommChannelDescs(const HcommChannelDesc& channelDesc, HcommC
     }
 
     // v3：channelName，低版本时置 NULL
-    if (channelDesc.header.version < HCOMM_CHANNEL_VERSION) {
+    constexpr uint32_t HCOMM_CHANNEL_VERSION_THREE = 3U;
+    if (channelDesc.header.version < HCOMM_CHANNEL_VERSION_THREE) {
         channelDescFinal.channelName = nullptr;
     } else {
         channelDescFinal.channelName = channelDesc.channelName;
@@ -259,6 +260,13 @@ HcommResult ProcessHcommChannelDescs(const HcommChannelDesc& channelDesc, HcommC
             HCCL_ERROR("[%s] channelName too long, max len[%u].", __func__, HCOMM_CHANNEL_NAME_MAX_LEN);
             return HCCL_E_PARA;
         }
+    }
+
+    // v4：roceAttr.srcPortList，低版本时 union 内该位置为脏数据，置 NULL
+    if (channelDesc.header.version < HCOMM_CHANNEL_VERSION) {
+        channelDescFinal.roceAttr.srcPortList = nullptr;
+    } else {
+        channelDescFinal.roceAttr.srcPortList = channelDesc.roceAttr.srcPortList;
     }
 
     return HCOMM_SUCCESS;

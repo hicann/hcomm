@@ -31,6 +31,7 @@
 #include "ccu_res.h"
 #include "coll_comm_mgr.h"
 #include "new_rank_info.h"
+#include "roce_channel_desc_configurator.h"
 
 #include <acl/acl.h>
 #include "shared_jetty_channel_pool.h"
@@ -1047,10 +1048,12 @@ HcclResult MyRank::CreateChannels(
     auto& rdmaConfig = Hccl::EnvConfig::GetInstance().GetRdmaConfig();
     std::vector<HcommChannelDesc> hcommDescs(channelNum);
     std::vector<std::vector<MemHandle>> allHandles(channelNum);
+    RoceChannelDescConfigurator roceDescConfigurator(channelNum);
     for (u32 i = 0; i < channelNum; ++i) {
         hcommDescs[i] = MyRankUtils::ChannelDescHccl2Hcomm(channelDescs[i], config_);
         hcommDescs[i].roceAttr.qpThreshold = rdmaConfig.GetRdmaMultiQpThreshold();
         CHK_RET(ConfigSqDepthByExpansionMode(engine, hcommDescs[i]));
+        CHK_RET(roceDescConfigurator.FillRoceSrcPortList(channelDescs[i], i, hcommDescs[i]));
     }
 
     auto start = std::chrono::steady_clock::now();

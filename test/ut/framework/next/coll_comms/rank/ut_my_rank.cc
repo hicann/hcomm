@@ -25,6 +25,7 @@
 #define private public
 #include "my_rank.h"
 #undef private
+#include "roce_channel_desc_configurator.h"
 #include "hccl_comm_pub.h"
 #include "llt_hccl_stub_rank_graph.h"
 #include "ccu_res.h"
@@ -104,6 +105,7 @@ protected:
     virtual void SetUp()
     {
         s_registerMemoryCalls.clear();
+        ResetUdpPortConfig();
         std::cout << "A Test case in MyRankTest SetUP" << std::endl;
         rankIpPortMap = std::make_shared<std::unordered_map<u32, std::unordered_map<Hccl::IpAddress, u32>>>();
         (*rankIpPortMap)[0][Hccl::IpAddress("1.0.0.0")] = 16666;
@@ -115,8 +117,19 @@ protected:
 
     virtual void TearDown()
     {
+        ResetUdpPortConfig();
         GlobalMockObject::verify();
         std::cout << "A Test case in MyRankTest TearDown" << std::endl;
+    }
+
+    void ResetUdpPortConfig()
+    {
+        const auto& rdmaConfig = Hccl::EnvConfig::GetInstance().GetRdmaConfig();
+        auto& hostUdpPorts = const_cast<Hccl::HostRdmaUdpPortsList&>(rdmaConfig.GetHostRdmaUdpPortsList()).portsByPhyId;
+        auto& fileUdpPorts
+            = const_cast<Hccl::MultiQpSrcPortConfig&>(rdmaConfig.GetMultiQpSrcPortConfig()).ipPairToPorts;
+        hostUdpPorts.clear();
+        fileUdpPorts.clear();
     }
 
     void CreateCclBuffer(HcclMem& cclBuffer)
@@ -1454,4 +1467,105 @@ TEST_F(MyRankTest, Ut_BatchCreateChannels_When_DefaultPort_EnvNotConfigured_Expe
         HCCL_SUCCESS);
 
     GlobalMockObject::verify();
+}
+
+TEST_F(MyRankTest, Ut_FillRoceSrcPortList_When_EnvMatchesPhyId_Expect_EnvPriorityAndCycle)
+{
+    const auto& rdmaConfig = Hccl::EnvConfig::GetInstance().GetRdmaConfig();
+    auto& hostUdpPorts = const_cast<Hccl::HostRdmaUdpPortsList&>(rdmaConfig.GetHostRdmaUdpPortsList()).portsByPhyId;
+    auto& fileUdpPorts = const_cast<Hccl::MultiQpSrcPortConfig&>(rdmaConfig.GetMultiQpSrcPortConfig()).ipPairToPorts;
+    hostUdpPorts[1] = {10001, 10002};
+    fileUdpPorts["1.0.0.0,2.0.0.0"] = {20001};
+
+    s32 deviceLogicId = 0;
+    MOCKER(hrtGetDevice).stubs().with(outBoundP(&deviceLogicId)).will(returnValue(HCCL_SUCCESS));
+    MOCKER(hrtGetDevicePhyIdByIndex)
+        .stubs()
+        .with(mockcpp::any(), outBound(static_cast<u32>(1)), mockcpp::any())
+        .will(returnValue(HCCL_SUCCESS));
+
+    HcclChannelDesc hcclDesc{};
+    ASSERT_EQ(HcclChannelDescInit(&hcclDesc, 1), HCCL_SUCCESS);
+    hcclDesc.channelProtocol = COMM_PROTOCOL_ROCE;
+    CreateEndpointDesc(hcclDesc.localEndpoint, COMM_PROTOCOL_ROCE, "1.0.0.0");
+    hcclDesc.localEndpoint.loc.locType = ENDPOINT_LOC_TYPE_HOST;
+    CreateEndpointDesc(hcclDesc.remoteEndpoint, COMM_PROTOCOL_ROCE, "2.0.0.0");
+
+    HcommChannelDesc hcommDesc = MyRankUtils::ChannelDescHccl2Hcomm(hcclDesc, config);
+    hcommDesc.roceAttr.queueNum = 4;
+    RoceChannelDescConfigurator configurator(1);
+    ASSERT_EQ(configurator.FillRoceSrcPortList(hcclDesc, 0, hcommDesc), HCCL_SUCCESS);
+    ASSERT_NE(hcommDesc.roceAttr.srcPortList, nullptr);
+    EXPECT_EQ(
+        std::vector<uint16_t>(hcommDesc.roceAttr.srcPortList, hcommDesc.roceAttr.srcPortList + 4),
+        (std::vector<uint16_t>{10001, 10002, 10001, 10002}));
+}
+
+TEST_F(MyRankTest, Ut_FillRoceSrcPortList_When_EnvMissesPhyId_Expect_FallbackToFileConfig)
+{
+    const auto& rdmaConfig = Hccl::EnvConfig::GetInstance().GetRdmaConfig();
+    auto& hostUdpPorts = const_cast<Hccl::HostRdmaUdpPortsList&>(rdmaConfig.GetHostRdmaUdpPortsList()).portsByPhyId;
+    auto& fileUdpPorts = const_cast<Hccl::MultiQpSrcPortConfig&>(rdmaConfig.GetMultiQpSrcPortConfig()).ipPairToPorts;
+    hostUdpPorts[1] = {10001};
+    fileUdpPorts["1.0.0.0,2.0.0.0"] = {20001, 20002};
+
+    s32 deviceLogicId = 0;
+    MOCKER(hrtGetDevice).stubs().with(outBoundP(&deviceLogicId)).will(returnValue(HCCL_SUCCESS));
+    MOCKER(hrtGetDevicePhyIdByIndex)
+        .stubs()
+        .with(mockcpp::any(), outBound(static_cast<u32>(0)), mockcpp::any())
+        .will(returnValue(HCCL_SUCCESS));
+
+    HcclChannelDesc hcclDesc{};
+    ASSERT_EQ(HcclChannelDescInit(&hcclDesc, 1), HCCL_SUCCESS);
+    hcclDesc.channelProtocol = COMM_PROTOCOL_ROCE;
+    CreateEndpointDesc(hcclDesc.localEndpoint, COMM_PROTOCOL_ROCE, "1.0.0.0");
+    hcclDesc.localEndpoint.loc.locType = ENDPOINT_LOC_TYPE_HOST;
+    CreateEndpointDesc(hcclDesc.remoteEndpoint, COMM_PROTOCOL_ROCE, "2.0.0.0");
+
+    HcommChannelDesc hcommDesc = MyRankUtils::ChannelDescHccl2Hcomm(hcclDesc, config);
+    hcommDesc.roceAttr.queueNum = 2;
+    RoceChannelDescConfigurator configurator(1);
+    ASSERT_EQ(configurator.FillRoceSrcPortList(hcclDesc, 0, hcommDesc), HCCL_SUCCESS);
+    ASSERT_NE(hcommDesc.roceAttr.srcPortList, nullptr);
+    EXPECT_EQ(
+        std::vector<uint16_t>(hcommDesc.roceAttr.srcPortList, hcommDesc.roceAttr.srcPortList + 2),
+        (std::vector<uint16_t>{20001, 20002}));
+}
+
+TEST_F(MyRankTest, Ut_FillRoceSrcPortList_When_FileConfigAddressInvalid_Expect_InternalError)
+{
+    const auto& rdmaConfig = Hccl::EnvConfig::GetInstance().GetRdmaConfig();
+    auto& fileUdpPorts = const_cast<Hccl::MultiQpSrcPortConfig&>(rdmaConfig.GetMultiQpSrcPortConfig()).ipPairToPorts;
+    fileUdpPorts["1.0.0.0,2.0.0.0"] = {20001};
+
+    HcclChannelDesc hcclDesc{};
+    ASSERT_EQ(HcclChannelDescInit(&hcclDesc, 1), HCCL_SUCCESS);
+    hcclDesc.channelProtocol = COMM_PROTOCOL_ROCE;
+    hcclDesc.localEndpoint.protocol = COMM_PROTOCOL_ROCE;
+    hcclDesc.localEndpoint.loc.locType = ENDPOINT_LOC_TYPE_HOST;
+    hcclDesc.remoteEndpoint.protocol = COMM_PROTOCOL_ROCE;
+
+    HcommChannelDesc hcommDesc = MyRankUtils::ChannelDescHccl2Hcomm(hcclDesc, config);
+    hcommDesc.roceAttr.queueNum = 1;
+    RoceChannelDescConfigurator configurator(1);
+    EXPECT_EQ(configurator.FillRoceSrcPortList(hcclDesc, 0, hcommDesc), HCCL_E_INTERNAL);
+    EXPECT_EQ(hcommDesc.roceAttr.srcPortList, nullptr);
+}
+
+TEST_F(MyRankTest, Ut_FillRoceSrcPortList_When_ExchangeAllMems_Expect_SrcPortListNull)
+{
+    HcclChannelDesc hcclDesc{};
+    ASSERT_EQ(HcclChannelDescInit(&hcclDesc, 1), HCCL_SUCCESS);
+    hcclDesc.channelProtocol = COMM_PROTOCOL_ROCE;
+    CreateEndpointDesc(hcclDesc.localEndpoint, COMM_PROTOCOL_ROCE, "1.0.0.0");
+    hcclDesc.localEndpoint.loc.locType = ENDPOINT_LOC_TYPE_HOST;
+    CreateEndpointDesc(hcclDesc.remoteEndpoint, COMM_PROTOCOL_ROCE, "2.0.0.0");
+
+    HcommChannelDesc hcommDesc = MyRankUtils::ChannelDescHccl2Hcomm(hcclDesc, config);
+    hcommDesc.exchangeAllMems = true;
+    hcommDesc.roceAttr.queueNum = 2;
+    RoceChannelDescConfigurator configurator(1);
+    EXPECT_EQ(configurator.FillRoceSrcPortList(hcclDesc, 0, hcommDesc), HCCL_SUCCESS);
+    EXPECT_EQ(hcommDesc.roceAttr.srcPortList, nullptr);
 }

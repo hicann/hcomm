@@ -27,12 +27,10 @@
 #include "adapter_hccp.h"
 #include "binary_stream.h"
 #include "env_config/env_config_v2.h"
-#include "env_config/env_func.h"
 #include "../../../../../legacy/ascend910/platform/resource/notify/notify_pool_impl.h"
 #include "../../../../../base_comm/resources/hccp/inc/network/hccp_common.h"
 #include "dlprof_function.h"
 #include "user_remote_mem_getter.h"
-#include "env_config/env_config_v2.h"
 
 namespace hcomm {
 constexpr u32 MEM_BLOCK_SIZE = 128;
@@ -43,7 +41,13 @@ constexpr u32 DEFAULT_NOTIFY_WAIT_TIMEOUT_S = 30; // NotifyWait超时默认值�
 HostCpuRoceChannel::HostCpuRoceChannel(EndpointHandle endpointHandle, HcommChannelDesc channelDesc)
     : endpointHandle_(endpointHandle),
       channelDesc_(channelDesc)
-{}
+{
+    if (channelDesc_.roceAttr.srcPortList != nullptr && channelDesc_.roceAttr.queueNum > 0) {
+        srcPortBuf_.assign(
+            channelDesc_.roceAttr.srcPortList, channelDesc_.roceAttr.srcPortList + channelDesc_.roceAttr.queueNum);
+        channelDesc_.roceAttr.srcPortList = srcPortBuf_.data();
+    }
+}
 
 HostCpuRoceChannel::~HostCpuRoceChannel()
 {
@@ -197,31 +201,6 @@ HcclResult HostCpuRoceChannel::BuildSocket()
     return HCCL_SUCCESS;
 }
 
-static std::vector<u16>
-GetConfiguredUdpSrcPorts(const HcommChannelDesc& channelDesc, u32 devicePhyId, const CommAddr& localCommAddr)
-{
-    if (channelDesc.exchangeAllMems) { // hixl场景填0
-        return {};
-    }
-
-    const auto& rdmaConfig = Hccl::EnvConfig::GetInstance().GetRdmaConfig();
-    const auto& udpSportsList = rdmaConfig.GetRdmaUdpSportsList();
-    std::vector<u16> srcPorts = Hccl::GetRdmaUdpSportsByPhyId(udpSportsList, devicePhyId);
-    if (!srcPorts.empty()) {
-        return srcPorts;
-    }
-
-    const auto& qpSrcPortConfig = rdmaConfig.GetMultiQpSrcPortConfig();
-    if (qpSrcPortConfig.IsAvailable()) {
-        Hccl::IpAddress localIp;
-        Hccl::IpAddress remoteIp;
-        (void)CommAddrToIpAddress(localCommAddr, localIp);
-        (void)CommAddrToIpAddress(channelDesc.remoteEndpoint.commAddr, remoteIp);
-        srcPorts = Hccl::GetMultiQpSrcPortsByIpPair(qpSrcPortConfig, localIp, remoteIp);
-    }
-    return srcPorts;
-}
-
 HcclResult HostCpuRoceChannel::BuildConnection()
 {
     u32 loopTimes = 0;
@@ -230,7 +209,6 @@ HcclResult HostCpuRoceChannel::BuildConnection()
     } else {
         loopTimes = channelDesc_.roceAttr.queueNum;
     }
-    const std::vector<u16> srcPorts = GetConfiguredUdpSrcPorts(channelDesc_, devicePhyId_, localEp_.commAddr);
     for (u32 i = 0; i < loopTimes; i++) {
         std::unique_ptr<HostRdmaConnection> conn;
         EXCEPTION_CATCH(conn = std::make_unique<HostRdmaConnection>(socket_, rdmaHandle_), return HCCL_E_INTERNAL);
@@ -244,8 +222,8 @@ HcclResult HostCpuRoceChannel::BuildConnection()
         qpInfo.trafficClass = channelDesc_.roceAttr.tc;
         qpInfo.retryCnt = channelDesc_.roceAttr.retryCnt;
         qpInfo.retryInterval = channelDesc_.roceAttr.retryInterval;
-        qpInfo.udpSport = (!channelDesc_.exchangeAllMems && !srcPorts.empty()) ?
-                              static_cast<u32>(srcPorts[i % srcPorts.size()]) :
+        qpInfo.udpSport = (!channelDesc_.exchangeAllMems && channelDesc_.roceAttr.srcPortList != nullptr) ?
+                              static_cast<u32>(channelDesc_.roceAttr.srcPortList[i % channelDesc_.roceAttr.queueNum]) :
                               0;
         HCCL_INFO(
             "[HostCpuRoceChannel::BuildConnection] QpInfo[%u]: lbValue[%u], serviceLevel[%u], trafficClass[%u], "

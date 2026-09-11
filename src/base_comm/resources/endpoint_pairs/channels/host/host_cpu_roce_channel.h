@@ -132,6 +132,7 @@ private:
     // 入参
     EndpointHandle endpointHandle_;
     HcommChannelDesc channelDesc_;
+    std::vector<uint16_t> srcPortBuf_{};
 
     // 转换参数
     EndpointDesc localEp_;

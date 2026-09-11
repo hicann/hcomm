@@ -532,38 +532,51 @@ TEST_F(EnvConfigTest, Ut_GetRdmaQueueNum_OutOfRange_ReturnsException)
     unsetenv("HCCL_RDMA_QPS_PER_CONNECTION");
 }
 
-TEST_F(EnvConfigTest, Ut_EnvRdmaConfigGetRdmaUdpSportsList_WhenValidAndEmpty_ExpectParsed)
+TEST_F(EnvConfigTest, Ut_EnvRdmaConfigGetHostRdmaUdpPortsList_WhenValidAndEmpty_ExpectParsed)
 {
-    setenv("HCCL_RDMA_UDP_SPORTS_LIST", "0:10000,10015;1:10016,10031", 1);
+    setenv("HCCL_HOST_RDMA_UDP_PORTS_LIST", "0:10000,10015;1:10016,10031", 1);
     EnvRdmaConfig validRdmaConfig;
     validRdmaConfig.Parse();
-    const auto& validList = validRdmaConfig.GetRdmaUdpSportsList();
-    EXPECT_EQ(GetRdmaUdpSportsByPhyId(validList, 0), (std::vector<std::uint16_t>{10000, 10015}));
-    EXPECT_EQ(GetRdmaUdpSportsByPhyId(validList, 1), (std::vector<std::uint16_t>{10016, 10031}));
-    EXPECT_TRUE(GetRdmaUdpSportsByPhyId(validList, 2).empty());
+    const auto& validList = validRdmaConfig.GetHostRdmaUdpPortsList();
+    EXPECT_EQ(GetHostRdmaUdpPortsByPhyId(validList, 0), (std::vector<std::uint16_t>{10000, 10015}));
+    EXPECT_EQ(GetHostRdmaUdpPortsByPhyId(validList, 1), (std::vector<std::uint16_t>{10016, 10031}));
+    EXPECT_TRUE(GetHostRdmaUdpPortsByPhyId(validList, 2).empty());
 
-    setenv("HCCL_RDMA_UDP_SPORTS_LIST", "", 1);
+    setenv("HCCL_HOST_RDMA_UDP_PORTS_LIST", "", 1);
     EnvRdmaConfig emptyRdmaConfig;
     emptyRdmaConfig.Parse();
-    EXPECT_FALSE(emptyRdmaConfig.GetRdmaUdpSportsList().IsAvailable());
-    unsetenv("HCCL_RDMA_UDP_SPORTS_LIST");
+    EXPECT_FALSE(emptyRdmaConfig.GetHostRdmaUdpPortsList().IsAvailable());
+    unsetenv("HCCL_HOST_RDMA_UDP_PORTS_LIST");
 }
 
-TEST_F(EnvConfigTest, Ut_EnvRdmaConfigParse_WhenRdmaUdpSportsInvalid_ExpectThrow)
+TEST_F(EnvConfigTest, Ut_EnvRdmaConfigParse_WhenHostRdmaUdpPortsInvalid_ExpectUnavailable)
 {
     std::string tooManyPorts = "0:1";
     for (u32 i = 0; i < MultiQpSrcPortConfig::CONFIG_SRC_PORT_NUM_MAX; ++i) {
         tooManyPorts += ",1";
     }
+    const std::string tooLongValue(HostRdmaUdpPortsList::CONFIG_VALUE_LEN_MAX + 1U, '0');
     const std::vector<std::string> invalidValues
-        = {"a:10000", "0:0", "0:65536", "0:10000,", "0:10000,10001;0:10002", tooManyPorts};
+        = {"a:10000",
+           "0:0",
+           "0:65536",
+           "0:10000,",
+           "0",
+           ":10000",
+           "0:",
+           "0:10000:10001",
+           "0:10000,10001;0:10002",
+           "0:10000,10001;1:0",
+           tooManyPorts,
+           tooLongValue};
     for (const auto& value : invalidValues) {
         SCOPED_TRACE(value);
-        setenv("HCCL_RDMA_UDP_SPORTS_LIST", value.c_str(), 1);
+        setenv("HCCL_HOST_RDMA_UDP_PORTS_LIST", value.c_str(), 1);
         EnvRdmaConfig rdmaConfig;
-        EXPECT_THROW(rdmaConfig.Parse(), InvalidParamsException);
+        EXPECT_NO_THROW(rdmaConfig.Parse());
+        EXPECT_FALSE(rdmaConfig.GetHostRdmaUdpPortsList().IsAvailable());
     }
-    unsetenv("HCCL_RDMA_UDP_SPORTS_LIST");
+    unsetenv("HCCL_HOST_RDMA_UDP_PORTS_LIST");
 }
 
 TEST_F(EnvConfigTest, Ut_GetRdmaMultiQpThreshold_ValidValue_ReturnsCorrectValue)

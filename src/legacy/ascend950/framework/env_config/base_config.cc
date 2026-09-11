@@ -139,10 +139,10 @@ void EnvRdmaConfig::Parse()
         "[HCCL_ENV] HCCL_MULTI_QP_THRESHOLD set by %s to [%u]B", multiQpThreshold.GetSource(),
         GetRdmaMultiQpThreshold());
 
-    rdmaUdpSportsList.Parse();
+    hostRdmaUdpPortsList.Parse();
     HCCL_RUN_INFO(
-        "[HCCL_ENV] HCCL_RDMA_UDP_SPORTS_LIST set by %s, device config count[%zu]", rdmaUdpSportsList.GetSource(),
-        GetRdmaUdpSportsList().GetDeviceConfigCount());
+        "[HCCL_ENV] HCCL_HOST_RDMA_UDP_PORTS_LIST set by %s, device config count[%zu]",
+        hostRdmaUdpPortsList.GetSource(), GetHostRdmaUdpPortsList().GetDeviceConfigCount());
 
     qpPortConfigPath.Parse();
     HCCL_RUN_INFO(
@@ -377,7 +377,7 @@ u32 EnvRdmaConfig::GetRdmaQueueNum() const { return queueNum.Get(); }
 
 u32 EnvRdmaConfig::GetRdmaMultiQpThreshold() const { return multiQpThreshold.Get(); }
 
-const RdmaUdpSportsList& EnvRdmaConfig::GetRdmaUdpSportsList() const { return rdmaUdpSportsList.Get(); }
+const HostRdmaUdpPortsList& EnvRdmaConfig::GetHostRdmaUdpPortsList() const { return hostRdmaUdpPortsList.Get(); }
 
 const MultiQpSrcPortConfig& EnvRdmaConfig::GetMultiQpSrcPortConfig() const { return multiQpSrcPortConfig_; }
 

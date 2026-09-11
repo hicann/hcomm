@@ -378,6 +378,7 @@ namespace {
 uint32_t gCapturedChannelDescQos = 0U;
 uint32_t gCapturedChannelDescSqDepth = 0U;
 const char* gCapturedChannelDescChannelName = nullptr;
+uint16_t* gCapturedChannelDescSrcPortList = nullptr;
 
 HcclResult CaptureCreateChannelsLoop(
     EndpointHandle, CommEngine, HcommChannelDesc* channelDescs, uint32_t channelNum, ChannelHandle*)
@@ -386,6 +387,7 @@ HcclResult CaptureCreateChannelsLoop(
         gCapturedChannelDescQos = channelDescs[0].qos;
         gCapturedChannelDescSqDepth = channelDescs[0].ubAttr.sqDepth;
         gCapturedChannelDescChannelName = channelDescs[0].channelName;
+        gCapturedChannelDescSrcPortList = channelDescs[0].roceAttr.srcPortList;
     }
     return HCCL_SUCCESS;
 }
@@ -663,9 +665,10 @@ TEST_F(HcommCAdptTest, ut_HcommChannelDescInit_When_Normal_Expect_Success)
     HcommChannelDesc channelDesc{};
     HcommResult ret = HcommChannelDescInit(&channelDesc, 1);
     EXPECT_EQ(ret, HCCL_SUCCESS);
+    EXPECT_EQ(channelDesc.roceAttr.srcPortList, nullptr);
 }
 
-TEST_F(HcommCAdptTest, ut_HcommChannelDescInit_When_Normal_Expect_Version2AndFullSize)
+TEST_F(HcommCAdptTest, ut_HcommChannelDescInit_When_Normal_Expect_CurrentVersionAndFullSize)
 {
     HcommChannelDesc channelDesc{};
     ASSERT_EQ(HcommChannelDescInit(&channelDesc, 1), HCCL_SUCCESS);
@@ -730,8 +733,10 @@ TEST_F(HcommCAdptTest, ut_HcommCollectiveChannelCreate_V1Desc_ClearsQosField)
 TEST_F(HcommCAdptTest, ut_HcommCollectiveChannelCreate_CurrentDescWithSmallSize_KeepsFieldsByVersion)
 {
     static const char channelName[] = "channel-name";
+    uint16_t srcPorts[] = {10001U, 10002U};
     gCapturedChannelDescQos = 0U;
     gCapturedChannelDescChannelName = nullptr;
+    gCapturedChannelDescSrcPortList = nullptr;
     EndpointHandle endpointHandle = reinterpret_cast<EndpointHandle>(0x12345);
     HcommChannelDesc channelDesc{};
     ASSERT_EQ(HcommChannelDescInit(&channelDesc, 1), HCCL_SUCCESS);
@@ -739,6 +744,7 @@ TEST_F(HcommCAdptTest, ut_HcommCollectiveChannelCreate_CurrentDescWithSmallSize_
     channelDesc.header.size = HCOMM_CHANNEL_DESC_ABI_V1_SIZE;
     channelDesc.qos = 5U;
     channelDesc.channelName = channelName;
+    channelDesc.roceAttr.srcPortList = srcPorts;
     ChannelHandle channels[1] = {0};
 
     MOCKER(ChannelProcess::CreateChannelsLoop).stubs().will(invoke(CaptureCreateChannelsLoop));
@@ -747,6 +753,29 @@ TEST_F(HcommCAdptTest, ut_HcommCollectiveChannelCreate_CurrentDescWithSmallSize_
     EXPECT_EQ(ret, HCCL_SUCCESS);
     EXPECT_EQ(gCapturedChannelDescQos, 5U);
     EXPECT_STREQ(gCapturedChannelDescChannelName, channelName);
+    EXPECT_EQ(gCapturedChannelDescSrcPortList, srcPorts);
+}
+
+TEST_F(HcommCAdptTest, ut_HcommCollectiveChannelCreate_V3Desc_KeepsChannelNameAndClearsSrcPortList)
+{
+    static const char channelName[] = "channel-name";
+    uint16_t srcPorts[] = {10001U, 10002U};
+    gCapturedChannelDescChannelName = nullptr;
+    gCapturedChannelDescSrcPortList = srcPorts;
+    EndpointHandle endpointHandle = reinterpret_cast<EndpointHandle>(0x12345);
+    HcommChannelDesc channelDesc{};
+    ASSERT_EQ(HcommChannelDescInit(&channelDesc, 1), HCCL_SUCCESS);
+    channelDesc.header.version = 3U;
+    channelDesc.channelName = channelName;
+    channelDesc.roceAttr.srcPortList = srcPorts;
+    ChannelHandle channels[1] = {0};
+
+    MOCKER(ChannelProcess::CreateChannelsLoop).stubs().will(invoke(CaptureCreateChannelsLoop));
+
+    HcommResult ret = HcommCollectiveChannelCreate(endpointHandle, COMM_ENGINE_CPU, &channelDesc, 1, channels);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+    EXPECT_STREQ(gCapturedChannelDescChannelName, channelName);
+    EXPECT_EQ(gCapturedChannelDescSrcPortList, nullptr);
 }
 
 TEST_F(HcommCAdptTest, ut_HcommResMgrInit_When_Normal_Expect_Success)
