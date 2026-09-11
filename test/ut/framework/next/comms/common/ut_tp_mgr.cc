@@ -324,6 +324,25 @@ int StubRaGetHccnCfgEmpty(struct RaInfo* info, enum HccnCfgKey key, char* value,
     return 0;
 }
 
+// 模拟 RsGetHccnCfg：valueLen = strlen + 1（含结尾 '\0'）
+int StubRaGetHccnCfgDscpWithTrailingNull(struct RaInfo* info, enum HccnCfgKey key, char* value, unsigned int* valueLen)
+{
+    (void)info;
+    (void)key;
+    if (value == nullptr || valueLen == nullptr) {
+        return -1;
+    }
+    const char* cfg = "4:33";
+    const unsigned int strLen = static_cast<unsigned int>(std::strlen(cfg));
+    const unsigned int copyLen = strLen + 1U; // 含 '\0'
+    if (*valueLen < copyLen) {
+        return -1;
+    }
+    (void)std::memcpy(value, cfg, copyLen);
+    *valueLen = copyLen;
+    return 0;
+}
+
 static uint8_t gCapturedSetTpAttrDscp = 0xFFU;
 static uint32_t gCapturedSetTpAttrBitmap = 0U;
 
@@ -648,6 +667,15 @@ TEST_F(TpMgrTest, Ut_GetDscpByQos_When_EmptyCfg_Expect_DefaultDscp)
     MOCKER(RaGetHccnCfg).stubs().will(invoke(StubRaGetHccnCfgEmpty));
     uint8_t dscp = 0U;
     ASSERT_EQ(Hccl::GetDscpByQos(0U, 2U, dscp), HCCL_SUCCESS);
+    EXPECT_EQ(dscp, Hccl::kUboeDefaultDscp);
+}
+
+// valueLen 含尾 '\0' 时，未命中 qos 应回退默认 DSCP，而非误判格式非法
+TEST_F(TpMgrTest, Ut_GetDscpByQos_When_TrailingNullAndQosMiss_Expect_DefaultDscp)
+{
+    MOCKER(RaGetHccnCfg).stubs().will(invoke(StubRaGetHccnCfgDscpWithTrailingNull));
+    uint8_t dscp = 0U;
+    ASSERT_EQ(Hccl::GetDscpByQos(0U, 0U, dscp), HCCL_SUCCESS);
     EXPECT_EQ(dscp, Hccl::kUboeDefaultDscp);
 }
 

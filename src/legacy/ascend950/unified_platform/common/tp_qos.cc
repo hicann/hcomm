@@ -151,7 +151,10 @@ HcclResult GetDscpByQos(const uint32_t devPhyId, uint8_t qos, uint8_t& dscp, Net
         return HcclResult::HCCL_SUCCESS;
     }
 
-    const unsigned int cfgLen = std::min(valueLen, kHccnCfgValueBufLen);
+    unsigned int cfgLen = std::min(valueLen, kHccnCfgValueBufLen);
+    if (cfgLen > 0U && value[cfgLen - 1U] == '\0') {
+        --cfgLen;
+    }
     const std::string cfg(value.data(), cfgLen);
     const HcclResult parseRet = ParseDscpByQos(cfg, qos, dscp);
     if (parseRet == HcclResult::HCCL_SUCCESS) {
