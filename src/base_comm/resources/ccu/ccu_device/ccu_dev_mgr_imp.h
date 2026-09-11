@@ -29,7 +29,7 @@ using ChannelPara = Hccl::ChannelPara;
 /* 开源自定义算子CCU设备管理实现，当前支持新老通信域混跑，
  * 暂时改用legacy数据结构，避免反向依赖
  * MAKE_ENUM(CcuVersion, CCU_V1, CCU_V2, CCU_INVALID);
- * MAKE_ENUM(ResType, LOOP, MS, CKE, XN, COUNT_XN, GSA, INS, MISSION);
+ * MAKE_ENUM(ResType, LOOP, MS, CKE, XN, COUNT_XN, GSA, INS, MISSION, CASC_CNT);
  * struct ChannelPara {
  *     uint32_t feId;
  *     uint32_t jettyNum;
@@ -295,21 +295,13 @@ public:
     static HcclResult AllocIns(const int32_t userDevId, const uint8_t dieId, const uint32_t num, ResInfo& insInfo);
     static HcclResult ReleaseIns(const int32_t userDevId, const uint8_t dieId, const ResInfo& insInfo);
     static uint32_t GetInsConsecutiveRemainSize(const int32_t userDevId, const uint8_t dieId);
+    static uint32_t GetCascCntBlockRemainSize(const int32_t deviceuserDevIdLogicId, const uint8_t dieId);
     static HcclResult
     AllocCke(const int32_t userDevId, const uint8_t dieId, const uint32_t num, std::vector<ResInfo>& ckeInfos);
     static HcclResult ReleaseCke(const int32_t userDevId, const uint8_t dieId, const std::vector<ResInfo>& ckeInfos);
     static HcclResult
     AllocXn(const int32_t userDevId, const uint8_t dieId, const uint32_t num, std::vector<ResInfo>& xnInfos);
     static HcclResult ReleaseXn(const int32_t userDevId, const uint8_t dieId, const std::vector<ResInfo>& xnInfos);
-    static HcclResult
-    AllocWishCntXn(const int32_t userDevId, const uint8_t dieId, const std::string& resGroupTag, uint32_t& wishCntXn);
-    static HcclResult
-    ReleaseWishCntXn(const int32_t userDevId, const uint8_t dieId, const std::string& resGroupTag, uint32_t wishCntXn);
-    static HcclResult GetCntXnBlock(
-        const int32_t userDevId, const uint8_t dieId, const std::string& resGroupTag,
-        std::pair<uint32_t, uint32_t>& cntXnPair);
-    static HcclResult
-    GetTotalCntXn(const int32_t userDevId, const uint8_t dieId, const std::string& resGroupTag, uint32_t& totalCntXn);
 
     static HcclResult GetMissionKey(const int32_t userDevId, const uint8_t dieId, uint32_t& missionKey);
     static HcclResult GetResSpecsInstructionNum(const int32_t userDevId, const uint8_t dieId, uint32_t& instrNum);
@@ -319,6 +311,7 @@ public:
     static HcclResult GetAllocatableMaxXnNum(const int32_t userDevId, const uint8_t dieId, uint32_t& xnNum);
     static HcclResult GetAllocatableMaxGsaNum(const int32_t userDevId, const uint8_t dieId, uint32_t& gsaNum);
     static HcclResult GetResSpecsMissionNum(const int32_t userDevId, const uint8_t dieId, uint32_t& missionNum);
+    static HcclResult GetResSpecsCascCntNum(const int32_t deviceLogicId, const uint8_t dieId, uint32_t& cascCntNum);
     static HcclResult GetXnBaseAddr(const int32_t userDevId, const uint8_t dieId, uint64_t& xnBaseAddr);
     static HcclResult GetCkeBaseAddr(const int32_t userDevId, const uint8_t dieId, uint64_t& ckeBaseAddr);
     static HcclResult

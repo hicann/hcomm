@@ -99,6 +99,16 @@ CcuResult CcuInstanceMgr::Destroy(CcuInsHandle insHandle)
         return CcuResult::CCU_E_NOT_FOUND;
     }
 
+    // 修改 cascCntMap_ 需持写锁; 边遍历边 erase 会使迭代器失效, 用 erase 返回值推进避免 coredump
+    std::unique_lock<std::shared_timed_mutex> cascCntLock(cascCntMapMutex_);
+    for (auto it = cascCntMap_.begin(); it != cascCntMap_.end();) {
+        if (it->second == insHandle) {
+            it = cascCntMap_.erase(it);
+        } else {
+            ++it;
+        }
+    }
+
     insMap_.erase(it);
     return CcuResult::CCU_SUCCESS;
 }
@@ -167,5 +177,68 @@ CcuResult CcuInstanceMgr::QueryInsResDesc(CcuInsHandle& ccuInsHandle, uint8_t di
 }
 
 CcuResDescMgr& CcuInstanceMgr::GetResDescMgr() { return resDescMgr_; }
+
+CcuResult CcuInstanceMgr::CascCntHandleAlloc(CcuInsHandle ccuInsHandle, uint8_t dieId, HcommCcuCascCntHandle& handle)
+{
+    std::shared_lock<std::shared_timed_mutex> lock(insMapMutex_);
+
+    auto it = insMap_.find(ccuInsHandle);
+    if (it == insMap_.end()) {
+        HCCL_ERROR("[CcuInstanceMgr][%s] ins handle[%llx] is not existed.", __func__, ccuInsHandle);
+        return CcuResult::CCU_E_NOT_FOUND;
+    }
+
+    // cascCnt 句柄由 Mgr 统一分配(per-device 全局唯一, 单调递增从 1 起), 从根本上消除各实例
+    // resPack 独立自增导致的跨实例句柄冲突 -> cascCntMap_ 静默错路由(致命)。
+    HcommCcuCascCntHandle allocHandle = nextCascCntHandle_.fetch_add(1) + 1;
+
+    // 先登记 handle->ins 路由(写操作必须持写锁; 原实现误用 shared_lock 存在并发写竞态), 再向下
+    // 申请块。全局唯一句柄理论上不会冲突, 仍防御性检查插入结果, 一旦冲突即显式失败而非静默错路由。
+    {
+        std::unique_lock<std::shared_timed_mutex> cascCntLock(cascCntMapMutex_);
+        auto emplaceRet = cascCntMap_.emplace(allocHandle, ccuInsHandle);
+        if (!emplaceRet.second) {
+            HCCL_ERROR(
+                "[CcuInstanceMgr][%s] failed, cascCnt handle[%llx] already routed to ins[%llx].", __func__, allocHandle,
+                emplaceRet.first->second);
+            return CcuResult::CCU_E_INTERNAL;
+        }
+    }
+
+    // 向下申请块失败(如无空闲块)时回滚路由登记, 避免 cascCntMap_ 残留指向未成功分配的悬挂项。
+    CcuResult ret = it->second->CascCntHandleAlloc(dieId, allocHandle);
+    if (ret != CcuResult::CCU_SUCCESS) {
+        std::unique_lock<std::shared_timed_mutex> cascCntLock(cascCntMapMutex_);
+        cascCntMap_.erase(allocHandle);
+        return ret;
+    }
+
+    handle = allocHandle;
+    return CcuResult::CCU_SUCCESS;
+}
+
+CcuResult CcuInstanceMgr::GetCascCntBlock(HcommCcuCascCntHandle cntHandle, CntXnBlock& cascCntBlock)
+{
+    // 锁序与 Destroy/CascCntHandleAlloc 全仓统一(先 insMapMutex_ 后 cascCntMapMutex_), 避免 AB-BA 死锁。
+    // insMap_ 的 find 与解引用调用必须持 insMapMutex_ 读锁: 否则与 CreateByResDescs 的 emplace(可能 rehash
+    // 释放桶数组)及 Destroy 的 erase 并发时为数据竞争(UB); 持读锁亦保证解引用期间实例不被 Destroy 析构。
+    std::shared_lock<std::shared_timed_mutex> insLock(insMapMutex_);
+    std::shared_lock<std::shared_timed_mutex> cascCntLock(cascCntMapMutex_);
+
+    auto cascCntIter = cascCntMap_.find(cntHandle);
+    if (cascCntIter == cascCntMap_.end()) {
+        HCCL_ERROR("[CcuInstanceMgr][%s] cascCnt handle[%llx] is not existed.", __func__, cntHandle);
+        return CcuResult::CCU_E_NOT_FOUND;
+    }
+
+    auto insIter = insMap_.find(cascCntIter->second);
+    if (insIter == insMap_.end()) {
+        HCCL_ERROR("[CcuInstanceMgr][%s] ins handle[%llx] is not existed.", __func__, cascCntIter->second);
+        return CcuResult::CCU_E_NOT_FOUND;
+    }
+
+    CCU_CHK_RET(insIter->second->GetCascCntBlock(cntHandle, cascCntBlock));
+    return CcuResult::CCU_SUCCESS;
+}
 
 } // namespace hcomm

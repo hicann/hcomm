@@ -12,6 +12,7 @@
 #include <chrono>
 #include <vector>
 
+#include "ccu_types.h"
 #include "hcomm_c_adpt.h"
 #include "hcomm_c_adpt_common.h"
 #include "hcomm_res_mgr.h"
@@ -33,6 +34,7 @@
 #include "adapter_rts_common.h"
 #include "tp_qos.h"
 #include "hccl/hccl_types.h"
+#include "ccu_log.h"
 #include "env_config.h"
 #include "hccp_common.h"
 
@@ -732,3 +734,33 @@ HcommChannelGetRemoteMems(ChannelHandle channelHandle, uint32_t* memNum, CommMem
 
     return ChannelProcess::ChannelGetRemoteMems(channelHandle, memNum, remoteMem, memInfos);
 }
+
+#ifdef __cplusplus
+extern "C" {
+#endif // __cplusplus
+
+CcuResult HcommCcuGetRmtMemToken(ChannelHandle channelHandle, uint64_t srcVa, uint64_t* tokenInfo)
+{
+    if (channelHandle == 0) {
+        HCCL_ERROR("[%s] failed, invalid channelHandle[%llu].", __func__, channelHandle);
+        return CcuResult::CCU_E_PARA;
+    }
+    CCU_CHK_PTR_NULL(tokenInfo);
+    // srcVa 为 0 不是已注册内存的合法地址。若不在此拦截，底层遍历 rmtBufferVec_ 匹配不到，
+    // 只会返回 HCCL_E_NOT_FOUND 并被收敛为 CCU_E_INTERNAL，与接口约定（非法 srcVa 返回 CCU_E_PARA）不符。
+    if (srcVa == 0) {
+        HCCL_ERROR("[%s] failed, invalid srcVa[%llu].", __func__, srcVa);
+        return CcuResult::CCU_E_PARA;
+    }
+    // CcuChannelGetRmtMemToken 返回内部 HcclResult，与本接口对外的 CcuResult 分属两套错误码体系，
+    // 故不做数值透传（不使用 HCCL_TO_CCU_RET），非 HCCL_SUCCESS 一律收敛为 CCU_E_INTERNAL。
+    // 具体失败原因（channelHandle 查不到、channel 非 CcuUrmaChannel、srcVa 未注册）
+    // 已在 ChannelProcess::CcuChannelGetRmtMemToken 与 CcuTransport::CcuGetRmtMemToken 内部打印。
+    return ChannelProcess::CcuChannelGetRmtMemToken(channelHandle, srcVa, *tokenInfo) == HCCL_SUCCESS ?
+               CcuResult::CCU_SUCCESS :
+               CcuResult::CCU_E_INTERNAL;
+}
+
+#ifdef __cplusplus
+}
+#endif // __cplusplus

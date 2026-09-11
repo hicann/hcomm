@@ -20,7 +20,9 @@ constexpr uint32_t MISSION_STATUS_MSG_LEN = 64;
 constexpr uint32_t WAIT_SIGNAL_CHANNEL_SIZE = 16;
 constexpr uint32_t BUF_REDUCE_ID_SIZE = 8;
 
-MAKE_ENUM(CcuErrorType, DEFAULT, MISSION, WAIT_SIGNAL, TRANS_MEM, BUF_TRANS_MEM, BUF_REDUCE, LOOP, LOOP_GROUP)
+MAKE_ENUM(
+    CcuErrorType, DEFAULT, MISSION, WAIT_SIGNAL, TRANS_MEM, BUF_TRANS_MEM, BUF_REDUCE, LOOP, LOOP_GROUP,
+    WRITE_VAR_ATOMIC, WRITE_WITH_CNT_INC, CASC_CNT_WAIT, CASC_CNT_CLEAR, LOAD_ADD_IMM, STORE_ADD_IMM)
 
 struct CcuErrorInfo {
     // 根据不同的typeId解析不同的union类型
@@ -101,6 +103,48 @@ struct CcuErrorInfo {
             uint16_t expandOffset;
             uint16_t expandCnt;
         } loopGroup;
+
+        struct {
+            uint16_t dstId;
+            uint64_t dstValue;
+            uint16_t signalId;
+            uint16_t signalMask;
+        } writeVarAtomic;
+
+        struct {
+            uint64_t locAddr;
+            uint64_t rmtAddr;
+            uint64_t len;
+            uint64_t incCntAddr;
+        } writeWithCntInc;
+
+        struct {
+            uint64_t targetValue;
+            uint64_t currentCntValue;
+        } cascCntWait;
+
+        struct {
+            uint16_t wishCntXnIdFirst; // block中的第一个高性能Xn
+            uint16_t expectedCntXn;    // block中的最后一个高性能xn
+        } cascCntClear;
+
+        struct {
+            uint16_t srcId;
+            uint16_t srcOffsetId;
+            uint16_t dstId;
+            uint16_t immAddValue;
+            uint64_t srcValue;
+            uint64_t srcOffsetValue;
+        } loadAddImm;
+
+        struct {
+            uint16_t dstId;
+            uint16_t dstOffsetId;
+            uint16_t srcId;
+            uint16_t immAddValue;
+            uint64_t dstValue;
+            uint64_t dstOffsetValue;
+        } storeAddImm;
     } msg;
 
     void SetBaseInfo(CcuRep::CcuRepType ccuRepType, uint8_t ccuDieId, uint8_t ccuMissionId, uint16_t insId)

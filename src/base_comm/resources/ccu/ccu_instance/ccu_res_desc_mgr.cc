@@ -129,6 +129,12 @@ CcuResult CcuResDescMgr::QueryRemainRes(HcommCcuResDescHandle handle, int32_t us
         "[CcuResDescMgr][%s] userDevId[%d] dieId[%u] resType[ResType::INS] remainNum[%u]", __func__, userDevId, dieId,
         insFreeSize);
     CCU_CHK_RET(desc.SetResNum(ResType::INS, insFreeSize));
+    // 单独处理 CASC_CNT: 从 CcuComponent 查询实际剩余量
+    uint32_t cascCntFreeSize = CcuDevMgrImp::GetCascCntBlockRemainSize(userDevId, dieId);
+    HCCL_INFO(
+        "[CcuResDescMgr][%s] userDevId[%d] dieId[%u] resType[ResType::CASC_CNT] remainNum[%u]", __func__, userDevId,
+        dieId, cascCntFreeSize);
+    CCU_CHK_RET(desc.SetResNum(ResType::CASC_CNT, cascCntFreeSize));
 
     return CcuResult::CCU_SUCCESS;
 }

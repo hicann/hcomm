@@ -10,9 +10,13 @@
 
 #include "ccu_comp.h"
 
+#include <algorithm>
+#include <cstdint>
 #include <random>
 
 #include "hccl_common.h"
+#include "hccl_types.h"
+#include "log.h"
 #include "rdma_handle_manager.h"
 
 #include "eid_info_mgr.h"
@@ -890,6 +894,18 @@ uint32_t CcuComponent::GetInsConsecutiveRemainSize(const uint8_t dieId) const
     return resAllocators_[dieId]->GetConsecutiveRemainSize(ResType::INS);
 }
 
+uint32_t CcuComponent::GetCascCntBlockRemainSize(const uint8_t dieId) const
+{
+    CHK_RET(CheckDieValid(__func__, userDevId_, dieId, dieEnableFlags_));
+    if (resAllocators_[dieId] == nullptr || ccuVersion_ != CcuVersion::CCU_V2)
+        return 0;
+
+    // 与 Alloc/Release 共用一把锁，避免读取 usedTotalCntXnFlags_ 与并发置位/清位形成数据竞争
+    std::lock_guard<std::mutex> cntXnLock(cntXnBlockMutex_);
+    return static_cast<uint32_t>(
+        std::count(usedTotalCntXnFlags_[dieId].begin(), usedTotalCntXnFlags_[dieId].end(), false));
+}
+
 HcclResult CcuComponent::AllocIns(const uint8_t dieId, const uint32_t num, ResInfo& insInfo)
 {
     CHK_RET(CheckDieValid(__func__, userDevId_, dieId, dieEnableFlags_));
@@ -986,8 +1002,11 @@ HcclResult CcuComponent::ReleaseXn(const uint8_t dieId, const std::vector<ResInf
     return HcclResult::HCCL_SUCCESS;
 }
 
-constexpr u32 WISH_COUNT_XN_NUM = 511;
-constexpr u32 TOTAL_COUNT_XN_NUM = 1;
+// 0.5RTT 级联计数器块（CntXnBlock）固定占用 1024 个连续 XN，按下列布局切分（见 AllocCntXnBlock / ConfirmCntXns）：
+// [startId, startId+1021] -> wishCntXn，startId+1022 -> totalCntXn，startId+1023 -> expectedCntXn
+constexpr u32 WISH_COUNT_XN_NUM = 1022; // wishCntXn 个数，其地址区间经 HcommCcuCascCntAlloc 返回给调用方注册使用
+constexpr u32 TOTAL_COUNT_XN_NUM = 1; // totalCntXn 个数，由 SetTotalCntXn 配置为硬件比较寄存器并绑定 blockIdx
+constexpr u32 EXPECTED_COUNT_XN_NUM = 1; // expectedCntXn 个数，供 cascCntWait/cascCntClear 指令读取期望计数值
 
 HcclResult CcuComponent::SetSplitUnit(uint8_t dieId, uint32_t splitPktUnit) const
 {
@@ -1021,16 +1040,16 @@ HcclResult CcuComponent::SetSplitUnit(uint8_t dieId, uint32_t splitPktUnit) cons
     return HcclResult::HCCL_SUCCESS;
 }
 
-HcclResult CcuComponent::GetAvailableTotalCntXnIndex(uint32_t& index) const
+HcclResult CcuComponent::GetAvailableTotalCntXnIndex(uint8_t dieId, uint32_t& index) const
 {
     for (uint32_t i = 0; i < CCU_V2_RESOURCE_TOTAL_CNT_XNS_NUM; ++i) {
-        if (!usedTotalCntXnFlags_[i]) {
+        if (!usedTotalCntXnFlags_[dieId][i]) {
             index = i;
             return HcclResult::HCCL_SUCCESS;
         }
     }
 
-    HCCL_ERROR("[CcuComponent][%s] failed, no available TotalCnt Xns.", __func__);
+    HCCL_ERROR("[CcuComponent][%s] failed, die [%u] no available TotalCnt Xns.", __func__, dieId);
     return HcclResult::HCCL_E_UNAVAIL;
 }
 
@@ -1055,13 +1074,13 @@ HcclResult CcuComponent::SetTotalCntXn(uint8_t dieId, uint32_t fromId, uint32_t 
             "[CcuComponent][%s] failed, dieId[%u], index[%u], userDevId[%d].", __func__, dieId, index, userDevId_),
         ret);
 
-    usedTotalCntXnFlags_[index] = true;
+    usedTotalCntXnFlags_[dieId][index] = true;
     return HcclResult::HCCL_SUCCESS;
 }
 
 HcclResult CcuComponent::ResetTotalCntXn(uint8_t dieId, uint32_t index)
 {
-    if (index >= CCU_V2_RESOURCE_TOTAL_CNT_XNS_NUM || !usedTotalCntXnFlags_[index]) {
+    if (index >= CCU_V2_RESOURCE_TOTAL_CNT_XNS_NUM || !usedTotalCntXnFlags_[dieId][index]) {
         return HcclResult::HCCL_SUCCESS;
     }
 
@@ -1077,7 +1096,7 @@ HcclResult CcuComponent::ResetTotalCntXn(uint8_t dieId, uint32_t index)
             "[CcuComponent][%s] failed, dieId[%u], index[%u], userDevId[%d].", __func__, dieId, index, userDevId_),
         ret);
 
-    usedTotalCntXnFlags_[index] = false;
+    usedTotalCntXnFlags_[dieId][index] = false;
     return HcclResult::HCCL_SUCCESS;
 }
 
@@ -1122,10 +1141,9 @@ HcclResult CcuComponent::SetTotalCntXnProcess(
     return HcclResult::HCCL_SUCCESS;
 }
 
-HcclResult CcuComponent::ConfirmCntXns(const uint8_t dieId, const std::string& resGroupTag, const ResInfo& cntXnInfos)
+HcclResult CcuComponent::ConfirmCntXns(const uint8_t dieId, const ResInfo& cntXnInfos, CntXnBlock& cntXnBlock)
 {
-    struct CntXnBlock cntXnBlock;
-    uint32_t totalCntXnId = cntXnInfos.startId + cntXnInfos.num - TOTAL_COUNT_XN_NUM;
+    uint32_t totalCntXnId = cntXnInfos.startId + cntXnInfos.num - TOTAL_COUNT_XN_NUM - EXPECTED_COUNT_XN_NUM;
     uint32_t wishCntXnIdBegin = cntXnInfos.startId;
     uint32_t wishCntXnIdEnd = totalCntXnId - 1;
     uint32_t blockIdx = CCU_V2_RESOURCE_TOTAL_CNT_XNS_NUM; // invalid value
@@ -1134,7 +1152,7 @@ HcclResult CcuComponent::ConfirmCntXns(const uint8_t dieId, const std::string& r
         "Set TotalCntXn, wishCntXnIdBegin[%u] wishCntXnIdEnd[%u] totalCntXnId[%u]", wishCntXnIdBegin, wishCntXnIdEnd,
         totalCntXnId);
 
-    auto ret = GetAvailableTotalCntXnIndex(blockIdx);
+    auto ret = GetAvailableTotalCntXnIndex(dieId, blockIdx);
     CHK_PRT_RET(
         ret != HcclResult::HCCL_SUCCESS,
         HCCL_ERROR(
@@ -1151,145 +1169,88 @@ HcclResult CcuComponent::ConfirmCntXns(const uint8_t dieId, const std::string& r
         return ret;
     }
 
-    for (u32 idx = wishCntXnIdBegin; idx <= wishCntXnIdEnd; idx++) {
-        cntXnBlock.wishCntXns.push(idx);
-    }
     cntXnBlock.resInfo = cntXnInfos;
+    cntXnBlock.wishCntXns = {wishCntXnIdBegin, wishCntXnIdEnd};
+    uint64_t resourceAddr = 0;
+    uint64_t xnAddr = 0;
+    CHK_RET(CcuResSpecifications::GetInstance(userDevId_).GetResourceAddr(dieId, resourceAddr));
+    // GetResourceAddr 不校验零值，resourceAddr 为 0 时下面会拼出仅含偏移的非法用户态地址并写入
+    // wishCntXnsMem 交给调用方注册，故显式拦截（对齐 CcuResSpecifications::GetXnBaseAddr 的零值校验）。
+    CHK_PRT_RET(
+        resourceAddr == 0,
+        HCCL_ERROR(
+            "[CcuComponent][%s] failed, CCU resource base address is 0, userDevId[%d], dieId[%u].", __func__,
+            userDevId_, dieId),
+        HcclResult::HCCL_E_INTERNAL);
+    CHK_RET(CcuResSpecifications::GetInstance(userDevId_).GetXnOffsetCcumAddrById(dieId, wishCntXnIdBegin, xnAddr));
+
+    const uint32_t wishCntXnNum = wishCntXnIdEnd - wishCntXnIdBegin + 1;
+    cntXnBlock.wishCntXnsMem = {
+        reinterpret_cast<void*>(resourceAddr + xnAddr), static_cast<uint64_t>(wishCntXnNum) * CCU_RESOURCE_XN_PER_SIZE};
     cntXnBlock.totalCntXn = totalCntXnId;
+    cntXnBlock.expectedCntXn = cntXnInfos.startId + cntXnInfos.num - 1; // 取block中的最后一个Xn
     cntXnBlock.blockIdx = blockIdx;
-    cntXnBlocks_[dieId].insert(std::make_pair(resGroupTag, cntXnBlock));
     return HcclResult::HCCL_SUCCESS;
 }
 
-HcclResult CcuComponent::AllocWishCntXn(const uint8_t dieId, const std::string& resGroupTag, uint32_t& wishCntXn)
+HcclResult CcuComponent::AllocCntXnBlock(const uint8_t dieId, CntXnBlock& cntXnBlock)
 {
+    // 全程持锁，使扫描空闲 index、SetTotalCntXn 置位、寄存器配置成为原子区段，避免并发双占
+    std::lock_guard<std::mutex> cntXnLock(cntXnBlockMutex_);
     CHK_PRT_RET(
         (ccuVersion_ != CcuVersion::CCU_V2),
-        HCCL_ERROR("[CcuComponent][%s] failed, ccuVersion[%d] does not support this interface.", __func__, ccuVersion_),
+        HCCL_ERROR(
+            "[CcuComponent][%s] failed, ccuVersion[%d] "
+            "does not support this interface.",
+            __func__, ccuVersion_),
         HCCL_E_NOT_SUPPORT);
     CHK_RET(CheckDieValid(__func__, userDevId_, dieId, dieEnableFlags_));
 
-    std::unique_lock<std::mutex> lock(cntXnBlockMutex_);
-    auto& cntXnBlocks = cntXnBlocks_[dieId];
-    auto iter = cntXnBlocks.find(resGroupTag);
-    if (iter != cntXnBlocks.end()) {
-        CHK_PRT_RET(
-            (iter->second.wishCntXns.size() == 0),
-            HCCL_ERROR(
-                "[CcuComponent][%s] failed, wishCntXn is not enough, resGroupTag[%s], userDevId[%d], "
-                "dieId[%u].",
-                __func__, resGroupTag.c_str(), userDevId_, dieId),
-            HCCL_E_UNAVAIL);
-    } else {
-        CHK_PRT_RET(
-            (cntXnBlocks.size() == CCU_V2_RESOURCE_TOTAL_CNT_XNS_NUM),
-            HCCL_ERROR(
-                "[CcuComponent][%s] failed, cntXnBlock is not enough, resGroupTag[%s], "
-                "userDevId[%d], dieId[%u].",
-                __func__, resGroupTag.c_str(), userDevId_, dieId),
-            HCCL_E_UNAVAIL);
-        ResInfo countXnInfo;
-        // 申请511 + 1个cntXn，前511个为wishCntXn，最后一个为totalCntXn
-        auto ret = resAllocators_[dieId]->AllocCountXn(WISH_COUNT_XN_NUM + TOTAL_COUNT_XN_NUM, countXnInfo);
-        CHK_PRT_RET(
-            ret != HcclResult::HCCL_SUCCESS,
-            HCCL_ERROR(
-                "[CcuComponent][%s] failed, num[%u], resGroupTag[%s], userDevId[%d], dieId[%u].", __func__,
-                (WISH_COUNT_XN_NUM + TOTAL_COUNT_XN_NUM), resGroupTag.c_str(), userDevId_, dieId),
-            ret);
-        // 配置cntXn
-        ret = ConfirmCntXns(dieId, resGroupTag, countXnInfo);
-        if (ret != HcclResult::HCCL_SUCCESS) {
-            HCCL_ERROR(
-                "[CcuComponent][%s] failed[%d] to confirm cnt xns, "
-                "try to release new allocated cnt xns, dieId[%u] resGroupTag[%s].",
-                __func__, ret, dieId, resGroupTag.c_str());
-            CHK_RET(resAllocators_[dieId]->ReleaseCountXn(countXnInfo.startId, countXnInfo.num));
-            return ret;
-        }
-    }
-    auto& xnBlock = cntXnBlocks_[dieId][resGroupTag];
-    HCCL_INFO("resGroupTag[%s] stack size[%u]", resGroupTag.c_str(), xnBlock.wishCntXns.size());
-    wishCntXn = xnBlock.wishCntXns.top();
-    xnBlock.wishCntXns.pop();
-    uint32_t totalCntXn = xnBlock.totalCntXn;
-    HCCL_INFO(
-        "[CcuComponent][%s] success, resGroupTag[%s], userDevId[%d], dieId[%u], wishCntXn[%u], totalCntXn[%u].",
-        __func__, resGroupTag.c_str(), userDevId_, dieId, wishCntXn, totalCntXn);
-
-    return HcclResult::HCCL_SUCCESS;
-}
-
-HcclResult CcuComponent::ReleaseWishCntXn(const uint8_t dieId, const std::string& resGroupTag, uint32_t wishCntXn)
-{
-    CHK_RET(CheckDieValid(__func__, userDevId_, dieId, dieEnableFlags_));
-
-    std::unique_lock<std::mutex> lock(cntXnBlockMutex_);
-    if (cntXnBlocks_[dieId].find(resGroupTag) == cntXnBlocks_[dieId].end()) {
-        HCCL_ERROR(
-            "[CcuComponent][%s] failed, resGroupTag[%s] is not found, userDevId[%d], dieId[%u].", __func__,
-            resGroupTag.c_str(), userDevId_, dieId);
-        return HCCL_E_NOT_FOUND;
-    }
-
-    auto& xnBlock = cntXnBlocks_[dieId][resGroupTag];
-    xnBlock.wishCntXns.push(wishCntXn);
-    if (xnBlock.wishCntXns.size() != WISH_COUNT_XN_NUM) {
-        HCCL_INFO(
-            "[CcuComponent][%s] success, resGroupTag[%s], userDevId[%d], dieId[%u], wishCntXn[%u], available "
-            "wishCntXn num[%u].",
-            __func__, resGroupTag.c_str(), userDevId_, dieId, wishCntXn, xnBlock.wishCntXns.size());
-        return HCCL_SUCCESS;
-    }
-
-    // 所有wishCnt都已经release，释放资源
-    CHK_RET(ResetTotalCntXn(dieId, xnBlock.blockIdx));
-
-    auto ret = resAllocators_[dieId]->ReleaseCountXn(xnBlock.resInfo.startId, xnBlock.resInfo.num);
+    ResInfo countXnInfo;
+    // 申请1022 + 1个cntXn + 1个expectedCntXn，前1022个为wishCntXn，第1023个为totalCntXn，第1024个为expectedCntXn
+    auto ret = resAllocators_[dieId]->AllocCountXn(
+        WISH_COUNT_XN_NUM + TOTAL_COUNT_XN_NUM + EXPECTED_COUNT_XN_NUM, countXnInfo);
     CHK_PRT_RET(
         ret != HcclResult::HCCL_SUCCESS,
         HCCL_ERROR(
-            "[CcuComponent][%s] failed, resGroupTag[%s], resInfo[%s], userDevId[%d], dieId[%u].", __func__,
-            resGroupTag.c_str(), xnBlock.resInfo.Describe().c_str(), userDevId_, dieId),
+            "[CcuComponent][%s] failed, num[%u], userDevId[%d], dieId[%u].", __func__,
+            (WISH_COUNT_XN_NUM + TOTAL_COUNT_XN_NUM + EXPECTED_COUNT_XN_NUM), userDevId_, dieId),
         ret);
-    cntXnBlocks_[dieId].erase(resGroupTag);
+    // 配置cntXn
+    ret = ConfirmCntXns(dieId, countXnInfo, cntXnBlock);
+    if (ret != HcclResult::HCCL_SUCCESS) {
+        HCCL_ERROR(
+            "[CcuComponent][%s] failed[%d] to confirm cnt xns, "
+            "try to release new allocated cnt xns, dieId[%u].",
+            __func__, ret, dieId);
+        CHK_RET(resAllocators_[dieId]->ReleaseCountXn(countXnInfo.startId, countXnInfo.num));
+        return ret;
+    }
+    HCCL_INFO(
+        "[CcuComponent][%s] success, userDevId[%d], dieId[%u], wishCntXn begin[%u] end[%u], "
+        "totalCntXn[%u], expectedCntXn[%u], blockIdx[%u].",
+        __func__, userDevId_, dieId, cntXnBlock.wishCntXns.first, cntXnBlock.wishCntXns.second, cntXnBlock.totalCntXn,
+        cntXnBlock.expectedCntXn, cntXnBlock.blockIdx);
 
     return HcclResult::HCCL_SUCCESS;
 }
 
-HcclResult CcuComponent::GetCntXnBlock(
-    const uint8_t dieId, const std::string& resGroupTag, std::pair<uint32_t, uint32_t>& cntXnPair)
+HcclResult CcuComponent::ReleaseCntXnBlock(const uint8_t dieId, const CntXnBlock& cntXnBlock)
 {
+    // 与 AllocCntXnBlock 共用一把锁，保证 ResetTotalCntXn 清位与并发申请互斥，避免标志回绕复用同块
+    std::lock_guard<std::mutex> cntXnLock(cntXnBlockMutex_);
     CHK_RET(CheckDieValid(__func__, userDevId_, dieId, dieEnableFlags_));
 
-    std::unique_lock<std::mutex> lock(cntXnBlockMutex_);
-    auto iter = cntXnBlocks_[dieId].find(resGroupTag);
-    if (iter == cntXnBlocks_[dieId].end()) {
+    // 所有wishCnt都已经release，释放资源
+    CHK_RET(ResetTotalCntXn(dieId, cntXnBlock.blockIdx));
+
+    auto ret = resAllocators_[dieId]->ReleaseCountXn(cntXnBlock.resInfo.startId, cntXnBlock.resInfo.num);
+    CHK_PRT_RET(
+        ret != HcclResult::HCCL_SUCCESS,
         HCCL_ERROR(
-            "[CcuComponent][%s] failed, resGroupTag[%s] is not found, userDevId[%d], dieId[%u].", __func__,
-            resGroupTag.c_str(), userDevId_, dieId);
-        return HCCL_E_NOT_FOUND;
-    }
-
-    cntXnPair = std::make_pair(iter->second.resInfo.startId, iter->second.totalCntXn);
-
-    return HcclResult::HCCL_SUCCESS;
-}
-
-HcclResult CcuComponent::GetTotalCntXn(const uint8_t dieId, const std::string& resGroupTag, uint32_t& totalCntXn)
-{
-    CHK_RET(CheckDieValid(__func__, userDevId_, dieId, dieEnableFlags_));
-
-    std::unique_lock<std::mutex> lock(cntXnBlockMutex_);
-    auto iter = cntXnBlocks_[dieId].find(resGroupTag);
-    if (iter == cntXnBlocks_[dieId].end()) {
-        HCCL_ERROR(
-            "[CcuComponent][%s] failed, resGroupTag[%s] is not found, userDevId[%d], dieId[%u].", __func__,
-            resGroupTag.c_str(), userDevId_, dieId);
-        return HCCL_E_NOT_FOUND;
-    }
-
-    totalCntXn = iter->second.totalCntXn;
+            "[CcuComponent][%s] failed, resInfo[%s], userDevId[%d], dieId[%u].", __func__,
+            cntXnBlock.resInfo.Describe().c_str(), userDevId_, dieId),
+        ret);
 
     return HcclResult::HCCL_SUCCESS;
 }
@@ -1551,4 +1512,43 @@ HcclResult CcuComponent::CleanDieCkes(const uint8_t dieId) const
     return HcclResult::HCCL_SUCCESS;
 }
 
+HcclResult CcuComponent::QueryTokenInfo(uint64_t srcVa, uint64_t size, uint64_t& tokenId, uint64_t& tokenValue)
+{
+    for (uint8_t dieId = 0; dieId < MAX_CCU_IODIE_NUM; dieId++) {
+        if (dieEnableFlags_[dieId]) {
+            uint32_t xnNum = 0;
+            uint32_t cntXnNum = 0;
+            uint64_t resourceAddr = 0;
+            uint64_t xnOffset = 0;
+            CHK_RET(CcuResSpecifications::GetInstance(userDevId_).GetXnNum(dieId, xnNum));
+            CHK_RET(CcuResSpecifications::GetInstance(userDevId_).GetCountXnNum(dieId, cntXnNum));
+            CHK_RET(CcuResSpecifications::GetInstance(userDevId_).GetResourceAddr(dieId, resourceAddr));
+            CHK_RET(CcuResSpecifications::GetInstance(userDevId_).GetXnOffsetCcumAddrById(dieId, xnNum, xnOffset));
+            // xnOffset 不会越界：其值为 xnBaseAddr + xnNum * CCU_RESOURCE_XN_PER_SIZE，两项上界均可静态推定——
+            // xnBaseAddr 是编译期常量（V2 为 1M、V1 为 1M+32K，其余版本为 0 并被 GetXnOffsetCcumAddrById 内部
+            // 的 CheckResOffsetAddrIsValid 按 INVALID_ADDR 拦截）；xnNum 取自 caps 的 16 位域，最大 65536，
+            // 故 xnOffset < 2^21；resourceAddr 为设备资源空间的用户态基址（< 2^48），相加远未触及 u64 上界。
+            // GetResourceAddr 只校验 dieId，resourceAddr 为成员默认值 0 时同样返回成功，会使下面的区间塌缩为
+            // [xnOffset, xnOffset + cntXnRangeSize)，导致不在 CCU 资源空间的小地址 srcVa 被误判命中并取到 token，
+            // 故此处显式拦截（对齐 CcuResSpecifications::GetXnBaseAddr 的零值校验）。
+            CHK_PRT_RET(
+                resourceAddr == 0,
+                HCCL_ERROR(
+                    "[%s] failed, CCU resource base address is 0, userDevId[%d], dieId[%u].", __func__, userDevId_,
+                    dieId),
+                HcclResult::HCCL_E_INTERNAL);
+            // cntXnNum 上界为 CCU_V2_COUNT_XN_NUM(4096)，且已提升到 u64 域相乘，不会回绕
+            const uint64_t cntXnRangeSize = static_cast<uint64_t>(cntXnNum) * CCU_RESOURCE_XN_PER_SIZE;
+            uint64_t cntXnAddrStart = resourceAddr + xnOffset;
+            uint64_t cntXnAddrEnd = cntXnAddrStart + cntXnRangeSize;
+            if (srcVa >= cntXnAddrStart && srcVa < cntXnAddrEnd && size <= (cntXnAddrEnd - srcVa)) {
+                CHK_RET(GetCcuResourceSpaceTokenInfo(dieId, tokenId, tokenValue));
+                HCCL_INFO("[%s] success, dieId[%u], srcVa[%llu], size[%llu]", __func__, dieId, srcVa, size);
+                return HcclResult::HCCL_SUCCESS;
+            }
+        }
+    }
+    HCCL_WARNING("[%s] failed, srcVa[%llu], size[%llu] not found", __func__, srcVa, size);
+    return HcclResult::HCCL_E_NOT_FOUND;
+}
 }; // namespace hcomm

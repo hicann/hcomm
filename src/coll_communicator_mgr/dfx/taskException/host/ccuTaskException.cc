@@ -1054,6 +1054,93 @@ void CcuTaskException::GenErrorInfoDefault(
     errorInfo.push_back(errorMsg);
 }
 
+void CcuTaskException::GenErrorInfoWriteVarAtomic(
+    const ErrorInfoBase& baseInfo, shared_ptr<CcuRep::CcuRepBase> repBase, vector<CcuErrorInfo>& errorInfo)
+{
+    CcuErrorInfo errorMsg{};
+    errorMsg.type = CcuErrorType::WRITE_VAR_ATOMIC;
+    errorMsg.SetBaseInfo(repBase->Type(), baseInfo.dieId, baseInfo.missionId, repBase->StartInstrId());
+    const auto rep = static_pointer_cast<CcuRep::CcuRepWriteVarAtomic>(repBase);
+    errorMsg.msg.writeVarAtomic.dstId = rep->GetTargetId();
+    errorMsg.msg.writeVarAtomic.dstValue = GetCcuXnValue(baseInfo.deviceId, baseInfo.dieId, rep->GetTargetId());
+    errorMsg.msg.writeVarAtomic.signalId = rep->GetSemId();
+    errorMsg.msg.writeVarAtomic.signalMask = rep->GetMask();
+    errorInfo.push_back(errorMsg);
+}
+
+void CcuTaskException::GenErrorInfoWriteWithCntInc(
+    const ErrorInfoBase& baseInfo, shared_ptr<CcuRep::CcuRepBase> repBase, vector<CcuErrorInfo>& errorInfo)
+{
+    CcuErrorInfo errorMsg{};
+    errorMsg.type = CcuErrorType::WRITE_WITH_CNT_INC;
+    errorMsg.SetBaseInfo(repBase->Type(), baseInfo.dieId, baseInfo.missionId, repBase->StartInstrId());
+    const auto rep = static_pointer_cast<CcuRep::CcuRepWriteWithCntInc>(repBase);
+    errorMsg.msg.writeWithCntInc.locAddr = GetCcuXnValue(baseInfo.deviceId, baseInfo.dieId, rep->GetLocAddrId());
+    errorMsg.msg.writeWithCntInc.rmtAddr = GetCcuXnValue(baseInfo.deviceId, baseInfo.dieId, rep->GetRemAddrId());
+    errorMsg.msg.writeWithCntInc.len = GetCcuXnValue(baseInfo.deviceId, baseInfo.dieId, rep->GetLenId());
+    errorMsg.msg.writeWithCntInc.incCntAddr = GetCcuXnValue(baseInfo.deviceId, baseInfo.dieId, rep->GetIncCntAddrId());
+    errorInfo.push_back(errorMsg);
+}
+
+void CcuTaskException::GenErrorInfoCascCntWait(
+    const ErrorInfoBase& baseInfo, shared_ptr<CcuRep::CcuRepBase> repBase, vector<CcuErrorInfo>& errorInfo)
+{
+    CcuErrorInfo errorMsg{};
+    errorMsg.type = CcuErrorType::CASC_CNT_WAIT;
+    errorMsg.SetBaseInfo(repBase->Type(), baseInfo.dieId, baseInfo.missionId, repBase->StartInstrId());
+    const auto rep = static_pointer_cast<CcuRep::CcuRepCascCntWait>(repBase);
+    errorMsg.msg.cascCntWait.targetValue = rep->GetOutCntTarget();
+    auto cascCntBlock = rep->GetCascCntBlock();
+    errorMsg.msg.cascCntWait.currentCntValue
+        = GetCcuXnValue(baseInfo.deviceId, baseInfo.dieId, cascCntBlock.totalCntXn);
+    errorInfo.push_back(errorMsg);
+}
+
+void CcuTaskException::GenErrorInfoCascCntClear(
+    const ErrorInfoBase& baseInfo, shared_ptr<CcuRep::CcuRepBase> repBase, vector<CcuErrorInfo>& errorInfo)
+{
+    CcuErrorInfo errorMsg{};
+    errorMsg.type = CcuErrorType::CASC_CNT_CLEAR;
+    errorMsg.SetBaseInfo(repBase->Type(), baseInfo.dieId, baseInfo.missionId, repBase->StartInstrId());
+    const auto rep = static_pointer_cast<CcuRep::CcuRepCascCntClear>(repBase);
+    auto cascCntBlock = rep->GetCascCntBlock();
+    errorMsg.msg.cascCntClear.wishCntXnIdFirst = static_cast<uint16_t>(cascCntBlock.wishCntXns.first);
+    errorMsg.msg.cascCntClear.expectedCntXn = static_cast<uint16_t>(cascCntBlock.expectedCntXn);
+    errorInfo.push_back(errorMsg);
+}
+
+void CcuTaskException::GenErrorInfoLoadAddImm(
+    const ErrorInfoBase& baseInfo, shared_ptr<CcuRep::CcuRepBase> repBase, vector<CcuErrorInfo>& errorInfo)
+{
+    CcuErrorInfo errorMsg{};
+    errorMsg.type = CcuErrorType::LOAD_ADD_IMM;
+    errorMsg.SetBaseInfo(repBase->Type(), baseInfo.dieId, baseInfo.missionId, repBase->StartInstrId());
+    const auto rep = static_pointer_cast<CcuRep::CcuRepLoadAddImm>(repBase);
+    errorMsg.msg.loadAddImm.srcId = rep->GetSrcId();
+    errorMsg.msg.loadAddImm.srcOffsetId = rep->GetSrcOffsetId();
+    errorMsg.msg.loadAddImm.dstId = rep->GetDstId();
+    errorMsg.msg.loadAddImm.immAddValue = rep->GetImmAddValue();
+    errorMsg.msg.loadAddImm.srcValue = GetCcuXnValue(baseInfo.deviceId, baseInfo.dieId, rep->GetSrcId());
+    errorMsg.msg.loadAddImm.srcOffsetValue = GetCcuXnValue(baseInfo.deviceId, baseInfo.dieId, rep->GetSrcOffsetId());
+    errorInfo.push_back(errorMsg);
+}
+
+void CcuTaskException::GenErrorInfoStoreAddImm(
+    const ErrorInfoBase& baseInfo, shared_ptr<CcuRep::CcuRepBase> repBase, vector<CcuErrorInfo>& errorInfo)
+{
+    CcuErrorInfo errorMsg{};
+    errorMsg.type = CcuErrorType::STORE_ADD_IMM;
+    errorMsg.SetBaseInfo(repBase->Type(), baseInfo.dieId, baseInfo.missionId, repBase->StartInstrId());
+    const auto rep = static_pointer_cast<CcuRep::CcuRepStoreAddImm>(repBase);
+    errorMsg.msg.storeAddImm.dstId = rep->GetDstId();
+    errorMsg.msg.storeAddImm.dstOffsetId = rep->GetDstOffsetId();
+    errorMsg.msg.storeAddImm.srcId = rep->GetSrcId();
+    errorMsg.msg.storeAddImm.immAddValue = rep->GetImmAddValue();
+    errorMsg.msg.storeAddImm.dstValue = GetCcuXnValue(baseInfo.deviceId, baseInfo.dieId, rep->GetDstId());
+    errorMsg.msg.storeAddImm.dstOffsetValue = GetCcuXnValue(baseInfo.deviceId, baseInfo.dieId, rep->GetDstOffsetId());
+    errorInfo.push_back(errorMsg);
+}
+
 void CcuTaskException::GenErrorInfoByRepType(
     const ErrorInfoBase& baseInfo, shared_ptr<CcuRep::CcuRepBase> repBase, vector<CcuErrorInfo>& errorInfo)
 {
@@ -1079,7 +1166,13 @@ void CcuTaskException::GenErrorInfoByRepType(
         {CcuRep::CcuRepType::BUF_LOC_READ, &CcuTaskException::GenErrorInfoBufLocRead},
         {CcuRep::CcuRepType::BUF_LOC_WRITE, &CcuTaskException::GenErrorInfoBufLocWrite},
         // BUF_REDUCE
-        {CcuRep::CcuRepType::BUF_REDUCE, &CcuTaskException::GenErrorInfoBufReduce}};
+        {CcuRep::CcuRepType::BUF_REDUCE, &CcuTaskException::GenErrorInfoBufReduce},
+        {CcuRep::CcuRepType::WRITE_VAR_ATOMIC, &CcuTaskException::GenErrorInfoWriteVarAtomic},
+        {CcuRep::CcuRepType::WRITE_WITH_CNT_INC, &CcuTaskException::GenErrorInfoWriteWithCntInc},
+        {CcuRep::CcuRepType::CASC_CNT_WAIT, &CcuTaskException::GenErrorInfoCascCntWait},
+        {CcuRep::CcuRepType::CASC_CNT_CLEAR, &CcuTaskException::GenErrorInfoCascCntClear},
+        {CcuRep::CcuRepType::LOAD_ADD_IMM, &CcuTaskException::GenErrorInfoLoadAddImm},
+        {CcuRep::CcuRepType::STORE_ADD_IMM, &CcuTaskException::GenErrorInfoStoreAddImm}};
     const auto funcIt = HANDLER_MAP.find(repBase->Type());
     HCCL_INFO("[%s]type[%d]", __func__, repBase->Type());
     if (funcIt == HANDLER_MAP.end()) {
@@ -1789,6 +1882,75 @@ string CcuTaskException::GetCcuErrorMsgBufReduce(
         ccuErrorInfo.msg.bufReduce.signalId, ccuErrorInfo.msg.bufReduce.signalMask, buffIds.str().c_str());
 }
 
+string CcuTaskException::GetCcuErrorMsgWriteVarAtomic(
+    const CcuErrorInfo& ccuErrorInfo, const Hccl::TaskInfo& taskInfo, u32 deviceId)
+{
+    (void)taskInfo;
+    (void)deviceId;
+    return Hccl::StringFormat(
+        "InstrId[%u]: WriteVarAtomic, dstId[%u], dstValue[0x%016llx], Set sem[%u], mask[0x%04x]", ccuErrorInfo.instrId,
+        ccuErrorInfo.msg.writeVarAtomic.dstId, ccuErrorInfo.msg.writeVarAtomic.dstValue,
+        ccuErrorInfo.msg.writeVarAtomic.signalId, ccuErrorInfo.msg.writeVarAtomic.signalMask);
+}
+
+string CcuTaskException::GetCcuErrorMsgWriteWithCntInc(
+    const CcuErrorInfo& ccuErrorInfo, const Hccl::TaskInfo& taskInfo, u32 deviceId)
+{
+    (void)taskInfo;
+    (void)deviceId;
+    string printMsg = GetCcuLenErrorMsg(ccuErrorInfo.msg.writeWithCntInc.len);
+    return Hccl::StringFormat(
+        "InstrId[%u]: WriteWithCntInc, Memory[0x%016llx] to Memory[0x%016llx], Len[%llu], incCntAddr[0x%016llx] %s",
+        ccuErrorInfo.instrId, ccuErrorInfo.msg.writeWithCntInc.locAddr, ccuErrorInfo.msg.writeWithCntInc.rmtAddr,
+        ccuErrorInfo.msg.writeWithCntInc.len, ccuErrorInfo.msg.writeWithCntInc.incCntAddr, printMsg.c_str());
+}
+
+string CcuTaskException::GetCcuErrorMsgCascCntWait(
+    const CcuErrorInfo& ccuErrorInfo, const Hccl::TaskInfo& taskInfo, u32 deviceId)
+{
+    (void)taskInfo;
+    (void)deviceId;
+    return Hccl::StringFormat(
+        "InstrId[%u]: CascCntWait, targetValue[0x%016llx], currentCntValue[0x%016llx]", ccuErrorInfo.instrId,
+        ccuErrorInfo.msg.cascCntWait.targetValue, ccuErrorInfo.msg.cascCntWait.currentCntValue);
+}
+
+string CcuTaskException::GetCcuErrorMsgCascCntClear(
+    const CcuErrorInfo& ccuErrorInfo, const Hccl::TaskInfo& taskInfo, u32 deviceId)
+{
+    (void)taskInfo;
+    (void)deviceId;
+    return Hccl::StringFormat(
+        "InstrId[%u]: CascCntClear, Xns[%u~%u]", ccuErrorInfo.instrId, ccuErrorInfo.msg.cascCntClear.wishCntXnIdFirst,
+        ccuErrorInfo.msg.cascCntClear.expectedCntXn);
+}
+
+string CcuTaskException::GetCcuErrorMsgLoadAddImm(
+    const CcuErrorInfo& ccuErrorInfo, const Hccl::TaskInfo& taskInfo, u32 deviceId)
+{
+    (void)taskInfo;
+    (void)deviceId;
+    return Hccl::StringFormat(
+        "InstrId[%u]: LoadAddImm, srcId[%u], srcOffsetId[%u], dstId[%u], immAddValue[%u], "
+        "srcValue[0x%016llx], srcOffsetValue[0x%016llx]",
+        ccuErrorInfo.instrId, ccuErrorInfo.msg.loadAddImm.srcId, ccuErrorInfo.msg.loadAddImm.srcOffsetId,
+        ccuErrorInfo.msg.loadAddImm.dstId, ccuErrorInfo.msg.loadAddImm.immAddValue,
+        ccuErrorInfo.msg.loadAddImm.srcValue, ccuErrorInfo.msg.loadAddImm.srcOffsetValue);
+}
+
+string CcuTaskException::GetCcuErrorMsgStoreAddImm(
+    const CcuErrorInfo& ccuErrorInfo, const Hccl::TaskInfo& taskInfo, u32 deviceId)
+{
+    (void)taskInfo;
+    (void)deviceId;
+    return Hccl::StringFormat(
+        "InstrId[%u]: StoreAddImm, dstId[%u], dstOffsetId[%u], srcId[%u], immAddValue[%u], "
+        "dstValue[0x%016llx], dstOffsetValue[0x%016llx]",
+        ccuErrorInfo.instrId, ccuErrorInfo.msg.storeAddImm.dstId, ccuErrorInfo.msg.storeAddImm.dstOffsetId,
+        ccuErrorInfo.msg.storeAddImm.srcId, ccuErrorInfo.msg.storeAddImm.immAddValue,
+        ccuErrorInfo.msg.storeAddImm.dstValue, ccuErrorInfo.msg.storeAddImm.dstOffsetValue);
+}
+
 string CcuTaskException::GetCcuErrorMsgDefault(const CcuErrorInfo& ccuErrorInfo)
 {
     return Hccl::StringFormat(
@@ -1934,7 +2096,13 @@ CcuTaskException::GetCcuErrorMsgByType(const CcuErrorInfo& ccuErrorInfo, const H
         {CcuRep::CcuRepType::BUF_WRITE, &CcuTaskException::GetCcuErrorMsgBufWrite},
         {CcuRep::CcuRepType::BUF_LOC_READ, &CcuTaskException::GetCcuErrorMsgBufLocRead},
         {CcuRep::CcuRepType::BUF_LOC_WRITE, &CcuTaskException::GetCcuErrorMsgBufLocWrite},
-        {CcuRep::CcuRepType::BUF_REDUCE, &CcuTaskException::GetCcuErrorMsgBufReduce}};
+        {CcuRep::CcuRepType::BUF_REDUCE, &CcuTaskException::GetCcuErrorMsgBufReduce},
+        {CcuRep::CcuRepType::WRITE_VAR_ATOMIC, &CcuTaskException::GetCcuErrorMsgWriteVarAtomic},
+        {CcuRep::CcuRepType::WRITE_WITH_CNT_INC, &CcuTaskException::GetCcuErrorMsgWriteWithCntInc},
+        {CcuRep::CcuRepType::CASC_CNT_WAIT, &CcuTaskException::GetCcuErrorMsgCascCntWait},
+        {CcuRep::CcuRepType::CASC_CNT_CLEAR, &CcuTaskException::GetCcuErrorMsgCascCntClear},
+        {CcuRep::CcuRepType::LOAD_ADD_IMM, &CcuTaskException::GetCcuErrorMsgLoadAddImm},
+        {CcuRep::CcuRepType::STORE_ADD_IMM, &CcuTaskException::GetCcuErrorMsgStoreAddImm}};
 
     const auto funcIt = HANDLER_MAP.find(ccuErrorInfo.repType);
     if (funcIt == HANDLER_MAP.end()) {

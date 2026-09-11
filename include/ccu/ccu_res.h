@@ -13,6 +13,7 @@
 
 #include "ccu_res_defs.h"
 #include "ccu_types.h"
+#include "hcomm_res_defs.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -191,6 +192,40 @@ extern CcuResult HcommCcuKernelQueryResReq(
  */
 extern CcuResult HcommCcuGetMemToken(uint64_t srcVa, uint64_t size, uint64_t* tokenInfo);
 
+/**
+ * @brief 在 CCU 实例上申请一个级联计数器块（1022 wishCntXn + totalCntXn + expectedCntXn）。
+ * @param[in]  ccuInsHandle HcommCcuInsCreate 返回的实例句柄，须为当前 device 上有效实例。
+ * @param[in]  dieId     资源归属的 ioDie ID，取值范围 [0, CCU_MAX_IODIE_NUM)。
+ * @param[out] handle    输出级联计数器句柄；失败时置 0。
+ * @return CcuResult。CCU_SUCCESS 表示成功；CCU_E_PARA 表示 ccuInsHandle/dieId 非法；
+ *         CCU_E_PTR 表示 handle 为 nullptr；CCU_E_NOT_FOUND 表示 ccuInsHandle 在当前 device 上不存在（含已被销毁）；
+ *         CCU_E_UNAVAIL 表示本 die 无空闲块；CCU_E_INTERNAL 表示底层资源分配失败。
+ * @note 句柄生命周期与 ccuInsHandle 绑定，随 HcommCcuInsDestroy 一并释放，无独立释放接口；
+ *       仅 host 端调用。每 die 上限 4 块。
+ */
+extern CcuResult HcommCcuCascCntAlloc(CcuInsHandle ccuInsHandle, uint8_t dieId, HcommCcuCascCntHandle* handle);
+
+/**
+ * @brief 查询级联计数器Cascade Counter块对应的 wishCntXn 内存区域，供 host 端组装 LocalAddr/RemoteAddr 使用。
+ * @param[in]  handle  HcommCcuCascCntAlloc 返回的级联计数器句柄。
+ * @param[out] commMem  输出内存描述符，包含地址与长度；不可为 nullptr。
+ * @return CcuResult。CCU_SUCCESS 表示成功；CCU_E_PARA 表示 handle 非法；
+ *         CCU_E_PTR 表示 commMem 为 nullptr；CCU_E_INTERNAL 表示底层查询失败。
+ * @note 仅可在 host 端调用。返回的内存区域用于 CCU 算子数据面读写。
+ */
+extern CcuResult HcommCcuCascCntGetMem(HcommCcuCascCntHandle handle, CommMem* commMem);
+
+/**
+ * @brief 查询对端 rank 内存区域的 CCU 访问 token，供 host 端组装 RemoteAddr 使用。
+ * @param[in]  channelHandle  与对端 rank 建立的通道句柄。
+ * @param[in]  srcVa          对端内存区域起始虚地址（VA），不可为 0。
+ * @param[out] tokenInfo      输出指针，指向单个 uint64_t（非数组），成功时写入对端 token 值；不可为 nullptr。
+ * @return CcuResult。CCU_SUCCESS 表示成功；CCU_E_PARA 表示 channelHandle/srcVa 非法；
+ *         CCU_E_PTR 表示 tokenInfo 为 nullptr；CCU_E_INTERNAL 表示底层查询失败。
+ * @note 与 HcommCcuGetMemToken 的差异：本接口查询的是对端 rank 的 token，经 channel 带外交换获取；
+ *       HcommCcuGetMemToken 查询的是本端 token。token 属安全信息，调用方不应打印。
+ */
+extern CcuResult HcommCcuGetRmtMemToken(ChannelHandle channelHandle, uint64_t srcVa, uint64_t* tokenInfo);
 #ifdef __cplusplus
 }
 #endif // __cplusplus

@@ -86,13 +86,20 @@ public:
     CcuSharedResource& GetImportedRes();
 
     void SetResRepository(const CcuResRepository& resRepo);
+    void SetCascCntBlock(const std::unordered_map<HcommCcuCascCntHandle, CntXnBlock>& cascCntBlocks);
     void SetInstrId(uint32_t instrId);
+    HcclResult GetCascCntBlock(HcommCcuCascCntHandle cntHandle, CntXnBlock& cascCntBlock);
     uint32_t GetInstrId() const;
     uint32_t GetInstrCount();
     // 统计会翻译出 CKE 写者微码 (profiling -> setcke / 非 profiling -> clearcke) 的三种 wait 类 rep
     // 个数 (含 block 子 rep), 用于按 CCU_CKE_RAW_LATENCY 为每个此类 rep 预留指令空间.
     // 每个此类 rep 只发射 1 条 setcke / clearcke.
     uint32_t GetRepNeedToAddLatency() const;
+    // 统计会翻译出 LoadX/StoreX/ClearX (half-rtt 写后读写者) 的 rep 个数
+    // = #(LOAD_ADD_IMM + STORE_ADD_IMM + CASC_CNT_CLEAR) (含 block 子 rep), 用于按 CCU_XN_RAW_LATENCY
+    // 为每个此类 rep 预留指令空间. 每个此类 rep 恰翻译出 1 条 LoadX/StoreX/ClearX, 后端优化最多为其
+    // 后续读者补 (CCU_XN_RAW_LATENCY - 1) 条 NOP. 仅 CCU_V2 生效.
+    uint32_t GetLsxRepReserveCount() const;
     void SetCcuInstrInfo(const CcuRep::CcuInstrInfo& instrInfo);
 
     CcuResult GeneTaskParams(const uint64_t* taskArgs, uint32_t argsNum, std::vector<CcuTaskParam>& taskParams);
@@ -155,6 +162,12 @@ public:
     CcuResult GetCcuKernelInfo(CcuKernelInfo& info) const;
     CcuResult LoadVar(uint64_t addr, CcuVariableHandle varHandle, uint32_t num);
     CcuResult CcuLoadVarFromVarAddr(CcuVariableHandle addrHandle, CcuVariableHandle varHandle, uint32_t num);
+    CcuResult LoadAddImm(
+        CcuVariableHandle varHandle, uint16_t srcNum, CcuVariableHandle offsetHandle, uint16_t immAddValue,
+        CcuVariableHandle dstHandle);
+    CcuResult AddImmStore(
+        CcuVariableHandle varHandle, uint16_t dstNum, CcuVariableHandle offsetHandle, uint16_t immAddValue,
+        CcuVariableHandle srcHandle);
     CcuResult StoreVar(uint64_t addr, CcuVariableHandle varHandle, uint32_t num);
     CcuResult CcuStoreVarToVarAddr(CcuVariableHandle addrHandle, CcuVariableHandle varHandle, uint32_t num);
 
@@ -167,6 +180,8 @@ public:
     CcuResult WriteVariableWithNotify(
         const ChannelHandle channel, CcuVariableHandle varHandle, uint32_t remoteVarIdx, uint32_t remoteNotifyIdx,
         uint32_t mask);
+    CcuResult CascCntWait(HcommCcuCascCntHandle cntHandle, uint64_t tgtValue);
+    CcuResult CascCntClear(HcommCcuCascCntHandle cntHandle, CcuEventHandle eventHandle, uint32_t mask);
     // 本地（同 device 内跨 core）通知同步：用 notifyTag 字符串作为对端标识，
     // 由调用方约定生产者/消费者使用相同的 tag 字符串完成配对。
     // 与 NotifyRecord/Wait（用 ChannelHandle 标识跨 rank 通道）的对偶。
@@ -248,6 +263,12 @@ public:
         ChannelHandle channel, CcuRemoteAddrHandle remoteHandle, CcuLocalAddrHandle localHandle,
         CcuVariableHandle lenHandle, HcclDataType dataType, HcclReduceOp opType, CcuEventHandle eventHandle,
         uint32_t mask);
+    CcuResult WriteVarAtomicAdd(
+        CcuVariableHandle channelIdHandle, CcuRemoteAddrHandle varAddrHandle, CcuVariableHandle addValueHandle,
+        CcuEventHandle eventHandle, uint32_t mask);
+    CcuResult WriteWithCascCntInc(
+        CcuVariableHandle channelIdHandle, CcuRemoteAddrHandle remoteHandle, CcuLocalAddrHandle localHandle,
+        CcuVariableHandle lenHandle, CcuRemoteAddrHandle inCntAddr);
 
     CcuResult IfBegin(CcuVariableHandle varHandle, uint64_t immediate, CcuConditionType condType, const char* label);
     CcuResult
@@ -495,6 +516,9 @@ private:
     CcuRepResource res_{};
     CcuResRepository resRepo_{};
 
+    std::mutex cascCntBlockMutex_;
+    std::unordered_map<HcommCcuCascCntHandle, CntXnBlock> cascCntBlocks_{};
+
     std::unordered_set<ChannelHandle> channels_{};
 
     std::unordered_set<uint32_t> declaredLocXns_{};
@@ -575,6 +599,8 @@ private:
 
     std::string name_{};
 };
+
+CcuResult GetChannelIdByHandle(ChannelHandle channel, uint32_t& channelId);
 
 } // namespace hcomm
 

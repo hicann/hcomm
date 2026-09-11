@@ -197,6 +197,41 @@ namespace CcuOpt {
                 return ins;
             }
 
+            // half-rtt LoadX: xn[dst] = array[base + xn[srcOffset]] + imm. 字段落位以 CcuV2::LoadX 为准,
+            // 后端优化里 dst(=xdId) 是唯一 def(写者), base/srcOffset 是 use(读者).
+            static CcuInstr MakeLoadX(uint16_t dst, uint16_t base, uint16_t srcOffset, uint16_t imm)
+            {
+                CcuInstr ins{};
+                CcuV2::LoadX(&ins, dst, base, srcOffset, imm, /*oMode*/ 0, /*setCKEId*/ 0, /*setCKEMask*/ 0);
+                return ins;
+            }
+            // half-rtt StoreX: array[base + xn[dstOffset]] = xn[src] + imm. 字段落位以 CcuV2::StoreX 为准,
+            // 后端优化里 base(=xdo) 是唯一 def(写者), src/dstOffset 是 use(读者).
+            static CcuInstr MakeStoreX(uint16_t base, uint16_t src, uint16_t imm, uint16_t dstOffset)
+            {
+                CcuInstr ins{};
+                CcuV2::StoreX(&ins, base, src, imm, dstOffset, /*oMode*/ 0, /*setCKEId*/ 0, /*setCKEMask*/ 0);
+                return ins;
+            }
+            // half-rtt ClearX: 清空连续 xn 区间 [xnId, xmId], 整片既读又写.
+            static CcuInstr MakeClearX(uint16_t xnId, uint16_t xmId)
+            {
+                CcuInstr ins{};
+                CcuV2::ClearX(&ins, xnId, xmId, /*xnIdMode*/ 0, /*xmIdMode*/ 0, /*setCKEId*/ 0, /*setCKEMask*/ 0);
+                return ins;
+            }
+            // 统计输出序列里被插入的 NOP 条数 (originIndex == -1). 便于与 nopInserted 交叉验证.
+            static uint32_t CountInsertedNops(const SchedulerStats& stats)
+            {
+                uint32_t n = 0;
+                for (int32_t idx : stats.originIndex) {
+                    if (idx < 0) {
+                        n++;
+                    }
+                }
+                return n;
+            }
+
             // 在 ExtractOperandsV2 结果里查找某个 CKE 寄存器是否以给定 def/use 身份出现。
             static bool HasCkeOperand(const std::vector<RegOperand>& ops, uint16_t regId, bool isDef)
             {
@@ -428,6 +463,298 @@ namespace CcuOpt {
             ASSERT_EQ(out.instrVec.size(), 2u); // 顺序保持, 无插入
             EXPECT_EQ(out.instrVec[0].header.code, InstrCodeV2::LOADIMDTOX_CODE);
             EXPECT_EQ(out.instrVec[1].header.code, InstrCodeV2::ADD_CODE);
+        }
+
+        // ================= half-rtt XN 写后读 (LoadX / StoreX / ClearX) =================
+
+        // ExtractOperandsV2: LoadX 只把 xdId(=i) 当 def, base/srcOffset 当 use, 立即数字段不提取.
+        TEST_F(MicrocodeOptTest, ExtractOperands_LoadX_OnlyDstIsDef)
+        {
+            auto ins = MakeLoadX(/*dst*/ 10, /*base*/ 20, /*srcOffset*/ 30, /*imm*/ 0x55);
+            auto ops = ExtractOperandsV2(ins);
+            // 期望: def X10; use X20 (base); use X30 (offset). 立即数不入.
+            bool defI = false, useBase = false, useOff = false;
+            for (const auto& o : ops) {
+                if (o.type != RegType::XN)
+                    continue;
+                if (o.isDef && o.regId == 10)
+                    defI = true;
+                if (!o.isDef && o.regId == 20)
+                    useBase = true;
+                if (!o.isDef && o.regId == 30)
+                    useOff = true;
+            }
+            EXPECT_TRUE(defI);
+            EXPECT_TRUE(useBase);
+            EXPECT_TRUE(useOff);
+            // xdId 不应同时以 use 身份出现.
+            for (const auto& o : ops) {
+                if (o.type == RegType::XN && o.regId == 10) {
+                    EXPECT_TRUE(o.isDef);
+                }
+            }
+        }
+
+        // ExtractOperandsV2: StoreX 只把 xdo(=array 基址) 当 def, src(=i)/dstOffset 当 use.
+        TEST_F(MicrocodeOptTest, ExtractOperands_StoreX_OnlyArrayBaseIsDef)
+        {
+            auto ins = MakeStoreX(/*base*/ 40, /*src*/ 50, /*imm*/ 0x66, /*dstOffset*/ 60);
+            auto ops = ExtractOperandsV2(ins);
+            bool defBase = false, useSrc = false, useOff = false;
+            for (const auto& o : ops) {
+                if (o.type != RegType::XN)
+                    continue;
+                if (o.isDef && o.regId == 40)
+                    defBase = true;
+                if (!o.isDef && o.regId == 50)
+                    useSrc = true;
+                if (!o.isDef && o.regId == 60)
+                    useOff = true;
+            }
+            EXPECT_TRUE(defBase);
+            EXPECT_TRUE(useSrc);
+            EXPECT_TRUE(useOff);
+        }
+
+        // LoadX 写 i -> 后续任意指令读 i: 构成 XN 写后读, 补 (L-1) 条 NOP, 且严格 < L.
+        TEST_F(MicrocodeOptTest, SchedulerCkeOnly_LoadXWriterFollowedByReaderInsertsXnNops)
+        {
+            CcuInstrInfo input{};
+            input.startInstrId = 0;
+            input.instrVec.push_back(MakeLoadX(/*dst*/ 7, /*base*/ 20, /*srcOffset*/ 30, /*imm*/ 0)); // 写 X7
+            input.instrVec.push_back(MakeAdd(/*xd*/ 8, /*xn*/ 7, /*xm*/ 9));                          // 读 X7 (RAW)
+            input.instrCount = 2;
+
+            InstructionSchedulerOptions o{};
+            o.level = SchedLevel::CkeOnly;
+            InstructionScheduler sched(o);
+            auto out = sched.Schedule(input);
+
+            EXPECT_EQ(sched.Stats().nopInserted, CcuRep::CCU_XN_RAW_LATENCY - 1);
+            EXPECT_LT(sched.Stats().nopInserted, CcuRep::CCU_XN_RAW_LATENCY); // 每写者补 NOP < L, 与预留对齐
+            EXPECT_EQ(sched.Stats().nopRemoved, 0u);
+            ASSERT_EQ(out.instrVec.size(), CcuRep::CCU_XN_RAW_LATENCY + 1);
+            EXPECT_EQ(CountInsertedNops(sched.Stats()), CcuRep::CCU_XN_RAW_LATENCY - 1);
+        }
+
+        // 新方向: 别人写 X20 -> LoadX 读 X20 (作为 base). 硬件对 LoadX 读操作数 interlock 失效,
+        // 后端须补 (L-1) 条 NOP.
+        TEST_F(MicrocodeOptTest, SchedulerCkeOnly_WriterThenLoadXReaderInsertsXnNops)
+        {
+            CcuInstrInfo input{};
+            input.startInstrId = 0;
+            input.instrVec.push_back(MakeAdd(/*xd*/ 20, /*xn*/ 1, /*xm*/ 2));                 // 写 X20
+            input.instrVec.push_back(MakeLoadX(/*dst*/ 7, /*base*/ 20, /*srcOffset*/ 30, 0)); // LoadX 读 X20 (RAW)
+            input.instrCount = 2;
+
+            InstructionSchedulerOptions o{};
+            o.level = SchedLevel::CkeOnly;
+            InstructionScheduler sched(o);
+            auto out = sched.Schedule(input);
+
+            EXPECT_EQ(sched.Stats().nopInserted, CcuRep::CCU_XN_RAW_LATENCY - 1);
+            EXPECT_LT(sched.Stats().nopInserted, CcuRep::CCU_XN_RAW_LATENCY); // 每读者补 NOP < L, 与预留对齐
+            ASSERT_EQ(out.instrVec.size(), CcuRep::CCU_XN_RAW_LATENCY + 1);
+            EXPECT_EQ(out.instrVec[0].header.code, InstrCodeV2::ADD_CODE);
+            EXPECT_EQ(out.instrVec.back().header.code, InstrCodeV2::LOADX_CODE);
+        }
+
+        // 新方向: 别人写 offset 寄存器 X30 -> LoadX 读 X30 (作为 srcOffset). 同样补 (L-1) 条 NOP.
+        TEST_F(MicrocodeOptTest, SchedulerCkeOnly_WriterThenLoadXOffsetReaderInsertsXnNops)
+        {
+            CcuInstrInfo input{};
+            input.startInstrId = 0;
+            input.instrVec.push_back(MakeAdd(/*xd*/ 30, /*xn*/ 1, /*xm*/ 2));                 // 写 X30 (offset)
+            input.instrVec.push_back(MakeLoadX(/*dst*/ 7, /*base*/ 20, /*srcOffset*/ 30, 0)); // LoadX 读 X30
+            input.instrCount = 2;
+
+            InstructionSchedulerOptions o{};
+            o.level = SchedLevel::CkeOnly;
+            InstructionScheduler sched(o);
+            auto out = sched.Schedule(input);
+
+            EXPECT_EQ(sched.Stats().nopInserted, CcuRep::CCU_XN_RAW_LATENCY - 1);
+        }
+
+        // 新方向: 别人写 src 寄存器 X50 -> StoreX 读 X50 (被存的数据 i). 补 (L-1) 条 NOP.
+        // 注意: StoreX 的 base(=array 基址, xdo) 是 def 不是 read, 故写者须落在 StoreX 真正读的
+        // src(xsId) 或 dstOffset(xdId) 上, 而非 base.
+        TEST_F(MicrocodeOptTest, SchedulerCkeOnly_WriterThenStoreXReaderInsertsXnNops)
+        {
+            CcuInstrInfo input{};
+            input.startInstrId = 0;
+            input.instrVec.push_back(MakeAdd(/*xd*/ 50, /*xn*/ 1, /*xm*/ 2)); // 写 X50 (src)
+            // StoreX: base=40(def), src=50(读), dstOffset=60(读). 前序写 X50 -> StoreX 读 X50.
+            input.instrVec.push_back(MakeStoreX(/*base*/ 40, /*src*/ 50, /*imm*/ 0, /*dstOffset*/ 60));
+            input.instrCount = 2;
+
+            InstructionSchedulerOptions o{};
+            o.level = SchedLevel::CkeOnly;
+            InstructionScheduler sched(o);
+            auto out = sched.Schedule(input);
+
+            EXPECT_EQ(sched.Stats().nopInserted, CcuRep::CCU_XN_RAW_LATENCY - 1);
+        }
+
+        // 新方向 + pinnedGroup 归约: 别人写组内寄存器 (base+2) -> LoadX 读 array 基址 (base),
+        // 经 pinnedGroup 归约到同一 array key -> 命中, 补 (L-1) 条 NOP.
+        TEST_F(MicrocodeOptTest, SchedulerCkeOnly_PinnedGroupWriterThenLoadXReaderInsertsXnNops)
+        {
+            const uint16_t base = 100;
+            const uint16_t count = 4; // array = [100, 104)
+
+            CcuInstrInfo input{};
+            input.startInstrId = 0;
+            input.instrVec.push_back(MakeAdd(/*xd*/ base + 2, /*xn*/ 1, /*xm*/ 2));             // 写 X102 (组内)
+            input.instrVec.push_back(MakeLoadX(/*dst*/ 7, /*base*/ base, /*srcOffset*/ 30, 0)); // LoadX 读 array@100
+            input.instrCount = 2;
+
+            std::vector<PinnedGroup> groups{PinnedGroup{base, count}};
+            InstructionSchedulerOptions o{};
+            o.level = SchedLevel::CkeOnly;
+            o.pinnedGroups = &groups;
+            InstructionScheduler sched(o);
+            auto out = sched.Schedule(input);
+
+            EXPECT_EQ(sched.Stats().nopInserted, CcuRep::CCU_XN_RAW_LATENCY - 1)
+                << "组内寄存器写经 pinnedGroup 归约应命中 LoadX 读的 array key";
+        }
+
+        // 新方向: 普通指令作为读者不查通用写者表 -> 别人写 X20 -> 普通 Add 读 X20 仍不补 (硬件 interlock).
+        // 与"任意写 -> lsx 读"区分: 只有读者是 lsx/clearx 时才补.
+        TEST_F(MicrocodeOptTest, SchedulerCkeOnly_WriterThenNormalReaderStillNoNop)
+        {
+            CcuInstrInfo input{};
+            input.startInstrId = 0;
+            input.instrVec.push_back(MakeAdd(/*xd*/ 20, /*xn*/ 1, /*xm*/ 2));  // 写 X20
+            input.instrVec.push_back(MakeAdd(/*xd*/ 21, /*xn*/ 20, /*xm*/ 3)); // 普通读 X20 (非 lsx)
+            input.instrCount = 2;
+
+            InstructionSchedulerOptions o{};
+            o.level = SchedLevel::CkeOnly;
+            InstructionScheduler sched(o);
+            auto out = sched.Schedule(input);
+
+            EXPECT_EQ(sched.Stats().nopInserted, 0u); // 普通读者交硬件 interlock
+            ASSERT_EQ(out.instrVec.size(), 2u);
+        }
+
+        // StoreX 写 array 基址 -> 后续读同一 array 基址寄存器: 补 (L-1) 条 NOP.
+        TEST_F(MicrocodeOptTest, SchedulerCkeOnly_StoreXWriterFollowedByArrayReaderInsertsXnNops)
+        {
+            CcuInstrInfo input{};
+            input.startInstrId = 0;
+            input.instrVec.push_back(MakeStoreX(/*base*/ 40, /*src*/ 50, /*imm*/ 0, /*dstOffset*/ 60)); // 写 X40(array)
+            input.instrVec.push_back(MakeAdd(/*xd*/ 41, /*xn*/ 40, /*xm*/ 42));                         // 读 X40 (RAW)
+            input.instrCount = 2;
+
+            InstructionSchedulerOptions o{};
+            o.level = SchedLevel::CkeOnly;
+            InstructionScheduler sched(o);
+            auto out = sched.Schedule(input);
+
+            EXPECT_EQ(sched.Stats().nopInserted, CcuRep::CCU_XN_RAW_LATENCY - 1);
+            ASSERT_EQ(out.instrVec.size(), CcuRep::CCU_XN_RAW_LATENCY + 1);
+        }
+
+        // pinnedGroup 归约: StoreX 写 array 基址 baseId, 后续指令读组内另一个寄存器 (baseId+2),
+        // 经 pinnedGroup 归约到同一 array key -> 命中写后读, 补 (L-1) 条 NOP.
+        TEST_F(MicrocodeOptTest, SchedulerCkeOnly_PinnedGroupReducesArrayReaderToStoreXWriter)
+        {
+            const uint16_t base = 100;
+            const uint16_t count = 4; // array = [100, 104)
+
+            CcuInstrInfo input{};
+            input.startInstrId = 0;
+            input.instrVec.push_back(
+                MakeStoreX(/*base*/ base, /*src*/ 50, /*imm*/ 0, /*dstOffset*/ 60));    // 写 array@100
+            input.instrVec.push_back(MakeAdd(/*xd*/ 200, /*xn*/ base + 2, /*xm*/ 201)); // 读 X102 (组内)
+            input.instrCount = 2;
+
+            std::vector<PinnedGroup> groups{PinnedGroup{base, count}};
+            InstructionSchedulerOptions o{};
+            o.level = SchedLevel::CkeOnly;
+            o.pinnedGroups = &groups;
+            InstructionScheduler sched(o);
+            auto out = sched.Schedule(input);
+
+            EXPECT_EQ(sched.Stats().nopInserted, CcuRep::CCU_XN_RAW_LATENCY - 1)
+                << "组内寄存器经 pinnedGroup 归约应命中 StoreX 写的 array key";
+        }
+
+        // 无 pinnedGroup 时, 读组内另一寄存器 (base+2) 与写者 key(base) 不同 -> 不命中, 不补.
+        TEST_F(MicrocodeOptTest, SchedulerCkeOnly_NoPinnedGroupArrayReaderMisses)
+        {
+            const uint16_t base = 100;
+
+            CcuInstrInfo input{};
+            input.startInstrId = 0;
+            input.instrVec.push_back(MakeStoreX(/*base*/ base, /*src*/ 50, /*imm*/ 0, /*dstOffset*/ 60));
+            input.instrVec.push_back(MakeAdd(/*xd*/ 200, /*xn*/ base + 2, /*xm*/ 201)); // 读 X102, 无归约
+            input.instrCount = 2;
+
+            InstructionSchedulerOptions o{};
+            o.level = SchedLevel::CkeOnly; // pinnedGroups == nullptr
+            InstructionScheduler sched(o);
+            auto out = sched.Schedule(input);
+
+            EXPECT_EQ(sched.Stats().nopInserted, 0u);
+            ASSERT_EQ(out.instrVec.size(), 2u);
+        }
+
+        // ClearX 同片自依赖: 两条相同区间的 ClearX 构成写后读, 补 (L-1) 条 NOP.
+        TEST_F(MicrocodeOptTest, SchedulerCkeOnly_ClearXSameRangeInsertsXnNops)
+        {
+            CcuInstrInfo input{};
+            input.startInstrId = 0;
+            input.instrVec.push_back(MakeClearX(/*xnId*/ 300, /*xmId*/ 310));
+            input.instrVec.push_back(MakeClearX(/*xnId*/ 300, /*xmId*/ 310)); // 同片 RAW
+            input.instrCount = 2;
+
+            InstructionSchedulerOptions o{};
+            o.level = SchedLevel::CkeOnly;
+            InstructionScheduler sched(o);
+            auto out = sched.Schedule(input);
+
+            EXPECT_EQ(sched.Stats().nopInserted, CcuRep::CCU_XN_RAW_LATENCY - 1);
+            ASSERT_EQ(out.instrVec.size(), CcuRep::CCU_XN_RAW_LATENCY + 1);
+        }
+
+        // ClearX 不同片: 两条区间不相交的 ClearX 不构成写后读, 不补.
+        TEST_F(MicrocodeOptTest, SchedulerCkeOnly_ClearXDifferentRangeNoNop)
+        {
+            CcuInstrInfo input{};
+            input.startInstrId = 0;
+            input.instrVec.push_back(MakeClearX(/*xnId*/ 300, /*xmId*/ 310));
+            input.instrVec.push_back(MakeClearX(/*xnId*/ 320, /*xmId*/ 330)); // 不同片
+            input.instrCount = 2;
+
+            InstructionSchedulerOptions o{};
+            o.level = SchedLevel::CkeOnly;
+            InstructionScheduler sched(o);
+            auto out = sched.Schedule(input);
+
+            EXPECT_EQ(sched.Stats().nopInserted, 0u);
+            ASSERT_EQ(out.instrVec.size(), 2u);
+        }
+
+        // 新方向: 别人写区间端点 X300 -> ClearX 读区间 [300,310] (端点 300 既读又写). ClearX 作为读者,
+        // 硬件 interlock 对其读操作数失效, 命中前序写者补 (L-1) 条 NOP.
+        TEST_F(MicrocodeOptTest, SchedulerCkeOnly_WriterThenClearXReaderInsertsXnNops)
+        {
+            CcuInstrInfo input{};
+            input.startInstrId = 0;
+            input.instrVec.push_back(MakeAdd(/*xd*/ 300, /*xn*/ 1, /*xm*/ 2)); // 写 X300 (区间端点)
+            input.instrVec.push_back(MakeClearX(/*xnId*/ 300, /*xmId*/ 310));  // ClearX 读端点 X300
+            input.instrCount = 2;
+
+            InstructionSchedulerOptions o{};
+            o.level = SchedLevel::CkeOnly;
+            InstructionScheduler sched(o);
+            auto out = sched.Schedule(input);
+
+            EXPECT_EQ(sched.Stats().nopInserted, CcuRep::CCU_XN_RAW_LATENCY - 1);
+            ASSERT_EQ(out.instrVec.size(), CcuRep::CCU_XN_RAW_LATENCY + 1);
         }
 
         TEST_F(MicrocodeOptTest, SchedulerCkeOnly_LoopRefsRemappedAfterCkeNopInsertion)

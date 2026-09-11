@@ -284,3 +284,46 @@ CcuResult HcommCcuInsDestroy(CcuInsHandle ccuInsHandle)
 
     return CcuResult::CCU_SUCCESS;
 }
+
+CcuResult HcommCcuCascCntAlloc(CcuInsHandle ccuInsHandle, uint8_t dieId, HcommCcuCascCntHandle* handle)
+{
+    // 输出指针先校验：接口约定失败时 handle 置 0，须在一切可能失败的分支之前完成清零，
+    // 因此其校验先于 insHandle/dieId 的值校验；成功时由 Create 写入有效句柄覆盖。
+    CCU_CHK_PTR_NULL(handle);
+    *handle = 0;
+
+    if (ccuInsHandle == 0) {
+        HCCL_ERROR("[%s] failed, invalid ccuInsHandle[%llu].", __func__, ccuInsHandle);
+        return CcuResult::CCU_E_PARA;
+    }
+    if (dieId >= hcomm::CCU_MAX_IODIE_NUM) {
+        HCCL_ERROR("[%s] dieId[%u] is invalid, dieId should in [0, %u).", __func__, dieId, hcomm::CCU_MAX_IODIE_NUM);
+        return CcuResult::CCU_E_PARA;
+    }
+
+    int32_t devLogicId = INVALID_INT;
+    CCU_CHK_RET(HcclDeviceRefresh(devLogicId));
+    CCU_CHK_RET(hcomm::CcuInstanceMgr::GetInstance(devLogicId).CascCntHandleAlloc(ccuInsHandle, dieId, *handle));
+
+    return CcuResult::CCU_SUCCESS;
+}
+
+CcuResult HcommCcuCascCntGetMem(HcommCcuCascCntHandle handle, CommMem* commMem)
+{
+    if (handle == 0) {
+        HCCL_ERROR("[%s] failed, invalid ccuCascCntHandle[%llu].", __func__, handle);
+        return CcuResult::CCU_E_PARA;
+    }
+    CCU_CHK_PTR_NULL(commMem);
+
+    int32_t devLogicId = INVALID_INT;
+    CCU_CHK_RET(HcclDeviceRefresh(devLogicId));
+    hcomm::CntXnBlock cascCntBlock;
+    CCU_CHK_RET(hcomm::CcuInstanceMgr::GetInstance(devLogicId).GetCascCntBlock(handle, cascCntBlock));
+
+    commMem->addr = cascCntBlock.wishCntXnsMem.first;
+    commMem->size = cascCntBlock.wishCntXnsMem.second;
+    commMem->type = CommMemType::COMM_MEM_TYPE_CCU;
+
+    return CcuResult::CCU_SUCCESS;
+}

@@ -103,6 +103,20 @@ inline void MockControlDeviceRefresh(int32_t deviceLogicId)
     g_deviceRefreshResult = HcclResult::HCCL_SUCCESS;
     MOCKER(hrtGetDeviceRefresh).stubs().with(mockcpp::any()).will(invoke(MockHrtGetDeviceRefresh));
 }
+
+inline CcuResult
+MockControlAllocCntXnBlock(const int32_t deviceLogicId, const uint8_t dieId, hcomm::CntXnBlock& cntXnBlock)
+{
+    (void)deviceLogicId;
+    (void)dieId;
+    constexpr uint32_t startId = 12288;
+    constexpr uint32_t count = 1024;
+    cntXnBlock.resInfo = hcomm::ResInfo(startId, count);
+    cntXnBlock.wishCntXns = {startId, startId + 1021};
+    cntXnBlock.totalCntXn = startId + 1022;
+    cntXnBlock.expectedCntXn = startId + 1023;
+    return CcuResult::CCU_SUCCESS;
+}
 } // namespace
 
 class HcommCcuControlApiTest : public BaseInit {
@@ -117,6 +131,15 @@ public:
             .stubs()
             .with(outBound(HCCL_VERSION_USING_VALIDATE_AND_APPLY_DIE))
             .will(returnValue(HCCL_SUCCESS));
+        // PR 新增 CcuAllocCntXnBlock / CcuReleaseCntXnBlock 在 AllocCascCntBlock 路径中被调用
+        MOCKER(hcomm::CcuAllocCntXnBlock)
+            .stubs()
+            .with(mockcpp::any(), mockcpp::any(), mockcpp::any())
+            .will(invoke(MockControlAllocCntXnBlock));
+        MOCKER(hcomm::CcuReleaseCntXnBlock)
+            .stubs()
+            .with(mockcpp::any(), mockcpp::any(), mockcpp::any())
+            .will(returnValue(CcuResult::CCU_SUCCESS));
     }
     void TearDown() override
     {
@@ -388,4 +411,43 @@ inline void RegisterLaunchAndCleanupSingleArgKernel(
         DestroyCcuResDescs(resDescs);                                                                                 \
     }
 
+#define CCU_FUNC_KERNEL_V2_TEST(testName, demoFunc, expectRegisterSuccess)                                            \
+    TEST_F(HcommCcuControlApiTest, testName)                                                                          \
+    {                                                                                                                 \
+        CcuResult ccuRes = CcuResult::CCU_E_RESERVED;                                                                 \
+        constexpr uint32_t fakeDevId = MAX_MODULE_DEVICE_NUM - 2;                                                     \
+        constexpr hcomm::CcuVersion fakeCcuVersion = hcomm::CcuVersion::CCU_V2;                                       \
+        (void)MockCcuDeviceEnv(fakeDevId, fakeCcuVersion);                                                            \
+                                                                                                                      \
+        HcommCcuResDescHandle resDescs[hcomm::CCU_MAX_IODIE_NUM] = {0, 0};                                            \
+        CreateCcuResDescsPair(resDescs, fakeCcuVersion);                                                              \
+        CcuInsHandle insHandle{0};                                                                                    \
+        constexpr uint32_t descNum = 2;                                                                               \
+        ccuRes = HcommCcuInsCreate(resDescs, descNum, &insHandle);                                                    \
+        EXPECT_EQ(ccuRes, CcuResult::CCU_SUCCESS);                                                                    \
+                                                                                                                      \
+        ccuRes = HcommCcuKernelRegisterStart(insHandle);                                                              \
+        EXPECT_EQ(ccuRes, CcuResult::CCU_SUCCESS);                                                                    \
+                                                                                                                      \
+        int32_t dummyArg = 0;                                                                                         \
+        CcuKernelArg kernelArg = static_cast<CcuKernelArg>(&dummyArg);                                                \
+        const void* kernelArgs[] = {kernelArg};                                                                       \
+        CcuKernelHandle kernelHandle{0};                                                                              \
+        auto kernelFunc = reinterpret_cast<void*>(demoFunc);                                                          \
+        constexpr uint32_t kernelArgNum = 1;                                                                          \
+        constexpr uint32_t fakeDieId = 0;                                                                             \
+        ccuRes = HcommCcuKernelRegister(                                                                              \
+            insHandle, fakeDieId, const_cast<char*>(#demoFunc), kernelFunc, kernelArgs, kernelArgNum, &kernelHandle); \
+        if (expectRegisterSuccess) {                                                                                  \
+            EXPECT_EQ(ccuRes, CcuResult::CCU_SUCCESS);                                                                \
+            ccuRes = HcommCcuKernelRegisterEnd(insHandle);                                                            \
+            EXPECT_EQ(ccuRes, CcuResult::CCU_SUCCESS);                                                                \
+        } else {                                                                                                      \
+            EXPECT_NE(ccuRes, CcuResult::CCU_SUCCESS);                                                                \
+        }                                                                                                             \
+                                                                                                                      \
+        ccuRes = HcommCcuInsDestroy(insHandle);                                                                       \
+        EXPECT_EQ(ccuRes, CcuResult::CCU_SUCCESS);                                                                    \
+        DestroyCcuResDescs(resDescs);                                                                                 \
+    }
 #endif // UT_HCOMM_CCU_CONTROL_API_COMMON_H

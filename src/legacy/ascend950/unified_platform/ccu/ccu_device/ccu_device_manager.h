@@ -27,7 +27,7 @@ using CcuResHandle = void*;
 
 MAKE_ENUM(CcuVersion, CCU_V1, CCU_V2, CCU_INVALID);
 
-MAKE_ENUM(ResType, LOOP, MS, CKE, XN, COUNT_XN, GSA, INS, MISSION);
+MAKE_ENUM(ResType, LOOP, MS, CKE, XN, COUNT_XN, GSA, INS, MISSION, CASC_CNT);
 
 // 使用对外头文件的数据结构
 using MissionReqType = hcomm::MissionReqType;

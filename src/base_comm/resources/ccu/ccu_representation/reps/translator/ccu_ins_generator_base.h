@@ -177,6 +177,26 @@ namespace CcuRep {
             const TransDep& dep)
             = 0;
 
+        // halfRtt
+        virtual HcclResult CcuRepWriteVarAtomicTranslate(
+            CcuKernel* ccuKernel, CcuInstr*& instr, uint16_t& curInstrId, CcuRepWriteVarAtomic* writeVarAtomPtr,
+            const TransDep& dep);
+        virtual HcclResult CcuRepWriteWithCntIncTranslate(
+            CcuKernel* ccuKernel, CcuInstr*& instr, uint16_t& curInstrId, CcuRepWriteWithCntInc* writeCntIncPtr,
+            const TransDep& dep);
+        virtual HcclResult CcuRepCascCntWaitTranslate(
+            CcuKernel* ccuKernel, CcuInstr*& instr, uint16_t& curInstrId, CcuRepCascCntWait* cascCntWaitPtr,
+            const TransDep& dep);
+        virtual HcclResult CcuRepCascCntClearTranslate(
+            CcuKernel* ccuKernel, CcuInstr*& instr, uint16_t& curInstrId, CcuRepCascCntClear* cascCntClearPtr,
+            const TransDep& dep);
+        virtual HcclResult CcuRepLoadAddImmTranslate(
+            CcuKernel* ccuKernel, CcuInstr*& instr, uint16_t& curInstrId, CcuRepLoadAddImm* loadAddImmPtr,
+            const TransDep& dep);
+        virtual HcclResult CcuRepStoreAddImmTranslate(
+            CcuKernel* ccuKernel, CcuInstr*& instr, uint16_t& curInstrId, CcuRepStoreAddImm* storeAddImmPtr,
+            const TransDep& dep);
+
         virtual uint32_t GetInstrCount(CcuRepType repType) = 0;
 
         virtual HcclResult PrepareConstValue(CcuRepBase* repPtr, const TransDep& dep, CcuKernel* ccuKernel)

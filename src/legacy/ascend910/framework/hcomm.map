@@ -43,6 +43,8 @@ global:
     CcuLoadArg;
     CcuLoadVar;
     CcuLoadVarFromVarAddr;
+    CcuLoadAddImm;
+    CcuAddImmStore;
     CcuLocalAddrAlloc;
     CcuLocalBufferReduce;
     CcuLocalCopyBufferToMem;
@@ -51,6 +53,8 @@ global:
     CcuLocalMemReduce;
     CcuLocalNotifyRecord;
     CcuLocalNotifyWait;
+    CcuCascCntWait;
+    CcuCascCntClear;
     CcuLoopCreate;
     CcuLoopGroupAddLoop;
     CcuLoopGroupAddLoopCfg;
@@ -62,6 +66,7 @@ global:
     CcuLoopGroupCreateFromVarV2;
     CcuNotifyRecord;
     CcuNotifyWait;
+    CcuChannelIdGet;
     CcuReadMemToBuffer;
     CcuReadMemToMem;
     CcuReadMemToMemReduce;
@@ -91,6 +96,8 @@ global:
     CcuWriteBufferToMem;
     CcuWriteMemToMem;
     CcuWriteMemToMemReduce;
+    CcuWriteVarAtomicAdd;
+    CcuWriteWithCascCntInc;
     CcuWriteVariableWithNotify;
     CommGetCCLBufSizeCfg;
     CommGetKFCWorkSpace;
@@ -320,6 +327,9 @@ global:
     HcommCcuEventAlloc;
     HcommCcuEventGetAddr;
     HcommCcuGetMemToken;
+    HcommCcuCascCntAlloc;
+    HcommCcuCascCntGetMem;
+    HcommCcuGetRmtMemToken;
     HcommCcuGetTaskArgsNum;
     HcommCcuInsCreate;
     HcommCcuInsCreateDefault;

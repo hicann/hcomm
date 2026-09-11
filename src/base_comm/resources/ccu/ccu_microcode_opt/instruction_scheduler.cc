@@ -28,6 +28,76 @@ namespace CcuOpt {
             return (static_cast<uint32_t>(operand.type) << REG_TYPE_SHIFT) | static_cast<uint32_t>(operand.regId);
         }
 
+        // ---------------- XN 写后读 (half-rtt LoadX/StoreX/ClearX) 归约与判定 ----------------
+
+        // XN 写者/读者归约到统一 key 的编码域. XN regId 为 15 位 (< 0x8000), 用高位 flag 与
+        // ClearX 区间 key 隔离, 保证三类 key (单 xn / array 组 / ClearX 区间) 互不碰撞:
+        //   * 单 xn / array 组: 直接用归约后的 XN id (< 0x8000), 无 flag;
+        //   * ClearX 区间:      kClearXRangeFlag | (lo << 15) | hi.
+        constexpr uint32_t kClearXRangeFlag = 1u << 30;
+        constexpr uint32_t kXnIdShift = 15;
+
+        // 把任意 XN regId 归约成整组 key: 命中某 pinnedGroup [baseId, baseId+count) 则返回 baseId,
+        // 否则原样返回 regId. 各组互不相交, 命中唯一.
+        inline uint16_t ReduceXnToGroupKey(uint16_t regId, const std::vector<PinnedGroup>* pinnedGroups)
+        {
+            if (pinnedGroups == nullptr) {
+                return regId;
+            }
+            for (const auto& g : *pinnedGroups) {
+                if (g.count == 0) {
+                    continue;
+                }
+                if (regId >= g.baseId && regId < static_cast<uint32_t>(g.baseId) + g.count) {
+                    return g.baseId;
+                }
+            }
+            return regId;
+        }
+
+        // 归约后的单 xn / array 组 key (无 flag).
+        inline uint32_t XnGroupKey(uint16_t regId, const std::vector<PinnedGroup>* pinnedGroups)
+        {
+            return static_cast<uint32_t>(ReduceXnToGroupKey(regId, pinnedGroups));
+        }
+
+        // ClearX 区间规范化 key: 以较小端点为 lo, 较大端点为 hi, 与普通单 xn key 天然隔离,
+        // 只有相同区间的两条 ClearX 才会命中同一 key.
+        inline uint32_t ClearXRangeKey(uint16_t a, uint16_t b)
+        {
+            uint16_t lo = a <= b ? a : b;
+            uint16_t hi = a <= b ? b : a;
+            return kClearXRangeFlag | (static_cast<uint32_t>(lo) << kXnIdShift) | static_cast<uint32_t>(hi);
+        }
+
+        inline bool IsLoadX(const CcuRep::CcuInstr& instr)
+        {
+            return instr.header.type == InstrCodeV2::LOAD_TYPE && instr.header.code == InstrCodeV2::LOADX_CODE;
+        }
+        inline bool IsStoreX(const CcuRep::CcuInstr& instr)
+        {
+            return instr.header.type == InstrCodeV2::LOAD_TYPE && instr.header.code == InstrCodeV2::STOREX_CODE;
+        }
+        inline bool IsClearX(const CcuRep::CcuInstr& instr)
+        {
+            return instr.header.type == InstrCodeV2::LOAD_TYPE && instr.header.code == InstrCodeV2::CLEARX_CODE;
+        }
+
+        // 收集当前指令作为 XN 写者登记进写者表的 key. 新机制单向: 只有 LoadX 写的 i / StoreX 写的
+        // array / ClearX 区间进表; 其余指令的 XN def (Add 等) 交硬件 interlock, 不进表.
+        // 字段落位以 ccu_microcode_v2.cc 为准 (LoadX: xdId=i; StoreX: xdo=array; ClearX: [xnId,xmId]).
+        void CollectXnWriterKeys(
+            const CcuRep::CcuInstr& instr, const std::vector<PinnedGroup>* pinnedGroups, std::vector<uint32_t>& keys)
+        {
+            if (IsLoadX(instr)) {
+                keys.push_back(XnGroupKey(instr.v2.loadStoreX.xdId, pinnedGroups));
+            } else if (IsStoreX(instr)) {
+                keys.push_back(XnGroupKey(instr.v2.loadStoreX.xdo, pinnedGroups));
+            } else if (IsClearX(instr)) {
+                keys.push_back(ClearXRangeKey(instr.v2.clearX.xnId, instr.v2.clearX.xmId));
+            }
+        }
+
         inline CcuRep::CcuInstr MakeNop()
         {
             // CcuInstr 为 POD (header + union, 无非平凡成员), {} 值初始化已将全部字节零化,
@@ -202,7 +272,14 @@ namespace CcuOpt {
             std::vector<int32_t>& origToOut;
             SchedulerStats& stats;
             const std::vector<bool>& relJmpProtected; // 逐指令保护掩码: true 表示属于 RelJmp 原子块, 块内禁止插 NOP.
+            const std::vector<PinnedGroup>* pinnedGroups = nullptr; // XN array 归约用 pinned 组; 只读引用.
             std::unordered_map<uint32_t, int64_t> lastCkeWriterCycle{};
+            std::unordered_map<uint32_t, int64_t> lastXnWriterCycle{}; // XN 写后读写者表, 与 CKE 表并行.
+            // 通用 XN 写者表 (任意指令的 XN def 归约后进表): 只服务于 "任意指令写 xn/array -> 后续
+            // LoadX/StoreX/ClearX 读该 xn/array" 这一方向. 硬件对 LoadX/StoreX/ClearX 读操作数的 interlock
+            // 会失效, 故其读若命中前序写者且距离 < latency, 后端须补 NOP. 与 lastXnWriterCycle (只登记
+            // lsx 写者、服务任意读者) 并存互补, 两方向各自查各自的表.
+            std::unordered_map<uint32_t, int64_t> lastAnyXnWriterCycle{};
             int64_t cycle = 0;
         };
 
@@ -235,6 +312,85 @@ namespace CcuOpt {
             return earliest;
         }
 
+        // 计算当前指令为满足 XN 写后读 (half-rtt LoadX/StoreX/ClearX) latency 所需的最早发射 cycle.
+        // 读者是任意指令的 XN use, 经 pinnedGroup 归约成 array/单 xn key 后查 XN 写者表; ClearX 额外
+        // 以其规范化区间 key 作为读者查表 (同片自依赖). 命中写者则 needed = writerCycle + L.
+        // 返回值语义: cycle 是发射节拍计数, 恒 >= 0. 初值取 state.cycle (>=0), 后续只与
+        // writerCycle + latency (两者均非负) 取 max, 故结果永不为负. 之所以用有符号 int64_t 而非
+        // uint: (1) 与 state.cycle / writerCycle 存储类型一致, 全程 64 位避免与 latency 运算时的
+        // 隐式截断/无符号回绕; (2) 有符号便于表达 "无需求" 等潜在哨兵语义并让越界更易在调试期暴露.
+        inline int64_t EarliestXnIssueCycle(
+            const CkeOnlyState& state, const CcuRep::CcuInstr& instr, const std::vector<RegOperand>& operands)
+        {
+            const int64_t xnLatency = static_cast<int64_t>(CcuRep::CCU_XN_RAW_LATENCY);
+            int64_t earliest = state.cycle;
+
+            auto probe = [&](uint32_t key) {
+                auto it = state.lastXnWriterCycle.find(key);
+                if (it == state.lastXnWriterCycle.end()) {
+                    return;
+                }
+                int64_t needed = it->second + xnLatency;
+                if (needed > earliest) {
+                    earliest = needed;
+                }
+            };
+
+            // 任意指令的 XN use 作为读者归约后查表.
+            for (const auto& operand : operands) {
+                if (operand.isDef || operand.type != RegType::XN) {
+                    continue;
+                }
+                probe(XnGroupKey(operand.regId, state.pinnedGroups));
+            }
+            // ClearX 同片自依赖: 用区间 key 再查一次.
+            if (IsClearX(instr)) {
+                probe(ClearXRangeKey(instr.v2.clearX.xnId, instr.v2.clearX.xmId));
+            }
+            return earliest;
+        }
+
+        // 计算当前指令为满足 "前序任意指令写 xn/array -> LoadX/StoreX/ClearX 读该 xn/array" 写后读
+        // latency 所需的最早发射 cycle. 背景: 硬件 interlock 对 LoadX/StoreX/ClearX 的读操作数失效,
+        // 故只有当前指令本身是 lsx/clearx 时, 才需要把它读的 xn/array 与前序任意写者 (通用写者表
+        // lastAnyXnWriterCycle) 做写后读检查; 其余普通指令的读仍由硬件 interlock 兜底, 不查此表.
+        // 读者操作数: lsx/clearx 提取出的所有 XN use (经 pinnedGroup 归约成 array/单 xn key), 以及
+        // ClearX 的区间 key. 命中写者则 needed = writerCycle + L.
+        inline int64_t EarliestXnReadByLsxCycle(
+            const CkeOnlyState& state, const CcuRep::CcuInstr& instr, const std::vector<RegOperand>& operands)
+        {
+            // 只有读者本身是 LoadX/StoreX/ClearX 时其读才失去硬件 interlock, 需要后端补 NOP.
+            if (!IsLoadX(instr) && !IsStoreX(instr) && !IsClearX(instr)) {
+                return state.cycle;
+            }
+            const int64_t xnLatency = static_cast<int64_t>(CcuRep::CCU_XN_RAW_LATENCY);
+            int64_t earliest = state.cycle;
+
+            auto probe = [&](uint32_t key) {
+                auto it = state.lastAnyXnWriterCycle.find(key);
+                if (it == state.lastAnyXnWriterCycle.end()) {
+                    return;
+                }
+                int64_t needed = it->second + xnLatency;
+                if (needed > earliest) {
+                    earliest = needed;
+                }
+            };
+
+            // lsx/clearx 的所有 XN use 作为读者归约后查通用写者表.
+            for (const auto& operand : operands) {
+                if (operand.isDef || operand.type != RegType::XN) {
+                    continue;
+                }
+                probe(XnGroupKey(operand.regId, state.pinnedGroups));
+            }
+            // ClearX 区间既读又写: 用规范化区间 key 再查一次前序区间写者.
+            if (IsClearX(instr)) {
+                probe(ClearXRangeKey(instr.v2.clearX.xnId, instr.v2.clearX.xmId));
+            }
+            return earliest;
+        }
+
         // 处理单条指令: 先补齐 latency NOP, 再原序发射, 最后记录 CKE 写者的发射 cycle.
         void ScheduleOneCkeInstr(CkeOnlyState& state, const CcuRep::CcuInstr& instr, size_t originIdx)
         {
@@ -245,7 +401,20 @@ namespace CcuOpt {
             // 即使块紧邻的 CKE 写者仍有残余 latency 需求, 也不会把 NOP 插进/插到块中间破坏运行期地址链.
             const bool isProtected = originIdx < state.relJmpProtected.size() && state.relJmpProtected[originIdx];
             if (!isProtected) {
+                // CKE 与 XN 多路写后读需求并行计算, 取最大者决定最早发射 cycle; 各路结构对称:
+                //   * EarliestCkeIssueCycle    : CKE 写后读 (setcke/clearcke -> waitcke/clearcke);
+                //   * EarliestXnIssueCycle     : lsx 写 xn/array -> 任意后续指令读 (原方向);
+                //   * EarliestXnReadByLsxCycle : 任意前序指令写 xn/array -> lsx/clearx 读 (新方向,
+                //                                硬件对 lsx/clearx 读操作数 interlock 失效).
                 int64_t earliestIssueCycle = EarliestCkeIssueCycle(state, operands);
+                int64_t earliestXnCycle = EarliestXnIssueCycle(state, instr, operands);
+                if (earliestXnCycle > earliestIssueCycle) {
+                    earliestIssueCycle = earliestXnCycle;
+                }
+                int64_t earliestXnReadCycle = EarliestXnReadByLsxCycle(state, instr, operands);
+                if (earliestXnReadCycle > earliestIssueCycle) {
+                    earliestIssueCycle = earliestXnReadCycle;
+                }
                 while (state.cycle < earliestIssueCycle) {
                     EmitNop(state);
                 }
@@ -257,11 +426,32 @@ namespace CcuOpt {
             int64_t issueCycle = state.cycle;
             state.cycle++;
 
+            // 登记 CKE 写者 (现有): clearcke 自动清零的 waitCKEId.
             for (const auto& operand : operands) {
                 if (!operand.isDef || operand.type != RegType::CKE) {
                     continue;
                 }
                 state.lastCkeWriterCycle[RegKey(operand)] = issueCycle;
+            }
+            // 登记 lsx 写者 (原方向, 单向): 仅 LoadX 写 i / StoreX 写 array / ClearX 区间进表,
+            // 服务 "lsx 写 -> 任意后续指令读" 的 EarliestXnIssueCycle.
+            std::vector<uint32_t> xnWriterKeys;
+            CollectXnWriterKeys(instr, state.pinnedGroups, xnWriterKeys);
+            for (uint32_t key : xnWriterKeys) {
+                state.lastXnWriterCycle[key] = issueCycle;
+            }
+            // 登记通用 XN 写者 (新方向): 任意指令的每个 XN def 归约后进通用表, 服务 "任意前序写 ->
+            // 后续 lsx/clearx 读" 的 EarliestXnReadByLsxCycle. 含 lsx/clearx 自身写的目标 (LoadX 写 i /
+            // StoreX 写 array / ClearX 区间两端点), 使 lsx 之间的写读也被覆盖. ClearX 额外登记区间 key,
+            // 供后续同区间 ClearX 的读命中 (与自依赖判定共用区间 key 域).
+            for (const auto& operand : operands) {
+                if (!operand.isDef || operand.type != RegType::XN) {
+                    continue;
+                }
+                state.lastAnyXnWriterCycle[XnGroupKey(operand.regId, state.pinnedGroups)] = issueCycle;
+            }
+            if (IsClearX(instr)) {
+                state.lastAnyXnWriterCycle[ClearXRangeKey(instr.v2.clearX.xnId, instr.v2.clearX.xmId)] = issueCycle;
             }
         }
 
@@ -570,7 +760,7 @@ namespace CcuOpt {
         // 只跟踪 CKE 写者的发射 cycle; 不做启发式放大, 保证补 NOP 有界.
         // 索引用 size_t 与 vector::size() 对齐, 避免 instrCount 逼近 65535 时 uint16_t 回绕死循环;
         // 输出条数是否越界预留区由上游 TransRepSequenceToMicrocode 按 instrVec.size() 快速失败兜底.
-        CkeOnlyState state{outVec, origToOut, stats_, relJmpProtected};
+        CkeOnlyState state{outVec, origToOut, stats_, relJmpProtected, opts_.pinnedGroups};
         for (size_t i = 0; i < instrCount; ++i) {
             ScheduleOneCkeInstr(state, origVec[i], i);
         }

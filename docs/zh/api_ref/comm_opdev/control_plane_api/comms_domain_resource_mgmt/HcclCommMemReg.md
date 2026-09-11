@@ -46,6 +46,7 @@ HcclResult HcclCommMemReg(HcclComm comm, const char *memTag, const CommMem *mem,
 - 一个通信域内，同一个memTag，只允许注册一块内存。
 - 一个通信域内，相同memTag重复注册会返回HCCL_E_PARA报错，不会复用已有的注册内存句柄。
 - 一个通信域内，不同memTag可映射到重叠或相同的内存区域。
+- 当`mem->type`为`COMM_MEM_TYPE_CCU`时，表示注册CCU资源空间内存，仅Ascend 950PR/Ascend 950DT支持。CCU类型内存的注册流程与DEVICE一致。详见[CommMemType](../../datatype_definition/CommMemType.md)。
 
 ## 调用示例
 

@@ -233,33 +233,6 @@ TEST_F(CcuTransportTest, Ut_CheckFinish_When_MismatchMsg_Expect_ReturnHCCL_E_INT
     EXPECT_EQ(transport->CheckFinish(), HcclResult::HCCL_E_INTERNAL);
 }
 
-TEST_F(CcuTransportTest, Ut_ResUpdate_When_EmptyTags_Expect_ReturnSuccess)
-{
-    std::vector<std::string> tags;
-    EXPECT_EQ(transport->ResUpdate(tags), HcclResult::HCCL_SUCCESS);
-}
-
-TEST_F(CcuTransportTest, Ut_ResUpdate_When_NewTags_Expect_InsertIntoCntXns)
-{
-    transport->transStatus_ = CcuTransport::TransStatus::READY;
-    transport->dieId_ = 0;
-    transport->userDevId_ = 0;
-    MOCKER(hcomm::CcuDevMgrImp::AllocWishCntXn).stubs().will(returnValue(HcclResult::HCCL_SUCCESS));
-    std::vector<std::string> tags = {"group1", "group2"};
-    EXPECT_EQ(transport->ResUpdate(tags), HcclResult::HCCL_SUCCESS);
-    EXPECT_EQ(transport->locRes_.cntXns.size(), 2U);
-    EXPECT_EQ(transport->locRes_.cntXns.count("group1"), 1U);
-    EXPECT_EQ(transport->locRes_.cntXns.count("group2"), 1U);
-    GlobalMockObject::verify();
-    GlobalMockObject::reset();
-}
-
-TEST_F(CcuTransportTest, Ut_GetRmtWishCntXnAddr_When_NotFound_Expect_ReturnHCCL_E_NOT_FOUND)
-{
-    uint64_t addr = 0;
-    EXPECT_EQ(transport->GetRmtWishCntXnAddr("nonexistent", addr), HcclResult::HCCL_E_NOT_FOUND);
-}
-
 TEST_F(CcuTransportTest, Ut_AttributionDescribe_Expect_NonEmpty)
 {
     CcuTransport::Attribution attr;

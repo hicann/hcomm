@@ -22,6 +22,7 @@
 
 #include "hccl_types.h"
 
+#include "ccu_res_repo.h"
 #include "tp_mgr.h"
 #include "ccu_dev_mgr_imp.h"
 #include "ccu_res_allocator.h"
@@ -57,17 +58,15 @@ public:
     HcclResult AllocIns(const uint8_t dieId, const uint32_t num, ResInfo& insInfo);
     HcclResult ReleaseIns(const uint8_t dieId, const ResInfo& insInfo);
     uint32_t GetInsConsecutiveRemainSize(const uint8_t dieId) const;
+    uint32_t GetCascCntBlockRemainSize(const uint8_t dieId) const;
     HcclResult AllocCke(const uint8_t dieId, const uint32_t num, std::vector<ResInfo>& ckeInfos);
     HcclResult ReleaseCke(const uint8_t dieId, const std::vector<ResInfo>& ckeInfos);
     HcclResult AllocXn(const uint8_t dieId, const uint32_t num, std::vector<ResInfo>& xnInfos);
     HcclResult ReleaseXn(const uint8_t dieId, const std::vector<ResInfo>& xnInfos);
 
     // 0.5rtt专用接口
-    HcclResult AllocWishCntXn(const uint8_t dieId, const std::string& resGroupTag, uint32_t& wishCntXn);
-    HcclResult ReleaseWishCntXn(const uint8_t dieId, const std::string& resGroupTag, uint32_t wishCntXn);
-    HcclResult
-    GetCntXnBlock(const uint8_t dieId, const std::string& resGroupTag, std::pair<uint32_t, uint32_t>& cntXnPair);
-    HcclResult GetTotalCntXn(const uint8_t dieId, const std::string& resGroupTag, uint32_t& totalCntXn);
+    HcclResult AllocCntXnBlock(const uint8_t dieId, CntXnBlock& cntXnBlock);
+    HcclResult ReleaseCntXnBlock(const uint8_t dieId, const CntXnBlock& cntXnBlock);
 
     const std::array<bool, CCU_MAX_IODIE_NUM>& GetDieEnableFlags() const;
 
@@ -76,6 +75,7 @@ public:
     HcclResult CcuCleanTaskKillState(const int32_t userDevId) const;
     HcclResult SetTaskKillDone();
     HcclResult SetTaskKill();
+    HcclResult QueryTokenInfo(uint64_t srcVa, uint64_t size, uint64_t& tokenId, uint64_t& tokenValue);
 
 private:
     explicit CcuComponent() = default;
@@ -108,8 +108,8 @@ private:
     HcclResult CcuSetTaskKillDone(const int32_t userDevId) const;
 
     // 0.5rtt专用接口
-    HcclResult ConfirmCntXns(const uint8_t dieId, const std::string& resGroupTag, const ResInfo& cntXnInfos);
-    HcclResult GetAvailableTotalCntXnIndex(uint32_t& index) const;
+    HcclResult ConfirmCntXns(const uint8_t dieId, const ResInfo& cntXnInfos, CntXnBlock& cntXnBlock);
+    HcclResult GetAvailableTotalCntXnIndex(uint8_t dieId, uint32_t& index) const;
     HcclResult
     SetTotalCntXnProcess(uint8_t dieId, uint32_t index, uint32_t fromId, uint32_t toId, uint32_t totalId) const;
 
@@ -149,17 +149,11 @@ private:
     enum class CcuTaskKillStatus : uint8_t { INIT = 0, TASK_KILL = 1, KILL_DONE = 2, CLEAN_TIF = 3, INVALID = 4 };
     CcuTaskKillStatus status{CcuTaskKillStatus::INVALID};
 
-    struct CntXnBlock {
-        ResInfo resInfo{};               // cntXn resInfo
-        std::stack<uint32_t> wishCntXns; // wishCntXn Id
-        uint32_t totalCntXn{0};          // totalCntXn Id
-        uint32_t blockIdx{0};            // wishCntXn和totalCntXn绑定时的idx
-    };
-    std::mutex cntXnBlockMutex_;
-    std::unordered_map<uint8_t, std::unordered_map<std::string, struct CntXnBlock>>
-        cntXnBlocks_; // {dieId, {resGroupTag, CntXnBlock}}
     // 已使用的0.5RTT配置寄存器的index
-    std::array<bool, CCU_V2_RESOURCE_TOTAL_CNT_XNS_NUM> usedTotalCntXnFlags_{};
+    std::array<std::array<bool, CCU_V2_RESOURCE_TOTAL_CNT_XNS_NUM>, CCU_MAX_IODIE_NUM> usedTotalCntXnFlags_{};
+    // 保护 usedTotalCntXnFlags_ 的扫描空闲index/置位/清位与配置寄存器成为原子区段，
+    // 覆盖 per-device 单例下多 CCU 实例并发 Alloc/Release 的竞态（mutable 供 const 查询接口加锁）
+    mutable std::mutex cntXnBlockMutex_;
 };
 
 } // namespace hcomm

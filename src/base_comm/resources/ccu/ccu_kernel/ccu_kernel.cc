@@ -38,6 +38,7 @@
 // todo: 引入头文件需要检查
 #include "ccu_assist_v1.h"
 #include "hccl_comm_pub.h"
+#include "hccl_types.h"
 #include "task_param.h"
 
 #include "ccu_ins_generator_base.h"
@@ -100,6 +101,30 @@ static HcclResult GetDieIdByChannel(const ChannelHandle channel, uint32_t& dieId
     dieId = channelImpl->GetDieId();
     HCCL_INFO("[%s], channelHandle[0x%llx], dieId[%u]", __func__, channel, dieId);
     return HcclResult::HCCL_SUCCESS;
+}
+
+CcuResult GetChannelIdByHandle(ChannelHandle channel, uint32_t& channelId)
+{
+    void* channelPtr{nullptr};
+    // HcommResult 与 HcclResult 数值对齐（见 hcomm_result_defs.h 与 hcomm_res_defs.h 注释），
+    // 经 static_cast<HcclResult> 再由 HCCL_TO_CCU_RET 转为 CcuResult
+    HcommResult hret = HcommChannelGet(channel, &channelPtr);
+    if (static_cast<HcclResult>(hret) != HCCL_SUCCESS) {
+        HCCL_ERROR("[%s] HcommChannelGet failed, ret[%d], channel[0x%llx].", __func__, hret, channel);
+        return HCCL_TO_CCU_RET(static_cast<HcclResult>(hret));
+    }
+    auto* channelImpl = dynamic_cast<CcuUrmaChannel*>(static_cast<Channel*>(channelPtr));
+    if (channelImpl == nullptr) {
+        HCCL_ERROR("[%s] failed to cast channel[0x%llx] to CcuUrmaChannel", __func__, channel);
+        return CcuResult::CCU_E_PTR;
+    }
+    channelId = channelImpl->GetChannelId();
+    if (channelId == UINT32_MAX) {
+        HCCL_ERROR("[%s] channel[0x%llx] channelId is invalid", __func__, channel);
+        return CcuResult::CCU_E_UNAVAIL;
+    }
+    HCCL_INFO("[%s], channelHandle[0x%llx], channelId[%u]", __func__, channel, channelId);
+    return CcuResult::CCU_SUCCESS;
 }
 
 static HcclResult GetDieIdByChannels(const std::unordered_set<ChannelHandle>& channels, uint32_t& dieId)
@@ -833,6 +858,24 @@ CcuResult CcuKernel::NotifyWait(const ChannelHandle channel, uint32_t localNotif
     return CcuResult::CCU_SUCCESS;
 }
 
+CcuResult CcuKernel::CascCntWait(HcommCcuCascCntHandle cntHandle, uint64_t tgtValue)
+{
+    PLF_CONFIG_INFO(PLF_DATA_OP, "[CascCntWait] cntHandle=%llu, tgtValue=%llu", cntHandle, tgtValue);
+    auto rep = std::make_shared<CcuRep::CcuRepCascCntWait>(insGenerator, cntHandle, tgtValue);
+    Append(rep);
+    return CcuResult::CCU_SUCCESS;
+}
+CcuResult CcuKernel::CascCntClear(HcommCcuCascCntHandle cntHandle, CcuEventHandle eventHandle, uint32_t mask)
+{
+    PLF_CONFIG_INFO(
+        PLF_DATA_OP, "[CascCntClear] cntHandle=%llu, eventHandle=%llu, mask=%u", cntHandle, eventHandle, mask);
+    CcuRep::CompletedEvent* event{nullptr};
+    CCU_CHK_RET(GetEventByHandle(eventHandle, &event));
+    auto rep = std::make_shared<CcuRep::CcuRepCascCntClear>(insGenerator, cntHandle, *event, mask);
+    Append(rep);
+    SetDependencyInfo(event->Id(), mask, rep);
+    return CcuResult::CCU_SUCCESS;
+}
 CcuResult CcuKernel::WriteVariableWithNotify(
     const ChannelHandle channel, CcuVariableHandle varHandle, uint32_t remoteVarIdx, uint32_t remoteNotifyIdx,
     uint32_t mask)
@@ -935,6 +978,44 @@ CcuResult CcuKernel::CcuLoadVarFromVarAddr(CcuVariableHandle addrHandle, CcuVari
     if (num >= MIN_PINNED_REG_GROUP_NUM) {
         AddPinnedRegGroup(*var, static_cast<uint16_t>(num));
     }
+    return CcuResult::CCU_SUCCESS;
+}
+
+CcuResult CcuKernel::LoadAddImm(
+    CcuVariableHandle varHandle, uint16_t srcNum, CcuVariableHandle offsetHandle, uint16_t immAddValue,
+    CcuVariableHandle dstHandle)
+{
+    PLF_CONFIG_INFO(
+        PLF_DATA_OP, "[LoadAddImm] varHandle=%llu, offsetHandle=%llu, immAddValue=%u, dstHandle=%llu", varHandle,
+        offsetHandle, immAddValue, dstHandle);
+    CcuRep::Variable* baseVar(nullptr);
+    CCU_CHK_RET(GetVariableByHandle(varHandle, &baseVar));
+    CcuRep::Variable* offsetVar(nullptr);
+    CCU_CHK_RET(GetVariableByHandle(offsetHandle, &offsetVar));
+    CcuRep::Variable* dstVar(nullptr);
+    CCU_CHK_RET(GetVariableByHandle(dstHandle, &dstVar));
+    auto rep
+        = std::make_shared<CcuRep::CcuRepLoadAddImm>(insGenerator, *baseVar, srcNum, *offsetVar, immAddValue, *dstVar);
+    Append(rep);
+    return CcuResult::CCU_SUCCESS;
+}
+
+CcuResult CcuKernel::AddImmStore(
+    CcuVariableHandle varHandle, uint16_t dstNum, CcuVariableHandle offsetHandle, uint16_t immAddValue,
+    CcuVariableHandle srcHandle)
+{
+    PLF_CONFIG_INFO(
+        PLF_DATA_OP, "[AddImmStore] varHandle=%llu, offsetHandle=%llu, immAddValue=%u, srcHandle=%llu", varHandle,
+        offsetHandle, immAddValue, srcHandle);
+    CcuRep::Variable* baseVar(nullptr);
+    CCU_CHK_RET(GetVariableByHandle(varHandle, &baseVar));
+    CcuRep::Variable* offsetVar(nullptr);
+    CCU_CHK_RET(GetVariableByHandle(offsetHandle, &offsetVar));
+    CcuRep::Variable* srcVar(nullptr);
+    CCU_CHK_RET(GetVariableByHandle(srcHandle, &srcVar));
+    auto rep
+        = std::make_shared<CcuRep::CcuRepStoreAddImm>(insGenerator, *baseVar, dstNum, *offsetVar, immAddValue, *srcVar);
+    Append(rep);
     return CcuResult::CCU_SUCCESS;
 }
 
@@ -1235,6 +1316,55 @@ CcuResult CcuKernel::WriteMemToMemReduce(
         ResolveRemoteLocalLenEvent(remoteHandle, localHandle, lenHandle, eventHandle, &remote, &local, &len, &event));
     auto ret = WriteReduceNb(channel, *remote, *local, *len, dataType, opType, *event, mask);
     return HCCL_TO_CCU_RET(ret);
+}
+
+CcuResult CcuKernel::WriteVarAtomicAdd(
+    CcuVariableHandle channelIdHandle, CcuRemoteAddrHandle varAddrHandle, CcuVariableHandle addValueHandle,
+    CcuEventHandle eventHandle, uint32_t mask)
+{
+    PLF_CONFIG_INFO(
+        PLF_DATA_OP,
+        "[WriteVarAtomicAdd] channelIdHandle=%llu, varAddrHandle=%llu, addValueHandle=%llu, eventHandle=%llu,"
+        " mask=%u",
+        channelIdHandle, varAddrHandle, addValueHandle, eventHandle, mask);
+    CcuRep::Variable* channelId{nullptr};
+    CCU_CHK_RET(GetVariableByHandle(channelIdHandle, &channelId));
+    CcuRep::RemoteAddr* varAddr{nullptr};
+    CCU_CHK_RET(GetRemoteAddrByHandle(varAddrHandle, &varAddr));
+    CcuRep::Variable* addValue{nullptr};
+    CCU_CHK_RET(GetVariableByHandle(addValueHandle, &addValue));
+    CcuRep::CompletedEvent* event{nullptr};
+    CCU_CHK_RET(GetEventByHandle(eventHandle, &event));
+    auto rep
+        = std::make_shared<CcuRep::CcuRepWriteVarAtomic>(insGenerator, *channelId, *varAddr, *addValue, *event, mask);
+    Append(rep);
+    SetDependencyInfo(event->Id(), mask, rep);
+    return CcuResult::CCU_SUCCESS;
+}
+
+CcuResult CcuKernel::WriteWithCascCntInc(
+    CcuVariableHandle channelIdHandle, CcuRemoteAddrHandle remoteHandle, CcuLocalAddrHandle localHandle,
+    CcuVariableHandle lenHandle, CcuRemoteAddrHandle inCntAddrHandle)
+{
+    PLF_CONFIG_INFO(
+        PLF_DATA_OP,
+        "[WriteWithCascCntInc] channelIdHandle=%llu, remoteHandle=%llu, localHandle=%llu, lenHandle=%llu,"
+        " inCntAddrHandle=%llu",
+        channelIdHandle, remoteHandle, localHandle, lenHandle, inCntAddrHandle);
+    CcuRep::Variable* channelId{nullptr};
+    CCU_CHK_RET(GetVariableByHandle(channelIdHandle, &channelId));
+    CcuRep::RemoteAddr* remoteAddr{nullptr};
+    CCU_CHK_RET(GetRemoteAddrByHandle(remoteHandle, &remoteAddr));
+    CcuRep::LocalAddr* local{nullptr};
+    CCU_CHK_RET(GetLocalAddrByHandle(localHandle, &local));
+    CcuRep::Variable* len{nullptr};
+    CCU_CHK_RET(GetVariableByHandle(lenHandle, &len));
+    CcuRep::RemoteAddr* inCntAddr{nullptr};
+    CCU_CHK_RET(GetRemoteAddrByHandle(inCntAddrHandle, &inCntAddr));
+    auto rep = std::make_shared<CcuRep::CcuRepWriteWithCntInc>(
+        insGenerator, *channelId, *remoteAddr, *local, *len, *inCntAddr);
+    Append(rep);
+    return CcuResult::CCU_SUCCESS;
 }
 
 void CcuKernel::FlushClosablePendingIfs()
@@ -2786,6 +2916,53 @@ namespace {
         }
         return count;
     }
+
+    // 识别"会翻译出 LoadX/StoreX/ClearX (half-rtt 特殊指令) 的 rep". 后端优化 (CkeOnly) 对该指令双向补
+    // NOP: 作为写者其后读者、作为读者其前写者各最多补 (CCU_XN_RAW_LATENCY - 1) 条, 故每个此类 rep 都要按
+    // 2 * CCU_XN_RAW_LATENCY 预留指令空间, 保证优化后指令数不越界. 各 rep 恰出 1 条对应微指令 (见
+    // ccu_ins_generator_v2.cc):
+    //   LOAD_ADD_IMM   -> 1 条 LoadX;
+    //   STORE_ADD_IMM  -> 1 条 StoreX;
+    //   CASC_CNT_CLEAR -> 1 条 ClearX.
+    // CASC_CNT_CLEAR 的 ClearX 同片自依赖 (两条相同区间 ClearX) 也会触发后端补 NOP
+    // (见 instruction_scheduler.cc EarliestXnIssueCycle 的 ClearX 区间 key 探测与 UT
+    // SchedulerCkeOnly_ClearXSameRangeInsertsXnNops), 故必须与 LoadX/StoreX 同等预留, 否则预留与
+    // 实际插入漂移会导致越界.
+    bool IsLdStXRep(const std::shared_ptr<CcuRep::CcuRepBase>& rep)
+    {
+        if (rep == nullptr) {
+            return false;
+        }
+        switch (rep->Type()) {
+            case CcuRep::CcuRepType::LOAD_ADD_IMM:
+            case CcuRep::CcuRepType::STORE_ADD_IMM:
+            case CcuRep::CcuRepType::CASC_CNT_CLEAR:
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    // 与 CountCkeWaitRepInBlock 一致地下钻一层 block 子 rep, 统计其中会翻译出 LoadX/StoreX/ClearX 的 rep 个数.
+    uint32_t CountLdStXRepInBlock(const std::shared_ptr<CcuRep::CcuRepBase>& rep)
+    {
+        const auto repType = rep->Type();
+        if (repType != CcuRep::CcuRepType::BLOCK && repType != CcuRep::CcuRepType::FUNC_BLOCK
+            && repType != CcuRep::CcuRepType::LOOP_BLOCK) {
+            return 0;
+        }
+        auto* blockPtr = static_cast<CcuRep::CcuRepBlock*>(rep.get());
+        if (blockPtr == nullptr) {
+            return 0;
+        }
+        uint32_t count = 0;
+        for (const auto& child : blockPtr->GetReps()) {
+            if (IsLdStXRep(child)) {
+                count++;
+            }
+        }
+        return count;
+    }
 } // namespace
 
 // 统计当前 kernel 中"需要按 cke 写后读 latency 补 NOP"的 rep 个数 (含 block 子 rep).
@@ -2811,6 +2988,36 @@ uint32_t CcuKernel::GetRepNeedToAddLatency() const
         count += CountCkeWaitRepInBlock(rep);
     }
     HCCL_INFO("[CcuKernel] cke wait rep count %u (reserve %u instrs)", count, count * CcuRep::CCU_CKE_RAW_LATENCY);
+    return count;
+}
+
+// 统计当前 kernel 中"会翻译出 LoadX/StoreX/ClearX (half-rtt 特殊指令) 的 rep 个数" (含 block 子 rep),
+// 每个此类 rep 恰出 1 条对应微指令. 后端优化对该指令存在两个方向的写后读补 NOP:
+//   (1) 该 lsx 写 xn/array -> 后续任意指令读 (作为写者, 其后读者最多补 CCU_XN_RAW_LATENCY - 1 条);
+//   (2) 任意前序指令写 xn/array -> 本 lsx/clearx 读 (硬件对 lsx/clearx 读操作数 interlock 失效,
+//       作为读者, 其前最多补 CCU_XN_RAW_LATENCY - 1 条).
+// 单个 rep 前后两侧最坏合计补 2*(CCU_XN_RAW_LATENCY - 1) 条, 故上层据此为每个此类 rep 预留
+// 2 * CCU_XN_RAW_LATENCY 条指令空间 (预留倍数见 ccu_kernel_mgr.cc ComputeKernelInstrRegionSize).
+// 本函数只返回 rep 个数, latency 倍数由预留计算处统一乘. 判定集合见 IsLdStXRep: LOAD_ADD_IMM /
+// STORE_ADD_IMM / CASC_CNT_CLEAR.
+uint32_t CcuKernel::GetLsxRepReserveCount() const
+{
+    // XN 写后读补 NOP 与指令空间预留只属于 A6(CCU_V2) 后端优化; A5(CCU_V1) 不跑后端优化,
+    // 不做任何预留, 直接返回 0, 避免影响 A5 的申请/释放口径.
+    if (ccuVersion_ != CcuVersion::CCU_V2) {
+        return 0;
+    }
+    uint32_t count = 0;
+    for (const auto& rep : const_cast<CcuKernel*>(this)->GetRepSequence()) {
+        if (rep == nullptr) {
+            continue;
+        }
+        if (IsLdStXRep(rep)) {
+            count++;
+        }
+        count += CountLdStXRepInBlock(rep);
+    }
+    HCCL_INFO("[CcuKernel] lsx rep count %u (reserve %u instrs)", count, count * 2u * CcuRep::CCU_XN_RAW_LATENCY);
     return count;
 }
 
@@ -2921,6 +3128,24 @@ HcclResult CcuKernel::CreateBlockCompletedEvent(const uint32_t count, CcuRep::Co
 }
 
 void CcuKernel::SetResRepository(const CcuResRepository& resRepo) { resRepo_ = resRepo; }
+
+void CcuKernel::SetCascCntBlock(const std::unordered_map<HcommCcuCascCntHandle, CntXnBlock>& cascCntBlocks)
+{
+    std::lock_guard<std::mutex> lock(cascCntBlockMutex_);
+    cascCntBlocks_ = cascCntBlocks;
+}
+
+HcclResult CcuKernel::GetCascCntBlock(HcommCcuCascCntHandle cntHandle, CntXnBlock& cascCntBlock)
+{
+    std::lock_guard<std::mutex> lock(cascCntBlockMutex_);
+    auto cascCntBlockIter = cascCntBlocks_.find(cntHandle);
+    if (cascCntBlockIter == cascCntBlocks_.end()) {
+        HCCL_ERROR("Invalid cascCntHandle(%llu)", static_cast<unsigned long long>(cntHandle));
+        return HCCL_E_NOT_FOUND;
+    }
+    cascCntBlock = cascCntBlockIter->second;
+    return HcclResult::HCCL_SUCCESS;
+}
 
 CcuResRepository& CcuKernel::GetResRepository() { return resRepo_; }
 

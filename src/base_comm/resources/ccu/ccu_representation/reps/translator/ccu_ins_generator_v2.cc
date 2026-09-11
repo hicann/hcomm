@@ -23,10 +23,13 @@ namespace hcomm {
 
 namespace CcuRep {
 #define UNUSED(x) static_cast<void>(x)
-
+    // V2中所有variable的Id()需要换成IdWithFlag()
     namespace {
-        constexpr uint8_t URMA_DMA_OP_READ = 0x6;     // UB URMA WQEBB opcode: read
-        constexpr uint8_t URMA_DMA_OP_WRITE = 0x3;    // UB URMA WQEBB opcode: write
+        constexpr uint8_t URMA_DMA_OP_READ = 0x6;  // UB URMA WQEBB opcode: read
+        constexpr uint8_t URMA_DMA_OP_WRITE = 0x3; // UB URMA WQEBB opcode: write
+        constexpr uint8_t URMA_DMA_OP_WRITE_WITH_CNT_INC
+            = 0x1A;                                   // UB URMA WQEBB opcode: write with cascade counter increase
+        constexpr uint8_t SPLIT_MODE_PACKET = 1;      // TransMem按包为单位切分
         constexpr uint32_t REL_JMP_INSTR_NUM = 9;     // RelJmp生成的指令数
         constexpr uint32_t FUNC_CALL_JMP_OFFSET = 11; // RelJmp+Jump+Nop
         constexpr uint32_t FUNC_CALL_RET_OFFSET = 12; // FUNC_CALL_JMP_OFFSET + 1
@@ -1325,6 +1328,115 @@ namespace CcuRep {
         }
         CcuV2::SetCKE(instr++, 0, 0, dep.commSignal, storeVarPtr->GetMask(), 1);
 
+        return HcclResult::HCCL_SUCCESS;
+    }
+
+    // halfRtt
+    HcclResult CcuInsGeneratorV2::CcuRepWriteVarAtomicTranslate(
+        CcuKernel* ccuKernel, CcuInstr*& instr, uint16_t& curInstrId, CcuRepWriteVarAtomic* writeVarAtomPtr,
+        const TransDep& dep)
+    {
+        CHK_PTR_NULL(writeVarAtomPtr);
+        (void)ccuKernel;
+        (void)curInstrId;
+        (void)dep;
+
+        CcuV2::SyncAtX(
+            instr++, writeVarAtomPtr->GetVarAddrId(), writeVarAtomPtr->GetVarTokenId(), writeVarAtomPtr->GetTargetId(),
+            writeVarAtomPtr->GetChannelVarId(), writeVarAtomPtr->GetSemId(), writeVarAtomPtr->GetMask());
+        return HcclResult::HCCL_SUCCESS;
+    }
+
+    HcclResult CcuInsGeneratorV2::CcuRepWriteWithCntIncTranslate(
+        CcuKernel* ccuKernel, CcuInstr*& instr, uint16_t& curInstrId, CcuRepWriteWithCntInc* writeCntIncPtr,
+        const TransDep& dep)
+    {
+        CHK_PTR_NULL(writeCntIncPtr);
+        (void)ccuKernel;
+        (void)curInstrId;
+        (void)dep;
+
+        CcuV2::TransMemNotifyInfo notify{};
+        CcuV2::TransMemReduceInfo reduce{};
+        CcuV2::TransMemConfig config{};
+        config.dmaOpCode = URMA_DMA_OP_WRITE_WITH_CNT_INC;
+        config.splitMode = SPLIT_MODE_PACKET;
+        notify.xnId = writeCntIncPtr->GetIncCntAddrId();
+        notify.xntId = writeCntIncPtr->GetIncCntTokenId();
+        notify.value = 1;
+        CcuV2::TransMem(
+            instr++, writeCntIncPtr->GetRemAddrId(), writeCntIncPtr->GetRemTokenId(), writeCntIncPtr->GetLocAddrId(),
+            writeCntIncPtr->GetLocTokenId(), writeCntIncPtr->GetLenId(), writeCntIncPtr->GetChannelVarId(), notify,
+            reduce, config, 0, 0);
+        return HcclResult::HCCL_SUCCESS;
+    }
+
+    HcclResult CcuInsGeneratorV2::CcuRepCascCntWaitTranslate(
+        CcuKernel* ccuKernel, CcuInstr*& instr, uint16_t& curInstrId, CcuRepCascCntWait* cascCntWaitPtr,
+        const TransDep& dep)
+    {
+        CHK_PTR_NULL(cascCntWaitPtr);
+        (void)curInstrId;
+        (void)dep;
+
+        CntXnBlock cascCntBlock;
+        CHK_RET(ccuKernel->GetCascCntBlock(cascCntWaitPtr->GetCntHandle(), cascCntBlock));
+        cascCntWaitPtr->SetCascCntBlock(cascCntBlock);
+
+        CcuV2::LoadImdToXn(
+            instr++, static_cast<uint16_t>(cascCntBlock.expectedCntXn), cascCntWaitPtr->GetOutCntTarget(), 0, 0);
+        CcuV2::Wait(
+            instr++, static_cast<uint16_t>(cascCntBlock.totalCntXn), static_cast<uint16_t>(cascCntBlock.expectedCntXn),
+            0);
+        return HcclResult::HCCL_SUCCESS;
+    }
+
+    HcclResult CcuInsGeneratorV2::CcuRepCascCntClearTranslate(
+        CcuKernel* ccuKernel, CcuInstr*& instr, uint16_t& curInstrId, CcuRepCascCntClear* cascCntClearPtr,
+        const TransDep& dep)
+    {
+        CHK_PTR_NULL(cascCntClearPtr);
+        (void)curInstrId;
+        (void)dep;
+
+        CntXnBlock cascCntBlock;
+        CHK_RET(ccuKernel->GetCascCntBlock(cascCntClearPtr->GetCntHandle(), cascCntBlock));
+        cascCntClearPtr->SetCascCntBlock(cascCntBlock);
+
+        CcuV2::ClearX(
+            instr++, static_cast<uint16_t>(cascCntBlock.wishCntXns.first),
+            static_cast<uint16_t>(cascCntBlock.expectedCntXn), 0, 0, cascCntClearPtr->GetSemId(),
+            cascCntClearPtr->GetMask());
+        return HcclResult::HCCL_SUCCESS;
+    }
+
+    HcclResult CcuInsGeneratorV2::CcuRepLoadAddImmTranslate(
+        CcuKernel* ccuKernel, CcuInstr*& instr, uint16_t& curInstrId, CcuRepLoadAddImm* loadAddImmPtr,
+        const TransDep& dep)
+    {
+        CHK_PTR_NULL(loadAddImmPtr);
+        (void)ccuKernel;
+        (void)curInstrId;
+        (void)dep;
+
+        CcuV2::LoadX(
+            instr++, loadAddImmPtr->GetDstId(), loadAddImmPtr->GetSrcId(), loadAddImmPtr->GetSrcOffsetId(),
+            loadAddImmPtr->GetImmAddValue(), 0, 0, 0);
+        return HcclResult::HCCL_SUCCESS;
+    }
+
+    HcclResult CcuInsGeneratorV2::CcuRepStoreAddImmTranslate(
+        CcuKernel* ccuKernel, CcuInstr*& instr, uint16_t& curInstrId, CcuRepStoreAddImm* storeAddImmPtr,
+        const TransDep& dep)
+    {
+        CHK_PTR_NULL(storeAddImmPtr);
+        (void)ccuKernel;
+        (void)curInstrId;
+        (void)dep;
+
+        CcuV2::StoreX(
+            instr++, storeAddImmPtr->GetDstId(), storeAddImmPtr->GetSrcId(), storeAddImmPtr->GetImmAddValue(),
+            storeAddImmPtr->GetDstOffsetId(), 0, 0, 0);
         return HcclResult::HCCL_SUCCESS;
     }
 

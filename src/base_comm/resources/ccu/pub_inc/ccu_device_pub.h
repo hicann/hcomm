@@ -130,6 +130,7 @@ CcuResult CcuGetXnNum(int32_t userDevId, uint8_t dieId, uint32_t& num);
 CcuResult CcuGetGsaNum(int32_t userDevId, uint8_t dieId, uint32_t& num);
 CcuResult CcuGetInstructionNum(int32_t userDevId, uint8_t dieId, uint32_t& num);
 CcuResult CcuGetMissionNum(int32_t userDevId, uint8_t dieId, uint32_t& num);
+CcuResult CcuGetCascCntNum(int32_t userDevId, uint8_t dieId, uint32_t& num);
 
 /**
  * @brief 获取指定device的主板类型
@@ -253,5 +254,40 @@ HcclResult CcuCleanTaskKillState(const int32_t userDevId);
  */
 HcclResult CcuCleanDieCkes(const int32_t userDevId, const uint8_t dieId);
 
+/**
+ * @brief 申请批量cnt xn资源
+ *
+ * @param userDevId 用户设备ID
+ * @param dieId ioDie ID
+ * @param cntXnBlock count xn block结构体
+ * @return CcuResult
+ * @note 返回申请的count xn block
+ */
+CcuResult CcuAllocCntXnBlock(const int32_t userDevId, const uint8_t dieId, CntXnBlock& cntXnBlock);
+
+/**
+ * @brief 清理指定ioDie CCU的全部CKE资源，重置为0
+ *
+ * @param userDevId 用户设备ID
+ * @param dieId ioDie ID
+ * @param cntXnBlock count xn block结构体
+ * @return CcuResult
+ * @note 根据cntXnBlock释放对应的count xn资源
+ */
+CcuResult CcuReleaseCntXnBlock(const int32_t userDevId, const uint8_t dieId, const CntXnBlock& cntXnBlock);
+
+/**
+ * @brief 查询指定device指定地址的资源token信息
+ *
+ * @param userDevId 用户设备ID
+ * @param srcVa 资源地址
+ * @param size 资源size
+ * @param tokenId token ID
+ * @param tokenValue token value
+ * @return CcuResult
+ * @note 查询资源token信息，返回token信息
+ */
+CcuResult
+CcuQueryTokenInfo(const int32_t userDevId, uint64_t srcVa, uint64_t size, uint64_t& tokenId, uint64_t& tokenValue);
 }; // namespace hcomm
 #endif // CCU_DEVICE_PUB_H

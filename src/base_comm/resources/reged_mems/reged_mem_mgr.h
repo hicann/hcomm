@@ -15,6 +15,7 @@
 #include <cstdint>
 #include <memory>
 #include <mutex>
+#include <type_traits>
 #include <utility>
 #include <vector>
 #include "hcomm_c_adpt.h"
@@ -159,7 +160,9 @@ protected:
         std::shared_ptr<Hccl::Buffer> localBufferPtr = nullptr;
         EXCEPTION_CATCH(
             (localBufferPtr = std::make_shared<Hccl::Buffer>(
-                 reinterpret_cast<uintptr_t>(mem.addr), mem.size, static_cast<HcclMemType>(mem.type), memTag)),
+                 reinterpret_cast<uintptr_t>(mem.addr), mem.size,
+                 (mem.type == COMM_MEM_TYPE_HOST) ? HcclMemType::HCCL_MEM_TYPE_HOST : HcclMemType::HCCL_MEM_TYPE_DEVICE,
+                 memTag)),
             return HCCL_E_PTR);
 
         std::shared_ptr<RmaBuffer> rmaBuffer;

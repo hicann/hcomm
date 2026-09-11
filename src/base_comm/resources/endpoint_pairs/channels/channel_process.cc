@@ -28,6 +28,7 @@
 #include "env_config/env_config_v2.h"
 #include "aicpu_ts_p2p_channel.h"
 #include "aiv_urma_channel.h"
+#include "ccu_urma_channel.h"
 #include "mem_device_pub.h"
 #include "comm_engine_utils.h"
 #include "comm_configer.h"
@@ -976,6 +977,16 @@ HcclResult ChannelProcess::ChannelGetRemoteMems(
     return WithChannelByHandleLocked(channelHandle, [&memNum, &remoteMem, &memInfos](Channel& channel) -> HcclResult {
         // 锁内调用，避免 destroy 并发释放
         return channel.GetRemoteMems(memNum, remoteMem, memInfos);
+    });
+}
+
+HcclResult ChannelProcess::CcuChannelGetRmtMemToken(ChannelHandle channelHandle, uint64_t srcVa, uint64_t& tokenInfo)
+{
+    return WithChannelByHandleLocked(channelHandle, [&srcVa, &tokenInfo](Channel& channel) -> HcclResult {
+        // 锁内调用，避免 destroy 并发释放
+        auto* ccuChannel = dynamic_cast<CcuUrmaChannel*>(&channel);
+        CHK_PTR_NULL(ccuChannel);
+        return ccuChannel->CcuGetRmtMemToken(srcVa, tokenInfo);
     });
 }
 

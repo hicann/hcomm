@@ -123,16 +123,18 @@ namespace CcuOpt {
         HCCL_INFO("[CcuMicrocodeOpt][optlog] === end ===");
     }
 
-    CcuRep::CcuInstrInfo
-    MicrocodeOptimizer::Run(const CcuRep::CcuInstrInfo& input, uint16_t reserveXnId, uint16_t reserveCkeId)
+    CcuRep::CcuInstrInfo MicrocodeOptimizer::Run(
+        const CcuRep::CcuInstrInfo& input, uint16_t reserveXnId, uint16_t reserveCkeId,
+        const std::vector<PinnedGroup>& pinnedGroups)
     {
         OptimizerOptions opts = DefaultOptions(); // 恒 CkeOnly.
         HCCL_INFO(
-            "[CcuMicrocodeOpt] active options: sched=CkeOnly, reserveXn=%u, reserveCke=%u",
-            static_cast<unsigned>(reserveXnId), static_cast<unsigned>(reserveCkeId));
+            "[CcuMicrocodeOpt] active options: sched=CkeOnly, reserveXn=%u, reserveCke=%u, pinnedGroups=%zu",
+            static_cast<unsigned>(reserveXnId), static_cast<unsigned>(reserveCkeId), pinnedGroups.size());
 
         MicrocodeOptimizer opt;
         opt.SetOptions(opts);
+        opt.SetPinnedGroups(&pinnedGroups);
         return opt.Optimize(input);
     }
 

@@ -576,6 +576,17 @@ HcclResult CcuResSpecifications::GetCountXnNum(const uint8_t dieId, uint32_t& co
     return HcclResult::HCCL_SUCCESS;
 }
 
+HcclResult CcuResSpecifications::GetCascCntNum(const uint8_t dieId, uint32_t& cascCntNum) const
+{
+    CHK_RET(CheckDieValid(__func__, userDevId_, dieId, dieEnableFlags_));
+    if (ccuVersion_ != CcuVersion::CCU_V2) {
+        cascCntNum = 0;
+        return HcclResult::HCCL_SUCCESS;
+    }
+    cascCntNum = CCU_V2_RESOURCE_TOTAL_CNT_XNS_NUM;
+    return HcclResult::HCCL_SUCCESS;
+}
+
 HcclResult CcuResSpecifications::GetCkeNum(const uint8_t dieId, uint32_t& ckeNum) const
 {
     CHK_RET(CheckDieValid(__func__, userDevId_, dieId, dieEnableFlags_));

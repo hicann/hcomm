@@ -18,6 +18,7 @@
 #include "ccu_res_batch_allocator.h"
 
 // 支持ccu新老通信域混跑临时添加
+#include "log.h"
 #include "unified_platform/ccu/ccu_device/ccu_component/ccu_component.h"
 #include "unified_platform/ccu/ccu_device/ccu_res_specs_legacy.h"
 #include "unified_platform/ccu/ccu_device/ccu_res_batch_allocator_legacy.h"
@@ -180,6 +181,12 @@ CcuResult CcuGetInstructionNum(int32_t userDevId, uint8_t dieId, uint32_t& num)
 CcuResult CcuGetMissionNum(int32_t userDevId, uint8_t dieId, uint32_t& num)
 {
     CCU_CHK_RET(CcuDevMgrImp::GetResSpecsMissionNum(userDevId, dieId, num));
+    return CcuResult::CCU_SUCCESS;
+}
+
+CcuResult CcuGetCascCntNum(int32_t userDevId, uint8_t dieId, uint32_t& num)
+{
+    CCU_CHK_RET(CcuDevMgrImp::GetResSpecsCascCntNum(userDevId, dieId, num));
     return CcuResult::CCU_SUCCESS;
 }
 
@@ -593,6 +600,11 @@ uint32_t CcuDevMgrImp::GetInsConsecutiveRemainSize(const int32_t userDevId, cons
                                         Hccl::CcuComponent::GetInstance(userDevId).GetInsConsecutiveRemainSize(dieId);
 }
 
+uint32_t CcuDevMgrImp::GetCascCntBlockRemainSize(const int32_t userDevId, const uint8_t dieId)
+{
+    return CheckCcuOpenSourceEnable() ? CcuComponent::GetInstance(userDevId).GetCascCntBlockRemainSize(dieId) : 0;
+}
+
 HcclResult
 CcuDevMgrImp::AllocCke(const int32_t userDevId, const uint8_t dieId, const uint32_t num, std::vector<ResInfo>& ckeInfos)
 {
@@ -633,63 +645,6 @@ HcclResult CcuDevMgrImp::ReleaseXn(const int32_t userDevId, const uint8_t dieId,
                                        Hccl::CcuComponent::GetInstance(userDevId).ReleaseXn(dieId, xnInfos);
     EXCEPTION_HANDLE_END
     return ret;
-}
-
-HcclResult CcuDevMgrImp::AllocWishCntXn(
-    const int32_t userDevId, const uint8_t dieId, const std::string& resGroupTag, uint32_t& wishCntXn)
-{
-    if (!CheckCcuOpenSourceEnable()) {
-        HCCL_WARNING("[CcuDevMgrImp][%s] is not supported for legacy interface.", __func__);
-        return HcclResult::HCCL_E_NOT_SUPPORT;
-    }
-
-    HCCL_INFO(
-        "[%s] new alloc count xn request: userDevId[%d], dieId[%u], resGroupTag[%s].", __func__, userDevId, dieId,
-        resGroupTag.c_str());
-    return CcuComponent::GetInstance(userDevId).AllocWishCntXn(dieId, resGroupTag, wishCntXn);
-}
-
-HcclResult CcuDevMgrImp::ReleaseWishCntXn(
-    const int32_t userDevId, const uint8_t dieId, const std::string& resGroupTag, uint32_t wishCntXn)
-{
-    if (!CheckCcuOpenSourceEnable()) {
-        HCCL_WARNING("[CcuDevMgrImp][%s] is not supported for legacy interface.", __func__);
-        return HcclResult::HCCL_E_NOT_SUPPORT;
-    }
-
-    HCCL_INFO(
-        "[%s] new release count xn request: userDevId[%d], dieId[%u], resGroupTag[%s], wishCntXn[%u].", __func__,
-        userDevId, dieId, resGroupTag.c_str(), wishCntXn);
-    return CcuComponent::GetInstance(userDevId).ReleaseWishCntXn(dieId, resGroupTag, wishCntXn);
-}
-
-HcclResult CcuDevMgrImp::GetCntXnBlock(
-    const int32_t userDevId, const uint8_t dieId, const std::string& resGroupTag,
-    std::pair<uint32_t, uint32_t>& cntXnPair)
-{
-    if (!CheckCcuOpenSourceEnable()) {
-        HCCL_WARNING("[CcuDevMgrImp][%s] is not supported for legacy interface.", __func__);
-        return HcclResult::HCCL_E_NOT_SUPPORT;
-    }
-
-    HCCL_INFO(
-        "[%s] get count xn request: userDevId[%d], dieId[%u], resGroupTag[%s].", __func__, userDevId, dieId,
-        resGroupTag.c_str());
-    return CcuComponent::GetInstance(userDevId).GetCntXnBlock(dieId, resGroupTag, cntXnPair);
-}
-
-HcclResult CcuDevMgrImp::GetTotalCntXn(
-    const int32_t userDevId, const uint8_t dieId, const std::string& resGroupTag, uint32_t& totalCntXn)
-{
-    if (!CheckCcuOpenSourceEnable()) {
-        HCCL_WARNING("[CcuDevMgrImp][%s] is not supported for legacy interface.", __func__);
-        return HcclResult::HCCL_E_NOT_SUPPORT;
-    }
-
-    HCCL_INFO(
-        "[%s] get count xn request: userDevId[%d], dieId[%u], resGroupTag[%s].", __func__, userDevId, dieId,
-        resGroupTag.c_str());
-    return CcuComponent::GetInstance(userDevId).GetTotalCntXn(dieId, resGroupTag, totalCntXn);
 }
 
 HcclResult CcuDevMgrImp::GetMissionKey(const int32_t userDevId, const uint8_t dieId, uint32_t& missionKey)
@@ -795,6 +750,22 @@ HcclResult CcuDevMgrImp::GetXnBaseAddr(const int32_t userDevId, const uint8_t di
     EXCEPTION_HANDLE_END
     return ret;
 }
+
+HcclResult CcuDevMgrImp::GetResSpecsCascCntNum(const int32_t userDevId, const uint8_t dieId, uint32_t& cascCntNum)
+{
+    if (!CheckCcuOpenSourceEnable()) {
+        // 此处不同于兄弟接口返回 HCCL_E_NOT_SUPPORT：0.5RTT 级联计数器属于可选特性，
+        // legacy 版本无该硬件能力，按“数量为 0”成功返回，避免调用方将其当作错误处理。
+        HCCL_WARNING(
+            "[CcuDevMgrImp][%s] is not supported for legacy interface, cascCntNum is set to 0, "
+            "userDevId[%d], dieId[%u].",
+            __func__, userDevId, dieId);
+        cascCntNum = 0;
+        return HcclResult::HCCL_SUCCESS;
+    }
+    return CcuResSpecifications::GetInstance(userDevId).GetCascCntNum(dieId, cascCntNum);
+}
+
 HcclResult CcuDevMgrImp::GetCkeBaseAddr(const int32_t userDevId, const uint8_t dieId, uint64_t& ckeBaseAddr)
 {
     if (!CheckCcuOpenSourceEnable()) {
@@ -939,4 +910,59 @@ HcclResult CcuCleanDieCkes(const int32_t userDevId, const uint8_t dieId)
     return ret;
 }
 
+CcuResult CcuAllocCntXnBlock(const int32_t userDevId, const uint8_t dieId, CntXnBlock& cntXnBlock)
+{
+    if (!CheckCcuOpenSourceEnable()) {
+        HCCL_WARNING("[CcuDevMgrImp][%s] is not supported for legacy interface.", __func__);
+        return CcuResult::CCU_E_NOT_SUPPORT;
+    }
+
+    HCCL_INFO("[%s] new alloc count xn block request: userDevId[%d], dieId[%u].", __func__, userDevId, dieId);
+    HcclResult ret = CcuComponent::GetInstance(userDevId).AllocCntXnBlock(dieId, cntXnBlock);
+    if (ret == HcclResult::HCCL_E_UNAVAIL) {
+        // 资源不足(本 die 配置寄存器耗尽或 cntXn 不足), 保留可回退语义, 供上层区分于内部错误
+        HCCL_WARNING("[%s] alloc count xn block unavailable: userDevId[%d], dieId[%u].", __func__, userDevId, dieId);
+        return CcuResult::CCU_E_UNAVAIL;
+    }
+    if (ret != HcclResult::HCCL_SUCCESS) {
+        HCCL_ERROR("[%s] alloc count xn block failed: ret[%d].", __func__, ret);
+        return CcuResult::CCU_E_INTERNAL;
+    }
+    return CcuResult::CCU_SUCCESS;
+}
+
+CcuResult CcuReleaseCntXnBlock(const int32_t userDevId, const uint8_t dieId, const CntXnBlock& cntXnBlock)
+{
+    if (!CheckCcuOpenSourceEnable()) {
+        HCCL_WARNING("[CcuDevMgrImp][%s] is not supported for legacy interface.", __func__);
+        return CcuResult::CCU_E_NOT_SUPPORT;
+    }
+
+    HCCL_INFO("[%s] release count xn block request: userDevId[%d], dieId[%u].", __func__, userDevId, dieId);
+    if (CcuComponent::GetInstance(userDevId).ReleaseCntXnBlock(dieId, cntXnBlock) != HcclResult::HCCL_SUCCESS) {
+        return CcuResult::CCU_E_INTERNAL;
+    }
+    return CcuResult::CCU_SUCCESS;
+}
+
+CcuResult
+CcuQueryTokenInfo(const int32_t userDevId, uint64_t srcVa, uint64_t size, uint64_t& tokenId, uint64_t& tokenValue)
+{
+    if (!CheckCcuOpenSourceEnable()) {
+        HCCL_WARNING("[CcuDevMgrImp][%s] is not supported for legacy interface.", __func__);
+        return CcuResult::CCU_E_NOT_SUPPORT;
+    }
+
+    HCCL_INFO(
+        "[%s] query token info request: userDevId[%d], srcVa[%llu], size[%llu].", __func__, userDevId, srcVa, size);
+    HcclResult ret = CcuComponent::GetInstance(userDevId).QueryTokenInfo(srcVa, size, tokenId, tokenValue);
+    if (ret == HcclResult::HCCL_E_NOT_FOUND) {
+        HCCL_WARNING("[%s] query token info not found, ret[%d].", __func__, ret);
+        return CcuResult::CCU_E_NOT_FOUND;
+    } else if (ret != HcclResult::HCCL_SUCCESS) {
+        HCCL_ERROR("[%s] query token info failed, ret[%d].", __func__, ret);
+        return CcuResult::CCU_E_INTERNAL;
+    }
+    return CcuResult::CCU_SUCCESS;
+}
 }; // namespace hcomm

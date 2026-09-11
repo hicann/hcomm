@@ -292,10 +292,19 @@ namespace CcuRep {
         [[maybe_unused]] CcuInstrInfo
         RunV2BackendOptimizer(const CcuInstrInfo& instrInfo, const CcuKernel* ccuKernel, const TransDep& transDep)
         {
-            (void)ccuKernel; // CkeOnly 不使用 pinned Xn / pinned 组.
             HCCL_INFO("[CcuMicrocodeOpt] running backend optimizer (V2)");
+            // 把 kernel 登记的 pinned 组 (array = 连续 XN 寄存器) 转成优化器侧轻量结构, 供 XN 写后读
+            // (LoadX/StoreX/ClearX) 把散落 xn 操作数归约到所属 array 组. kernel 为空时退化为不归约.
+            std::vector<CcuOpt::PinnedGroup> pinnedGroups;
+            if (ccuKernel != nullptr) {
+                const auto& groups = ccuKernel->GetPinnedRegGroups();
+                pinnedGroups.reserve(groups.size());
+                for (const auto& g : groups) {
+                    pinnedGroups.push_back(CcuOpt::PinnedGroup{g.baseVar.Id(), g.count});
+                }
+            }
             CcuInstrInfo optimized
-                = CcuOpt::MicrocodeOptimizer::Run(instrInfo, transDep.reserveXnId, transDep.reserveCkeId);
+                = CcuOpt::MicrocodeOptimizer::Run(instrInfo, transDep.reserveXnId, transDep.reserveCkeId, pinnedGroups);
             HCCL_INFO(
                 "[CcuMicrocodeOpt] before instrCount=%u, after instrCount=%u", instrInfo.instrCount,
                 optimized.instrCount);

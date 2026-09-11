@@ -51,6 +51,7 @@ HcommResult：接口成功返回0，其他失败。
    - 针对Ascend 950PR/Ascend 950DT：
      - 当Endpoint位于HOST侧时，支持通信协议为RoCE、UB_CTP的Endpoint。
      - 当Endpoint位于DEVICE侧时，支持通信协议为UB_CTP、UB_MEM、PCIe、UBoE、UB_RTP的Endpoint。
+     - 当`mem->type`为`COMM_MEM_TYPE_CCU`时，表示注册CCU资源空间内存，仅Ascend 950PR/Ascend 950DT支持。CCU类型内存的注册流程与DEVICE一致。详见[CommMemType](../../datatype_definition/CommMemType.md)。
    <!-- end id6 -->
 
    <!-- npu="A3" id7 -->

@@ -28,6 +28,7 @@
 #include "ccu_instance_mgr.h"
 #include "ccu_var_event_res_mgr.h"
 
+#include "log.h"
 #include "thread.h"
 #include "dfx_dlprof_function.h"
 
@@ -415,7 +416,21 @@ CcuResult HcommCcuGetMemToken(uint64_t srcVa, uint64_t size, uint64_t* tokenInfo
     hcomm::rtMemUbTokenInfo info{};
     info.va = srcVa;
     info.size = size;
-    CCU_CHK_RET(hcomm::RtsUbDevQueryInfo(QUERY_PROCESS_TOKEN, info));
+
+    const uint32_t userDevId = HcclGetThreadDeviceId();
+    uint64_t tokenId = 0;
+    uint64_t tokenValue = 0;
+    CcuResult ret = hcomm::CcuQueryTokenInfo(userDevId, info.va, info.size, tokenId, tokenValue);
+    if (ret == CcuResult::CCU_E_NOT_FOUND || ret == CcuResult::CCU_E_NOT_SUPPORT) {
+        // 非CCU资源空间或非960设备：回退既有RTS查询路径
+        CCU_CHK_RET(hcomm::RtsUbDevQueryInfo(QUERY_PROCESS_TOKEN, info));
+    } else if (ret != CcuResult::CCU_SUCCESS) {
+        HCCL_ERROR("[%s] failed, ret[%d].", __func__, ret);
+        return ret;
+    } else {
+        info.tokenId = static_cast<uint32_t>(tokenId);
+        info.tokenValue = static_cast<uint32_t>(tokenValue);
+    }
     *tokenInfo = hcomm::CcuRep::CcuCombineTokenInfo(info.tokenId, info.tokenValue, 1);
 
     return CcuResult::CCU_SUCCESS;

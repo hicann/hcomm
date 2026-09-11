@@ -137,6 +137,8 @@ CcuResult CcuInstance::InitByAllRes()
         CCU_CHK_RET(descs[dieId].SetResNum(ResType::INS, num));
         CCU_CHK_RET(CcuGetMissionNum(userDevId_, dieId, num));
         CCU_CHK_RET(descs[dieId].SetResNum(ResType::MISSION, num));
+        CCU_CHK_RET(CcuGetCascCntNum(userDevId_, dieId, num));
+        CCU_CHK_RET(descs[dieId].SetResNum(ResType::CASC_CNT, num));
     }
 
     if (!resPack_) {
@@ -278,4 +280,25 @@ void CcuInstance::AbortRegister()
     registerState_ = RegisterState::REGISTER_ABORTED;
 }
 
+CcuResult CcuInstance::CascCntHandleAlloc(uint8_t dieId, HcommCcuCascCntHandle handle)
+{
+    if (resPack_ == nullptr) {
+        HCCL_ERROR("[CcuInstance][%s] failed, resPack_ is nullptr.", __func__);
+        return CcuResult::CCU_E_INTERNAL;
+    }
+
+    CCU_CHK_RET(resPack_->AcquireCascCntBlock(dieId, handle));
+    return CcuResult::CCU_SUCCESS;
+}
+
+CcuResult CcuInstance::GetCascCntBlock(HcommCcuCascCntHandle handle, CntXnBlock& cascCntBlock)
+{
+    if (resPack_ == nullptr) {
+        HCCL_ERROR("[CcuInstance][%s] failed, resPack_ is nullptr.", __func__);
+        return CcuResult::CCU_E_INTERNAL;
+    }
+
+    CCU_CHK_RET(resPack_->GetCascCntBlock(handle, cascCntBlock));
+    return CcuResult::CCU_SUCCESS;
+}
 } // namespace hcomm

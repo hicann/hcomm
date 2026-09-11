@@ -104,6 +104,18 @@ private:
     GetCcuErrorMsgBufLocWrite(const CcuErrorInfo& ccuErrorInfo, const Hccl::TaskInfo& taskInfo, u32 deviceId);
     static std::string
     GetCcuErrorMsgBufReduce(const CcuErrorInfo& ccuErrorInfo, const Hccl::TaskInfo& taskInfo, u32 deviceId);
+    static std::string
+    GetCcuErrorMsgWriteVarAtomic(const CcuErrorInfo& ccuErrorInfo, const Hccl::TaskInfo& taskInfo, u32 deviceId);
+    static std::string
+    GetCcuErrorMsgWriteWithCntInc(const CcuErrorInfo& ccuErrorInfo, const Hccl::TaskInfo& taskInfo, u32 deviceId);
+    static std::string
+    GetCcuErrorMsgCascCntWait(const CcuErrorInfo& ccuErrorInfo, const Hccl::TaskInfo& taskInfo, u32 deviceId);
+    static std::string
+    GetCcuErrorMsgCascCntClear(const CcuErrorInfo& ccuErrorInfo, const Hccl::TaskInfo& taskInfo, u32 deviceId);
+    static std::string
+    GetCcuErrorMsgLoadAddImm(const CcuErrorInfo& ccuErrorInfo, const Hccl::TaskInfo& taskInfo, u32 deviceId);
+    static std::string
+    GetCcuErrorMsgStoreAddImm(const CcuErrorInfo& ccuErrorInfo, const Hccl::TaskInfo& taskInfo, u32 deviceId);
 
     static HcclResult GetCcuChannelHandleById(u16 channelId, u64& channelHandle);
     static RankId GetRankIdByChannelId(uint16_t channelId, const Hccl::TaskInfo& taskInfo, u32 deviceId);
@@ -167,6 +179,24 @@ private:
         const ErrorInfoBase& baseInfo, std::shared_ptr<CcuRep::CcuRepBase> repBase,
         std::vector<CcuErrorInfo>& errorInfo);
     static void GenErrorInfoDefault(
+        const ErrorInfoBase& baseInfo, std::shared_ptr<CcuRep::CcuRepBase> repBase,
+        std::vector<CcuErrorInfo>& errorInfo);
+    static void GenErrorInfoWriteVarAtomic(
+        const ErrorInfoBase& baseInfo, std::shared_ptr<CcuRep::CcuRepBase> repBase,
+        std::vector<CcuErrorInfo>& errorInfo);
+    static void GenErrorInfoWriteWithCntInc(
+        const ErrorInfoBase& baseInfo, std::shared_ptr<CcuRep::CcuRepBase> repBase,
+        std::vector<CcuErrorInfo>& errorInfo);
+    static void GenErrorInfoCascCntWait(
+        const ErrorInfoBase& baseInfo, std::shared_ptr<CcuRep::CcuRepBase> repBase,
+        std::vector<CcuErrorInfo>& errorInfo);
+    static void GenErrorInfoCascCntClear(
+        const ErrorInfoBase& baseInfo, std::shared_ptr<CcuRep::CcuRepBase> repBase,
+        std::vector<CcuErrorInfo>& errorInfo);
+    static void GenErrorInfoLoadAddImm(
+        const ErrorInfoBase& baseInfo, std::shared_ptr<CcuRep::CcuRepBase> repBase,
+        std::vector<CcuErrorInfo>& errorInfo);
+    static void GenErrorInfoStoreAddImm(
         const ErrorInfoBase& baseInfo, std::shared_ptr<CcuRep::CcuRepBase> repBase,
         std::vector<CcuErrorInfo>& errorInfo);
 

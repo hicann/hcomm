@@ -352,8 +352,8 @@ namespace TaskGraphGeneratorV3 {
             uint64_t xdValue = 0;
             if (mode == 0) {
                 // 计算公式：*Xd=*X(*Xs+立即数)+立即数（64位）
-                uint16_t immedataSo = instr->v2.loadStoreX.xsoId;
-                uint16_t immedataDo = instr->v2.loadStoreX.xdoId;
+                uint16_t immedataSo = instr->v2.loadStoreX.xso;
+                uint16_t immedataDo = instr->v2.loadStoreX.xdo;
                 uint16_t xsTmpId = static_cast<uint16_t>(xsValue) + immedataSo;
                 uint64_t xsTmpValue = 0;
                 CHK_RET(GetXnValueAndCheck(curCcuTask, queId, xsTmpId, xsTmpValue));
@@ -363,11 +363,11 @@ namespace TaskGraphGeneratorV3 {
                     immedataSo, xsTmpId, xsTmpValue, immedataDo, xdId, xdValue);
             } else if (mode == 1) {
                 // 计算公式：*Xd=*X(*Xs+*Xso)+*Xdo
-                uint16_t xsSoId = GetXnId(instr->v2.loadStoreX.xsoId, loopGroupParam);
+                uint16_t xsSoId = GetXnId(instr->v2.loadStoreX.xso, loopGroupParam);
                 uint64_t xsSoValue = 0;
                 CHK_GET_XN_V3(curCcuTask, queId, xsSoId, xsSoValue);
 
-                uint16_t xsDoId = GetXnId(instr->v2.loadStoreX.xdoId, loopGroupParam);
+                uint16_t xsDoId = GetXnId(instr->v2.loadStoreX.xdo, loopGroupParam);
                 uint64_t xsDoValue = 0;
                 CHK_GET_XN_V3(curCcuTask, queId, xsDoId, xsDoValue);
 
@@ -418,8 +418,8 @@ namespace TaskGraphGeneratorV3 {
             uint16_t newValue = 0;
             if (mode == 0) {
                 // 计算公式：*X(*Xd + 立即数) =*Xs+*Xso
-                uint16_t immedataSo = instr->v2.loadStoreX.xsoId;
-                uint16_t immedataDo = instr->v2.loadStoreX.xdoId;
+                uint16_t immedataSo = instr->v2.loadStoreX.xso;
+                uint16_t immedataDo = instr->v2.loadStoreX.xdo;
 
                 newId = static_cast<uint16_t>(xdValue) + immedataDo;
                 newValue = xsValue + static_cast<uint64_t>(immedataSo);
@@ -429,12 +429,12 @@ namespace TaskGraphGeneratorV3 {
 
             } else if (mode == 1) {
                 // 计算公式：*X(*Xd+*Xdo) =*Xs+*Xso
-                uint16_t xsDoId = GetXnId(instr->v2.loadStoreX.xdoId, loopGroupParam);
+                uint16_t xsDoId = GetXnId(instr->v2.loadStoreX.xdo, loopGroupParam);
                 uint64_t xsDoValue = 0;
                 CHK_GET_XN_V3(curCcuTask, queId, xsDoId, xsDoValue);
                 newId = static_cast<uint16_t>(xdValue + xsDoValue);
 
-                uint16_t xsSoId = GetXnId(instr->v2.loadStoreX.xsoId, loopGroupParam);
+                uint16_t xsSoId = GetXnId(instr->v2.loadStoreX.xso, loopGroupParam);
                 uint64_t xsSoValue = 0;
                 CHK_GET_XN_V3(curCcuTask, queId, xsSoId, xsSoValue);
 

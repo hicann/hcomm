@@ -35,6 +35,7 @@ public:
     HcclResult GetNotifyNum(uint32_t* notifyNum) const override;
     HcclResult GetRemoteMems(uint32_t* memNum, CommMem** remoteMem, char*** memInfos) override;
     HcclResult UpdateMemInfo(HcommMemHandle* memHandles, uint32_t memHandleNum) override;
+    HcclResult CcuGetRmtMemToken(uint64_t srcVa, uint64_t& tokenInfo);
 
     HcclResult Clean() override;
     HcclResult Resume() override;
@@ -57,8 +58,6 @@ public:
 
     HcclResult GetRmtCkeByIndex(const uint32_t index, uint32_t& rmtCkeId) const;
     HcclResult GetRmtXnByIndex(const uint32_t index, uint32_t& rmtXnId) const;
-
-    HcclResult GetRmtWishCntXnAddr(const std::string& resGroupTag, uint64_t& wishCntXnAddr) const;
 
     HcclResult GetRmtBuffer(uint64_t& addr, uint32_t& size, uint32_t& tokenId, uint32_t& tokenValue) const;
 

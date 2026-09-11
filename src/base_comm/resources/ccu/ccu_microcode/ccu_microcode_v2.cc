@@ -331,6 +331,34 @@ namespace CcuRep {
             instr->v2.store.setCKEMask = setCKEMask;
         }
 
+        void LoadX(
+            CcuInstr* instr, uint16_t dst, uint16_t src, uint16_t srcOffset, uint16_t dstOffset, uint16_t oMode,
+            uint16_t setCKEId, uint16_t setCKEMask)
+        {
+            instr->header = InstrHeader(LOAD_TYPE, LOADX_CODE);
+            instr->v2.loadStoreX.xdId = dst;
+            instr->v2.loadStoreX.xsId = srcOffset;
+            instr->v2.loadStoreX.xso = src;
+            instr->v2.loadStoreX.xdo = dstOffset;
+            instr->v2.loadStoreX.oMode = oMode & 0x1;
+            instr->v2.loadStoreX.setCKEId = setCKEId;
+            instr->v2.loadStoreX.setCKEMask = setCKEMask;
+        }
+
+        void StoreX(
+            CcuInstr* instr, uint16_t dst, uint16_t src, uint16_t srcOffset, uint16_t dstOffset, uint16_t oMode,
+            uint16_t setCKEId, uint16_t setCKEMask)
+        {
+            instr->header = InstrHeader(LOAD_TYPE, STOREX_CODE);
+            instr->v2.loadStoreX.xdId = dstOffset;
+            instr->v2.loadStoreX.xsId = src;
+            instr->v2.loadStoreX.xso = srcOffset;
+            instr->v2.loadStoreX.xdo = dst;
+            instr->v2.loadStoreX.oMode = oMode & 0x1;
+            instr->v2.loadStoreX.setCKEId = setCKEId;
+            instr->v2.loadStoreX.setCKEMask = setCKEMask;
+        }
+
         // startInstrId ~ endInstrId之间的指令构成loop
         // Xm寄存器中的内容：LoopCtxId[52:45], Offset[44:13], IterNum[12:0]
         // IterNum[12:0] loop执行IterNum次 loop每次执行, 地址偏移为Offset loop在第LoopCtxId个LoopEngine上执行
@@ -659,7 +687,7 @@ namespace CcuRep {
 
             // 使用 StringFormat 格式化字符串
             return Hccl::StringFormat(
-                "CleanX: xnId[%u] to xmId[%u], Set CKE[%u:%04x]", xnId, xmId, setCKEId, setCKEMask);
+                "ClearX: xnId[%u] to xmId[%u], Set CKE[%u:%04x]", xnId, xmId, setCKEId, setCKEMask);
         }
 
         std::string ParseNop(const CcuInstr* instr)
@@ -863,6 +891,36 @@ namespace CcuRep {
                 "victimHint[%u], storeType[%u], hscbType[%u], hscbBroadCastDstType[%u], set CKE[%u:%04x]",
                 xdId, xdtId, xsId, xlId, xhId, srcType, allocHint, victimHint, storeType, hscbType,
                 hscbBroadCastDstType, setCKEId, setCKEMask);
+        }
+
+        std::string ParseLoadX(const CcuInstr* instr)
+        {
+            uint16_t xdId = instr->v2.loadStoreX.xdId;
+            uint16_t xsId = instr->v2.loadStoreX.xsId;
+            uint16_t xso = instr->v2.loadStoreX.xso;
+            uint16_t xdo = instr->v2.loadStoreX.xdo;
+            uint16_t oMode = instr->v2.loadStoreX.oMode;
+            uint16_t setCKEId = instr->v2.loadStoreX.setCKEId;
+            uint16_t setCKEMask = instr->v2.loadStoreX.setCKEMask;
+
+            return Hccl::StringFormat(
+                "LoadX: xdId[%u] xsId[%u] xso[%u] xdo[%u] oMode[%u], set CKE[%u:%04x]", xdId, xsId, xso, xdo, oMode,
+                setCKEId, setCKEMask);
+        }
+
+        std::string ParseStoreX(const CcuInstr* instr)
+        {
+            uint16_t xdId = instr->v2.loadStoreX.xdId;
+            uint16_t xsId = instr->v2.loadStoreX.xsId;
+            uint16_t xso = instr->v2.loadStoreX.xso;
+            uint16_t xdo = instr->v2.loadStoreX.xdo;
+            uint16_t oMode = instr->v2.loadStoreX.oMode;
+            uint16_t setCKEId = instr->v2.loadStoreX.setCKEId;
+            uint16_t setCKEMask = instr->v2.loadStoreX.setCKEMask;
+
+            return Hccl::StringFormat(
+                "StoreX: xdId[%u] xsId[%u] xso[%u] xdo[%u] oMode[%u], set CKE[%u:%04x]", xdId, xsId, xso, xdo, oMode,
+                setCKEId, setCKEMask);
         }
 
         std::string ParseLoop(const CcuInstr* instr)
@@ -1090,8 +1148,8 @@ namespace CcuRep {
                     xn, dst, dstToken, channelId, notifyXnId, notifyXntId, notifyValue, setCKEId, setCKEMask, parMode);
             } else {
                 return Hccl::StringFormat(
-                    "Sync Xn[%u] To Mem[%u:%u] Use ChannelXn[%u], and Set CKE[%u:%04x], parMode[%u]", xn, dst, dstToken,
-                    channelId, setCKEId, setCKEMask, parMode);
+                    "Sync Immd[%u] To Mem[%u:%u] Use ChannelXn[%u], and Set CKE[%u:%04x], parMode[%u]", xn, dst,
+                    dstToken, channelId, setCKEId, setCKEMask, parMode);
             }
         }
 
@@ -1156,6 +1214,8 @@ namespace CcuRep {
                {InstrHeader(LOAD_TYPE, SHR_CODE).header, &ParseShr},
                {InstrHeader(LOAD_TYPE, LOAD_CODE).header, &ParseLoadFromMem},
                {InstrHeader(LOAD_TYPE, STORE_CODE).header, &ParseStoreXToMem},
+               {InstrHeader(LOAD_TYPE, LOADX_CODE).header, &ParseLoadX},
+               {InstrHeader(LOAD_TYPE, STOREX_CODE).header, &ParseStoreX},
                {InstrHeader(CTRL_TYPE, LOOP_CODE).header, &ParseLoop},
                {InstrHeader(CTRL_TYPE, LOOPGROUP_CODE).header, &ParseLoopGroup},
                {InstrHeader(CTRL_TYPE, JMP_CODE).header, &ParseJump},

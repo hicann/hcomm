@@ -116,6 +116,8 @@ typedef uint64_t CcuRemoteAddrHandle;
 
 typedef void* CcuKernelArg;
 
+typedef uint64_t HcommCcuCascCntHandle;
+
 #ifdef __cplusplus
 }
 #endif // __cplusplus

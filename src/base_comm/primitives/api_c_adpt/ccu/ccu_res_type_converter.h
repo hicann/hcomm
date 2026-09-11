@@ -29,7 +29,8 @@ inline CcuResult ConvertHcommCcuResTypeToHcclResType(HcommCcuResType ccuResType,
         ResType::GSA,     // <- HCOMM_CCU_RES_TYPE_ADDRESS
         ResType::CKE,     // <- HCOMM_CCU_RES_TYPE_EVENT
         ResType::MISSION, // <- HCOMM_CCU_RES_TYPE_CCU_THREAD
-        ResType::INS      // <- HCOMM_CCU_RES_TYPE_INSTRUCTION
+        ResType::INS,     // <- HCOMM_CCU_RES_TYPE_INSTRUCTION
+        ResType::CASC_CNT // <- HCOMM_CCU_RES_TYPE_CASC_CNT
     };
     const int32_t resTypeIndex = static_cast<int32_t>(ccuResType);
     if ((resTypeIndex < 0) || (static_cast<std::size_t>(resTypeIndex) >= RES_TYPE_MAP.size())) {
@@ -49,7 +50,8 @@ inline CcuResult ConvertHcclResTypeToHcommCcuResType(ResType hcclResType, HcommC
         HCOMM_CCU_RES_TYPE_INVALID,     // <- ResType::COUNT_XN
         HCOMM_CCU_RES_TYPE_ADDRESS,     // <- ResType::GSA
         HCOMM_CCU_RES_TYPE_INSTRUCTION, // <- ResType::INS
-        HCOMM_CCU_RES_TYPE_CCU_THREAD   // <- ResType::MISSION
+        HCOMM_CCU_RES_TYPE_CCU_THREAD,  // <- ResType::MISSION
+        HCOMM_CCU_RES_TYPE_CASC_CNT     // <- ResType::CASC_CNT
     };
     const auto resTypeIndex = static_cast<std::size_t>(static_cast<ResType::Value>(hcclResType));
     if ((resTypeIndex >= RES_TYPE_MAP.size()) || (RES_TYPE_MAP[resTypeIndex] == HCOMM_CCU_RES_TYPE_INVALID)) {

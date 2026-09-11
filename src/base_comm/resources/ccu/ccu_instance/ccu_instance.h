@@ -52,6 +52,9 @@ public:
     CcuResult EndRegister();
     void AbortRegister();
 
+    CcuResult CascCntHandleAlloc(uint8_t dieId, HcommCcuCascCntHandle handle);
+    CcuResult GetCascCntBlock(HcommCcuCascCntHandle handle, CntXnBlock& cascCntBlock);
+
 private:
     // 从 resPack_ 取 CcuResRepository，把各 die 各资源类型的占用数量写入 totalResDescs_
     CcuResult FillTotalResDescs();

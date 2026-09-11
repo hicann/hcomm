@@ -22,7 +22,7 @@
 namespace hcomm {
 
 // CCU 资源类型数量，需与 ResType::__COUNT__ 保持一致
-constexpr size_t CCU_RES_TYPE_COUNT = 8;
+constexpr size_t CCU_RES_TYPE_COUNT = 9;
 
 /**
  * @brief CCU 资源描述符，描述单个 ioDie 上各类资源的申请数量

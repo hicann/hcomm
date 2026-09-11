@@ -15,6 +15,7 @@
 #include "../../../../../legacy/ascend950/unified_platform/resource/mem/user_remote_mem_getter.h"
 
 #include "env_config/env_config_v2.h"
+#include "ccu_assist_v1.h"
 #include "hccl_log_keywords.h"
 
 namespace hcomm {
@@ -171,22 +172,6 @@ HcclResult CcuTransport::AppendXns(uint32_t xnsNum)
         }
     }
     xnsRes_.push_back(resInfo);
-    return HCCL_SUCCESS;
-}
-
-HcclResult CcuTransport::AppendCntXns()
-{
-    for (auto& cntXns : locRes_.cntXns) {
-        if (cntXns.second == INVALID_UINT) {
-            uint32_t wishCntXnId = 0;
-            auto ret = CcuDevMgrImp::AllocWishCntXn(userDevId_, dieId_, cntXns.first, wishCntXnId);
-            CHK_PRT_RET(
-                ret == HcclResult::HCCL_E_UNAVAIL,
-                HCCL_ERROR("[CcuTransport][%s] failed, the resource is not enough.", __func__), ret);
-            CHK_RET(ret);
-            cntXns.second = wishCntXnId;
-        }
-    }
     return HCCL_SUCCESS;
 }
 
@@ -465,18 +450,6 @@ HcclResult CcuTransport::TransResPack(Hccl::BinaryStream& binaryStream)
     return HcclResult::HCCL_SUCCESS;
 }
 
-HcclResult CcuTransport::TransCntXnResPack(Hccl::BinaryStream& binaryStream)
-{
-    const uint32_t locCntXnsSize = locRes_.cntXns.size();
-    binaryStream << locCntXnsSize;
-    for (auto& cntXns : locRes_.cntXns) {
-        binaryStream << cntXns.first << cntXns.second;
-        HCCL_INFO("Send resGroupTag[%s], wishCntXn[%u]", cntXns.first.c_str(), cntXns.second);
-    }
-
-    return HcclResult::HCCL_SUCCESS;
-}
-
 HcclResult CcuTransport::BufferInfoPack(Hccl::BinaryStream& binaryStream, std::vector<CclBufferInfo>& bufferVec) const
 {
     u32 locBufferNum = bufferVec.size();
@@ -529,35 +502,6 @@ HcclResult CcuTransport::TransResUnpackProc(Hccl::BinaryStream& binaryStream)
     }
     HCCL_INFO("Recv xnsSize[%u]", resSize);
 
-    return HcclResult::HCCL_SUCCESS;
-}
-
-HcclResult CcuTransport::TransCntXnResUnpackProc(Hccl::BinaryStream& binaryStream)
-{
-    uint32_t resSize{0};
-    binaryStream >> resSize;
-    HCCL_INFO("Recv resGroupTagSize[%u]", resSize);
-    for (uint32_t num = 0; num < resSize; num++) {
-        std::string resGroupTag;
-        uint32_t wishCntXn = 0;
-        binaryStream >> resGroupTag >> wishCntXn;
-        HCCL_INFO(
-            "Recv resGroupTag[%s], wishCntXn[%u], locRes_.cntXns size[%zu]", resGroupTag.c_str(), wishCntXn,
-            locRes_.cntXns.size());
-        if (locRes_.cntXns.find(resGroupTag) == locRes_.cntXns.end()) {
-            HCCL_ERROR("Recv resGroupTag[%s] not in locRes.", resGroupTag.c_str());
-            return HcclResult::HCCL_E_INTERNAL;
-        }
-        auto iter = rmtRes_.cntXns.find(resGroupTag);
-        if (iter == rmtRes_.cntXns.end()) {
-            rmtRes_.cntXns.insert(std::make_pair(resGroupTag, wishCntXn));
-        } else if (iter->second != wishCntXn) {
-            HCCL_ERROR(
-                "Recv resGroupTag[%s], current rmt cnt xn[%u] is not equal to recv cnt xn[%u].", resGroupTag.c_str(),
-                iter->second, wishCntXn);
-            return HcclResult::HCCL_E_INTERNAL;
-        }
-    }
     return HcclResult::HCCL_SUCCESS;
 }
 
@@ -724,22 +668,6 @@ HcclResult CcuTransport::GetRmtXnByIndex(const uint32_t index, uint32_t& rmtXnId
 
     rmtXnId = rmtRes_.xns[index];
     return HcclResult::HCCL_SUCCESS;
-}
-
-HcclResult CcuTransport::GetRmtWishCntXnAddr(const std::string& resGroupTag, uint64_t& wishCntXnAddr) const
-{
-    auto iter = rmtRes_.cntXns.find(resGroupTag);
-    if (iter == rmtRes_.cntXns.end()) {
-        HCCL_ERROR("[CcuTransport][%s] failed, resGroupTag[%s] is not found.", __func__, resGroupTag.c_str());
-        return HCCL_E_NOT_FOUND;
-    }
-
-    const uint32_t wishCntXn = iter->second;
-    CHK_RET(GetRmtVarAddrByXnId(wishCntXn, wishCntXnAddr));
-    HCCL_DEBUG(
-        "[CcuTransport][%s] resGroupTag[%s], wishCntXnAddr[%u][0x%llx]", __func__, resGroupTag.c_str(), wishCntXn,
-        wishCntXnAddr);
-    return HCCL_SUCCESS;
 }
 
 HcclResult CcuTransport::GetLocBuffer(CclBufferInfo& bufferInfo, const uint32_t& bufNum) const
@@ -938,35 +866,6 @@ HcclResult CcuTransport::UpdateMemInfo(std::vector<CcuTransport::CclBufferInfo>&
     return HcclResult::HCCL_SUCCESS;
 }
 
-HcclResult CcuTransport::ResUpdate(std::vector<std::string>& resGroupTags)
-{
-    if (resGroupTags.size() == 0) {
-        return HCCL_SUCCESS;
-    }
-
-    for (auto& resGroupTag : resGroupTags) {
-        if (locRes_.cntXns.find(resGroupTag) == locRes_.cntXns.end()) {
-            locRes_.cntXns.insert(std::make_pair(resGroupTag, INVALID_UINT));
-        }
-    }
-
-    CHK_RET(AppendCntXns());
-
-    switch (transStatus_) {
-        case CcuTransport::TransStatus::INIT:
-            break;
-        case CcuTransport::TransStatus::READY:
-            transStatus_ = CcuTransport::TransStatus::SEND_TRANS_RES;
-            break;
-        default:
-            HCCL_ERROR("[CcuTransport][%s] failed, error status[%s].", __func__, transStatus_.Describe().c_str());
-            transStatus_ = CcuTransport::TransStatus::CONNECT_FAILED;
-            break;
-    }
-
-    return HcclResult::HCCL_SUCCESS;
-}
-
 HcclResult
 CcuTransport::ConstructMsgOnlyTransport(Hccl::Socket* socket, std::unique_ptr<CcuTransport>& impl, CcuResStatus status)
 {
@@ -978,5 +877,18 @@ CcuTransport::ConstructMsgOnlyTransport(Hccl::Socket* socket, std::unique_ptr<Cc
     impl->locResStatus_ = status;
     impl->transStatus_ = CcuTransport::TransStatus::INIT;
     return HCCL_SUCCESS;
+}
+
+HcclResult CcuTransport::CcuGetRmtMemToken(uint64_t srcVa, uint64_t& tokenInfo)
+{
+    for (auto& bufferInfo : rmtBufferVec_) {
+        if (bufferInfo->GetAddr() == srcVa) {
+            tokenInfo = CcuRep::CcuCombineTokenInfo(bufferInfo->GetTokenId(), bufferInfo->GetTokenValue(), 1);
+            HCCL_INFO("[CcuTransport][CcuGetRmtMemToken] srcVa[%llu].", srcVa);
+            return HcclResult::HCCL_SUCCESS;
+        }
+    }
+    HCCL_ERROR("[CcuTransport][CcuGetRmtMemToken] srcVa[%llu] not found.", srcVa);
+    return HcclResult::HCCL_E_NOT_FOUND;
 }
 } // namespace hcomm

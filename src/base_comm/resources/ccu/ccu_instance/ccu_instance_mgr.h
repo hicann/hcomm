@@ -11,12 +11,14 @@
 #ifndef HCOMM_CCU_INSTANCE_MGR_H
 #define HCOMM_CCU_INSTANCE_MGR_H
 
+#include <atomic>
 #include <memory>
 #include <mutex>
 #include <shared_mutex>
 #include <unordered_map>
 
 #include "ccu_instance.h"
+#include "ccu_log.h"
 #include "ccu_res_desc_mgr.h"
 
 namespace hcomm {
@@ -40,6 +42,9 @@ public:
     CcuResult Destroy(CcuInsHandle insHandle);
     CcuResDescMgr& GetResDescMgr();
 
+    CcuResult CascCntHandleAlloc(CcuInsHandle ccuInsHandle, uint8_t dieId, HcommCcuCascCntHandle& handle);
+    CcuResult GetCascCntBlock(HcommCcuCascCntHandle cntHandle, CntXnBlock& cascCntBlock);
+
 private:
     explicit CcuInstanceMgr() = default;
     ~CcuInstanceMgr();
@@ -53,6 +58,14 @@ private:
     CcuInsHandle instanceId_{0};
     mutable std::shared_timed_mutex insMapMutex_;
     std::unordered_map<CcuInsHandle, std::unique_ptr<CcuInstance>> insMap_{};
+
+    mutable std::shared_timed_mutex cascCntMapMutex_;
+    std::unordered_map<HcommCcuCascCntHandle, CcuInsHandle> cascCntMap_{};
+
+    // cascCnt 句柄由 Mgr 统一分配, 保证 per-device 全局唯一(跨实例不冲突); 单调递增从 1 起,
+    // 不在 Init/Deinit 重置, 避免句柄复用与 cascCntMap_ 残留项发生 ABA 冲突。
+    std::atomic<HcommCcuCascCntHandle> nextCascCntHandle_{0};
+
     CcuResDescMgr resDescMgr_;
 };
 }; // namespace hcomm

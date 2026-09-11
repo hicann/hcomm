@@ -26,9 +26,9 @@ namespace CcuOpt {
         // LOAD_TYPE
         constexpr uint16_t LOADSQEARGSTOX_CODE = 0x1;
         constexpr uint16_t LOADIMDTOX_CODE = 0x2;
-        constexpr uint16_t LOADSTOREX_CODE = 0x6; // (预留, 当前 v2 未生成)
-        constexpr uint16_t STOREX_CODE = 0x7;     // (预留)
-        constexpr uint16_t CLEARX_CODE = 0x8;
+        constexpr uint16_t LOADX_CODE = 0x6;  // half-rtt LoadAddImm 翻译目标 (v2.loadStoreX)
+        constexpr uint16_t STOREX_CODE = 0x7; // half-rtt AddImmStore 翻译目标 (v2.loadStoreX)
+        constexpr uint16_t CLEARX_CODE = 0x8; // half-rtt CascCntClear 翻译目标 (v2.clearX)
         constexpr uint16_t NOP_CODE = 0x9;
         constexpr uint16_t LOAD_CODE = 0xA;
         constexpr uint16_t STORE_CODE = 0xB;

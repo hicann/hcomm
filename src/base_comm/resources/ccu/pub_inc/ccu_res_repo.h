@@ -14,6 +14,7 @@
 #include <array>
 #include <string>
 #include <sstream>
+#include <utility>
 #include <vector>
 #include "ccu_common.h"
 
@@ -83,6 +84,15 @@ struct CcuResReq {
     std::array<uint32_t, CCU_MAX_IODIE_NUM> gsaReq{};
     std::array<uint32_t, CCU_MAX_IODIE_NUM> blockGsaReq{};
     MissionReq missionReq{};
+};
+
+using CntXnBlock = struct tagCntXnBlock {
+    ResInfo resInfo{};                          // cntXn resInfo
+    std::pair<uint32_t, uint32_t> wishCntXns{}; // wishCntXn Id <begin, end>
+    std::pair<void*, uint64_t> wishCntXnsMem{}; // wishCntXnsMem <ptr, size>
+    uint32_t totalCntXn{0};                     // totalCntXn Id
+    uint32_t expectedCntXn{0};                  // expectedCntXn Id
+    uint32_t blockIdx{0};                       // wishCntXn和totalCntXn绑定时的idx
 };
 
 } // namespace hcomm

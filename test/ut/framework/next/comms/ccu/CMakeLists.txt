@@ -15,6 +15,7 @@ set(src_to_test_list
     ut_HcommCcuControlApi_test.cc
     ut_HcommCcuControlApi_ckenop_test.cc
     ut_HcommCcuResDescApi_test.cc
+    ut_HcommCcuCascCntApi_test.cc
     ut_HcommCcuKernelQueryResReq_test.cc
     ut_CollectLoopGroupProfiling_test.cc
 
@@ -23,6 +24,7 @@ set(src_to_test_list
     mocks/ccu_dev_mgr_mock.cc
     ut_CcuConn_test.cc
     ut_ccu_microcode.cc
+    ut_ccu_microcode_loadx_storex.cc
 
     ccu_kernel_impl/ccu_groupcopy_alg.cc
     ccu_kernel_impl/ccu_groupcopy_kernel.cc

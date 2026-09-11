@@ -53,15 +53,33 @@ namespace CcuOpt {
                 case LOADIMDTOX_CODE:
                     AddWrite(out, RegType::XN, instr.v2.loadImdToX.xnId);
                     return true;
-                case LOADSTOREX_CODE:
-                    // Xd = *Xs, *Xdo = Xso (读改写形式), 保守全部当作读写.
-                    AddRead(out, RegType::XN, instr.v2.loadStoreX.xsId);
-                    AddRead(out, RegType::XN, instr.v2.loadStoreX.xsoId);
-                    AddRead(out, RegType::XN, instr.v2.loadStoreX.xdoId);
+                case LOADX_CODE:
+                    // LoadX 语义: xn[i] = array[0 + xn[offset]]. 字段落位以 ccu_microcode_v2.cc
+                    // CcuV2::LoadX 为准 (串讲材料表格与代码不符, 以代码为准):
+                    //   xdId = i        (LoadX 写的目标单 xn, 唯一 def, 后端受管写后读写者);
+                    //   xso  = array 基址 (读);
+                    //   xsId = offset    (读);
+                    //   xdo  = 立即数     (非寄存器, 不提取).
                     AddWrite(out, RegType::XN, instr.v2.loadStoreX.xdId);
+                    AddRead(out, RegType::XN, instr.v2.loadStoreX.xso);
+                    AddRead(out, RegType::XN, instr.v2.loadStoreX.xsId);
+                    return true;
+                case STOREX_CODE:
+                    // StoreX 语义: array[0 + xn[offset]] = xn[i]. 字段落位以 ccu_microcode_v2.cc
+                    // CcuV2::StoreX 为准 (translate 传 dst=array, src=i, srcOffset=立即数, dstOffset=offset):
+                    //   xdo  = array 基址 (StoreX 写的目标, 唯一 def, 后端受管写后读写者);
+                    //   xsId = i         (被存的数据, 读);
+                    //   xdId = offset    (读);
+                    //   xso  = 立即数     (非寄存器, 不提取).
+                    AddWrite(out, RegType::XN, instr.v2.loadStoreX.xdo);
+                    AddRead(out, RegType::XN, instr.v2.loadStoreX.xsId);
+                    AddRead(out, RegType::XN, instr.v2.loadStoreX.xdId);
                     return true;
                 case CLEARX_CODE:
-                    // ClearX 语义为把指定 Xn / Xm 清零, 两者都是 def.
+                    // ClearX 清空连续 xn 区间 [xnId, xmId], 整片既读又写: 同片 ClearX 之间构成写后读.
+                    // xnIdMode/xmIdMode==0 表示端点为寄存器 id (translate 恒传 0), 直接按寄存器提取.
+                    AddRead(out, RegType::XN, instr.v2.clearX.xnId);
+                    AddRead(out, RegType::XN, instr.v2.clearX.xmId);
                     AddWrite(out, RegType::XN, instr.v2.clearX.xnId);
                     AddWrite(out, RegType::XN, instr.v2.clearX.xmId);
                     return true;

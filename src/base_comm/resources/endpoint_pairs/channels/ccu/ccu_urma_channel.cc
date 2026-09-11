@@ -63,7 +63,6 @@ HcclResult BuildBufferInfos(
         CHK_PTR_NULL(localRmaBuffer);
         auto buf = localRmaBuffer->GetBuf();
         CHK_PTR_NULL(buf);
-        HCCL_INFO("[BuildBufferInfos] localRmaBuffer[%s]", localRmaBuffer->Describe().c_str());
 
         std::array<char, HCCL_RES_TAG_MAX_LEN> memInfo{};
         std::string tag = buf->GetMemInfo();
@@ -359,13 +358,6 @@ HcclResult CcuUrmaChannel::GetRmtXnByIndex(const uint32_t index, uint32_t& rmtXn
     return HcclResult::HCCL_SUCCESS;
 }
 
-HcclResult CcuUrmaChannel::GetRmtWishCntXnAddr(const std::string& resGroupTag, uint64_t& wishCntXnAddr) const
-{
-    CHK_PTR_NULL(impl_);
-    CHK_RET(impl_->GetRmtWishCntXnAddr(resGroupTag, wishCntXnAddr));
-    return HcclResult::HCCL_SUCCESS;
-}
-
 HcclResult CcuUrmaChannel::GetRmtBuffer(uint64_t& addr, uint32_t& size, uint32_t& tokenId, uint32_t& tokenValue) const
 {
     CHK_PTR_NULL(impl_);
@@ -409,6 +401,10 @@ HcclResult CcuUrmaChannel::UpdateMemInfo(HcommMemHandle* memHandles, uint32_t me
     std::vector<CcuTransport::CclBufferInfo> bufferVecTemp{};
     CHK_RET(BuildBufferInfos(memHandles, memHandleNum, bufferVecTemp));
     return impl_->UpdateMemInfo(bufferVecTemp);
+}
+HcclResult CcuUrmaChannel::CcuGetRmtMemToken(uint64_t srcVa, uint64_t& tokenInfo)
+{
+    return impl_->CcuGetRmtMemToken(srcVa, tokenInfo);
 }
 
 HcclResult CcuUrmaChannel::NotifyRecord([[maybe_unused]] const uint32_t remoteNotifyIdx)

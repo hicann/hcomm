@@ -34,7 +34,7 @@ namespace ccu {
     using LoopGroupConfig = ::CcuLoopGroupConfig;
     using LoopCfg = ::CcuLoopCfg;
     using LoopGroupCfg = ::CcuLoopGroupCfg;
-
+    using CascCounterHandle = ::HcommCcuCascCntHandle; // Cascade Counter Handle 数据面别名，与res侧同一句柄实体
     // ==================== 资源创建 ====================
 
     template <typename T>
@@ -69,10 +69,24 @@ namespace ccu {
     {
         return CcuNotifyWait(channel, localNotifyIdx, mask);
     }
+    inline CcuResult ChannelIdGet(ChannelHandle channel, uint32_t& channelId)
+    {
+        return CcuChannelIdGet(channel, &channelId);
+    }
     inline CcuResult WriteVariableWithNotify(
         ChannelHandle channel, Variable var, uint32_t remoteVarIdx, uint32_t remoteNotifyIdx, uint16_t mask = 1)
     {
         return CcuWriteVariableWithNotify(channel, var.handle, remoteVarIdx, remoteNotifyIdx, mask);
+    }
+    // Cascade Counter Wait
+    inline CcuResult CascCntWait(CascCounterHandle cntHandle, uint64_t tgtValue)
+    {
+        return CcuCascCntWait(cntHandle, tgtValue);
+    }
+    // Cascade Counter Clear
+    inline CcuResult CascCntClear(CascCounterHandle cntHandle, Event event, uint16_t mask = 1)
+    {
+        return CcuCascCntClear(cntHandle, event.handle, mask);
     }
 
     // ==================== 加载 ====================
@@ -87,6 +101,16 @@ namespace ccu {
         return CcuLoadVarFromVarAddr(addrVar.handle, vArr[0].handle, num);
     }
     inline CcuResult Load(Variable addrVar, Variable v) { return CcuLoadVarFromVarAddr(addrVar.handle, v.handle, 1); }
+    inline CcuResult LoadAddImm(const Array<Variable>& array, Variable offset, uint16_t immAddValue, Variable dst)
+    {
+        return CcuLoadAddImm(
+            array[0].handle, static_cast<uint16_t>(array.size()), offset.handle, immAddValue, dst.handle);
+    }
+    inline CcuResult AddImmStore(const Array<Variable>& array, Variable offset, uint16_t immAddValue, Variable src)
+    {
+        return CcuAddImmStore(
+            array[0].handle, static_cast<uint16_t>(array.size()), offset.handle, immAddValue, src.handle);
+    }
     inline CcuResult Store(uint64_t addr, Array<Variable>& vArr, uint32_t num)
     {
         return CcuStoreVar(addr, vArr[0].handle, num);
@@ -178,6 +202,17 @@ namespace ccu {
     {
         return CcuWriteMemToMemReduce(
             ch, remote.handle, local.handle, len.handle, dataType, opType, event.handle, mask);
+    }
+    inline CcuResult
+    WriteVarAtomicAdd(Variable channelId, RemoteAddr varAddr, Variable addValue, Event event, uint16_t mask = 1)
+    {
+        return CcuWriteVarAtomicAdd(channelId.handle, varAddr.handle, addValue.handle, event.handle, mask);
+    }
+    // Write With Cascade Counter Increase
+    inline CcuResult
+    WriteWithCascCntInc(Variable channelId, RemoteAddr remote, LocalAddr local, Variable len, RemoteAddr inCntAddr)
+    {
+        return CcuWriteWithCascCntInc(channelId.handle, remote.handle, local.handle, len.handle, inCntAddr.handle);
     }
 
 } // namespace ccu

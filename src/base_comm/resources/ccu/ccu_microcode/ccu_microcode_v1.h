@@ -12,6 +12,7 @@
 #define CCU_MICROCODE_H
 
 #include <cstdint>
+#include <cstdlib>
 #include <string>
 #include <unordered_map>
 namespace hcomm {
@@ -34,6 +35,12 @@ namespace CcuRep {
     // 后端优化 cke-only 档按此为每个 CKE 读者补 NOP; 指令空间预留也按此为每个 wait 类 rep
     // 预留同等条数, 两处必须同源引用, 严禁各自写死, 否则预留与实际插入会漂移导致越界.
     constexpr uint32_t CCU_CKE_RAW_LATENCY = 14;
+
+    // CCU V2 XN 写后读 (half-rtt: LoadX 写 i / StoreX 写 array / ClearX 同片) 需要的最坏 latency
+    // (单位: 指令周期). 与 CCU_CKE_RAW_LATENCY 解耦, 后端优化 (CkeOnly) 按此为每个 XN 写后读读者补
+    // NOP; 指令空间预留也按此为每个会翻译出 LoadX/StoreX 的 rep 预留同等条数, 两处必须同源引用,
+    // 严禁各自写死, 否则预留与实际插入会漂移导致越界. 仅 CCU_V2 生效.
+    constexpr uint32_t CCU_XN_RAW_LATENCY = 14;
 
 #pragma pack(push, 1)
     // instr common header
@@ -522,8 +529,8 @@ namespace CcuRep {
         struct CcuInstrLoadStoreX {
             uint16_t xdId;
             uint16_t xsId;
-            uint16_t xsoId;
-            uint16_t xdoId;
+            uint16_t xso; // O_Mode=0时装Immedata_so立即数, 非寄存器Id, 故不带Id后缀
+            uint16_t xdo; // O_Mode=0时装Immedata_do立即数, 非寄存器Id, 故不带Id后缀
             uint16_t oMode : 1;
             uint16_t reserved : 15;
             uint16_t reserved1[8];
@@ -944,6 +951,12 @@ namespace CcuRep {
             const CacheConfig& cacheConfig, uint16_t setCKEId, uint16_t setCKEMask);
         void HSCBStoreXToMem(
             CcuInstr* instr, uint16_t dst, uint16_t src, uint16_t len, const CacheConfig& cacheConfig,
+            uint16_t setCKEId, uint16_t setCKEMask);
+        void LoadX(
+            CcuInstr* instr, uint16_t dst, uint16_t src, uint16_t srcOffset, uint16_t dstOffset, uint16_t oMode,
+            uint16_t setCKEId, uint16_t setCKEMask);
+        void StoreX(
+            CcuInstr* instr, uint16_t dst, uint16_t src, uint16_t srcOffset, uint16_t dstOffset, uint16_t oMode,
             uint16_t setCKEId, uint16_t setCKEMask);
 
         void Assign(CcuInstr* instr, uint16_t result, uint16_t operand, uint16_t setCKEId = 0, uint16_t setCKEMask = 0);

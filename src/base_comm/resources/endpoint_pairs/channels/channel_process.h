@@ -83,6 +83,7 @@ public:
     static HcclResult ChannelGetNotifyNum(ChannelHandle channelHandle, uint32_t* notifyNum);
     static HcclResult
     ChannelGetRemoteMems(ChannelHandle channelHandle, uint32_t* memNum, CommMem** remoteMem, char*** memInfos);
+    static HcclResult CcuChannelGetRmtMemToken(ChannelHandle channelHandle, uint64_t srcVa, uint64_t& tokenInfo);
     static HcclResult ChannelKernelDestroy(ChannelHandle* channelHandles, uint32_t listNum, aclrtBinHandle binHandle);
     static HcclResult
     ChannelDestroy(const ChannelHandle* channels, uint32_t channelNum, aclrtBinHandle binHandle = nullptr);

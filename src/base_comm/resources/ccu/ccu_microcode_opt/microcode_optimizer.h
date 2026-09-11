@@ -41,6 +41,10 @@ namespace CcuOpt {
         }
         const OptimizerOptions& Options() const { return opts_; }
 
+        // 设置 XN 写后读归约用的 pinned 组 (LoadX/StoreX/ClearX). 指针语义, 生命周期由调用方持有;
+        // 仅在随后的 Optimize() 调用栈内使用. 传 nullptr 表示不做 array 归约.
+        void SetPinnedGroups(const std::vector<PinnedGroup>* pinnedGroups) { schedOpts_.pinnedGroups = pinnedGroups; }
+
         CcuRep::CcuInstrInfo Optimize(const CcuRep::CcuInstrInfo& input);
 
         const OptimizerStats& Stats() const { return stats_; }
@@ -51,7 +55,10 @@ namespace CcuOpt {
         // 后端优化统一入口: V2 场景无条件启用 (V1 由调用方保证不进来).
         // reserveXnId / reserveCkeId 为 translator 保留寄存器, CkeOnly 不重命名寄存器,
         // 故这两个参数当前仅用于日志观测.
-        static CcuRep::CcuInstrInfo Run(const CcuRep::CcuInstrInfo& input, uint16_t reserveXnId, uint16_t reserveCkeId);
+        // pinnedGroups: XN 写后读 (LoadX/StoreX/ClearX) array 归约用的 pinned 组; 默认空 (不归约).
+        static CcuRep::CcuInstrInfo
+        Run(const CcuRep::CcuInstrInfo& input, uint16_t reserveXnId, uint16_t reserveCkeId,
+            const std::vector<PinnedGroup>& pinnedGroups = {});
 
     private:
         // dfx / opt_log: 把"优化前指令序列 + 优化后指令序列 + 后→前指令下标映射"一次性写入

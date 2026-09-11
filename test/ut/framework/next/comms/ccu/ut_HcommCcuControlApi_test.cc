@@ -23,6 +23,8 @@
 #include "ccu_kernel_impl/ccu_reduce_scatter_mesh1d_a6_demo.h"
 #include "ccu_kernel_impl/ccu_groupcopy_demo.h"
 #include "ccu_kernel_impl/ccu_var_acquire_demo.h"
+#include "ccu_kernel_impl/ccu_imm_casc_demo.h"
+#include "ccu_urma_channel.h"
 #undef protected
 #undef private
 
@@ -38,6 +40,88 @@ CCU_FUNC_KERNEL_TEST(Ut_EventRecordTagInLoop_Expect_Fail, CcuEventRecordTagInLoo
 CCU_FUNC_KERNEL_TEST(Ut_EventRecordInLoop_Expect_Fail, CcuEventRecordInLoopInvalidDemoKernel, false)
 CCU_FUNC_KERNEL_TEST(Ut_A5MixedLoopCount_Expect_Success, CcuA5MixedLoopCountDemoKernel, true)
 CCU_FUNC_KERNEL_TEST(Ut_LoopCfgDemo_Expect_Success, CcuLoopCfgDemoKernel, true)
+CCU_FUNC_KERNEL_V2_TEST(Ut_LoadAddImm_Expect_Success, CcuLoadAddImmDemoKernel, true)
+CCU_FUNC_KERNEL_V2_TEST(Ut_AddImmStore_Expect_Success, CcuAddImmStoreDemoKernel, true)
+CCU_FUNC_KERNEL_V2_TEST(Ut_WriteVarAtomicAdd_Expect_Success, CcuWriteVarAtomicAddDemoKernel, true)
+CCU_FUNC_KERNEL_V2_TEST(Ut_WriteWithCascCntInc_Expect_Success, CcuWriteWithCascCntIncDemoKernel, true)
+
+namespace {
+void SetupCascCntTest(
+    HcommCcuResDescHandle resDescs[hcomm::CCU_MAX_IODIE_NUM], CcuInsHandle& insHandle, HcommCcuCascCntHandle& cntHandle)
+{
+    constexpr uint32_t fakeDevId = MAX_MODULE_DEVICE_NUM - 2;
+    constexpr hcomm::CcuVersion fakeCcuVersion = hcomm::CcuVersion::CCU_V2;
+    (void)MockCcuDeviceEnv(fakeDevId, fakeCcuVersion);
+
+    CreateCcuResDescsPair(resDescs, fakeCcuVersion);
+    EXPECT_EQ(HcommCcuInsResDescSetNum(resDescs[0], HCOMM_CCU_RES_TYPE_CASC_CNT, 1), CcuResult::CCU_SUCCESS);
+    EXPECT_EQ(HcommCcuInsCreate(resDescs, hcomm::CCU_MAX_IODIE_NUM, &insHandle), CcuResult::CCU_SUCCESS);
+    EXPECT_EQ(HcommCcuCascCntAlloc(insHandle, 0, &cntHandle), CcuResult::CCU_SUCCESS);
+    EXPECT_NE(cntHandle, 0U);
+}
+} // namespace
+
+TEST_F(HcommCcuControlApiTest, Ut_CascCntWait_Expect_Success)
+{
+    HcommCcuResDescHandle resDescs[hcomm::CCU_MAX_IODIE_NUM] = {0, 0};
+    CcuInsHandle insHandle{0};
+    HcommCcuCascCntHandle cntHandle = 0;
+    SetupCascCntTest(resDescs, insHandle, cntHandle);
+
+    CcuResult ccuRet = HcommCcuKernelRegisterStart(insHandle);
+    EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
+
+    CcuCascCntDemoArg demoArg{};
+    demoArg.cntHandle = cntHandle;
+    demoArg.tgtValue = 1024;
+    CcuKernelArg kernelArg = static_cast<CcuKernelArg>(&demoArg);
+    const void* kernelArgs[] = {kernelArg};
+    auto kernelFunc = reinterpret_cast<void*>(CcuCascCntWaitDemoKernel);
+    const char* kernelFuncName = "CcuCascCntWaitDemoKernel";
+    CcuKernelHandle kernelHandle{0};
+    constexpr uint32_t fakeDieId = 0;
+    constexpr uint32_t kernelArgNum = 1;
+    ccuRet = HcommCcuKernelRegister(
+        insHandle, fakeDieId, const_cast<char*>(kernelFuncName), kernelFunc, kernelArgs, kernelArgNum, &kernelHandle);
+    EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
+
+    ccuRet = HcommCcuKernelRegisterEnd(insHandle);
+    EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
+
+    ccuRet = HcommCcuInsDestroy(insHandle);
+    EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
+    DestroyCcuResDescs(resDescs);
+}
+
+TEST_F(HcommCcuControlApiTest, Ut_CascCntClear_Expect_Success)
+{
+    HcommCcuResDescHandle resDescs[hcomm::CCU_MAX_IODIE_NUM] = {0, 0};
+    CcuInsHandle insHandle{0};
+    HcommCcuCascCntHandle cntHandle = 0;
+    SetupCascCntTest(resDescs, insHandle, cntHandle);
+
+    CcuResult ccuRet = HcommCcuKernelRegisterStart(insHandle);
+    EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
+
+    CcuCascCntDemoArg demoArg{};
+    demoArg.cntHandle = cntHandle;
+    CcuKernelArg kernelArg = static_cast<CcuKernelArg>(&demoArg);
+    const void* kernelArgs[] = {kernelArg};
+    CcuKernelHandle kernelHandle{0};
+    auto kernelFunc = reinterpret_cast<void*>(CcuCascCntClearDemoKernel);
+    constexpr uint32_t fakeDieId = 0;
+    constexpr uint32_t kernelArgNum = 1;
+    ccuRet = HcommCcuKernelRegister(
+        insHandle, fakeDieId, const_cast<char*>("CcuCascCntClearDemoKernel"), kernelFunc, kernelArgs, kernelArgNum,
+        &kernelHandle);
+    EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
+    ccuRet = HcommCcuKernelRegisterEnd(insHandle);
+    EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
+
+    ccuRet = HcommCcuInsDestroy(insHandle);
+    EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
+    DestroyCcuResDescs(resDescs);
+}
 
 TEST_F(HcommCcuControlApiTest, Ut_LoopObjectApi_Expect_Success)
 {
@@ -2120,6 +2204,15 @@ public:
         ASSERT_EQ(InitMockCcuResourcesForDevice(OTHER_TEST_DEVICE_LOGIC_ID, fakeCcuVersion), HcclResult::HCCL_SUCCESS);
         MockCcuChannelGetRes();
         MOCKER(hrtMemcpy).stubs().will(returnValue(HcclResult::HCCL_SUCCESS));
+        // PR 新增 CcuAllocCntXnBlock / CcuReleaseCntXnBlock 在 InitByResDescs 路径中被调用
+        MOCKER(hcomm::CcuAllocCntXnBlock)
+            .stubs()
+            .with(mockcpp::any(), mockcpp::any(), mockcpp::any())
+            .will(returnValue(CcuResult::CCU_SUCCESS));
+        MOCKER(hcomm::CcuReleaseCntXnBlock)
+            .stubs()
+            .with(mockcpp::any(), mockcpp::any(), mockcpp::any())
+            .will(returnValue(CcuResult::CCU_SUCCESS));
         ASSERT_EQ(hcomm::CcuInstanceMgr::GetInstance(TEST_DEVICE_LOGIC_ID).Init(), CcuResult::CCU_SUCCESS);
         ASSERT_EQ(hcomm::CcuInstanceMgr::GetInstance(OTHER_TEST_DEVICE_LOGIC_ID).Init(), CcuResult::CCU_SUCCESS);
     }
@@ -2332,4 +2425,77 @@ TEST_F(HcommCcuControlApiTest, Ut_HcommCcuGetTaskArgsNum_When_NoLoadArg_Expect_Z
 
     // 清理 fake kernel
     kernelMgr.kernelMap_.erase(fakeHandle);
+}
+
+TEST_F(HcommCcuControlApiTest, Ut_CcuChannelIdGet_When_Normal_Expect_Success)
+{
+    HcommChannelDesc desc{};
+    hcomm::CcuUrmaChannel channel(nullptr, desc);
+    void* channelPtr = static_cast<hcomm::Channel*>(&channel);
+    ChannelHandle handle = 0xAAAA;
+
+    MOCKER(HcommChannelGet)
+        .stubs()
+        .with(mockcpp::any(), outBoundP(&channelPtr))
+        .will(returnValue(static_cast<HcommResult>(0)));
+
+    const uint32_t expectedId = 101U;
+    MOCKER_CPP(&hcomm::CcuUrmaChannel::GetChannelId).stubs().will(returnValue(expectedId));
+
+    uint32_t channelId = 0;
+    CcuResult ret = CcuChannelIdGet(handle, &channelId);
+    EXPECT_EQ(ret, CcuResult::CCU_SUCCESS);
+    EXPECT_EQ(channelId, expectedId);
+}
+
+TEST_F(HcommCcuControlApiTest, Ut_CcuChannelIdGet_When_NullId_Expect_PtrError)
+{
+    ChannelHandle handle = 0xBBBB;
+    CcuResult ret = CcuChannelIdGet(handle, nullptr);
+    EXPECT_EQ(ret, CcuResult::CCU_E_PTR);
+}
+
+TEST_F(HcommCcuControlApiTest, Ut_CcuChannelIdGet_When_HcommChannelGetFail_Expect_ReturnError)
+{
+    ChannelHandle handle = 0xCCCC;
+    MOCKER(HcommChannelGet)
+        .stubs()
+        .with(mockcpp::any(), mockcpp::any())
+        .will(returnValue(static_cast<HcommResult>(HCCL_E_PARA)));
+
+    uint32_t channelId = 0;
+    CcuResult ret = CcuChannelIdGet(handle, &channelId);
+    EXPECT_EQ(ret, CcuResult::CCU_E_PARA);
+}
+
+TEST_F(HcommCcuControlApiTest, Ut_CcuChannelIdGet_When_ChannelPtrNull_Expect_PtrError)
+{
+    void* nullPtr = nullptr;
+    ChannelHandle handle = 0xDDDD;
+    MOCKER(HcommChannelGet)
+        .stubs()
+        .with(mockcpp::any(), outBoundP(&nullPtr))
+        .will(returnValue(static_cast<HcommResult>(0)));
+
+    uint32_t channelId = 0;
+    CcuResult ret = CcuChannelIdGet(handle, &channelId);
+    EXPECT_EQ(ret, CcuResult::CCU_E_PTR);
+}
+
+TEST_F(HcommCcuControlApiTest, Ut_CcuChannelIdGet_When_ChannelIdInvalid_Expect_Unavail)
+{
+    HcommChannelDesc desc{};
+    hcomm::CcuUrmaChannel channel(nullptr, desc);
+    void* channelPtr = static_cast<hcomm::Channel*>(&channel);
+    ChannelHandle handle = 0xEEEE;
+
+    MOCKER(HcommChannelGet)
+        .stubs()
+        .with(mockcpp::any(), outBoundP(&channelPtr))
+        .will(returnValue(static_cast<HcommResult>(0)));
+    MOCKER_CPP(&hcomm::CcuUrmaChannel::GetChannelId).stubs().will(returnValue(UINT32_MAX));
+
+    uint32_t channelId = 0;
+    CcuResult ret = CcuChannelIdGet(handle, &channelId);
+    EXPECT_EQ(ret, CcuResult::CCU_E_UNAVAIL);
 }

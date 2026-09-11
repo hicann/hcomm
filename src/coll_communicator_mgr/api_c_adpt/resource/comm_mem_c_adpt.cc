@@ -50,8 +50,8 @@ HcclResult HcclCommMemReg(HcclComm comm, const char* memTag, const CommMem* mem,
     CHK_PRT_RET(mem == nullptr, HCCL_ERROR("[HcclCommMemReg]mem is null"), HCCL_E_PTR);
     CHK_PRT_RET(memHandle == nullptr, HCCL_ERROR("[HcclCommMemReg]memHandle is null"), HCCL_E_PTR);
     CHK_PRT_RET(
-        (mem->type != COMM_MEM_TYPE_DEVICE) && (mem->type != COMM_MEM_TYPE_HOST),
-        HCCL_ERROR("[HcclCommMemReg]memoryType[%d] must be device or host", mem->type), HCCL_E_PARA);
+        (mem->type != COMM_MEM_TYPE_DEVICE) && (mem->type != COMM_MEM_TYPE_HOST) && (mem->type != COMM_MEM_TYPE_CCU),
+        HCCL_ERROR("[HcclCommMemReg]memoryType[%d] must be device or host or ccu", mem->type), HCCL_E_PARA);
     CHK_PRT_RET(mem->addr == nullptr, HCCL_ERROR("[HcclCommMemReg]addr is null"), HCCL_E_PTR);
     CHK_PRT_RET(
         mem->size == 0, HCCL_ERROR("[HcclCommMemReg]size[%llu] invalid", static_cast<unsigned long long>(mem->size)),
@@ -80,7 +80,7 @@ HcclResult HcclCommMemReg(HcclComm comm, const char* memTag, const CommMem* mem,
     HcclMem hcclMem;
     hcclMem.addr = mem->addr;
     hcclMem.size = mem->size;
-    hcclMem.type = (mem->type == COMM_MEM_TYPE_DEVICE) ? HCCL_MEM_TYPE_DEVICE : HCCL_MEM_TYPE_HOST;
+    hcclMem.type = (mem->type == COMM_MEM_TYPE_HOST) ? HCCL_MEM_TYPE_HOST : HCCL_MEM_TYPE_DEVICE;
     HcclRegMemAttr attr;
     attr.value = 0;
     HcclResult ret = hcclComm->GetIndependentOp().GetCommMemMgr().CommRegMem(memTagStr, hcclMem, attr, memHandle);

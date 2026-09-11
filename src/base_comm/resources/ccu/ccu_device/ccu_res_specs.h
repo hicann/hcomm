@@ -142,6 +142,7 @@ public:
     // v2 新增资源
     HcclResult GetLoopCkeNum(const uint8_t dieId, uint32_t& loopCkeNum) const;
     HcclResult GetCountXnNum(const uint8_t dieId, uint32_t& countXnNum) const;
+    HcclResult GetCascCntNum(const uint8_t dieId, uint32_t& cascCntNum) const;
 
     // channel资源
     HcclResult GetChannelNum(const uint8_t dieId, uint32_t& channelNum) const;

@@ -85,6 +85,12 @@ extern CcuResult CcuAddressAddImmToAddr(CcuAddressHandle resAddr, CcuAddressHand
 extern CcuResult CcuLoadArg(CcuVariableHandle varHandle, uint32_t argId);
 extern CcuResult CcuLoadVar(uint64_t addr, CcuVariableHandle varHandle, uint32_t num);
 extern CcuResult CcuLoadVarFromVarAddr(CcuVariableHandle addrHandle, CcuVariableHandle varHandle, uint32_t num);
+extern CcuResult CcuLoadAddImm(
+    CcuVariableHandle varHandle, uint16_t srcNum, CcuVariableHandle offset, uint16_t immAddValue,
+    CcuVariableHandle dst);
+extern CcuResult CcuAddImmStore(
+    CcuVariableHandle varHandle, uint16_t dstNum, CcuVariableHandle offset, uint16_t immAddValue,
+    CcuVariableHandle src);
 extern CcuResult CcuStoreVar(uint64_t addr, CcuVariableHandle varHandle, uint32_t num);
 extern CcuResult CcuStoreVarToVarAddr(CcuVariableHandle addrHandle, CcuVariableHandle varHandle, uint32_t num);
 
@@ -94,12 +100,15 @@ extern CcuResult CcuEventRecord(CcuEventHandle eventHandle, uint16_t mask);
 extern CcuResult CcuEventWait(CcuEventHandle eventHandle, uint16_t mask);
 extern CcuResult CcuNotifyRecord(ChannelHandle channel, uint32_t remoteNotifyIdx, uint16_t mask);
 extern CcuResult CcuNotifyWait(ChannelHandle channel, uint32_t localNotifyIdx, uint16_t mask);
+extern CcuResult CcuChannelIdGet(ChannelHandle channel, uint32_t* channelId);
 extern CcuResult CcuWriteVariableWithNotify(
     ChannelHandle channel, CcuVariableHandle varHandle, uint32_t remoteVarIdx, uint32_t remoteNotifyIdx, uint16_t mask);
 // 本地（同 device 内跨 core）通知同步：与 CcuNotifyRecord/Wait 的区别在于
 // 通知对端用 coreId 标识（同卡内某个 core），而不是 ChannelHandle（跨 rank 通道）。
 extern CcuResult CcuLocalNotifyRecord(const char* notifyTag, uint16_t mask);
 extern CcuResult CcuLocalNotifyWait(const char* notifyTag, uint16_t mask);
+extern CcuResult CcuCascCntWait(HcommCcuCascCntHandle cntHandle, uint64_t tgtValue);
+extern CcuResult CcuCascCntClear(HcommCcuCascCntHandle cntHandle, CcuEventHandle eventHandle, uint16_t mask);
 
 // 本地数据拷贝 相关接口
 extern CcuResult CcuLocalCopyMemToMem(
@@ -135,6 +144,12 @@ extern CcuResult CcuWriteBufferToMem(
 extern CcuResult CcuWriteMemToMemReduce(
     ChannelHandle channel, CcuRemoteAddrHandle remoteHandle, CcuLocalAddrHandle localHandle, CcuVariableHandle len,
     HcclDataType dataType, HcclReduceOp opType, CcuEventHandle event, uint16_t mask);
+extern CcuResult CcuWriteVarAtomicAdd(
+    CcuVariableHandle channelId, CcuRemoteAddrHandle varAddr, CcuVariableHandle addValue, CcuEventHandle event,
+    uint16_t mask);
+extern CcuResult CcuWriteWithCascCntInc(
+    CcuVariableHandle channelId, CcuRemoteAddrHandle remoteHandle, CcuLocalAddrHandle localHandle,
+    CcuVariableHandle len, CcuRemoteAddrHandle inCntAddr);
 
 /*========== 控制流操作 ==========*/
 extern CcuResult CcuIfBegin(CcuVariableHandle var, uint64_t immediate, CcuConditionType condType, const char* label);

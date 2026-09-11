@@ -25,8 +25,8 @@ void LoadXExecutor::Parser()
     ValidateVersionExclusive(RunnerCcuVersion::CCU_V2, "LoadXExecutor");
     xdId_ = instr_.v2.loadStoreX.xdId;
     xsId_ = instr_.v2.loadStoreX.xsId;
-    xsoId_ = instr_.v2.loadStoreX.xsoId;
-    xdoId_ = instr_.v2.loadStoreX.xdoId;
+    xsoId_ = instr_.v2.loadStoreX.xso;
+    xdoId_ = instr_.v2.loadStoreX.xdo;
     oMode_ = instr_.v2.loadStoreX.oMode;
     ckeId_ = instr_.v2.loadStoreX.setCKEId;
     ckeMask_ = instr_.v2.loadStoreX.setCKEMask;

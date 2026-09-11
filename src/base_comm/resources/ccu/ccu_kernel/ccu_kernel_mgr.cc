@@ -10,9 +10,12 @@
 
 #include "ccu_kernel_mgr.h"
 
+#include <cstdint>
+
 #include <acl/acl.h>
 
 #include "hccl_common.h"
+#include "ccu_types.h"
 #include "exception_handler.h"
 #include "adapter_rts.h"
 #include "ccu_assist_v1.h"
@@ -48,7 +51,7 @@ HcclResult GetHcclVersionForCcuKernelMgr(int& hcclVersion)
 
 constexpr int MAX_HCCL_VERSION_USING_CCU_RES_STATIC_ALLOC = 90100000;
 
-static uint32_t ComputeKernelInstrRegionSize(CcuKernel* kernel, const int32_t userDevId);
+static HcclResult ComputeKernelInstrRegionSize(CcuKernel* kernel, const int32_t userDevId, uint32_t& regionSize);
 
 CcuKernelMgr::~CcuKernelMgr()
 {
@@ -226,14 +229,23 @@ CcuResult CcuKernelMgr::GetKernelResourceRequest(
     resReq = currKernel_->GetResourceRequest();
     const uint32_t kernelInstrCount = currKernel_->GetInstrCount();
     const uint32_t translatorInstrCount = CcuRepTranslator::GetInstrNum(userDevId_);
-    const uint32_t constInstrCount = currKernel_->GetConstValue2VarMap().size();
-    const uint32_t ckeReserveInstrCount = currKernel_->GetRepNeedToAddLatency() * CcuRep::CCU_CKE_RAW_LATENCY;
-    // 总数统一走 ComputeKernelInstrRegionSize, 与申请/释放口径保持结构一致; 分项仅用于日志观测
-    instrCount = ComputeKernelInstrRegionSize(currKernel_.get(), userDevId_);
+    const uint32_t constInstrCount = static_cast<uint32_t>(currKernel_->GetConstValue2VarMap().size());
+    // reserve * latency 用 uint64_t 承载, 避免分项乘法在 uint32_t 空间内溢出使日志值失真;
+    // 分项仅用于观测, 溢出的最终防护在 ComputeKernelInstrRegionSize 内 (饱和 + ERROR).
+    const uint64_t ckeReserveInstrCount
+        = static_cast<uint64_t>(currKernel_->GetRepNeedToAddLatency()) * CcuRep::CCU_CKE_RAW_LATENCY;
+    const uint64_t xnReserveInstrCount
+        = static_cast<uint64_t>(currKernel_->GetLsxRepReserveCount()) * CcuRep::CCU_XN_RAW_LATENCY;
+    // 总数统一走 ComputeKernelInstrRegionSize, 与申请/释放口径保持结构一致; 分项仅用于日志观测.
+    // 溢出时该函数返回错误, 经 CCU_CHK_RET 中断查询, 避免把非法 instrCount 回给上层.
+    CCU_CHK_RET(ComputeKernelInstrRegionSize(currKernel_.get(), userDevId_, instrCount));
     HCCL_INFO(
         "[HcommCcuKernelQueryResReq][%s] resource request instruction count, kernelInstrCount[%u], "
-        "translatorInstrCount[%u], constInstrCount[%u], ckeReserveInstrCount[%u], totalInstrCount[%u].",
-        __func__, kernelInstrCount, translatorInstrCount, constInstrCount, ckeReserveInstrCount, instrCount);
+        "translatorInstrCount[%u], constInstrCount[%u], ckeReserveInstrCount[%llu], xnReserveInstrCount[%llu], "
+        "totalInstrCount[%u].",
+        __func__, kernelInstrCount, translatorInstrCount, constInstrCount,
+        static_cast<unsigned long long>(ckeReserveInstrCount), static_cast<unsigned long long>(xnReserveInstrCount),
+        instrCount);
     return CcuResult::CCU_SUCCESS;
 }
 
@@ -384,6 +396,7 @@ static void LoadRes(std::unique_ptr<CcuKernel>& kernel, CcuResPack& resPack)
     }
 
     kernel->SetResRepository(kernelResRepo);
+    kernel->SetCascCntBlock(resPack.GetCascCntBlocks());
 }
 
 // 指令空间区域大小的唯一计算入口:
@@ -391,19 +404,48 @@ static void LoadRes(std::unique_ptr<CcuKernel>& kernel, CcuResPack& resPack)
 //   + 每个会翻译出 waitCKEId!=0 && clearType=1 的 set/clearCKE 的 rep 预留 CCU_CKE_RAW_LATENCY 条
 //     NOP 空间 (计入集合见 CcuKernel::GetRepNeedToAddLatency / IsCkeWaitRep: 三种 wait 类 +
 //     LOAD/LOAD_VAR/STORE/STORE_VAR/RECORD_SHARED_NOTIFY).
-// 后端优化 cke-only 档只会为 CKE 写后读补 NOP, 每个此类 rep 最多补 (latency-1) 条,
-// 故此预留可从构造上保证优化后指令数不超过申请区. 申请 / 查询 / 释放三处必须走本函数,
+//   + 每个会翻译出 LoadX/StoreX/ClearX (half-rtt 特殊指令) 的 rep 预留 2 * CCU_XN_RAW_LATENCY 条 NOP
+//     空间 (计入集合见 CcuKernel::GetLsxRepReserveCount / IsLdStXRep: LOAD_ADD_IMM / STORE_ADD_IMM /
+//     CASC_CNT_CLEAR). 之所以是 2 倍: 后端优化对 lsx/clearx 存在两个方向的写后读补 NOP —
+//     (1) lsx 写 xn/array -> 后续任意指令读 (该 rep 作为写者, 其后读者补 NOP);
+//     (2) 任意前序指令写 xn/array -> 本 lsx/clearx 读该 xn/array (硬件对 lsx/clearx 读操作数
+//         interlock 失效, 该 rep 作为读者, 在其之前补 NOP).
+//     单个 lsx/clearx rep 前后两侧最坏各补 (CCU_XN_RAW_LATENCY - 1) 条, 故按 2 * CCU_XN_RAW_LATENCY
+//     预留 (含 1 条余量) 即可从构造上保证优化后指令数不越界.
+// 后端优化 cke-only 档只会为 CKE / XN 写后读补 NOP: CKE 每个此类 rep 最多补 (latency-1) 条;
+// lsx/clearx 每个此类 rep 因双向写后读最坏补 2*(latency-1) 条, 故 XN 侧按 2*latency 预留.
+// 此预留可从构造上保证优化后指令数不超过申请区. 申请 / 查询 / 释放三处必须走本函数,
 // 保证口径一致 (尤其申请与释放必须完全相等).
-static uint32_t ComputeKernelInstrRegionSize(CcuKernel* kernel, const int32_t userDevId)
+static HcclResult ComputeKernelInstrRegionSize(CcuKernel* kernel, const int32_t userDevId, uint32_t& regionSize)
 {
-    return kernel->GetInstrCount() + CcuRep::CcuRepTranslator::GetInstrNum(userDevId)
-           + static_cast<uint32_t>(kernel->GetConstValue2VarMap().size())
-           + kernel->GetRepNeedToAddLatency() * CcuRep::CCU_CKE_RAW_LATENCY;
+    // 各分项均为 uint32_t, 乘法 (reserve * latency) 与累加在 uint32_t 空间内理论上可能溢出.
+    // 此处全程用 uint64_t 承载中间结果; 一旦超过 UINT32_MAX 说明指令区规模异常 (不可恢复的内部
+    // 错误), 打 ERROR 并返回 HCCL_E_INTERNAL 由调用方 CHK_RET 中断执行, 避免截断/饱和后继续导致
+    // 后续指令区申请与越界写不一致. 申请/查询/释放/校验四处共用本函数, 口径一致.
+    const uint64_t total
+        = static_cast<uint64_t>(kernel->GetInstrCount())
+          + static_cast<uint64_t>(CcuRep::CcuRepTranslator::GetInstrNum(userDevId))
+          + static_cast<uint64_t>(kernel->GetConstValue2VarMap().size())
+          + static_cast<uint64_t>(kernel->GetRepNeedToAddLatency()) * CcuRep::CCU_CKE_RAW_LATENCY
+          + static_cast<uint64_t>(kernel->GetLsxRepReserveCount()) * (2ULL * CcuRep::CCU_XN_RAW_LATENCY);
+    if (total > static_cast<uint64_t>(UINT32_MAX)) {
+        HCCL_ERROR(
+            "[CcuKernelMgr][%s] kernel instr region size[%llu] overflow uint32. "
+            "instrCount[%u], translatorInstrCount[%u], constInstrCount[%zu], repNeedToAddLatency[%u], "
+            "lsxRepReserveCount[%u].",
+            __func__, static_cast<unsigned long long>(total), kernel->GetInstrCount(),
+            CcuRep::CcuRepTranslator::GetInstrNum(userDevId), kernel->GetConstValue2VarMap().size(),
+            kernel->GetRepNeedToAddLatency(), kernel->GetLsxRepReserveCount());
+        return HcclResult::HCCL_E_INTERNAL;
+    }
+    regionSize = static_cast<uint32_t>(total);
+    return HcclResult::HCCL_SUCCESS;
 }
 
 static CcuResult AllocInstrRes(std::unique_ptr<CcuKernel>& kernel, const int32_t userDevId)
 {
-    const uint32_t instrCount = ComputeKernelInstrRegionSize(kernel.get(), userDevId);
+    uint32_t instrCount = 0;
+    CCU_CHK_RET(ComputeKernelInstrRegionSize(kernel.get(), userDevId, instrCount));
     const uint32_t dieId = kernel->GetDieId();
     ResInfo insInfo(0, 0);
     CCU_CHK_RET(CcuDevMgrImp::AllocIns(userDevId, dieId, instrCount, insInfo));
@@ -687,7 +729,8 @@ CcuResult CcuKernelMgr::Translate(const std::vector<CcuKernelHandle>& kernelHand
 
 static HcclResult ReleaseInstrRes(CcuKernel* kernel, const int32_t userDevId)
 {
-    const uint32_t instrCount = ComputeKernelInstrRegionSize(kernel, userDevId);
+    uint32_t instrCount = 0;
+    CHK_RET(ComputeKernelInstrRegionSize(kernel, userDevId, instrCount));
     const ResInfo insInfo{kernel->GetInstrId(), instrCount};
     const uint8_t dieId = static_cast<uint8_t>(kernel->GetDieId());
     HCCL_INFO(
@@ -866,7 +909,8 @@ HcclResult CcuKernelMgr::TransRepSequenceToMicrocode(const std::vector<CcuKernel
             kernel, kernel->GetRepSequence(), kernel->GetInstrId(), isFuncBlock);
 
         // 后端优化会插 NOP 改变指令数; 按与申请同一口径校验不越界, 把静默越界变成快速失败.
-        const uint32_t regionSize = ComputeKernelInstrRegionSize(kernel, userDevId_);
+        uint32_t regionSize = 0;
+        CHK_RET(ComputeKernelInstrRegionSize(kernel, userDevId_, regionSize));
         CHK_PRT_RET(
             instrInfo.instrVec.size() > regionSize,
             HCCL_ERROR(

@@ -144,6 +144,26 @@ namespace CcuRep {
             CcuKernel* ccuKernel, CcuInstr*& instr, uint16_t& curInstrId, CcuRepStoreVar* storeVarPtr,
             const TransDep& dep) override;
 
+        // halfRtt
+        HcclResult CcuRepWriteVarAtomicTranslate(
+            CcuKernel* ccuKernel, CcuInstr*& instr, uint16_t& curInstrId, CcuRepWriteVarAtomic* writeVarAtomPtr,
+            const TransDep& dep) override;
+        HcclResult CcuRepWriteWithCntIncTranslate(
+            CcuKernel* ccuKernel, CcuInstr*& instr, uint16_t& curInstrId, CcuRepWriteWithCntInc* writeCntIncPtr,
+            const TransDep& dep) override;
+        HcclResult CcuRepCascCntWaitTranslate(
+            CcuKernel* ccuKernel, CcuInstr*& instr, uint16_t& curInstrId, CcuRepCascCntWait* cascCntWaitPtr,
+            const TransDep& dep) override;
+        HcclResult CcuRepCascCntClearTranslate(
+            CcuKernel* ccuKernel, CcuInstr*& instr, uint16_t& curInstrId, CcuRepCascCntClear* cascCntClearPtr,
+            const TransDep& dep) override;
+        HcclResult CcuRepLoadAddImmTranslate(
+            CcuKernel* ccuKernel, CcuInstr*& instr, uint16_t& curInstrId, CcuRepLoadAddImm* loadAddImmPtr,
+            const TransDep& dep) override;
+        HcclResult CcuRepStoreAddImmTranslate(
+            CcuKernel* ccuKernel, CcuInstr*& instr, uint16_t& curInstrId, CcuRepStoreAddImm* storeAddImmPtr,
+            const TransDep& dep) override;
+
         uint32_t GetInstrCount(CcuRepType repType) override;
 
         HcclResult PrepareConstValue(CcuRepBase* repPtr, const TransDep& dep, CcuKernel* ccuKernel) override;
@@ -222,10 +242,12 @@ namespace CcuRep {
                {CcuRepType::STORE, 3},
                {CcuRepType::STORE_VAR, 3},
 
-               {CcuRepType::WRITE_WITH_ARRIVE_NOTIFY, 1},
-               {CcuRepType::CLEAR_ALL_ARRIVE_NOTIFY, 1},
-               {CcuRepType::RECORD_EXPECT_COUNT, 1},
-               {CcuRepType::WAIT_ALL_PEERS_ARRIVE_NOTIFY, 1},
+               {CcuRepType::WRITE_VAR_ATOMIC, 1},
+               {CcuRepType::WRITE_WITH_CNT_INC, 1},
+               {CcuRepType::CASC_CNT_WAIT, 2},
+               {CcuRepType::CASC_CNT_CLEAR, 1},
+               {CcuRepType::LOAD_ADD_IMM, 1},
+               {CcuRepType::STORE_ADD_IMM, 1},
 
                {CcuRepType::AND, 1},
                {CcuRepType::NOT, 1},

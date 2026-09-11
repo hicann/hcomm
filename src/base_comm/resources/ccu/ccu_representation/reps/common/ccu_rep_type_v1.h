@@ -80,10 +80,12 @@ namespace CcuRep {
         RECORD_SHARED_NOTIFY,
 
         // 0.5rtt专用
-        WRITE_WITH_ARRIVE_NOTIFY,
-        CLEAR_ALL_ARRIVE_NOTIFY,
-        RECORD_EXPECT_COUNT,
-        WAIT_ALL_PEERS_ARRIVE_NOTIFY,
+        WRITE_VAR_ATOMIC,
+        WRITE_WITH_CNT_INC,
+        CASC_CNT_WAIT,
+        CASC_CNT_CLEAR,
+        LOAD_ADD_IMM,
+        STORE_ADD_IMM,
     };
 
     enum class AssignSubType { INVALID, IMD_TO_VARIABLE, IMD_TO_ADDR, VAR_TO_ADDR, ADDR_TO_ADDR, VAR_TO_VAR };

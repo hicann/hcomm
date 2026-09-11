@@ -207,6 +207,7 @@ typedef enum {
     COMM_MEM_TYPE_INVALID = -1, ///< 无效的内存类别
     COMM_MEM_TYPE_DEVICE = 0,   ///< 设备侧内存（如NPU等）
     COMM_MEM_TYPE_HOST = 1,     ///< 主机侧内存
+    COMM_MEM_TYPE_CCU = 2,      ///< CCU资源空间
 } CommMemType;
 
 /**
