@@ -39,6 +39,7 @@
 #include "channel_config.h"
 #include "hcclCommDfx.h"
 #include "coll_comm_res_c_adpt.h"
+#include "roce_channel_desc_configurator.h"
 #include "common/loggers/channel_logger.h"
 
 using namespace hccl;
@@ -76,7 +77,7 @@ static u32 ResolveQueueNum(const Hccl::EnvRdmaConfig& rdmaConfig, const HcclChan
     if (channelDesc.channelProtocol == COMM_PROTOCOL_ROCE
         && channelDesc.localEndpoint.loc.locType == ENDPOINT_LOC_TYPE_HOST) {
         u32 hostQpCount = 0;
-        MyRankUtils::ReadHostNicMultiQpCount(hostQpCount);
+        RoceChannelDescConfigurator::ReadHostNicMultiQpCount(hostQpCount);
         if (hostQpCount > 0) {
             return hostQpCount;
         }
