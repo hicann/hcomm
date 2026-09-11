@@ -841,6 +841,10 @@ HcclResult ThreadMgr::ResetDedicatedThreadLocalNotifies()
 {
     std::lock_guard<std::mutex> lock(dedicatedThreadMutex_);
     for (auto& pair : dedicatedThreadMap_) {
+        // device侧保序流不会保存在g_ThreadMap，不在此处清理，在ResetThreadPoolLocalNotifiles清
+        if (pair.first == HCCL_DED_THREAD_TYPE_AICPU_ORDER_LAUNCH_DEVICE) {
+            continue;
+        }
         if (pair.second == 0) {
             continue;
         }
