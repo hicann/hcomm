@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include "cast_utils.h"
 #include <cstdint>
 #include <cstdlib>
 #include <cstring>
@@ -165,7 +166,7 @@ HcclResult AicpuTaskCacheEntry::AddSqeArray(
     CHK_PRT_RET(sqeCount == 0, HCCL_ERROR("[AicpuTaskCacheEntry][AddSqeArray] sqeCount is 0"), HCCL_E_INTERNAL);
 
     const size_t sqeBytes = sqeCount * AC_SQE_SIZE;
-    uint8_t* newSqeArray = reinterpret_cast<uint8_t*>(malloc(sqeBytes));
+    uint8_t* newSqeArray = ReinterpretAs<uint8_t*>(malloc(sqeBytes));
     CHK_PTR_NULL(newSqeArray);
     HcclResult ret = AddSqeArray_(newSqeArray, sqeBytes, sqeArray, streamId);
     if (ret != HCCL_SUCCESS) {
@@ -477,7 +478,7 @@ AicpuTaskCacheEntry::RefreshTokenInfos_(const uint64_t* baseAddrs, const uint64_
             HCCL_E_INTERNAL);
 
         // 注意: AddWqeArray时已校验非空, 无需重复校验
-        UbTransportLiteImpl* ubTransportLitePtr = reinterpret_cast<UbTransportLiteImpl*>(iter->first);
+        UbTransportLiteImpl* ubTransportLitePtr = ReinterpretAs<UbTransportLiteImpl*>(iter->first);
         for (uint32_t memIdx = 0; memIdx < count; memIdx++) {
             const uint64_t baseAddr = baseAddrs[memIdx];
             const uint64_t memSize = memSizes[memIdx];
@@ -490,8 +491,8 @@ AicpuTaskCacheEntry::RefreshTokenInfos_(const uint64_t* baseAddrs, const uint64_
                 //     再调用locRmaBufSlicelite.GetTokenId()获取token id (一定与Hccl::RmaBufferLite locRmaBuf的token
                 //     id相同)
                 Hccl::RmaBufferLite locRmaBuf;
-                CHK_RET(ubTransportLitePtr->BuildLocRmaBufferLite(
-                    reinterpret_cast<uintptr_t>(baseAddr), memSize, locRmaBuf));
+                CHK_RET(
+                    ubTransportLitePtr->BuildLocRmaBufferLite(ReinterpretAs<uintptr_t>(baseAddr), memSize, locRmaBuf));
                 tokenInfo.locTokenId = locRmaBuf.GetTokenId();
             }
 
@@ -500,7 +501,7 @@ AicpuTaskCacheEntry::RefreshTokenInfos_(const uint64_t* baseAddrs, const uint64_
                 // token id/value 注意: Hccl::Buffer本身不含token id/value,
                 // 必须通过调用ubTransportLitePtr->GetRmtRmaBufSliceLite,
                 //     构造Hccl::RmtRmaBufSliceLite, 再调用GetTokenId/Value获取token id/value
-                const Hccl::Buffer rmtBuf{reinterpret_cast<uintptr_t>(baseAddr), memSize};
+                const Hccl::Buffer rmtBuf{ReinterpretAs<uintptr_t>(baseAddr), memSize};
                 Hccl::RmtRmaBufSliceLite rmtRmaBufSlicelite = ubTransportLitePtr->GetRmtRmaBufSliceLite(rmtBuf);
                 tokenInfo.rmtTokenId = rmtRmaBufSlicelite.GetTokenId();
                 tokenInfo.rmtTokenValue = rmtRmaBufSlicelite.GetTokenValue();
@@ -560,7 +561,7 @@ inline HcclResult AicpuTaskCacheEntry::PrintRefreshResult_(
     // 打印更新后的token信息
     for (std::unordered_map<UbTransportLiteImplHandle, vector<TokenInfo>>::iterator iter = tokenInfosMap_.begin();
          iter != tokenInfosMap_.end(); iter++) {
-        UbTransportLiteImpl* ubTransportLitePtr = reinterpret_cast<UbTransportLiteImpl*>(iter->first);
+        UbTransportLiteImpl* ubTransportLitePtr = ReinterpretAs<UbTransportLiteImpl*>(iter->first);
         vector<TokenInfo>& tokenInfos = iter->second;
         for (uint32_t memIdx = 0; memIdx < count; memIdx++) {
             TokenInfo& tokenInfo = tokenInfos[memIdx];
@@ -954,7 +955,7 @@ AicpuTaskCacheEntry::DumpWqeTasksPerWqe_(size_t wqeIdx, const WqeTask& wqeTask, 
         PLF_TASK, "[AicpuTaskCacheEntry][%s] %uth cached WQE in jetty[%u, %u, %u]", __func__, wqeIdx,
         ubConnLitePtr->GetUbJettyLiteId().GetDieId(), ubConnLitePtr->GetUbJettyLiteId().GetFuncId(),
         ubConnLitePtr->GetUbJettyLiteId().GetJettyId());
-    CHK_RET(AicpuTaskUtils::DumpWqeContent(reinterpret_cast<const uint8_t*>(&wqeTask)));
+    CHK_RET(AicpuTaskUtils::DumpWqeContent(ReinterpretAs<const uint8_t*>(&wqeTask)));
     return HCCL_SUCCESS;
 }
 
@@ -1300,7 +1301,7 @@ inline void AicpuTaskCacheEntry::FillSlotCommonFields_(
     slot->sqId = streamLite->GetSqId();
     slot->taskId = taskId;
     const void* opInfo = streamLite->GetLatestDfxOpInfo();
-    slot->dfxOpInfo = (opInfo != nullptr) ? reinterpret_cast<u64>(opInfo) : DFX_INVALID_U64;
+    slot->dfxOpInfo = (opInfo != nullptr) ? ReinterpretAs<u64>(opInfo) : DFX_INVALID_U64;
     slot->linkType = linkType;
     slot->transportType = transportType;
     slot->channelHandle = channelHandle;
@@ -1337,8 +1338,8 @@ inline HcclResult AicpuTaskCacheEntry::FillSlotUbDma_(
     slot->taskType = static_cast<u8>(profInfo.taskParamType);
     FillSlotCommonFields_(
         slot, streamLite, taskId, GetUbLinkTypeVal_(ubTransportLiteImplPtr),
-        static_cast<u8>(Hccl::DfxTransportType::DFX_TRANSPORT_TYPE_UB), reinterpret_cast<u64>(ubTransportLiteImplPtr));
-    slot->taskPara.ubDma.sqeAddr = reinterpret_cast<u64>(sqePtr);
+        static_cast<u8>(Hccl::DfxTransportType::DFX_TRANSPORT_TYPE_UB), ReinterpretAs<u64>(ubTransportLiteImplPtr));
+    slot->taskPara.ubDma.sqeAddr = ReinterpretAs<u64>(sqePtr);
     slot->taskPara.ubDma.srcAddr = profInfo.locAddr;
     slot->taskPara.ubDma.dstAddr = profInfo.rmtAddr;
     slot->taskPara.ubDma.size = profInfo.size;
@@ -1358,8 +1359,8 @@ inline HcclResult AicpuTaskCacheEntry::FillSlotReduce_(
     slot->taskType = static_cast<u8>(profInfo.taskParamType);
     FillSlotCommonFields_(
         slot, streamLite, taskId, GetUbLinkTypeVal_(ubTransportLiteImplPtr),
-        static_cast<u8>(Hccl::DfxTransportType::DFX_TRANSPORT_TYPE_UB), reinterpret_cast<u64>(ubTransportLiteImplPtr));
-    slot->taskPara.Reduce.sqeAddr = reinterpret_cast<u64>(sqePtr);
+        static_cast<u8>(Hccl::DfxTransportType::DFX_TRANSPORT_TYPE_UB), ReinterpretAs<u64>(ubTransportLiteImplPtr));
+    slot->taskPara.Reduce.sqeAddr = ReinterpretAs<u64>(sqePtr);
     slot->taskPara.Reduce.srcAddr = profInfo.locAddr;
     slot->taskPara.Reduce.dstAddr = profInfo.rmtAddr;
     slot->taskPara.Reduce.size = profInfo.size;
@@ -1420,7 +1421,7 @@ inline HcclResult AicpuTaskCacheEntry::FillSlotNotify_(
     FillSlotCommonFields_(
         slot, streamLite, taskId, Hccl::DfxLinkTypeVal::LINK_ONCHIP,
         static_cast<u8>(Hccl::DfxTransportType::DFX_TRANSPORT_TYPE_LOCAL), DFX_INVALID_U64);
-    slot->taskPara.Notify.sqeAddr = reinterpret_cast<u64>(sqePtr);
+    slot->taskPara.Notify.sqeAddr = ReinterpretAs<u64>(sqePtr);
     PLF_CONFIG_INFO(PLF_TASK, "[%s] %s", __func__, slot->Describe().c_str());
     return HCCL_SUCCESS;
 }
@@ -1435,11 +1436,11 @@ inline HcclResult AicpuTaskCacheEntry::FillSlotSdma_(
         static_cast<u8>(Hccl::DfxTransportType::DFX_TRANSPORT_TYPE_LOCAL), DFX_INVALID_U64);
     if (sdmaSqe->opcode == SDMA_OPCODE_MEMCPY) {
         slot->taskType = static_cast<u8>(Hccl::TaskParamTypeVal::TASK_SDMA);
-        slot->taskPara.Dma.sqeAddr = reinterpret_cast<u64>(sqePtr);
+        slot->taskPara.Dma.sqeAddr = ReinterpretAs<u64>(sqePtr);
     } else {
         constexpr uint32_t UINT32_BIT_WIDTH = 32;
         slot->taskType = static_cast<u8>(Hccl::TaskParamTypeVal::TASK_REDUCE_INLINE);
-        slot->taskPara.Reduce.sqeAddr = reinterpret_cast<u64>(sqePtr);
+        slot->taskPara.Reduce.sqeAddr = ReinterpretAs<u64>(sqePtr);
         slot->taskPara.Reduce.srcAddr = (static_cast<uint64_t>(sdmaSqe->u.strideMode0.srcAddrHigh) << UINT32_BIT_WIDTH)
                                         | sdmaSqe->u.strideMode0.srcAddrLow;
         slot->taskPara.Reduce.dstAddr = (static_cast<uint64_t>(sdmaSqe->u.strideMode0.dstAddrHigh) << UINT32_BIT_WIDTH)
@@ -1464,7 +1465,7 @@ HcclResult AicpuTaskCacheEntry::ReportSqeArrayProfiling_(
 
     // 获取SQE对应的sqId
     // 注意: aicpuTsThreadPtr已在AddSqeArray校验, 无需再校验
-    StreamLite* streamLite = reinterpret_cast<StreamLite*>(sqeArrayInfo.aicpuTsThreadPtr->GetStreamLitePtr());
+    StreamLite* streamLite = ReinterpretAs<StreamLite*>(sqeArrayInfo.aicpuTsThreadPtr->GetStreamLitePtr());
     CHK_PTR_NULL(streamLite);
     const u32 sqId = streamLite->GetSqId();
     for (size_t sqeIdx = 0; sqeIdx < sqeCount; ++sqeIdx) {

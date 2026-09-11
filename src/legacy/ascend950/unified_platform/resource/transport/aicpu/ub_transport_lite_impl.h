@@ -11,6 +11,7 @@
 #ifndef UB_MEM_TRANSPORT_LITE_H
 #define UB_MEM_TRANSPORT_LITE_H
 
+#include "cast_utils.h"
 #include <vector>
 #include <map>
 #include <memory>
@@ -211,7 +212,7 @@ private:
 
         // 构造DbSqeProfInfo (注意: 其他字段已在FillDbSqeProfInfo设置)
         dbSqeProfInfo.taskParamType = TaskParamType::TASK_UB;
-        dbSqeProfInfo.locAddr = reinterpret_cast<uint64_t>(loc);
+        dbSqeProfInfo.locAddr = ReinterpretAs<uint64_t>(loc);
     }
 
     void ReduceProfilingProcess(
@@ -260,12 +261,12 @@ private:
                 dmaOp = DmaOp::HCCL_DMA_READ;
             }
             BuildDbSqeProfInfoForProfilingProcess(
-                reinterpret_cast<void*>(GetRmaBufSlicelite(loc).GetAddr()),
-                reinterpret_cast<void*>(GetRmtRmaBufSliceLite(rmt).GetAddr()), totalSize, dmaOp, dbSqeProfInfo);
+                ReinterpretAs<void*>(GetRmaBufSlicelite(loc).GetAddr()),
+                ReinterpretAs<void*>(GetRmtRmaBufSliceLite(rmt).GetAddr()), totalSize, dmaOp, dbSqeProfInfo);
         } else {
             BuildDbSqeProfInfoForReduceProfilingProcess(
-                reinterpret_cast<void*>(GetRmaBufSlicelite(loc).GetAddr()),
-                reinterpret_cast<void*>(GetRmtRmaBufSliceLite(rmt).GetAddr()), totalSize, transferOp.reduceIn,
+                ReinterpretAs<void*>(GetRmaBufSlicelite(loc).GetAddr()),
+                ReinterpretAs<void*>(GetRmtRmaBufSliceLite(rmt).GetAddr()), totalSize, transferOp.reduceIn,
                 dbSqeProfInfo);
         }
     }
@@ -293,7 +294,7 @@ private:
     {
         // 构造DbSqeProfInfo
         dbSqeProfInfo.isValid = true;
-        dbSqeProfInfo.rmtAddr = reinterpret_cast<uint64_t>(rmt);
+        dbSqeProfInfo.rmtAddr = ReinterpretAs<uint64_t>(rmt);
         dbSqeProfInfo.size = size;
         dbSqeProfInfo.dmaOp = dmaOp;
         dbSqeProfInfo.locEid = GetLocEid();
@@ -320,8 +321,8 @@ private:
     inline void FillDbSqeProfInfoReducePub(
         void* loc, void* rmt, u64 size, const ReduceIn& reduceIn, DbSqeProfInfo& dbSqeProfInfo) const
     {
-        dbSqeProfInfo.locAddr = reinterpret_cast<uint64_t>(loc);
-        dbSqeProfInfo.rmtAddr = reinterpret_cast<uint64_t>(rmt);
+        dbSqeProfInfo.locAddr = ReinterpretAs<uint64_t>(loc);
+        dbSqeProfInfo.rmtAddr = ReinterpretAs<uint64_t>(rmt);
         dbSqeProfInfo.size = size;
         dbSqeProfInfo.locEid = GetLocEid();
         dbSqeProfInfo.rmtEid = GetRmtEid();
@@ -343,37 +344,37 @@ private:
     {
         if (transferOp.transType == TransferType::READ) {
             BuildDbSqeProfInfoForProfilingProcess(
-                reinterpret_cast<void*>(GetRmaBufSlicelite(loc).GetAddr()),
-                reinterpret_cast<void*>(GetRmtRmaBufSliceLite(rmt).GetAddr()), totalSize, DmaOp::HCCL_DMA_READ,
+                ReinterpretAs<void*>(GetRmaBufSlicelite(loc).GetAddr()),
+                ReinterpretAs<void*>(GetRmtRmaBufSliceLite(rmt).GetAddr()), totalSize, DmaOp::HCCL_DMA_READ,
                 dbSqeProfInfo);
         } else if (transferOp.transType == TransferType::WRITE) {
             BuildDbSqeProfInfoForProfilingProcess(
-                reinterpret_cast<void*>(GetRmaBufSlicelite(loc).GetAddr()),
-                reinterpret_cast<void*>(GetRmtRmaBufSliceLite(rmt).GetAddr()), totalSize, DmaOp::HCCL_DMA_WRITE,
+                ReinterpretAs<void*>(GetRmaBufSlicelite(loc).GetAddr()),
+                ReinterpretAs<void*>(GetRmtRmaBufSliceLite(rmt).GetAddr()), totalSize, DmaOp::HCCL_DMA_WRITE,
                 dbSqeProfInfo);
         } else if (transferOp.transType == TransferType::READ_REDUCE) {
             BuildDbSqeProfInfoForReduceProfilingProcess(
-                reinterpret_cast<void*>(GetRmaBufSlicelite(loc).GetAddr()),
-                reinterpret_cast<void*>(GetRmtRmaBufSliceLite(rmt).GetAddr()), totalSize, transferOp.reduceIn,
+                ReinterpretAs<void*>(GetRmaBufSlicelite(loc).GetAddr()),
+                ReinterpretAs<void*>(GetRmtRmaBufSliceLite(rmt).GetAddr()), totalSize, transferOp.reduceIn,
                 dbSqeProfInfo);
         } else if (transferOp.transType == TransferType::WRITE_REDUCE) {
             BuildDbSqeProfInfoForReduceProfilingProcess(
-                reinterpret_cast<void*>(GetRmaBufSlicelite(loc).GetAddr()),
-                reinterpret_cast<void*>(GetRmtRmaBufSliceLite(rmt).GetAddr()), totalSize, transferOp.reduceIn,
+                ReinterpretAs<void*>(GetRmaBufSlicelite(loc).GetAddr()),
+                ReinterpretAs<void*>(GetRmtRmaBufSliceLite(rmt).GetAddr()), totalSize, transferOp.reduceIn,
                 dbSqeProfInfo);
         } else if (transferOp.transType == TransferType::WRITE_WITH_NOTIFY) {
             BuildDbSqeProfInfoForWriteWithNotify(
-                reinterpret_cast<void*>(GetRmaBufSlicelite(loc).GetAddr()),
-                reinterpret_cast<void*>(GetRmtRmaBufSliceLite(rmt).GetAddr()), totalSize,
+                ReinterpretAs<void*>(GetRmaBufSlicelite(loc).GetAddr()),
+                ReinterpretAs<void*>(GetRmtRmaBufSliceLite(rmt).GetAddr()), totalSize,
                 GetRmtNotifySliceLite(notifyIdx).GetNotifyId(), dbSqeProfInfo);
         } else if (transferOp.transType == TransferType::WRITE_REDUCE_WITH_NOTIFY) {
             BuildDbSqeProfInfoForWriteReduceWithNotify(
-                reinterpret_cast<void*>(GetRmaBufSlicelite(loc).GetAddr()),
-                reinterpret_cast<void*>(GetRmtRmaBufSliceLite(rmt).GetAddr()), totalSize, transferOp.reduceIn,
+                ReinterpretAs<void*>(GetRmaBufSlicelite(loc).GetAddr()),
+                ReinterpretAs<void*>(GetRmtRmaBufSliceLite(rmt).GetAddr()), totalSize, transferOp.reduceIn,
                 GetRmtNotifySliceLite(notifyIdx).GetNotifyId(), dbSqeProfInfo);
         } else if (transferOp.transType == TransferType::NOTIFY_RECORD) {
             BuildDbSqeProfInfoForNotifyRecord(
-                reinterpret_cast<void*>(GetRmtNotifySliceLite(notifyIdx).GetAddr()),
+                ReinterpretAs<void*>(GetRmtNotifySliceLite(notifyIdx).GetAddr()),
                 GetRmtNotifySliceLite(notifyIdx).GetSize(), GetRmtNotifySliceLite(notifyIdx).GetNotifyId(),
                 dbSqeProfInfo);
         }
@@ -389,7 +390,7 @@ private:
 
         // 构造DbSqeProfInfo (注意: 其他字段已在FillDbSqeProfInfo设置)
         dbSqeProfInfo.taskParamType = TaskParamType::TASK_WRITE_WITH_NOTIFY;
-        dbSqeProfInfo.locAddr = reinterpret_cast<uint64_t>(loc);
+        dbSqeProfInfo.locAddr = ReinterpretAs<uint64_t>(loc);
         dbSqeProfInfo.notifyId = notifyId;
     }
 
@@ -526,7 +527,7 @@ private:
                         "in jetty[%u, %u, %u]",
                         wqeIdx, ubConnLitePtr->GetUbJettyLiteId().GetDieId(),
                         ubConnLitePtr->GetUbJettyLiteId().GetFuncId(), ubConnLitePtr->GetUbJettyLiteId().GetJettyId());
-                    ret = hcomm::AicpuTaskUtils::DumpWqeContent(reinterpret_cast<const uint8_t*>(&wqeTasks[wqeIdx]));
+                    ret = hcomm::AicpuTaskUtils::DumpWqeContent(ReinterpretAs<const uint8_t*>(&wqeTasks[wqeIdx]));
                     if (UNLIKELY(ret != HCCL_SUCCESS)) {
                         THROW<InternalException>(
                             "[UbTransportLiteImpl][PostLaunchWqe] "

@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include "cast_utils.h"
 #include "./dev_rdma_connection_v2.h"
 #include "log.h"
 #include "acl/acl_rt.h"
@@ -341,13 +342,13 @@ HcclResult DevRdmaConnectionV2::BuildSqContext(SqContext* context)
     context->contextInfo.roceSq.sqVa = ndaQpInfo_.sqInfo.qBuf.base;
     context->contextInfo.roceSq.wqeSize = ndaQpInfo_.sqInfo.qBuf.entrySize;
     context->contextInfo.roceSq.depth = ndaQpInfo_.sqInfo.qBuf.entryCnt;
-    context->contextInfo.roceSq.headAddr = reinterpret_cast<uint64_t>(SqPiMem_.ptr());
-    context->contextInfo.roceSq.tailAddr = reinterpret_cast<uint64_t>(SqCiMem_.ptr());
+    context->contextInfo.roceSq.headAddr = ReinterpretAs<uint64_t>(SqPiMem_.ptr());
+    context->contextInfo.roceSq.tailAddr = ReinterpretAs<uint64_t>(SqCiMem_.ptr());
     context->contextInfo.roceSq.sl = qpInfo_.serviceLevel;
-    context->contextInfo.roceSq.dbHwVa = reinterpret_cast<uint64_t>(ndaQpInfo_.sqInfo.dbHwVa.iovBase);
+    context->contextInfo.roceSq.dbHwVa = ReinterpretAs<uint64_t>(ndaQpInfo_.sqInfo.dbHwVa.iovBase);
 
     if (dmaMode_ == QBUF_DMA_MODE_INDEP_UB) {
-        context->contextInfo.roceSq.dbSwVa = reinterpret_cast<uint64_t>(ndaQpInfo_.sqInfo.dbrPiVa.iovBase);
+        context->contextInfo.roceSq.dbSwVa = ReinterpretAs<uint64_t>(ndaQpInfo_.sqInfo.dbrPiVa.iovBase);
         uint8_t mtuShift = static_cast<uint8_t>(localQpAttr.pathMtu - 1);
         uint8_t dbCos = static_cast<uint8_t>(localQpAttr.vendorPrivInfo & 0xFF);
         context->contextInfo.roceSq.dbVendorSpecified
@@ -385,15 +386,15 @@ HcclResult DevRdmaConnectionV2::BuildCqContext(CqContext* context)
     context->contextInfo.roceCq.cqVa = ndaCqInfo_.cqInfo.qBuf.base;
     context->contextInfo.roceCq.cqeSize = ndaCqInfo_.cqInfo.qBuf.entrySize;
     context->contextInfo.roceCq.cqDepth = ndaCqInfo_.cqInfo.qBuf.entryCnt;
-    context->contextInfo.roceCq.headAddr = reinterpret_cast<uint64_t>(CqPiMem_.ptr());
-    context->contextInfo.roceCq.tailAddr = reinterpret_cast<uint64_t>(CqCiMem_.ptr());
+    context->contextInfo.roceCq.headAddr = ReinterpretAs<uint64_t>(CqPiMem_.ptr());
+    context->contextInfo.roceCq.tailAddr = ReinterpretAs<uint64_t>(CqCiMem_.ptr());
     // PCIe模式(DEFAULT): 仅使用硬DB; UBNIC模式(INDEP_UB): 仅使用软DB
     if (dmaMode_ == QBUF_DMA_MODE_DEFAULT) {
         context->contextInfo.roceCq.cqn = ndaCqInfo_.resv[0]; // 云脉网卡NDA直驱，协商ndaCqInfo_.resv[0]字段为CQN
-        context->contextInfo.roceCq.dbHwVa = reinterpret_cast<uint64_t>(ndaCqInfo_.cqInfo.dbHwVa.iovBase);
+        context->contextInfo.roceCq.dbHwVa = ReinterpretAs<uint64_t>(ndaCqInfo_.cqInfo.dbHwVa.iovBase);
     } else {
         context->contextInfo.roceCq.cqn = DEFAULT_CQN;
-        context->contextInfo.roceCq.dbSwVa = reinterpret_cast<uint64_t>(ndaCqInfo_.cqInfo.dbrCiVa.iovBase);
+        context->contextInfo.roceCq.dbSwVa = ReinterpretAs<uint64_t>(ndaCqInfo_.cqInfo.dbrCiVa.iovBase);
     }
 
     HCCL_INFO(
@@ -427,10 +428,10 @@ std::vector<char> DevRdmaConnectionV2::GetSqUniqueId() const
     binaryStream << ndaQpInfo_.sqInfo.qBuf.base;
     binaryStream << ndaQpInfo_.sqInfo.qBuf.entrySize;
     binaryStream << ndaQpInfo_.sqInfo.qBuf.entryCnt;
-    binaryStream << reinterpret_cast<uint64_t>(SqPiMem_.ptr());
-    binaryStream << reinterpret_cast<uint64_t>(SqCiMem_.ptr());
-    binaryStream << reinterpret_cast<uint64_t>(ndaQpInfo_.sqInfo.dbHwVa.iovBase);
-    binaryStream << reinterpret_cast<uint64_t>(ndaQpInfo_.sqInfo.dbrPiVa.iovBase);
+    binaryStream << ReinterpretAs<uint64_t>(SqPiMem_.ptr());
+    binaryStream << ReinterpretAs<uint64_t>(SqCiMem_.ptr());
+    binaryStream << ReinterpretAs<uint64_t>(ndaQpInfo_.sqInfo.dbHwVa.iovBase);
+    binaryStream << ReinterpretAs<uint64_t>(ndaQpInfo_.sqInfo.dbrPiVa.iovBase);
     binaryStream << static_cast<uint8_t>(qpInfo_.serviceLevel);
     binaryStream << dbVendorSpecified;
 
@@ -452,9 +453,9 @@ std::vector<char> DevRdmaConnectionV2::GetCqUniqueId() const
     binaryStream << ndaCqInfo_.cqInfo.qBuf.base;
     binaryStream << ndaCqInfo_.cqInfo.qBuf.entrySize;
     binaryStream << ndaCqInfo_.cqInfo.qBuf.entryCnt;
-    binaryStream << reinterpret_cast<uint64_t>(CqPiMem_.ptr());
-    binaryStream << reinterpret_cast<uint64_t>(CqCiMem_.ptr());
-    binaryStream << reinterpret_cast<uint64_t>(ndaCqInfo_.cqInfo.dbrCiVa.iovBase);
+    binaryStream << ReinterpretAs<uint64_t>(CqPiMem_.ptr());
+    binaryStream << ReinterpretAs<uint64_t>(CqCiMem_.ptr());
+    binaryStream << ReinterpretAs<uint64_t>(ndaCqInfo_.cqInfo.dbrCiVa.iovBase);
     binaryStream << static_cast<uint64_t>(0); // CQ DbVendorSpecified placeholder
 
     std::vector<char> result;

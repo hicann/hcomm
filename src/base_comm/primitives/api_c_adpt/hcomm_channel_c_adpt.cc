@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include "cast_utils.h"
 #include <cstring>
 #include <chrono>
 #include <vector>
@@ -128,7 +129,7 @@ void RollbackPluginChannels(ChannelHandle* channels, uint32_t count)
             continue;
         auto* ch = CHANNEL_FROM_HANDLE(channels[i]);
         if (ch != nullptr) {
-            HcclResult ret = ChannelProcess::RemovePluginChannelFromMap(reinterpret_cast<ChannelHandle>(ch));
+            HcclResult ret = ChannelProcess::RemovePluginChannelFromMap(ReinterpretAs<ChannelHandle>(ch));
             if (ret != HCCL_SUCCESS) {
                 HCCL_WARNING(
                     "[%s] plugin channel not found in map during rollback, handle[0x%llx], ret[%d].", __func__,
@@ -177,7 +178,7 @@ HcommResult CreateOnePluginChannel(
 
     auto holder = std::make_shared<hcomm::PluginChannelHolder>(entry);
     holder->SetNicChannelCtx(filledOps, pluginCtx);
-    ChannelHandle handle = reinterpret_cast<ChannelHandle>(holder.get());
+    ChannelHandle handle = ReinterpretAs<ChannelHandle>(holder.get());
 
     ret = static_cast<HcommResult>(ChannelProcess::InsertPluginChannelToMap(handle, std::move(holder)));
     CHK_PRT_RET(
@@ -311,8 +312,8 @@ HcommResult ProcessHcommChannelDescs(const HcommChannelDesc& channelDesc, HcommC
                                                                                         channelDesc.header.size)
                               - sizeof(CommAbiHeader);
     CHK_SAFETY_FUNC_RET(memcpy_s(
-        reinterpret_cast<uint8_t*>(&channelDescFinal) + sizeof(CommAbiHeader), copySize,
-        reinterpret_cast<const uint8_t*>(&channelDesc) + sizeof(CommAbiHeader), copySize));
+        ReinterpretAs<uint8_t*>(&channelDescFinal) + sizeof(CommAbiHeader), copySize,
+        ReinterpretAs<const uint8_t*>(&channelDesc) + sizeof(CommAbiHeader), copySize));
     ApplyHcommChannelDescV1Fields(channelDesc, channelDescFinal);
     if (channelDesc.header.version > HCOMM_CHANNEL_VERSION) {
         HCCL_RUN_WARNING(
@@ -340,7 +341,7 @@ HcommResult ProcessHcommChannelDescs(const HcommChannelDesc& channelDesc, HcommC
     } else {
         channelDescFinal.channelName = channelDesc.channelName;
         if (channelDescFinal.channelName != nullptr
-            && reinterpret_cast<uintptr_t>(channelDescFinal.channelName) == static_cast<uintptr_t>(-1)) {
+            && ReinterpretAs<uintptr_t>(channelDescFinal.channelName) == static_cast<uintptr_t>(-1)) {
             channelDescFinal.channelName = nullptr;
         }
     }
@@ -589,7 +590,7 @@ HcommResult HcommChannelDestroy(const ChannelHandle* channels, uint32_t channelN
     if (IS_PLUGIN_HANDLE(channels[0])) {
         for (uint32_t idx = 0; idx < channelNum; ++idx) {
             auto* ch = CHANNEL_FROM_HANDLE(channels[idx]);
-            HcclResult ret = ChannelProcess::RemovePluginChannelFromMap(reinterpret_cast<ChannelHandle>(ch));
+            HcclResult ret = ChannelProcess::RemovePluginChannelFromMap(ReinterpretAs<ChannelHandle>(ch));
             if (ret != HCCL_SUCCESS) {
                 HCCL_WARNING(
                     "[%s] plugin channel not found in map during destroy, handle[0x%llx], ret[%d].", __func__,

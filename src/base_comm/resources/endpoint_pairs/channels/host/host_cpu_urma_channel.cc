@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include "cast_utils.h"
 #include "host_cpu_urma_channel.h"
 #include "endpoint.h"
 #include "../../sockets/socket_mgr.h"
@@ -56,7 +57,7 @@ HcclResult HostCpuUrmaChannel::ParseInputParam()
         std::shared_ptr<Hccl::LocalUbRmaBuffer>* memHandles = nullptr;
         uint32_t memHandleNum = 0;
         CHK_RET(static_cast<HcclResult>(
-            HcommMemGetAllMemHandles(endpointHandle_, reinterpret_cast<void**>(&memHandles), &memHandleNum)));
+            HcommMemGetAllMemHandles(endpointHandle_, ReinterpretAs<void**>(&memHandles), &memHandleNum)));
         HCCL_INFO("[HostCpuUrmaChannel][%s] Got memHandleNum[%u].", __func__, memHandleNum);
         for (uint32_t i = 0; i < memHandleNum; ++i) {
             std::shared_ptr<Hccl::LocalUbRmaBuffer>& localUbRmaBuffer = memHandles[i];
@@ -83,7 +84,7 @@ HcclResult HostCpuUrmaChannel::StartListen()
     uint16_t port = channelDesc_.port;
     HCCL_INFO(
         "[HostCpuUrmaChannel::%s] Start. EndpointHandle[0x%llx], port[%u]", __func__,
-        reinterpret_cast<uint64_t>(endpointHandle_), port);
+        ReinterpretAs<uint64_t>(endpointHandle_), port);
     if (port == 0) {
         port = DEFAULT_LISTENING_PORT;
         HCCL_INFO("[HostCpuUrmaChannel::%s] channelDesc port is 0, use default port [%u]", __func__, port);
@@ -242,7 +243,7 @@ HcclResult HostCpuUrmaChannel::GetLocSeg(const void* addr, const size_t size, u6
     for (auto& it : commonRes_.bufferVec) {
         CHK_PTR_NULL(it);
         Hccl::Buffer iterBuf(it->GetAddr(), it->GetSize());
-        if (iterBuf.Contains(reinterpret_cast<uintptr_t>(addr), size)) {
+        if (iterBuf.Contains(ReinterpretAs<uintptr_t>(addr), size)) {
             auto localUbRmaBuffer = dynamic_cast<Hccl::LocalUbRmaBuffer*>(it);
             CHK_PTR_NULL(localUbRmaBuffer);
             *seg = localUbRmaBuffer->GetTargetSeg();
@@ -298,7 +299,7 @@ HcclResult HostCpuUrmaChannel::UrmaPostJettySendWr(urma_opcode_t opcode, void* d
     urmaWriteWr.flag.bs.fence = (fenceFlag_ == true ? 1 : 0);
     urmaWriteWr.flag.bs.complete_enable = 0;
     urmaWriteWr.flag.bs.inline_flag = 0;
-    urmaWriteWr.tjetty = reinterpret_cast<urma_target_jetty_t*>(connections_[0]->GetTJettyVa());
+    urmaWriteWr.tjetty = ReinterpretAs<urma_target_jetty_t*>(connections_[0]->GetTJettyVa());
     urmaWriteWr.user_ctx = 0; // 跟ibvs中的wr_id对应
     urmaWriteWr.next = nullptr;
 
@@ -318,19 +319,19 @@ HcclResult HostCpuUrmaChannel::UrmaPostJettySendWr(urma_opcode_t opcode, void* d
         // 源地址 数据长度 tseg
         urma_sge_t srclist = {};
         urmaWriteWr.rw.src.sge = &srclist;
-        urmaWriteWr.rw.src.sge->addr = reinterpret_cast<uint64_t>(static_cast<char*>(const_cast<void*>(src)) + offset);
+        urmaWriteWr.rw.src.sge->addr = ReinterpretAs<uint64_t>(static_cast<char*>(const_cast<void*>(src)) + offset);
         urmaWriteWr.rw.src.sge->len = chunkLen;
-        urmaWriteWr.rw.src.sge->tseg = (opcode == URMA_OPC_WRITE) ? reinterpret_cast<urma_target_seg_t*>(localSeg) :
-                                                                    reinterpret_cast<urma_target_seg_t*>(remoteSeg);
+        urmaWriteWr.rw.src.sge->tseg = (opcode == URMA_OPC_WRITE) ? ReinterpretAs<urma_target_seg_t*>(localSeg) :
+                                                                    ReinterpretAs<urma_target_seg_t*>(remoteSeg);
         urmaWriteWr.rw.src.num_sge = 1;
 
         // 目的地址 数据长度 tseg
         urma_sge_t dstlist = {};
         urmaWriteWr.rw.dst.sge = &dstlist;
-        urmaWriteWr.rw.dst.sge->addr = reinterpret_cast<uint64_t>(static_cast<const char*>(dst) + offset); // 远端地址
+        urmaWriteWr.rw.dst.sge->addr = ReinterpretAs<uint64_t>(static_cast<const char*>(dst) + offset); // 远端地址
         urmaWriteWr.rw.dst.sge->len = chunkLen;
-        urmaWriteWr.rw.dst.sge->tseg = (opcode == URMA_OPC_WRITE) ? reinterpret_cast<urma_target_seg_t*>(remoteSeg) :
-                                                                    reinterpret_cast<urma_target_seg_t*>(localSeg);
+        urmaWriteWr.rw.dst.sge->tseg = (opcode == URMA_OPC_WRITE) ? ReinterpretAs<urma_target_seg_t*>(remoteSeg) :
+                                                                    ReinterpretAs<urma_target_seg_t*>(localSeg);
         urmaWriteWr.rw.dst.num_sge = 1;
 
         // 只有最后一个wr上报cqe
@@ -338,8 +339,8 @@ HcclResult HostCpuUrmaChannel::UrmaPostJettySendWr(urma_opcode_t opcode, void* d
             urmaWriteWr.flag.bs.complete_enable = 1;
             urmaWriteWr.flag.bs.place_order = STRONG_ORDER; // 最后一个wr设置为strong order
         }
-        CHK_RET(HrtUrmaPostJettySendWr(
-            reinterpret_cast<urma_jetty_t*>(connections_[0]->GetJettyVa()), &urmaWriteWr, &badWr));
+        CHK_RET(
+            HrtUrmaPostJettySendWr(ReinterpretAs<urma_jetty_t*>(connections_[0]->GetJettyVa()), &urmaWriteWr, &badWr));
         offset += chunkLen;
     }
     fenceFlag_ = false;
@@ -374,7 +375,7 @@ HcclResult HostCpuUrmaChannel::WaitForWqeCompletion()
         * 1000ULL); // 乘1000转为毫秒
     auto startTime = std::chrono::steady_clock::now();
     while (true) {
-        auto actualNum = HrtUrmaPollJfc(reinterpret_cast<urma_jfc_t*>(connections_[0]->GetCqVa()), wqeNum_, wc.data());
+        auto actualNum = HrtUrmaPollJfc(ReinterpretAs<urma_jfc_t*>(connections_[0]->GetCqVa()), wqeNum_, wc.data());
         if (actualNum < 0) {
             HCCL_ERROR("[HostCpuUrmaChannel::%s] urma_poll_jfc failed. actualNum=%d", __func__, actualNum);
             return HCCL_E_NETWORK;

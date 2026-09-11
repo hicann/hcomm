@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include "cast_utils.h"
 #include "aiv_urma_transport.h"
 
 #include <chrono>
@@ -170,9 +171,9 @@ void AivUrmaTransport::GetSqContext()
         sqContext.contextInfo.ubJfs.wqeSize = WQE_SIZE;
         conn->SetSqContextInfo(sqContext);
         sqContext.contextInfo.ubJfs.headAddr
-            = reinterpret_cast<uint64_t>(sqPiMem_.ptr()) + static_cast<uint64_t>(i) * QUEUE_INDEX_MEM_UNIT_SIZE;
+            = ReinterpretAs<uint64_t>(sqPiMem_.ptr()) + static_cast<uint64_t>(i) * QUEUE_INDEX_MEM_UNIT_SIZE;
         sqContext.contextInfo.ubJfs.tailAddr
-            = reinterpret_cast<uint64_t>(sqCiMem_.ptr()) + static_cast<uint64_t>(i) * QUEUE_INDEX_MEM_UNIT_SIZE;
+            = ReinterpretAs<uint64_t>(sqCiMem_.ptr()) + static_cast<uint64_t>(i) * QUEUE_INDEX_MEM_UNIT_SIZE;
         sqContextVec_[i] = sqContext;
     }
 }
@@ -196,9 +197,9 @@ void AivUrmaTransport::GetCqContext()
         cqContext.type = CQ_CONTEXT_TYPE_UB_JFC;
         conn->SetCqContextInfo(cqContext);
         cqContext.contextInfo.ubJfc.headAddr
-            = reinterpret_cast<uint64_t>(cqPiMem_.ptr()) + static_cast<uint64_t>(i) * QUEUE_INDEX_MEM_UNIT_SIZE;
+            = ReinterpretAs<uint64_t>(cqPiMem_.ptr()) + static_cast<uint64_t>(i) * QUEUE_INDEX_MEM_UNIT_SIZE;
         cqContext.contextInfo.ubJfc.tailAddr
-            = reinterpret_cast<uint64_t>(cqCiMem_.ptr()) + static_cast<uint64_t>(i) * QUEUE_INDEX_MEM_UNIT_SIZE;
+            = ReinterpretAs<uint64_t>(cqCiMem_.ptr()) + static_cast<uint64_t>(i) * QUEUE_INDEX_MEM_UNIT_SIZE;
         cqContextVec_[i] = cqContext;
     }
 }
@@ -244,7 +245,7 @@ void AivUrmaTransport::ResolveLocalBufferTokens()
         localBufferTokens_[i].tokenValue = localBuffer->GetTokenValue();
 
         aclrtPtrAttributes attributes{};
-        aclError ret = aclrtPointerGetAttributes(reinterpret_cast<const void*>(localBuffer->GetAddr()), &attributes);
+        aclError ret = aclrtPointerGetAttributes(ReinterpretAs<const void*>(localBuffer->GetAddr()), &attributes);
         if (ret != ACL_SUCCESS) {
             HCCL_WARNING(
                 "[AivUrmaTransport::%s] get buffer attributes failed, use registered token, addr[0x%llx], ret[%d]",
@@ -446,7 +447,7 @@ void AivUrmaTransport::RecvExchangeData()
 {
     recvData_.clear();
     recvData_.resize(exchangeDataSize_);
-    socket_->RecvAsync(reinterpret_cast<u8*>(recvData_.data()), recvData_.size());
+    socket_->RecvAsync(ReinterpretAs<u8*>(recvData_.data()), recvData_.size());
 
     HCCL_INFO("recv data %s, size=%llu", GetLinkDescInfo().c_str(), recvData_.size());
 }
@@ -546,7 +547,7 @@ void AivUrmaTransport::RecvFinish()
 {
     recvFinishMsg_.resize(FINISH_MSG_SIZE);
     HCCL_INFO("start recv Finish Msg %s [%s]", GetLinkDescInfo().c_str(), FINISH_MSG);
-    socket_->RecvAsync(reinterpret_cast<u8*>(recvFinishMsg_.data()), FINISH_MSG_SIZE);
+    socket_->RecvAsync(ReinterpretAs<u8*>(recvFinishMsg_.data()), FINISH_MSG_SIZE);
     HCCL_INFO("end recv Finish Msg %s [%s]", GetLinkDescInfo().c_str(), FINISH_MSG);
 }
 
@@ -622,7 +623,7 @@ HcclResult AivUrmaTransport::UpdateMemInfo(HcommMemHandle* memHandles, uint32_t 
     // 1. 新增 buffer 转换并追加到本端 bufferVec
     std::vector<Hccl::LocalRmaBuffer*> newBufs;
     for (uint32_t i = 0; i < memHandleNum; ++i) {
-        auto localRmaBuffer = reinterpret_cast<Hccl::LocalRmaBuffer*>(memHandles[i]);
+        auto localRmaBuffer = ReinterpretAs<Hccl::LocalRmaBuffer*>(memHandles[i]);
         CHK_PTR_NULL(localRmaBuffer);
         auto buf = localRmaBuffer->GetBuf();
         CHK_PTR_NULL(buf);
@@ -643,7 +644,7 @@ HcclResult AivUrmaTransport::UpdateMemInfo(HcommMemHandle* memHandles, uint32_t 
 
     recvData_.clear();
     recvData_.resize(exchangeDataSize_);
-    socket_->RecvAsync(reinterpret_cast<u8*>(recvData_.data()), recvData_.size());
+    socket_->RecvAsync(ReinterpretAs<u8*>(recvData_.data()), recvData_.size());
     CHK_RET(CheckSocketStatus("RecvData"));
 
     // 3. 解析对端全量 buffer 数据（RmtBufferVecUnpackProc 对已存在的 pos 幂等跳过）

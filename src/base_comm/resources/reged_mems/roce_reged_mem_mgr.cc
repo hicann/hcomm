@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include "cast_utils.h"
 #include "endpoint_pair.h"
 #include "log.h"
 #include "roce_reged_mem_mgr.h"
@@ -50,8 +51,8 @@ HcclResult RoceRegedMemMgr::GetMemAllocAddrRange(const HcommMem& mem, MemKey& al
         return HCCL_E_MEMORY;
     }
 
-    const uintptr_t base = reinterpret_cast<uintptr_t>(basePtr);
-    const uintptr_t userStart = reinterpret_cast<uintptr_t>(mem.addr);
+    const uintptr_t base = ReinterpretAs<uintptr_t>(basePtr);
+    const uintptr_t userStart = ReinterpretAs<uintptr_t>(mem.addr);
     const uintptr_t userEnd = userStart + static_cast<uintptr_t>(mem.size);
     const uintptr_t baseEnd = base + static_cast<uintptr_t>(rangeSize);
     if (userStart < base || userEnd < userStart || userEnd > baseEnd) {
@@ -64,7 +65,7 @@ HcclResult RoceRegedMemMgr::GetMemAllocAddrRange(const HcommMem& mem, MemKey& al
     allocKey = MemKey(base, static_cast<uint64_t>(rangeSize));
     HCCL_INFO(
         "[RoceRegedMemMgr][GetMemAllocAddrRange] user {%p, %llu} -> alloc {%p, %llu}", mem.addr, mem.size,
-        reinterpret_cast<void*>(allocKey.Addr()), allocKey.Size());
+        ReinterpretAs<void*>(allocKey.Addr()), allocKey.Size());
     return HCCL_SUCCESS;
 }
 
@@ -151,7 +152,7 @@ RoceRegedMemMgr::AcquireAllocMr(const MemKey& allocKey, HcclMemType memType, con
     slot.ref++;
     HCCL_INFO(
         "[RoceRegedMemMgr][AcquireAllocMr] this[%p] alloc {%p, %llu} allocRef[%llu] createdMr[%d]", this,
-        reinterpret_cast<void*>(allocKey.Addr()), allocKey.Size(), slot.ref, static_cast<int>(createdMr));
+        ReinterpretAs<void*>(allocKey.Addr()), allocKey.Size(), slot.ref, static_cast<int>(createdMr));
     return HCCL_SUCCESS;
 }
 
@@ -161,13 +162,13 @@ HcclResult RoceRegedMemMgr::ReleaseAllocMrRef(const MemKey& allocKey, uint64_t& 
     if (allocIt == allocToMrMap_.end() || allocIt->second.ref == 0) {
         HCCL_ERROR(
             "[RoceRegedMemMgr][ReleaseAllocMrRef] this[%p] alloc MR not found, key {%p, %llu}", this,
-            reinterpret_cast<void*>(allocKey.Addr()), allocKey.Size());
+            ReinterpretAs<void*>(allocKey.Addr()), allocKey.Size());
         return HCCL_E_NOT_FOUND;
     }
     allocRefAfter = --(allocIt->second.ref);
     HCCL_INFO(
         "[RoceRegedMemMgr][ReleaseAllocMrRef] this[%p] alloc {%p, %llu} allocRefAfter[%llu]", this,
-        reinterpret_cast<void*>(allocKey.Addr()), allocKey.Size(), allocRefAfter);
+        ReinterpretAs<void*>(allocKey.Addr()), allocKey.Size(), allocRefAfter);
     if (allocRefAfter == 0) {
         allocIt->second.mr.reset();
         allocToMrMap_.erase(allocIt);
@@ -183,7 +184,7 @@ HcclResult RoceRegedMemMgr::PublishMemHandle(
     if (allocIt == allocToMrMap_.end() || allocIt->second.mr == nullptr) {
         HCCL_ERROR(
             "[RoceRegedMemMgr][PublishMemHandle] alloc MR missing, key {%p, %llu}",
-            reinterpret_cast<void*>(allocKey.Addr()), allocKey.Size());
+            ReinterpretAs<void*>(allocKey.Addr()), allocKey.Size());
         return HCCL_E_INTERNAL;
     }
     AllocMrEntry& slot = allocIt->second;
@@ -196,7 +197,7 @@ HcclResult RoceRegedMemMgr::PublishMemHandle(
         std::shared_ptr<Hccl::Buffer> userBuf;
         EXCEPTION_CATCH(
             (userBuf = std::make_shared<Hccl::Buffer>(
-                 reinterpret_cast<uintptr_t>(mem.addr), mem.size, static_cast<HcclMemType>(mem.type), memTag)),
+                 ReinterpretAs<uintptr_t>(mem.addr), mem.size, static_cast<HcclMemType>(mem.type), memTag)),
             return HCCL_E_PTR);
         EXCEPTION_CATCH(
             (rmaBuffer = std::make_shared<Hccl::LocalRdmaRmaBuffer>(
@@ -233,7 +234,7 @@ HcclResult RoceRegedMemMgr::UnpublishMemHandle(Hccl::LocalRdmaRmaBuffer* buffer)
 HcclResult RoceRegedMemMgr::RegisterByMemAllocAddrRange(
     const HcommMem& mem, const char* memTag, void** memHandle, const MemKey& allocKey)
 {
-    const MemKey userKey(reinterpret_cast<uintptr_t>(mem.addr), mem.size);
+    const MemKey userKey(ReinterpretAs<uintptr_t>(mem.addr), mem.size);
 
     bool createdMr = false;
     CHK_RET(AcquireAllocMr(allocKey, static_cast<HcclMemType>(mem.type), memTag, createdMr));
@@ -249,7 +250,7 @@ HcclResult RoceRegedMemMgr::RegisterByMemAllocAddrRange(
     HCCL_INFO(
         "[RoceRegedMemMgr][Register] this[%p] path[MemAlloc] handle[%p] user {%p, %llu} alloc {%p, %llu} "
         "allocRef[%llu] isAlias[%d]",
-        this, *memHandle, mem.addr, mem.size, reinterpret_cast<void*>(allocKey.Addr()), allocKey.Size(), allocRef,
+        this, *memHandle, mem.addr, mem.size, ReinterpretAs<void*>(allocKey.Addr()), allocKey.Size(), allocRef,
         static_cast<int>(static_cast<Hccl::LocalRdmaRmaBuffer*>(*memHandle)->IsAlias()));
     return HCCL_SUCCESS;
 }
@@ -268,7 +269,7 @@ HcclResult RoceRegedMemMgr::UnregisterByMemAllocAddrRange(Hccl::LocalRdmaRmaBuff
     HCCL_INFO(
         "[RoceRegedMemMgr][Unregister] this[%p] path[MemAlloc] handle[%p] user {%p, %llu} alloc {%p, %llu} "
         "allocRefAfter[%llu]",
-        this, buffer, reinterpret_cast<void*>(userKey.Addr()), userKey.Size(), reinterpret_cast<void*>(allocKey.Addr()),
+        this, buffer, ReinterpretAs<void*>(userKey.Addr()), userKey.Size(), ReinterpretAs<void*>(allocKey.Addr()),
         allocKey.Size(), allocRefAfter);
     return HCCL_SUCCESS;
 }
@@ -375,7 +376,7 @@ HcclResult RoceRegedMemMgr::MemoryImport(const void* memDesc, uint32_t descLen, 
         return HCCL_E_AGAIN;
     }
 
-    outMem->addr = reinterpret_cast<void*>(remoteRdmaRmaBuffer->GetAddr());
+    outMem->addr = ReinterpretAs<void*>(remoteRdmaRmaBuffer->GetAddr());
     outMem->size = remoteRdmaRmaBuffer->GetSize();
     return HCCL_SUCCESS;
 }

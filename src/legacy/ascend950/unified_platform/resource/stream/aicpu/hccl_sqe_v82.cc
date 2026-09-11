@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include "cast_utils.h"
 #include "hccl_sqe_v82.h"
 #include "exception_util.h"
 #include "not_support_exception.h"
@@ -45,7 +46,7 @@ void HcclUBDmaDBSqe::Config(u16 streamId, u16 taskId, u16 jettyid, u8 funcId, u1
         jettyid, funcId, dieId, piValue);
 }
 
-u64 HcclUBDmaDBSqe::GetSqe() { return reinterpret_cast<u64>(sqe.get()); }
+u64 HcclUBDmaDBSqe::GetSqe() { return ReinterpretAs<u64>(sqe.get()); }
 
 HcclUBNotifyWaitSqe::HcclUBNotifyWaitSqe()
 {
@@ -76,7 +77,7 @@ void HcclUBNotifyWaitSqe::Config(u16 streamId, u16 taskId, u64 notifyId)
     HCCL_INFO("[SQE]HcclUBNotifyWaitSqe streamId=%u, taskId=%u, notifyId=%llu", streamId, taskId, notifyId);
 }
 
-u64 HcclUBNotifyWaitSqe::GetSqe() { return reinterpret_cast<u64>(sqe.get()); }
+u64 HcclUBNotifyWaitSqe::GetSqe() { return ReinterpretAs<u64>(sqe.get()); }
 
 HcclUBNotifyRecordSqe::HcclUBNotifyRecordSqe()
 {
@@ -105,7 +106,7 @@ void HcclUBNotifyRecordSqe::Config(u16 streamId, u16 taskId, u64 notifyId)
     HCCL_INFO("[SQE]HcclUBNotifyRecordSqe streamId=%u, taskId=%u, notifyId=%llu", streamId, taskId, notifyId);
 }
 
-u64 HcclUBNotifyRecordSqe::GetSqe() { return reinterpret_cast<u64>(sqe.get()); }
+u64 HcclUBNotifyRecordSqe::GetSqe() { return ReinterpretAs<u64>(sqe.get()); }
 
 HcclUBCntNotifyNto1RecordSqe::HcclUBCntNotifyNto1RecordSqe()
 {
@@ -130,7 +131,7 @@ void HcclUBCntNotifyNto1RecordSqe::Config(u16 streamId, u16 taskId, u64 notifyId
         notifyId, cntValue);
 }
 
-u64 HcclUBCntNotifyNto1RecordSqe::GetSqe() { return reinterpret_cast<u64>(sqe.get()); }
+u64 HcclUBCntNotifyNto1RecordSqe::GetSqe() { return ReinterpretAs<u64>(sqe.get()); }
 
 HcclUBCntNotify1toNWaitSqe::HcclUBCntNotify1toNWaitSqe()
 {
@@ -155,7 +156,7 @@ void HcclUBCntNotify1toNWaitSqe::Config(u16 streamId, u16 taskId, u64 notifyId, 
         notifyId, cntValue);
 }
 
-u64 HcclUBCntNotify1toNWaitSqe::GetSqe() { return reinterpret_cast<u64>(sqe.get()); }
+u64 HcclUBCntNotify1toNWaitSqe::GetSqe() { return ReinterpretAs<u64>(sqe.get()); }
 
 HcclUBCntNotifyNto1WaitSqe::HcclUBCntNotifyNto1WaitSqe()
 {
@@ -180,7 +181,7 @@ void HcclUBCntNotifyNto1WaitSqe::Config(u16 streamId, u16 taskId, u64 notifyId, 
         notifyId, cntValue);
 }
 
-u64 HcclUBCntNotifyNto1WaitSqe::GetSqe() { return reinterpret_cast<u64>(sqe.get()); }
+u64 HcclUBCntNotifyNto1WaitSqe::GetSqe() { return ReinterpretAs<u64>(sqe.get()); }
 
 HcclUBCntNotify1toNRecordSqe::HcclUBCntNotify1toNRecordSqe()
 {
@@ -205,7 +206,7 @@ void HcclUBCntNotify1toNRecordSqe::Config(u16 streamId, u16 taskId, u64 notifyId
         notifyId, cntValue);
 }
 
-u64 HcclUBCntNotify1toNRecordSqe::GetSqe() { return reinterpret_cast<u64>(sqe.get()); }
+u64 HcclUBCntNotify1toNRecordSqe::GetSqe() { return ReinterpretAs<u64>(sqe.get()); }
 
 HcclUBMemcpySqe::HcclUBMemcpySqe()
 {
@@ -283,7 +284,7 @@ void HcclUBMemcpySqe::Config(
         sqe->u.strideMode0.dstAddrHigh);
 }
 
-u64 HcclUBMemcpySqe::GetSqe() { return reinterpret_cast<u64>(sqe.get()); }
+u64 HcclUBMemcpySqe::GetSqe() { return ReinterpretAs<u64>(sqe.get()); }
 
 // change name: convert
 u8 HcclUBMemcpySqe::ConvertToMemcpyDataType(u8 copyDataType) const

@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include "cast_utils.h"
 #include "orion_adapter_hccp.h"
 #include <chrono>
 #include <unistd.h>
@@ -674,7 +675,7 @@ void HrtRaSocketBlockSend(const FdHandle fdHandle, const void* data, u32 sendSiz
     while (true) {
         // 底层ra_socket_send host网卡无限制，device网卡由于HDC通道限制的限制有大小限制(目前大小为64KB)
         ret = RaSocketSend(
-            fdHandle, reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(sendData) + totalSentSize),
+            fdHandle, ReinterpretAs<void*>(ReinterpretAs<uintptr_t>(sendData) + totalSentSize),
             sendSize - totalSentSize, &sentSize);
         HCCL_INFO("ra socket send, data[%p], size[%u] send size[%u]", sendData, sendSize, totalSentSize);
         if (ret == 0) {
@@ -819,8 +820,7 @@ void HrtRaSocketBlockRecv(const FdHandle fdHandle, void* data, u32 size)
             MACRO_THROW(NetworkApiException, errMsg);
         }
         rtRet = RaSocketRecv(
-            fdHandle, reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(data) + getedLen), size - getedLen,
-            &recvSize);
+            fdHandle, ReinterpretAs<void*>(ReinterpretAs<uintptr_t>(data) + getedLen), size - getedLen, &recvSize);
         if ((rtRet == 0) && (recvSize > 0)) { // 接收完成，也有可能要多次接收
             getedLen += recvSize;
             if (getedLen > size) {
@@ -1566,14 +1566,14 @@ std::pair<TokenIdHandle, uint32_t> RaUbAllocTokenIdHandle(RdmaHandle handle)
         MACRO_THROW(NetworkApiException, msg);
     }
     HCCL_INFO("[RaUbAllocTokenIdHandle] tokenIdHandle[%p], rdmaHandle[%p]", tokenIdHandle, handle);
-    return {reinterpret_cast<TokenIdHandle>(tokenIdHandle), out.tokenId >> URMA_TOKEN_ID_RIGHT_SHIFT};
+    return {ReinterpretAs<TokenIdHandle>(tokenIdHandle), out.tokenId >> URMA_TOKEN_ID_RIGHT_SHIFT};
 }
 
 void RaUbFreeTokenIdHandle(RdmaHandle handle, TokenIdHandle tokenIdHandle)
 {
     CHECK_NULLPTR(handle, "[RaUbFreeTokenIdHandle] handle is nullptr!");
     HCCL_INFO("[RaUbFreeTokenIdHandle] rdmaHandle[%p], tokenIdHandle[0x%llx].", handle, tokenIdHandle);
-    s32 ret = RaCtxTokenIdFree(handle, reinterpret_cast<void*>(tokenIdHandle));
+    s32 ret = RaCtxTokenIdFree(handle, ReinterpretAs<void*>(tokenIdHandle));
     if (ret != 0) {
         string msg = StringFormat(
             "%s failed, set=%d, rdmaHandle=%p, tokenIdHandle=0x%llx.", __func__, ret, handle, tokenIdHandle);
@@ -1610,7 +1610,7 @@ HrtRaUbLocalMemRegOutParam HrtRaUbLocalMemReg(RdmaHandle handle, const HrtRaUbLo
     info.in.ub.flags.bs.access = MEM_SEG_ACCESS_READ | MEM_SEG_ACCESS_WRITE | MEM_SEG_ACCESS_ATOMIC;
     info.in.ub.flags.bs.nonPin = in.nonPin;
     info.in.ub.tokenValue = in.tokenValue;
-    info.in.ub.tokenIdHandle = reinterpret_cast<void*>(in.tokenIdHandle);
+    info.in.ub.tokenIdHandle = ReinterpretAs<void*>(in.tokenIdHandle);
 
     void* lmemHandle = nullptr;
     s32 ret = RaCtxLmemRegister(handle, &info, &lmemHandle);
@@ -1627,7 +1627,7 @@ HrtRaUbLocalMemRegOutParam HrtRaUbLocalMemReg(RdmaHandle handle, const HrtRaUbLo
 
     HCCL_INFO("[HrtRaUbLocalMemReg]UbLocalMemReg key.size=%u", info.out.key.size);
     out.keySize = info.out.key.size;
-    out.handle = reinterpret_cast<LocMemHandle>(lmemHandle);
+    out.handle = ReinterpretAs<LocMemHandle>(lmemHandle);
     out.targetSegVa = info.out.ub.targetSegHandle;
     info.in.ub.tokenValue = 0;
     HCCL_INFO(
@@ -1640,7 +1640,7 @@ void HrtRaUbLocalMemUnreg(RdmaHandle rdmaHandle, LocMemHandle lmemHandle)
 {
     CHECK_NULLPTR(rdmaHandle, "[HrtRaUbLocalMemUnreg] rdmaHandle is nullptr!");
     HCCL_INFO("[HrtRaUbLocalMemUnreg] Input params: rdmaHandle=%p, lmemHandle=0x%llx", rdmaHandle, lmemHandle);
-    s32 ret = RaCtxLmemUnregister(rdmaHandle, reinterpret_cast<void*>(lmemHandle));
+    s32 ret = RaCtxLmemUnregister(rdmaHandle, ReinterpretAs<void*>(lmemHandle));
     if (ret != 0) {
         string msg = StringFormat("localMemUnreg failed, rdmaHandle=%p, lmemHandle=0x%llx", rdmaHandle, lmemHandle);
         MACRO_THROW(NetworkApiException, msg);
@@ -1675,7 +1675,7 @@ HrtRaUbRemMemImportedOutParam HrtRaUbRemoteMemImport(RdmaHandle handle, u8* key,
     }
 
     HrtRaUbRemMemImportedOutParam out;
-    out.handle = reinterpret_cast<LocMemHandle>(rmemHandle);
+    out.handle = ReinterpretAs<LocMemHandle>(rmemHandle);
     out.targetSegVa = info.out.ub.targetSegHandle;
     info.in.ub.tokenValue = 0;
     return out;
@@ -1684,7 +1684,7 @@ void HrtRaUbRemoteMemUnimport(RdmaHandle rdmaHandle, RemMemHandle rmemHandle)
 {
     CHECK_NULLPTR(rdmaHandle, "[HrtRaUbRemoteMemUnimport] rdmaHandle is nullptr!");
     HCCL_INFO("[HrtRaUbRemoteMemUnimport] Input params: rdmaHandle=%p, rmemHandle=0x%llx", rdmaHandle, rmemHandle);
-    s32 ret = RaCtxRmemUnimport(rdmaHandle, reinterpret_cast<void*>(rmemHandle));
+    s32 ret = RaCtxRmemUnimport(rdmaHandle, ReinterpretAs<void*>(rmemHandle));
     if (ret != 0) {
         string msg
             = StringFormat("ubRemoteMemUnimport failed, rdmaHandle=%p, rmemHandle=0x%llx", rdmaHandle, rmemHandle);
@@ -1728,14 +1728,14 @@ JfcHandle HrtRaUbCreateJfc(RdmaHandle handle, CqCreateInfo& cqInfo, HrtUbJfcMode
 
     cqInfo.va = info.out.va;
     HCCL_INFO("HrtRaUbCreateJfc va[%llu] mode[%u] jfcHandle[%p]", cqInfo.va, info.in.ub.mode, jfcHandle);
-    return reinterpret_cast<JfcHandle>(jfcHandle);
+    return ReinterpretAs<JfcHandle>(jfcHandle);
 }
 
 void HrtRaUbDestroyJfc(RdmaHandle handle, JfcHandle jfcHandle)
 {
     CHECK_NULLPTR(handle, "[HrtRaUbDestroyJfc] handle is nullptr!");
     HCCL_INFO("[HrtRaUbDestroyJfc] Input params: handle=%p, jfcHandle=0x%llx", handle, jfcHandle);
-    s32 ret = RaCtxCqDestroy(handle, reinterpret_cast<void*>(jfcHandle));
+    s32 ret = RaCtxCqDestroy(handle, ReinterpretAs<void*>(jfcHandle));
     if (ret != 0) {
         string msg = StringFormat("ubCqDestroy failed, rdmaHandle=%p, jfcHandle=0x%llx", handle, jfcHandle);
         MACRO_THROW(NetworkApiException, msg);
@@ -1773,7 +1773,7 @@ JfcHandle HrtRaUbCreateJfcUserCtl(RdmaHandle handle, CqCreateInfo& cqInfo)
     cqInfo.cqDepth = CQ_DEPTH;
     cqInfo.swdbAddr = info.out.swdbAddr;
 
-    return reinterpret_cast<JfcHandle>(jfcHandle);
+    return ReinterpretAs<JfcHandle>(jfcHandle);
 }
 
 const std::map<HrtTransportMode, TransportModeT> HRT_TRANSPORT_MODE_MAP
@@ -1793,16 +1793,16 @@ constexpr u32 RQ_DEPTH = 256;
 static struct QpCreateAttr GetQpCreateAttr(const HrtRaUbCreateJettyParam& in)
 {
     struct QpCreateAttr attr {};
-    attr.scqHandle = reinterpret_cast<void*>(in.sjfcHandle);
-    attr.rcqHandle = reinterpret_cast<void*>(in.rjfcHandle);
-    attr.srqHandle = reinterpret_cast<void*>(in.sjfcHandle);
+    attr.scqHandle = ReinterpretAs<void*>(in.sjfcHandle);
+    attr.rcqHandle = ReinterpretAs<void*>(in.rjfcHandle);
+    attr.srqHandle = ReinterpretAs<void*>(in.sjfcHandle);
     attr.rqDepth = RQ_DEPTH;
     attr.sqDepth = in.sqDepth;
     attr.transportMode = HRT_TRANSPORT_MODE_MAP.at(in.transMode);
     attr.ub.mode = HRT_JETTY_MODE_MAP.at(in.jettyMode);
 
     attr.ub.tokenValue = in.tokenValue;
-    attr.ub.tokenIdHandle = reinterpret_cast<void*>(in.tokenIdHandle);
+    attr.ub.tokenIdHandle = ReinterpretAs<void*>(in.tokenIdHandle);
     attr.ub.flag.value = 0;
     /* errTime配置值：0-31
         0-7代表芯片配置值b00:512ms
@@ -1862,7 +1862,7 @@ HrtRaUbJettyCreatedOutParam HrtRaUbCreateJetty(RdmaHandle handle, const HrtRaUbC
     PLF_CONFIG_INFO(PLF_RES, "Create Qp para: qpn[%u]", info.ub.id);
 
     HrtRaUbJettyCreatedOutParam out;
-    out.handle = reinterpret_cast<JettyHandle>(qpHandle);
+    out.handle = ReinterpretAs<JettyHandle>(qpHandle);
     out.id = info.ub.id;
     out.uasid = info.ub.uasid;
     out.jettyVa = info.va;
@@ -1886,10 +1886,10 @@ void HrtRaUbDestroyJetty(JettyHandle jettyHandle)
 {
     HCCL_INFO("[HrtRaUbDestroyJetty] Input params: jettyHandle=0x%llx", jettyHandle);
     if (GetPlfDebugConfigValue() & PLF_RES) {
-        u32 qpn = HrtGetJettyQpNum(reinterpret_cast<void*>(jettyHandle));
+        u32 qpn = HrtGetJettyQpNum(ReinterpretAs<void*>(jettyHandle));
         PLF_CONFIG_INFO(PLF_RES, "Destroy Qp para: qpn[%u]%s", qpn, (qpn == HRT_INVALID_QPN) ? " (invalid)" : "");
     }
-    s32 ret = RaCtxQpDestroy(reinterpret_cast<void*>(jettyHandle));
+    s32 ret = RaCtxQpDestroy(ReinterpretAs<void*>(jettyHandle));
     if (ret != 0) {
         string msg = StringFormat("ubDestroyJetty failed, jettyHandle=0x%llx", jettyHandle);
         MACRO_THROW(NetworkApiException, msg);
@@ -1943,7 +1943,7 @@ static HrtRaUbJettyImportedOutParam ImportJetty(
     }
 
     HrtRaUbJettyImportedOutParam out;
-    out.handle = reinterpret_cast<TargetJettyHandle>(remQpHandle);
+    out.handle = ReinterpretAs<TargetJettyHandle>(remQpHandle);
     out.targetJettyVa = info.out.ub.tjettyHandle;
     out.tpn = info.out.ub.tpn;
 
@@ -1995,7 +1995,7 @@ void HrtRaUbUnimportJetty(RdmaHandle handle, TargetJettyHandle targetJettyHandle
 {
     CHECK_NULLPTR(handle, "[HrtRaUbUnimportJetty] handle is nullptr!");
     HCCL_INFO("[HrtRaUbUnimportJetty] Input params: handle=%p, targetJettyHandle=0x%llx", handle, targetJettyHandle);
-    s32 ret = RaCtxQpUnimport(reinterpret_cast<void*>(handle), reinterpret_cast<void*>(targetJettyHandle));
+    s32 ret = RaCtxQpUnimport(ReinterpretAs<void*>(handle), ReinterpretAs<void*>(targetJettyHandle));
     if (ret != 0) {
         string msg
             = StringFormat("ubCqDestroy failed, rdmaHandle=%p, targetJettyHandle=0x%llx", handle, targetJettyHandle);
@@ -2008,7 +2008,7 @@ void HrtRaUbJettyBind(JettyHandle jettyHandle, TargetJettyHandle targetJettyHand
     HCCL_INFO(
         "[HrtRaUbJettyBind] Input params: jettyHandle=0x%llx, targetJettyHandle=0x%llx", jettyHandle,
         targetJettyHandle);
-    s32 ret = RaCtxQpBind(reinterpret_cast<void*>(jettyHandle), reinterpret_cast<void*>(targetJettyHandle));
+    s32 ret = RaCtxQpBind(ReinterpretAs<void*>(jettyHandle), ReinterpretAs<void*>(targetJettyHandle));
     if (ret != 0) {
         string msg = StringFormat(
             "ubJettyBind failed, jettyHandle=0x%llx, targetJettyHandle=0x%llx", jettyHandle, targetJettyHandle);
@@ -2019,7 +2019,7 @@ void HrtRaUbJettyBind(JettyHandle jettyHandle, TargetJettyHandle targetJettyHand
 void HrtRaUbJettyUnbind(JettyHandle jettyHandle)
 {
     HCCL_INFO("[HrtRaUbJettyUnbind] Input params: jettyHandle=0x%llx", jettyHandle);
-    s32 ret = RaCtxQpUnbind(reinterpret_cast<void*>(jettyHandle));
+    s32 ret = RaCtxQpUnbind(ReinterpretAs<void*>(jettyHandle));
     if (ret != 0) {
         string msg = StringFormat("ubJettyUnbind failed, jettyHandle=0x%llx", jettyHandle);
         MACRO_THROW(NetworkApiException, msg);
@@ -2044,7 +2044,7 @@ static void ConstructWrSge(HrtRaUbSendWrReqParam& in, struct WrSgeList& sge)
 {
     sge.addr = in.localAddr;
     sge.len = in.size;
-    sge.lmemHandle = reinterpret_cast<void*>(in.lmemHandle);
+    sge.lmemHandle = ReinterpretAs<void*>(in.lmemHandle);
 }
 
 static void ConstructSendWrReq(HrtRaUbSendWrReqParam& in, struct WrSgeList& sge, struct SendWrData& sendWr)
@@ -2053,7 +2053,7 @@ static void ConstructSendWrReq(HrtRaUbSendWrReqParam& in, struct WrSgeList& sge,
     sendWr.numSge = 1;
     sendWr.sges = &sge;
     sendWr.remoteAddr = in.remoteAddr;
-    sendWr.rmemHandle = reinterpret_cast<void*>(in.rmemHandle);
+    sendWr.rmemHandle = ReinterpretAs<void*>(in.rmemHandle);
     sendWr.ub.userCtx = 0;
     sendWr.ub.opcode = HRT_UB_SEND_WR_OP_CODE_MAP.at(in.opcode);
     sendWr.ub.flags.value = 0;
@@ -2061,7 +2061,7 @@ static void ConstructSendWrReq(HrtRaUbSendWrReqParam& in, struct WrSgeList& sge,
     sendWr.ub.flags.bs.completeEnable = in.cqeEn;
     sendWr.ub.flags.bs.fence = 1;
     sendWr.ub.flags.bs.solicitedEnable = 1;
-    sendWr.ub.remQpHandle = reinterpret_cast<void*>(in.handle);
+    sendWr.ub.remQpHandle = ReinterpretAs<void*>(in.handle);
     sendWr.ub.flags.bs.inlineFlag = in.inlineFlag;
     if (sendWr.ub.flags.bs.inlineFlag) {
         sendWr.inlineData = in.inlineData;
@@ -2075,7 +2075,7 @@ static void ConstructSendWrReq(HrtRaUbSendWrReqParam& in, struct WrSgeList& sge,
     if (sendWr.ub.opcode == RaUbOpcode::RA_UB_OPC_WRITE_NOTIFY) {
         sendWr.ub.notifyInfo.notifyData = in.notifyData;
         sendWr.ub.notifyInfo.notifyAddr = in.notifyAddr;
-        sendWr.ub.notifyInfo.notifyHandle = reinterpret_cast<void*>(in.notifyHandle);
+        sendWr.ub.notifyInfo.notifyHandle = ReinterpretAs<void*>(in.notifyHandle);
     }
 }
 
@@ -2097,7 +2097,7 @@ HrtRaUbSendWrRespParam HrtRaUbPostSend(JettyHandle jettyHandle, HrtRaUbSendWrReq
     SendWrResp sendWrResp{};
 
     u32 compNum = 0;
-    s32 ret = RaBatchSendWr(reinterpret_cast<void*>(jettyHandle), &sendWr, &sendWrResp, 1, &compNum);
+    s32 ret = RaBatchSendWr(ReinterpretAs<void*>(jettyHandle), &sendWr, &sendWrResp, 1, &compNum);
     if (ret != 0) {
         string msg = StringFormat("UbJettySendWr failed, jettyHandle=0x%llx,", jettyHandle);
         MACRO_THROW(NetworkApiException, msg);
@@ -2168,7 +2168,7 @@ void HrtRaUbPostNops(JettyHandle jettyHandle, JettyHandle remoteJettyHandle, con
 
     SendWrResp sendWrRespList[numNop] = {};
     u32 compNum = 0;
-    s32 ret = RaBatchSendWr(reinterpret_cast<void*>(jettyHandle), sendWrList, sendWrRespList, numNop, &compNum);
+    s32 ret = RaBatchSendWr(ReinterpretAs<void*>(jettyHandle), sendWrList, sendWrRespList, numNop, &compNum);
     if (ret != 0) {
         string msg = StringFormat("UbJettySendWr failed, jettyHandle=0x%llx,", jettyHandle);
         MACRO_THROW(NetworkApiException, msg);
@@ -2178,7 +2178,7 @@ void HrtRaUbPostNops(JettyHandle jettyHandle, JettyHandle remoteJettyHandle, con
 void RaUbUpdateCi(JettyHandle jettyHandle, u32 ci)
 {
     HCCL_INFO("RaUbUpdateCi: jettyHandle=0x%llx, ci=%u", jettyHandle, ci);
-    s32 ret = RaCtxUpdateCi(reinterpret_cast<void*>(jettyHandle), ci);
+    s32 ret = RaCtxUpdateCi(ReinterpretAs<void*>(jettyHandle), ci);
     if (ret != 0) {
         string msg = StringFormat("UbUpdateCi failed, ret=%d, jettyHandle=0x%llx, ci=%u", ret, jettyHandle, ci);
         MACRO_THROW(NetworkApiException, msg);
@@ -2255,7 +2255,7 @@ ReqHandleResult HrtRaGetAsyncReqResult(RequestHandle& reqHandle)
     }
 
     int reqResult = 0;
-    s32 ret = RaGetAsyncReqResult(reinterpret_cast<void*>(reqHandle), &reqResult);
+    s32 ret = RaGetAsyncReqResult(ReinterpretAs<void*>(reqHandle), &reqResult);
     // 返回 OTHERS_EAGAIN 代表查询到异步任务未完成，需要重新查询，此时保留handle
     if (ret == OTHERS_EAGAIN) {
         return ReqHandleResult::NOT_COMPLETED;
@@ -2319,7 +2319,7 @@ RequestHandle RaSocketConnectOneAsync(RaSocketConnectParam& in)
                 HCCL_ERROR_CODE(HcclResult::HCCL_E_TCP_CONNECT), ret));
     }
 
-    return reinterpret_cast<RequestHandle>(raReqHandle);
+    return ReinterpretAs<RequestHandle>(raReqHandle);
 }
 
 RequestHandle RaSocketCloseOneAsync(RaSocketCloseParam& in)
@@ -2338,7 +2338,7 @@ RequestHandle RaSocketCloseOneAsync(RaSocketCloseParam& in)
                                      HCCL_ERROR_CODE(HcclResult::HCCL_E_TCP_CONNECT), ret));
     }
 
-    return reinterpret_cast<RequestHandle>(raReqHandle);
+    return ReinterpretAs<RequestHandle>(raReqHandle);
 }
 
 RequestHandle RaSocketListenOneStartAsync(SocketListenInfoT* listenInfo)
@@ -2359,7 +2359,7 @@ RequestHandle RaSocketListenOneStartAsync(SocketListenInfoT* listenInfo)
                                      HCCL_ERROR_CODE(HcclResult::HCCL_E_TCP_CONNECT), ret));
     }
 
-    return reinterpret_cast<RequestHandle>(raReqHandle);
+    return ReinterpretAs<RequestHandle>(raReqHandle);
 }
 
 RequestHandle RaSocketListenOneStopAsync(RaSocketListenParam& in)
@@ -2378,7 +2378,7 @@ RequestHandle RaSocketListenOneStopAsync(RaSocketListenParam& in)
                                      HCCL_ERROR_CODE(HcclResult::HCCL_E_TCP_CONNECT), ret));
     }
 
-    return reinterpret_cast<RequestHandle>(raReqHandle);
+    return ReinterpretAs<RequestHandle>(raReqHandle);
 }
 
 RaSocketFdHandleParam RaGetOneSocket(u32 role, RaSocketGetParam& param)
@@ -2443,7 +2443,7 @@ RequestHandle HrtRaSocketSendAsync(const FdHandle fdHandle, const void* data, u3
                                      __func__, ret, raReqHandle, fdHandle, data, size, sentSize));
     }
 
-    return reinterpret_cast<RequestHandle>(raReqHandle);
+    return ReinterpretAs<RequestHandle>(raReqHandle);
 }
 
 RequestHandle HrtRaSocketRecvAsync(const FdHandle fdHandle, void* data, u32 size, unsigned long long& recvSize)
@@ -2463,7 +2463,8 @@ RequestHandle HrtRaSocketRecvAsync(const FdHandle fdHandle, void* data, u32 size
                                      "raReqHandle[%p], fdHandle[%p], data[%p], size[%u], recvSize[%u].",
                                      __func__, ret, raReqHandle, fdHandle, data, size, recvSize));
     }
-    return reinterpret_cast<RequestHandle>(raReqHandle);
+
+    return ReinterpretAs<RequestHandle>(raReqHandle);
 }
 
 RequestHandle
@@ -2480,7 +2481,7 @@ RaUbLocalMemRegAsync(RdmaHandle handle, const HrtRaUbLocMemRegParam& in, vector<
     u64 newSize = in.size + offset + 4;
 
     out.resize(sizeof(struct MrRegInfoT));
-    struct MrRegInfoT* info = reinterpret_cast<struct MrRegInfoT*>(out.data());
+    struct MrRegInfoT* info = ReinterpretAs<struct MrRegInfoT*>(out.data());
     info->in.mem.addr = newAddr;
     info->in.mem.size = newSize;
 
@@ -2490,7 +2491,7 @@ RaUbLocalMemRegAsync(RdmaHandle handle, const HrtRaUbLocMemRegParam& in, vector<
     info->in.ub.flags.bs.access = MEM_SEG_ACCESS_READ | MEM_SEG_ACCESS_WRITE | MEM_SEG_ACCESS_ATOMIC;
     info->in.ub.flags.bs.nonPin = in.nonPin;
     info->in.ub.tokenValue = in.tokenValue;
-    info->in.ub.tokenIdHandle = reinterpret_cast<void*>(in.tokenIdHandle);
+    info->in.ub.tokenIdHandle = ReinterpretAs<void*>(in.tokenIdHandle);
 
     void* raReqHandle = nullptr;
     s32 ret = RaCtxLmemRegisterAsync(handle, info, &lmemHandle, &raReqHandle);
@@ -2504,8 +2505,8 @@ RaUbLocalMemRegAsync(RdmaHandle handle, const HrtRaUbLocMemRegParam& in, vector<
     info->in.ub.tokenValue = 0;
     HCCL_INFO(
         "[%s] RaCtxLmemRegisterAsync success, reqHandle[%llu] addr[0x%llx] size[0x%llx].", __func__,
-        reinterpret_cast<RequestHandle>(raReqHandle), in.addr, in.size);
-    return reinterpret_cast<RequestHandle>(raReqHandle);
+        ReinterpretAs<RequestHandle>(raReqHandle), in.addr, in.size);
+    return ReinterpretAs<RequestHandle>(raReqHandle);
 }
 
 RequestHandle RaUbLocalMemUnregAsync(RdmaHandle rdmaHandle, LocMemHandle lmemHandle)
@@ -2513,7 +2514,7 @@ RequestHandle RaUbLocalMemUnregAsync(RdmaHandle rdmaHandle, LocMemHandle lmemHan
     CHECK_NULLPTR(rdmaHandle, "[RaUbLocalMemUnregAsync] rdmaHandle is nullptr!");
     HCCL_INFO("[RaUbLocalMemUnregAsync] Input params: rdmaHandle=%p, lmemHandle=0x%llx", rdmaHandle, lmemHandle);
     void* raReqHandle = nullptr;
-    s32 ret = RaCtxLmemUnregisterAsync(rdmaHandle, reinterpret_cast<void*>(lmemHandle), &raReqHandle);
+    s32 ret = RaCtxLmemUnregisterAsync(rdmaHandle, ReinterpretAs<void*>(lmemHandle), &raReqHandle);
     if (ret != 0 || !raReqHandle) {
         MACRO_THROW(
             NetworkApiException, StringFormat(
@@ -2524,8 +2525,8 @@ RequestHandle RaUbLocalMemUnregAsync(RdmaHandle rdmaHandle, LocMemHandle lmemHan
 
     HCCL_INFO(
         "[%s] RaCtxLmemUnregisterAsync success, reqHandle[%llu] lmemHandle[0x%llx].", __func__,
-        reinterpret_cast<RequestHandle>(raReqHandle), lmemHandle);
-    return reinterpret_cast<RequestHandle>(raReqHandle);
+        ReinterpretAs<RequestHandle>(raReqHandle), lmemHandle);
+    return ReinterpretAs<RequestHandle>(raReqHandle);
 }
 
 RequestHandle RaUbCreateJettyAsync(
@@ -2535,8 +2536,7 @@ RequestHandle RaUbCreateJettyAsync(
 
     void* raReqHandle = nullptr;
     out.resize(sizeof(QpCreateInfo));
-    s32 ret
-        = RaCtxQpCreateAsync(handle, &attr, reinterpret_cast<QpCreateInfo*>(out.data()), &jettyHandle, &raReqHandle);
+    s32 ret = RaCtxQpCreateAsync(handle, &attr, ReinterpretAs<QpCreateInfo*>(out.data()), &jettyHandle, &raReqHandle);
     if (ret != 0 || !raReqHandle) {
         MACRO_THROW(
             NetworkApiException, StringFormat(
@@ -2547,8 +2547,8 @@ RequestHandle RaUbCreateJettyAsync(
     attr.ub.tokenValue = 0;
     PLF_CONFIG_INFO(
         PLF_RES, "Create RaCtxQpCreateAsync success, reqHandle[%llu] jettyHandle[%p].",
-        reinterpret_cast<RequestHandle>(raReqHandle), jettyHandle);
-    return reinterpret_cast<RequestHandle>(raReqHandle);
+        ReinterpretAs<RequestHandle>(raReqHandle), jettyHandle);
+    return ReinterpretAs<RequestHandle>(raReqHandle);
 }
 
 RequestHandle RaUbDestroyJettyAsync(void* jettyHandle)
@@ -2567,8 +2567,8 @@ RequestHandle RaUbDestroyJettyAsync(void* jettyHandle)
 
     PLF_CONFIG_INFO(
         PLF_RES, "Destroy RaCtxQpDestroyAsync success, reqHandle[%llu] jettyHandle[%p].",
-        reinterpret_cast<RequestHandle>(raReqHandle), jettyHandle);
-    return reinterpret_cast<RequestHandle>(raReqHandle);
+        ReinterpretAs<RequestHandle>(raReqHandle), jettyHandle);
+    return ReinterpretAs<RequestHandle>(raReqHandle);
 }
 
 inline HccpEid IpAddressToHccpEid(const IpAddress& ipAddr)
@@ -2609,7 +2609,7 @@ RaUbGetTpInfoAsync(const RdmaHandle rdmaHandle, const RaUbGetTpInfoParam& param,
 
     // 须至少容纳 TP_HANDLE_REQUEST_NUM 条 HccpTpInfo，避免 RS 按 num 写多条时越界破坏堆
     out.resize(static_cast<size_t>(TP_HANDLE_REQUEST_NUM) * sizeof(struct HccpTpInfo));
-    struct HccpTpInfo* info = reinterpret_cast<struct HccpTpInfo*>(out.data());
+    struct HccpTpInfo* info = ReinterpretAs<struct HccpTpInfo*>(out.data());
 
     void* raReqHandle = nullptr;
     num = TP_HANDLE_REQUEST_NUM; // 指定需要从管控面申请tp handle的数量, hccp 会返回实际个数
@@ -2625,8 +2625,8 @@ RaUbGetTpInfoAsync(const RdmaHandle rdmaHandle, const RaUbGetTpInfoParam& param,
 
     HCCL_INFO(
         "[%s] RaGetTpInfoListAsync success, reqHandle[%llu] locAddr[%s] rmtAddr[%s] tpNum[%u].", __func__,
-        reinterpret_cast<RequestHandle>(raReqHandle), locAddr.Describe().c_str(), rmtAddr.Describe().c_str(), num);
-    return reinterpret_cast<RequestHandle>(raReqHandle);
+        ReinterpretAs<RequestHandle>(raReqHandle), locAddr.Describe().c_str(), rmtAddr.Describe().c_str(), num);
+    return ReinterpretAs<RequestHandle>(raReqHandle);
 }
 
 void RaUbGetTpInfo(const RdmaHandle rdmaHandle, const RaUbGetTpInfoParam& param, vector<char_t>& out, uint32_t& num)
@@ -2648,7 +2648,7 @@ void RaUbGetTpInfo(const RdmaHandle rdmaHandle, const RaUbGetTpInfoParam& param,
     HCCL_INFO("RaUbGetTpInfo cfg.peerEid=%s", HccpEidDesc(cfg.peerEid).c_str());
 
     out.resize(static_cast<size_t>(TP_HANDLE_REQUEST_NUM) * sizeof(struct HccpTpInfo));
-    struct HccpTpInfo* info = reinterpret_cast<struct HccpTpInfo*>(out.data());
+    struct HccpTpInfo* info = ReinterpretAs<struct HccpTpInfo*>(out.data());
 
     num = TP_HANDLE_REQUEST_NUM; // 指定需要从管控面申请tp handle的数量, hccp 会返回实际个数
     s32 ret = RaCtxGetTpInfoList(rdmaHandle, &cfg, info, &num);
@@ -2678,7 +2678,7 @@ static RequestHandle ImportJettyAsync(
     }
 
     out.resize(sizeof(QpImportInfoT));
-    struct QpImportInfoT* info = reinterpret_cast<QpImportInfoT*>(out.data());
+    struct QpImportInfoT* info = ReinterpretAs<QpImportInfoT*>(out.data());
 
     s32 ret = memcpy_s(info->in.key.value, sizeof(info->in.key.value), in.key, in.keyLen);
     if (ret != 0) {
@@ -2717,8 +2717,8 @@ static RequestHandle ImportJettyAsync(
     info->in.ub.tokenValue = 0;
     HCCL_INFO(
         "[%s] RaCtxQpImportAsync success, reqHandle[%llu] remQpHandle[%p].", __func__,
-        reinterpret_cast<RequestHandle>(raReqHandle), remQpHandle);
-    return reinterpret_cast<RequestHandle>(raReqHandle);
+        ReinterpretAs<RequestHandle>(raReqHandle), remQpHandle);
+    return ReinterpretAs<RequestHandle>(raReqHandle);
 }
 
 RequestHandle RaUbImportJettyAsync(
@@ -2758,8 +2758,8 @@ RequestHandle RaUbUnimportJettyAsync(void* targetJettyHandle)
 
     HCCL_INFO(
         "[%s] RaCtxQpUnimportAsync success, reqHandle[%llu] targetJettyHandle[%p].", __func__,
-        reinterpret_cast<RequestHandle>(raReqHandle), targetJettyHandle);
-    return reinterpret_cast<RequestHandle>(raReqHandle);
+        ReinterpretAs<RequestHandle>(raReqHandle), targetJettyHandle);
+    return ReinterpretAs<RequestHandle>(raReqHandle);
 }
 
 HcclResult HrtRaWaitEventHandle(
@@ -2804,8 +2804,8 @@ HcclResult HrtRaCreateQpWithCq(
     HCCL_INFO(
         "[HrtRaCreateQpWithCq] Input params: rdmaHandle=%p, sqEvent=%d, rqEvent=%d, sendChannel=%p, recvChannel=%p",
         rdmaHandle, sqEvent, rqEvent, sendChannel, recvChannel);
-    struct ibv_comp_channel* sChannel = reinterpret_cast<struct ibv_comp_channel*>(sendChannel);
-    struct ibv_comp_channel* rChannel = reinterpret_cast<struct ibv_comp_channel*>(recvChannel);
+    struct ibv_comp_channel* sChannel = ReinterpretAs<struct ibv_comp_channel*>(sendChannel);
+    struct ibv_comp_channel* rChannel = ReinterpretAs<struct ibv_comp_channel*>(recvChannel);
 
     QpConfig config(MAX_WR_NUM, MAX_SEND_SGE_NUM, MAX_RECV_SGE_NUM, sqEvent, rqEvent);
     CqInfo cq(
@@ -2926,7 +2926,7 @@ HcclResult HrtRaNormalQpCreate(RdmaHandle rdmaHandle, QpInfo& qp)
     ibQpAttr.cap.max_send_sge = qp.attr.maxSendSge;
     ibQpAttr.cap.max_recv_wr = (qp.srq == nullptr ? qp.attr.maxWr : 0);
     ibQpAttr.cap.max_recv_sge = (qp.srq == nullptr ? qp.attr.maxRecvSge : 0);
-    s32 ret = RaNormalQpCreate(rdmaHandle, &ibQpAttr, &(qp.qpHandle), reinterpret_cast<void**>(&(qp.qp)));
+    s32 ret = RaNormalQpCreate(rdmaHandle, &ibQpAttr, &(qp.qpHandle), ReinterpretAs<void**>(&(qp.qp)));
     RPT_INPUT_ERR(
         ret == ROCE_ENOMEM_RET, "EI0011",
         std::vector<std::string>({"memory_size"}), // A3是当ROCE_ENOMEM_RET才上报EI0011,内存大小取决于qp深度配置
@@ -3073,7 +3073,7 @@ RaBatchQueryJettyStatus(const std::vector<JettyHandle>& jettyHandles, std::vecto
     std::vector<struct JettyAttr> raJettyAttrs(MAX_JETTY_QUERY_NUM);
     void* qp_handle[jettyHandles.size()];
     for (size_t i = 0; i < jettyHandles.size(); ++i) {
-        qp_handle[i] = reinterpret_cast<void*>(jettyHandles[i]);
+        qp_handle[i] = ReinterpretAs<void*>(jettyHandles[i]);
     }
     auto ret = RaCtxQpQueryBatch(qp_handle, raJettyAttrs.data(), &num);
     if (ret != 0) {
@@ -3125,7 +3125,7 @@ HcclResult HrtRaCtxQpDestoryBatch(
     std::vector<void*> qp_handle;
     failJettyHandles.clear();
     for (auto jettyHandle : jettyHandles) {
-        qp_handle.push_back(reinterpret_cast<void*>(jettyHandle));
+        qp_handle.push_back(ReinterpretAs<void*>(jettyHandle));
     }
     unsigned int delNum = min(qp_handle.size(), static_cast<size_t>(MAX_DELETE_JETTY_NUMS));
     std::vector<void*> del_qp_handle;
@@ -3146,7 +3146,7 @@ HcclResult HrtRaCtxQpDestoryBatch(
             return HCCL_E_INTERNAL;
         }
 
-        RequestHandle reqHandle = reinterpret_cast<RequestHandle>(raReqHandle);
+        RequestHandle reqHandle = ReinterpretAs<RequestHandle>(raReqHandle);
         auto startTime = std::chrono::steady_clock::now();
         constexpr uint32_t pollTimeoutMs = 10000; // 轮询超时时间10s
         auto waitPollTimeOutMs = std::chrono::milliseconds(pollTimeoutMs);
@@ -3178,7 +3178,7 @@ HcclResult HrtRaCtxQpDestoryBatch(
         } else if (del_qp_handle.size() == delNum) {
             qp_handle.erase(qp_handle.begin(), qp_handle.begin() + delNum);
         } else {
-            failJettyHandles.push_back(reinterpret_cast<JettyHandle>(del_qp_handle[delNum]));
+            failJettyHandles.push_back(ReinterpretAs<JettyHandle>(del_qp_handle[delNum]));
             qp_handle.erase(qp_handle.begin(), qp_handle.begin() + delNum + 1);
         }
         if (qp_handle.size() == 0) {
@@ -3228,7 +3228,7 @@ HcclResult HrtGetCcuMemInfo(
     send_msg.length = sizeof(CcuMemReq);
     send_msg.data = send_data.get();
 
-    auto req = reinterpret_cast<CcuMemReq*>(send_msg.data);
+    auto req = ReinterpretAs<CcuMemReq*>(send_msg.data);
     req->udieIdx = udieIdx;
     req->memTypeBitmap = memTypeBitmap;
 
@@ -3237,7 +3237,7 @@ HcclResult HrtGetCcuMemInfo(
     recv_msg.length = sizeof(ccu_mem_rsp);
     recv_msg.data = recv_data.get();
 
-    auto rsp = reinterpret_cast<ccu_mem_rsp*>(recv_msg.data);
+    auto rsp = ReinterpretAs<ccu_mem_rsp*>(recv_msg.data);
     rsp->die_id = 0;
     rsp->num = 0;
     std::fill(std::begin(rsp->list), std::end(rsp->list), ccu_mem_info{});
@@ -3296,7 +3296,7 @@ HcclResult HrtRaGetEidByIp(RdmaHandle handle, const vector<IpAddress>& ipV4AddrL
 
 HcclResult WaitRequestResult(void* raReqHandle, RequestHandle& reqHandle)
 {
-    reqHandle = reinterpret_cast<RequestHandle>(raReqHandle);
+    reqHandle = ReinterpretAs<RequestHandle>(raReqHandle);
     auto startTime = std::chrono::steady_clock::now();
     constexpr uint32_t pollTimeoutMs = 10000; // 轮询超时时间
     auto waitPollTimeOutMs = std::chrono::milliseconds(pollTimeoutMs);
@@ -3402,7 +3402,7 @@ HcclResult HrtRaStartGetTpAttrAsync(
             raReqHandle, tpHandle);
         return HCCL_E_NETWORK;
     }
-    reqHandle = reinterpret_cast<RequestHandle>(raReqHandle);
+    reqHandle = ReinterpretAs<RequestHandle>(raReqHandle);
     return HCCL_SUCCESS;
 }
 

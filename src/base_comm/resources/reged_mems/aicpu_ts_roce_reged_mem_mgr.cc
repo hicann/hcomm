@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include "cast_utils.h"
 #include "aicpu_ts_roce_reged_mem_mgr.h"
 #include <algorithm>
 #include <mutex>
@@ -103,7 +104,7 @@ HcclResult AicpuTsRoceRegedMemMgr::RegisterMemory(const HcommMem* mem, const cha
     std::lock_guard<std::mutex> phyLocalLock(*ctx->mu);
 
     hccl::RmaMemType memType = static_cast<hccl::RmaMemType>(mem->type);
-    hccl::BufferKey<uintptr_t, u64> tempKey(reinterpret_cast<uintptr_t>(mem->addr), static_cast<u64>(mem->size));
+    hccl::BufferKey<uintptr_t, u64> tempKey(ReinterpretAs<uintptr_t>(mem->addr), static_cast<u64>(mem->size));
     auto findPair = localRdmaRmaBufferMgr_->Find(tempKey);
 
     std::shared_ptr<hccl::LocalRdmaRmaBuffer> localRdmaRmaBuffer;
@@ -153,7 +154,7 @@ HcclResult AicpuTsRoceRegedMemMgr::UnregisterMemory(void* memHandle)
     // IsAlias() 直接区分父子buffer：
     //   - 父buffer (IsAlias()=false): 自己的key在tree中 → Del(ownKey)
     //   - 子buffer (IsAlias()=true):  自己的key不在tree中 → 通过GetKey找父key做Del
-    hccl::BufferKey<uintptr_t, u64> ownKey(reinterpret_cast<uintptr_t>(buffer->GetAddr()), buffer->GetSize());
+    hccl::BufferKey<uintptr_t, u64> ownKey(ReinterpretAs<uintptr_t>(buffer->GetAddr()), buffer->GetSize());
     hccl::LocalRdmaRmaBuffer* refBuffer = buffer;
     if (buffer->IsAlias()) {
         refBuffer = ResolveAliasParent(
@@ -170,7 +171,7 @@ HcclResult AicpuTsRoceRegedMemMgr::UnregisterMemory(void* memHandle)
         }
     }
 
-    hccl::BufferKey<uintptr_t, u64> tempKey(reinterpret_cast<uintptr_t>(refBuffer->GetAddr()), refBuffer->GetSize());
+    hccl::BufferKey<uintptr_t, u64> tempKey(ReinterpretAs<uintptr_t>(refBuffer->GetAddr()), refBuffer->GetSize());
 
     bool delOk = false;
     EXCEPTION_CATCH(delOk = localRdmaRmaBufferMgr_->Del(tempKey), return HCCL_E_NOT_FOUND);
@@ -296,7 +297,7 @@ HcclResult AicpuTsRoceRegedMemMgr::MemoryImport(const void* memDesc, uint32_t de
             remoteRdmaRmaBufferMgrs_.size());
     }
 
-    hccl::BufferKey<uintptr_t, u64> tempKey(reinterpret_cast<uintptr_t>(remoteBuf->GetAddr()), remoteBuf->GetSize());
+    hccl::BufferKey<uintptr_t, u64> tempKey(ReinterpretAs<uintptr_t>(remoteBuf->GetAddr()), remoteBuf->GetSize());
     auto resultPair = remoteRdmaRmaBufferMgrs_[endpointDesc]->Add(tempKey, remoteBuf);
     if (!resultPair.second) {
         HCCL_ERROR("[AicpuTsRoceRegedMemMgr][MemoryImport] memDesc already imported");
@@ -331,7 +332,7 @@ HcclResult AicpuTsRoceRegedMemMgr::MemoryUnimport(const void* memDesc, uint32_t 
     EXCEPTION_CATCH(probe = std::make_shared<hccl::RemoteRdmaRmaBuffer>(), return HCCL_E_PTR);
     CHK_RET(probe->Deserialize(rdmaBlob));
 
-    hccl::BufferKey<uintptr_t, u64> tempKey(reinterpret_cast<uintptr_t>(probe->GetAddr()), probe->GetSize());
+    hccl::BufferKey<uintptr_t, u64> tempKey(ReinterpretAs<uintptr_t>(probe->GetAddr()), probe->GetSize());
     bool delOk = false;
     EXCEPTION_CATCH(delOk = mgrIt->second->Del(tempKey), return HCCL_E_NOT_FOUND);
     if (!delOk) {
@@ -382,8 +383,8 @@ HcclResult AicpuTsRoceRegedMemMgr::GatherLocalMemDetails(std::vector<RoceMemDeta
         auto* rma = static_cast<hccl::RmaBuffer*>(buf.get());
         CHK_PTR_NULL(rma->GetDevAddr());
         RoceMemDetails r{};
-        r.addr = static_cast<u64>(reinterpret_cast<uintptr_t>(rma->GetAddr()));
-        r.devAddr = static_cast<u64>(reinterpret_cast<uintptr_t>(rma->GetDevAddr()));
+        r.addr = static_cast<u64>(ReinterpretAs<uintptr_t>(rma->GetAddr()));
+        r.devAddr = static_cast<u64>(ReinterpretAs<uintptr_t>(rma->GetDevAddr()));
         r.size = buf->GetSize();
         r.key = buf->GetKey();
         localOut.push_back(r);
@@ -404,7 +405,7 @@ HcclResult AicpuTsRoceRegedMemMgr::AppendLocalNotifyMemDetails(std::vector<RoceM
     CHK_RET(HrtRaGetNotifyMrInfo(static_cast<u32>(netCtx->GetPhyId()), rdmaHandle_, &mrInfo));
     CHK_PTR_NULL(mrInfo.addr);
     RoceMemDetails notifyMd{};
-    notifyMd.addr = static_cast<u64>(reinterpret_cast<uintptr_t>(mrInfo.addr));
+    notifyMd.addr = static_cast<u64>(ReinterpretAs<uintptr_t>(mrInfo.addr));
     notifyMd.devAddr = notifyMd.addr;
     notifyMd.size = static_cast<u64>(mrInfo.size);
     notifyMd.key = mrInfo.lkey;
@@ -433,8 +434,8 @@ void AicpuTsRoceRegedMemMgr::GatherRemoteMemDetails(std::vector<RoceMemDetails>&
                     return;
                 }
                 RoceMemDetails r{};
-                r.addr = static_cast<u64>(reinterpret_cast<uintptr_t>(rma->GetAddr()));
-                r.devAddr = static_cast<u64>(reinterpret_cast<uintptr_t>(rma->GetDevAddr()));
+                r.addr = static_cast<u64>(ReinterpretAs<uintptr_t>(rma->GetAddr()));
+                r.devAddr = static_cast<u64>(ReinterpretAs<uintptr_t>(rma->GetDevAddr()));
                 r.size = rb->GetSize();
                 r.key = rb->GetKey();
                 remoteOut.push_back(r);

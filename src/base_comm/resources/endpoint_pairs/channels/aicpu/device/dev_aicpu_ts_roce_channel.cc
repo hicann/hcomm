@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include "cast_utils.h"
 #include "dev_aicpu_ts_roce_channel.h"
 #include <securec.h>
 #include <chrono>
@@ -84,9 +85,9 @@ HcclResult FillIbverbsDataFromRes(const HcommRoceChannelRes* res, TransportDevic
     ibd.localRoceMemDetailsList = std::move(localMd);
     ibd.remoteRoceMemDetailsList = std::move(remoteMd);
     ibd.useMemDetailsMgr = true;
-    ibd.remoteNotifyValueAddr = reinterpret_cast<uint64_t>(res->remoteNotifyAddr);
+    ibd.remoteNotifyValueAddr = ReinterpretAs<uint64_t>(res->remoteNotifyAddr);
     ibd.remoteNotifyValueKey = res->remoteNotifyKey;
-    ibd.localDataNotifyAddr = reinterpret_cast<uint64_t>(res->localDataNotifyAddr);
+    ibd.localDataNotifyAddr = ReinterpretAs<uint64_t>(res->localDataNotifyAddr);
     ibd.localDataNotifyKey = res->localDataNotifyKey;
     ibd.notifySize = res->notifySize;
     HCCL_DEBUG(
@@ -211,7 +212,7 @@ HcclResult DevAicpuTsRoceChannel::Create(
     std::shared_ptr<Transport> link;
     CHK_RET(CreateAndInitTsRoceTransport(deviceInfo, dctxPtr, commId, dispatcher, std::move(ibd), link));
 
-    outHandle = reinterpret_cast<ChannelHandle>(link.get());
+    outHandle = ReinterpretAs<ChannelHandle>(link.get());
     RoceSlot slot;
     slot.ctx = dctxPtr;
     slot.link = std::move(link);
@@ -227,7 +228,7 @@ HcclResult DevAicpuTsRoceChannel::Create(
         "localMem[%u] remoteMem[%u] qpsPerConn[%u] qpNum[%u] chipId[%lld] commId[%s] handle[0x%llx]",
         deviceInfo.deviceLogicId, deviceInfo.devicePhyId, devId, static_cast<unsigned long long>(blobBytes),
         res->localMemCount, res->remoteMemCount, res->qpsPerConnection, qpInfoSize, static_cast<long long>(res->chipId),
-        commId, static_cast<unsigned long long>(reinterpret_cast<uintptr_t>(outHandle)));
+        commId, static_cast<unsigned long long>(ReinterpretAs<uintptr_t>(outHandle)));
     return HCCL_SUCCESS;
 }
 

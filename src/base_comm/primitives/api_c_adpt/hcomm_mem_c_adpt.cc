@@ -48,7 +48,7 @@ HcommMemReg(EndpointHandle endpointHandle, const char* memTag, const CommMem* me
     auto mgr = endpoint->GetRegedMemMgr();
     CHK_PTR_NULL(mgr);
     CHK_RET(RefreshEndpointContext(endpoint->GetEndpointDesc()));
-    return static_cast<HcclResult>(mgr->RegisterMemory(mem, memTag, reinterpret_cast<void**>(memHandle)));
+    return static_cast<HcclResult>(mgr->RegisterMemory(mem, memTag, static_cast<void**>(memHandle)));
 }
 
 HcommResult HcommMemUnreg(EndpointHandle endpointHandle, HcommMemHandle memHandle)

@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include "cast_utils.h"
 #include "hcomm_primitives.h"
 
 #include <cstring>
@@ -84,8 +85,8 @@ HcommResult HcommAicpuTsTaskCacheStart(const char* tag, void** addrs, uint64_t* 
     // Aicpu task cache容量未满
     if (AicpuTaskCacheManager::cacheEntryPtr != nullptr) {
         // 保存地址信息到cache entry
-        CHK_RET(AicpuTaskCacheManager::cacheEntryPtr->InitCacheEntry(
-            reinterpret_cast<const uint64_t*>(addrs), sizes, count));
+        CHK_RET(
+            AicpuTaskCacheManager::cacheEntryPtr->InitCacheEntry(ReinterpretAs<const uint64_t*>(addrs), sizes, count));
     }
 
     return HCCL_SUCCESS;
@@ -173,8 +174,8 @@ HcommResult HcommAicpuTsTaskCacheExecute(const char* tag, void** addrs, uint64_t
     CHK_PTR_NULL(AicpuTaskCacheManager::cacheEntryPtr);
 
     // 刷新并下发task
-    HcclResult ret = AicpuTaskCacheManager::cacheEntryPtr->RefreshAndLaunch(
-        reinterpret_cast<const uint64_t*>(addrs), sizes, count);
+    HcclResult ret
+        = AicpuTaskCacheManager::cacheEntryPtr->RefreshAndLaunch(ReinterpretAs<const uint64_t*>(addrs), sizes, count);
     if (ret != HCCL_SUCCESS) {
         HCCL_ERROR("[HcommAicpuTsTaskCacheExecute] RefreshAndLaunch error, ret[%d]", ret);
     }

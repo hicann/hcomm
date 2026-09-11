@@ -11,6 +11,7 @@
 #ifndef REGED_MEM_MGR_H
 #define REGED_MEM_MGR_H
 
+#include "cast_utils.h"
 #include <algorithm>
 #include <cstdint>
 #include <memory>
@@ -94,7 +95,7 @@ protected:
     static HcclResult AddBuffer(Mgr& mgr, const BufferPtr& buffer)
     {
         hccl::BufferKey<uintptr_t, u64> actualRegKey(
-            reinterpret_cast<uintptr_t>(buffer->GetAddr()), static_cast<uint64_t>(buffer->GetSize()));
+            ReinterpretAs<uintptr_t>(buffer->GetAddr()), static_cast<uint64_t>(buffer->GetSize()));
         EXCEPTION_CATCH((void)mgr->AddWithoutCheck(actualRegKey, buffer), return HCCL_E_INTERNAL);
         return HCCL_SUCCESS;
     }
@@ -154,13 +155,13 @@ protected:
     {
         CHK_RET(ValidateMemParams(mem, memHandle));
 
-        hccl::BufferKey<uintptr_t, u64> tempKey(reinterpret_cast<uintptr_t>(mem.addr), mem.size);
+        hccl::BufferKey<uintptr_t, u64> tempKey(ReinterpretAs<uintptr_t>(mem.addr), mem.size);
         auto findPair = mgr->Find(tempKey);
 
         std::shared_ptr<Hccl::Buffer> localBufferPtr = nullptr;
         EXCEPTION_CATCH(
             (localBufferPtr = std::make_shared<Hccl::Buffer>(
-                 reinterpret_cast<uintptr_t>(mem.addr), mem.size,
+                 ReinterpretAs<uintptr_t>(mem.addr), mem.size,
                  (mem.type == COMM_MEM_TYPE_HOST) ? HcclMemType::HCCL_MEM_TYPE_HOST : HcclMemType::HCCL_MEM_TYPE_DEVICE,
                  memTag)),
             return HCCL_E_PTR);

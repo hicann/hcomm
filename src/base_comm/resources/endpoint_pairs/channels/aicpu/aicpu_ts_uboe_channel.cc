@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include "cast_utils.h"
 #include "aicpu_ts_uboe_channel.h"
 #include "orion_adpt_utils.h"
 #include "hcomm_res_mgr.h"
@@ -114,7 +115,7 @@ void AicpuTsUboeChannel::SendEidData()
 void AicpuTsUboeChannel::RecvEidData()
 {
     recvEidData_.resize(sendEidData_.size());
-    socket_->RecvAsync(reinterpret_cast<u8*>(recvEidData_.data()), recvEidData_.size());
+    socket_->RecvAsync(ReinterpretAs<u8*>(recvEidData_.data()), recvEidData_.size());
     HCCL_INFO("[AicpuTsUboeChannel::%s] recv eid data, size=%llu", __func__, recvEidData_.size());
 }
 
@@ -139,7 +140,7 @@ void AicpuTsUboeChannel::RecvFinish()
 {
     recvFinishMsg_.resize(FINISH_MSG_SIZE);
     HCCL_INFO("start recv Finish Msg [%s]", FINISH_MSG);
-    socket_->RecvAsync(reinterpret_cast<u8*>(recvFinishMsg_.data()), FINISH_MSG_SIZE);
+    socket_->RecvAsync(ReinterpretAs<u8*>(recvFinishMsg_.data()), FINISH_MSG_SIZE);
     HCCL_INFO("end recv Finish Msg [%s]", FINISH_MSG);
 }
 
@@ -275,7 +276,7 @@ HcclResult AicpuTsUboeChannel::UpdateMemInfo(HcommMemHandle* memHandles, uint32_
     CHK_RET(CheckSocketStatus("SendDataSize"));
 
     u32 recvSize = 0;
-    socket_->RecvAsync(reinterpret_cast<u8*>(&recvSize), sizeof(recvSize));
+    socket_->RecvAsync(ReinterpretAs<u8*>(&recvSize), sizeof(recvSize));
     CHK_RET(CheckSocketStatus("RecvDataSize"));
     HCCL_INFO("[AicpuTsUboeChannel][%s] Recv size[%u] of data.", __func__, recvSize);
 
@@ -284,7 +285,7 @@ HcclResult AicpuTsUboeChannel::UpdateMemInfo(HcommMemHandle* memHandles, uint32_
     CHK_RET(CheckSocketStatus("SendExchangeData"));
 
     std::vector<char> localRecvData(recvSize);
-    socket_->RecvAsync(reinterpret_cast<u8*>(localRecvData.data()), localRecvData.size());
+    socket_->RecvAsync(ReinterpretAs<u8*>(localRecvData.data()), localRecvData.size());
     CHK_RET(CheckSocketStatus("RecvExchangeData"));
     HCCL_INFO("[AicpuTsUboeChannel][%s] Recv data success.", __func__);
 

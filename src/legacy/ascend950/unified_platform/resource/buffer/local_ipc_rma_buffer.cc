@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include "cast_utils.h"
 #include "local_ipc_rma_buffer_v2.h"
 
 #include "rma_buffer.h"
@@ -17,7 +18,7 @@ namespace Hccl {
 
 LocalIpcRmaBuffer::LocalIpcRmaBuffer(std::shared_ptr<Buffer> buf) : LocalRmaBuffer(buf, RmaType::IPC)
 {
-    HrtDevMemAlignWithPage(reinterpret_cast<void*>(buf->GetAddr()), buf->GetSize(), ipcPtr, ipcSize, ipcOffset);
+    HrtDevMemAlignWithPage(ReinterpretAs<void*>(buf->GetAddr()), buf->GetSize(), ipcPtr, ipcSize, ipcOffset);
     HrtIpcSetMemoryName(ipcPtr, name, ipcSize, RTS_IPC_MEM_NAME_LEN);
 }
 
@@ -45,7 +46,7 @@ string LocalIpcRmaBuffer::Describe() const
 {
     return StringFormat(
         "LocalIpcRmaBuffer[buf=%s, ipcPtr=0x%llx, ipcOffset=0x%llx, ipcSize=0x%llx, name=%s]", buf->Describe().c_str(),
-        reinterpret_cast<uintptr_t>(ipcPtr), ipcOffset, ipcSize, name);
+        ReinterpretAs<uintptr_t>(ipcPtr), ipcOffset, ipcSize, name);
 }
 
 std::unique_ptr<Serializable> LocalIpcRmaBuffer::GetExchangeDto()

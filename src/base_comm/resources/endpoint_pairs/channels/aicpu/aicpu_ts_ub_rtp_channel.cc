@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include "cast_utils.h"
 #include "aicpu_ts_ub_rtp_channel.h"
 #include "orion_adpt_utils.h"
 #include "hcomm_res_mgr.h"
@@ -100,7 +101,7 @@ void AicpuTsUbRtpChannel::RecvFinish()
 {
     recvFinishMsg_.resize(FINISH_MSG_SIZE);
     HCCL_INFO("start recv Finish Msg [%s]", UB_RTP_FINISH_MSG);
-    socket_->RecvAsync(reinterpret_cast<u8*>(recvFinishMsg_.data()), FINISH_MSG_SIZE);
+    socket_->RecvAsync(ReinterpretAs<u8*>(recvFinishMsg_.data()), FINISH_MSG_SIZE);
     HCCL_INFO("end recv Finish Msg [%s]", UB_RTP_FINISH_MSG);
 }
 

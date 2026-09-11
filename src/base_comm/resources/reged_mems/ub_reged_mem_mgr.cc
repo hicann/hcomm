@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include "cast_utils.h"
 #include "resources/endpoints/endpoint.h"
 #include "hccl_common.h"
 #include "ub_reged_mem_mgr.h"
@@ -171,7 +172,7 @@ HcclResult UbRegedMemMgr::MemoryImport(const void* memDesc, uint32_t descLen, Hc
         return HCCL_E_AGAIN;
     }
 
-    outMem->addr = reinterpret_cast<void*>(remoteUbRmaBuffer->GetAddr());
+    outMem->addr = ReinterpretAs<void*>(remoteUbRmaBuffer->GetAddr());
     outMem->size = remoteUbRmaBuffer->GetSize();
 
     return HCCL_SUCCESS;

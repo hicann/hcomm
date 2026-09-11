@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include "cast_utils.h"
 #include "exception_handle.h"
 #include "log.h"
 #include "thread.h"
@@ -64,7 +65,7 @@ ExceptionHandle::ReceiveCqeReport(uint32_t devId, Hccl::StreamLite* streamLite, 
     cqeQueryInput.sqId = streamLite->GetSqId();
     cqeQueryInput.cqId = streamLite->GetCqId();
     cqeQueryInput.type = static_cast<uint32_t>(DRV_LOGIC_TYPE);
-    cqeQueryInput.cqeAddr = reinterpret_cast<uint8_t*>(streamReport);
+    cqeQueryInput.cqeAddr = ReinterpretAs<uint8_t*>(streamReport);
 
     return CqReportRecv(cqeQueryInput, cqeException);
 }
@@ -140,7 +141,7 @@ HcclResult ExceptionHandle::FillExceptionInfo(
 {
     CHK_PTR_NULL(thread);
 
-    exceptionInfo.thread = reinterpret_cast<uint64_t>(thread);
+    exceptionInfo.thread = ReinterpretAs<uint64_t>(thread);
     exceptionInfo.channel = 0;
     exceptionInfo.taskId = taskId;
     exceptionInfo.retCode = SwitchCqeErrCodeToHcclErrCode(cqeException.errorCode & 0xFF);

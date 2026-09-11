@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include "cast_utils.h"
 #include <chrono>
 #include "ub_conn_lite.h"
 #include "log.h"
@@ -245,7 +246,7 @@ void UbConnLite::LaunchOneWqe(UdmaSqeWrite* sqe, UdmaSqOpcode opCode)
     pi = pi + 1;
 
     // 写wqe到va
-    u8* va = reinterpret_cast<u8*>(sqVa_ + sqOffset * SQE_SIZE_64);
+    u8* va = ReinterpretAs<u8*>(sqVa_ + sqOffset * SQE_SIZE_64);
     if (!dwqeCacheLocked_) {
         auto ret = memcpy_sp(va, SQE_SIZE_64, sqe, SQE_SIZE_64);
         if (UNLIKELY(ret != 0)) {
@@ -290,13 +291,13 @@ void UbConnLite::LaunchOneWqeWithNotify(UdmaSqeWriteWithNotify* sqe, u32 opCode)
     // pi维护用于传入DB Send用于Rtsq 敲door bell，要求u16数据结构并且自然增长
     pi = pi + PI_NUM_TWO;
 
-    u8* va = reinterpret_cast<u8*>(sqVa_ + sqOffset * SQE_SIZE_64);
+    u8* va = ReinterpretAs<u8*>(sqVa_ + sqOffset * SQE_SIZE_64);
     if (!dwqeCacheLocked_) {
         // 带notify的wqe是96字节, 需要占用两个wqebb, 实际占用128字节
         if (sqOffset == sqDepth_ - 1) {
             MemorySetAndCopy(va, SQE_SIZE_64, sqe);
-            va = reinterpret_cast<u8*>(sqVa_);
-            MemorySetAndCopy(va, SQE_SIZE_64, reinterpret_cast<u8*>(sqe) + SQE_SIZE_64);
+            va = ReinterpretAs<u8*>(sqVa_);
+            MemorySetAndCopy(va, SQE_SIZE_64, ReinterpretAs<u8*>(sqe) + SQE_SIZE_64);
         } else {
             MemorySetAndCopy(va, SQE_SIZE_128, sqe);
         }
@@ -580,7 +581,7 @@ void UbConnLite::FillBatchOneWqe(
     CustomizeSqeByOneSidedComm(&(sqe.comm), isLastWqe);
 
     HCCL_INFO("UbConnLite BatchWrite cp data to va %llu, pi %u", sqVa_, pi);
-    u8* va = reinterpret_cast<u8*>(sqVa_ + sqOffset * SQE_SIZE_64);
+    u8* va = ReinterpretAs<u8*>(sqVa_ + sqOffset * SQE_SIZE_64);
     if (dwqeCacheLocked_ == false) {
         auto ret = memcpy_sp(va, SQE_SIZE_64, &sqe, sizeof(UdmaSqeWrite));
         if (UNLIKELY(ret != 0)) {

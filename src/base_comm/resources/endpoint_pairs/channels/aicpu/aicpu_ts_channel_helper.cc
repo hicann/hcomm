@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include "cast_utils.h"
 #include "aicpu_ts_channel_helper.h"
 #include "channel_process.h"
 #include "channel.h"
@@ -25,7 +26,7 @@ HcclResult AicpuTsChannelHelper::TryFillCtxList(
     ChannelHandle* hostChannelHandles, uint32_t listNum, const hccl::DeviceMem& deviceChannelList, void*& outCtxList,
     bool& isCtxMode)
 {
-    auto* firstCh = reinterpret_cast<Channel*>(hostChannelHandles[0]);
+    auto* firstCh = ReinterpretAs<Channel*>(hostChannelHandles[0]);
     CHK_PTR_NULL(firstCh);
     auto* firstHelper = firstCh->GetAicpuTsHelper();
     CHK_PTR_NULL(firstHelper);
@@ -36,7 +37,7 @@ HcclResult AicpuTsChannelHelper::TryFillCtxList(
     }
     std::vector<void*> ctxVec(listNum);
     for (uint32_t i = 0; i < listNum; i++) {
-        auto* ch = reinterpret_cast<Channel*>(hostChannelHandles[i]);
+        auto* ch = ReinterpretAs<Channel*>(hostChannelHandles[i]);
         CHK_PTR_NULL(ch);
         auto* helper = ch->GetAicpuTsHelper();
         ctxVec[i] = helper ? helper->GetCtxPtr() : nullptr;
@@ -96,7 +97,7 @@ HcclResult AicpuTsChannelHelper::LaunchKernel(
         if (channel->IsDeviceEntityReady()) {
             continue;
         }
-        subHostHandles.push_back(reinterpret_cast<ChannelHandle>(ch));
+        subHostHandles.push_back(ReinterpretAs<ChannelHandle>(ch));
         subDescs.push_back(channelDescs[i]);
         subChannels.push_back(channel);
     }
@@ -160,7 +161,7 @@ HcclResult AicpuTsChannelHelper::PreAllocChannels(
         (channelNum == 0), HCCL_ERROR("[%s] Invalid channelNum, channelNum[%u]", __func__, channelNum), HCCL_E_PARA);
 
     for (uint32_t i = 0; i < channelNum; i++) {
-        auto* channel = reinterpret_cast<Channel*>(targetChannels[i]);
+        auto* channel = ReinterpretAs<Channel*>(targetChannels[i]);
         CHK_PTR_NULL(channel);
         auto* helper = channel->GetAicpuTsHelper();
         CHK_PTR_NULL(helper);

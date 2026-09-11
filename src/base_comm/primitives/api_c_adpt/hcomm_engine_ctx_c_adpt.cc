@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include "cast_utils.h"
 #include "hcomm_c_adpt.h"
 #include "hcomm_res_defs.h"
 #include "log.h"
@@ -59,10 +60,9 @@ HcommResult HcommEngineCtxCopy(CommEngine engine, void* dstCtx, const void* srcC
     if (engine == COMM_ENGINE_AICPU_TS || engine == COMM_ENGINE_AICPU || engine == COMM_ENGINE_AIV) {
         // 从Host内存拷贝到Device Context内存上
         CHK_RET(hrtMemSyncCopy(
-            reinterpret_cast<uint8_t*>(dstCtx), size, srcCtx, size,
-            HcclRtMemcpyKind::HCCL_RT_MEMCPY_KIND_HOST_TO_DEVICE));
+            ReinterpretAs<uint8_t*>(dstCtx), size, srcCtx, size, HcclRtMemcpyKind::HCCL_RT_MEMCPY_KIND_HOST_TO_DEVICE));
     } else if (engine == COMM_ENGINE_CPU || engine == COMM_ENGINE_CPU_TS || engine == COMM_ENGINE_CCU) {
-        CHK_SAFETY_FUNC_RET(memcpy_s(reinterpret_cast<uint8_t*>(dstCtx), size, srcCtx, size));
+        CHK_SAFETY_FUNC_RET(memcpy_s(ReinterpretAs<uint8_t*>(dstCtx), size, srcCtx, size));
     } else {
         HCCL_ERROR(
             "[%s] copy engine ctx failed, Unsupported engine[%s]", __func__,

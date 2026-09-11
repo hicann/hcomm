@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include "cast_utils.h"
 #include "rts_notify_v2.h"
 #include "log.h"
 #include "dev_capability.h"
@@ -42,7 +43,7 @@ u32 RtsNotify::GetId() const { return id; }
 
 u64 RtsNotify::GetOffset() const { return HrtNotifyGetOffset(handle); }
 
-u64 RtsNotify::GetHandleAddr() const { return reinterpret_cast<u64>(handle); }
+u64 RtsNotify::GetHandleAddr() const { return ReinterpretAs<u64>(handle); }
 
 u32 RtsNotify::GetSize() const { return DevCapability::GetInstance().GetNotifySize(); }
 

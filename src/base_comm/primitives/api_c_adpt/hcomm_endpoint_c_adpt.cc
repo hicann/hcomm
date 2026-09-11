@@ -170,7 +170,7 @@ HcommResult CreatePluginEndpointHolder(
 
     auto holder = std::make_unique<PluginEndpointHolder>(*endpoint, pluginEntry);
     holder->SetNicEndpointCtx(pluginHolderOps, pluginCtx);
-    const EndpointHandle handle = reinterpret_cast<EndpointHandle>(holder.get());
+    const EndpointHandle handle = static_cast<EndpointHandle>(holder.get());
     auto& epMgr = HcommResMgr::GetInstance().GetEndpointMgr();
     EXCEPTION_CATCH(epMgr.Add(handle, std::move(holder)), return HCCL_E_INTERNAL);
     *endpointHandle = handle;
@@ -197,7 +197,7 @@ HcclResult CreateBuiltinEndpoint(const EndpointDesc* endpoint, EndpointHandle* e
 
     // 内置 endpoint 不再调 SetNicEndpointCtx（内存操作经 GetRegedMemMgr() 路径）
 
-    const EndpointHandle handle = reinterpret_cast<EndpointHandle>(endpointPtr.get());
+    const EndpointHandle handle = static_cast<EndpointHandle>(endpointPtr.get());
     CHK_PTR_NULL(handle);
     auto& epMgr = HcommResMgr::GetInstance().GetEndpointMgr();
     EXCEPTION_CATCH(epMgr.Add(handle, std::move(endpointPtr)), return HCCL_E_INTERNAL);

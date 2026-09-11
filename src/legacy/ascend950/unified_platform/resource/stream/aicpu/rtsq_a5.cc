@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include "cast_utils.h"
 #include <chrono>
 #include <unordered_map>
 #include "rtsq_a5.h"
@@ -126,7 +127,7 @@ void RtsqA5::CheckLaunchTaskStatus(
 
 void RtsqA5::CopySqeBufToSq(u8* sqeBuf) const
 {
-    u8* sqCurrAddr = reinterpret_cast<u8*>(sqBaseAddr_) + sqTail_ * RTSQ_SQE_SIZE;
+    u8* sqCurrAddr = ReinterpretAs<u8*>(sqBaseAddr_) + sqTail_ * RTSQ_SQE_SIZE;
     if (sqTail_ >= sqHead_) {
         u32 depthLeft = sqDepth_ - sqTail_;
         if (pendingSqeCnt <= depthLeft) { // 没有回绕
@@ -151,7 +152,7 @@ void RtsqA5::CopySqeBufToSq(u8* sqeBuf) const
             }
             // 拷贝剩余sqe
             ret = memcpy_sp(
-                reinterpret_cast<u8*>(sqBaseAddr_), sqHead_ * RTSQ_SQE_SIZE, sqeBuf + depthLeft * RTSQ_SQE_SIZE,
+                ReinterpretAs<u8*>(sqBaseAddr_), sqHead_ * RTSQ_SQE_SIZE, sqeBuf + depthLeft * RTSQ_SQE_SIZE,
                 (pendingSqeCnt - depthLeft) * AC_SQE_SIZE);
             if (UNLIKELY(ret != 0)) {
                 THROW<InternalException>(
@@ -521,7 +522,7 @@ HcclResult RtsqA5::GetLastStreamIdAndTaskId(uint16_t& streamId, uint16_t& taskId
 {
     if (pendingSqeCnt > 0) {
         const u8* lastSqe = locBuf + (pendingSqeCnt - 1U) * RTSQ_SQE_SIZE;
-        auto* sqe = reinterpret_cast<const Rt91095StarsNotifySqe*>(lastSqe);
+        auto* sqe = ReinterpretAs<const Rt91095StarsNotifySqe*>(lastSqe);
         streamId = sqe->header.rtStreamId;
         taskId = sqe->header.taskId;
         HCCL_INFO(

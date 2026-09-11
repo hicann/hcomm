@@ -60,7 +60,7 @@ Endpoint::Endpoint(const EndpointDesc& endpointDesc) { endpointDesc_ = endpointD
 
 Endpoint::~Endpoint()
 {
-    ReleaseEndpointMonitor(reinterpret_cast<EndpointHandle>(this));
+    ReleaseEndpointMonitor(static_cast<EndpointHandle>(this));
     // RegedMemMgr 缓存释放（ReleaseCache）由各派生类析构自行处理（缓存成员移至派生类）；
     // JettyContext 由持有它的派生类 unique_ptr 自动析构：refCount 归 0 销毁 jetty。
     // 控制面资源（设备上下文/注册内存）由各子类析构处理，与数据面 jetty 资源解耦。

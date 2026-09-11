@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include "cast_utils.h"
 #include "aicpu_ts_uboe_ub_rtp_channel_helper.h"
 #include "endpoint.h"
 #include "../../sockets/socket_mgr.h"
@@ -64,7 +65,7 @@ HcclResult AicpuTsUboeUbRtpChannelHelper::ParseInputParam()
         std::shared_ptr<Hccl::LocalUbRmaBuffer>* memHandles = nullptr;
         uint32_t memHandleNum = 0;
         CHK_RET(static_cast<HcclResult>(
-            HcommMemGetAllMemHandles(endpointHandle_, reinterpret_cast<void**>(&memHandles), &memHandleNum)));
+            HcommMemGetAllMemHandles(endpointHandle_, ReinterpretAs<void**>(&memHandles), &memHandleNum)));
         HCCL_INFO("[AicpuTsUboeUbRtpChannelHelper][%s] Got memHandleNum[%u].", __func__, memHandleNum);
         for (uint32_t i = 0; i < memHandleNum; ++i) {
             std::shared_ptr<Hccl::LocalUbRmaBuffer>& localUbRmaBuffer = memHandles[i];
@@ -127,8 +128,8 @@ HcclResult AicpuTsUboeUbRtpChannelHelper::BuildDrainResource()
     EXCEPTION_CATCH(constMem = std::make_shared<Hccl::DevBuffer>(notifySize), return HCCL_E_PTR);
 
     Hccl::HrtMemcpy(
-        reinterpret_cast<void*>(constMem->GetAddr()), constMem->GetSize(), &NORMAL_NOTIFY_VAL,
-        sizeof(NORMAL_NOTIFY_VAL), Hccl::tagRtMemcpyKind::RT_MEMCPY_HOST_TO_DEVICE);
+        ReinterpretAs<void*>(constMem->GetAddr()), constMem->GetSize(), &NORMAL_NOTIFY_VAL, sizeof(NORMAL_NOTIFY_VAL),
+        Hccl::tagRtMemcpyKind::RT_MEMCPY_HOST_TO_DEVICE);
 
     EXCEPTION_CATCH(drainBuffer_ = std::make_unique<Hccl::LocalUbRmaBuffer>(constMem, rdmaHandle_), return HCCL_E_PTR);
     HCCL_INFO(
@@ -342,7 +343,7 @@ void AicpuTsUboeUbRtpChannelHelper::SendDataSize()
 void AicpuTsUboeUbRtpChannelHelper::RecvDataSize()
 {
     // 接收数据包尺寸
-    socket_->RecvAsync(reinterpret_cast<u8*>(&recvDataSize_), sizeof(recvDataSize_));
+    socket_->RecvAsync(ReinterpretAs<u8*>(&recvDataSize_), sizeof(recvDataSize_));
     HCCL_INFO("[AicpuTsUboeUbRtpChannelHelper::%s] Receive Data Size", __func__);
 }
 
@@ -355,7 +356,7 @@ void AicpuTsUboeUbRtpChannelHelper::SendExchangeData()
 void AicpuTsUboeUbRtpChannelHelper::RecvExchangeData()
 {
     recvData_.resize(recvDataSize_);
-    socket_->RecvAsync(reinterpret_cast<u8*>(recvData_.data()), recvData_.size());
+    socket_->RecvAsync(ReinterpretAs<u8*>(recvData_.data()), recvData_.size());
     HCCL_INFO("[AicpuTsUboeUbRtpChannelHelper::%s] recv data", __func__);
 }
 
@@ -607,7 +608,7 @@ std::vector<char> AicpuTsUboeUbRtpChannelHelper::GetUniqueIdV2()
     binaryStream << rmtNotifyUniqueIds;
 
     for (auto& it : commonRes_.bufferVec) {
-        locBufferVec_.emplace_back(reinterpret_cast<Hccl::LocalUbRmaBuffer*>(it));
+        locBufferVec_.emplace_back(ReinterpretAs<Hccl::LocalUbRmaBuffer*>(it));
     }
 
     auto locBufferUniqueIds = GetLocBufferUniqueIds(locBufferVec_, UboeRmtBufType::BUFFER);

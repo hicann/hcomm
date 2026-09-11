@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include "cast_utils.h"
 #include "channel_process.h"
 #include <cstdint>
 #include <map>
@@ -101,7 +102,7 @@ HcclResult ChannelProcess::CreateChannelsLoop(
 
         tmpPtr->SetNicChannelCtx(&g_BuiltinChannelOps, tmpPtr.get());
 
-        ChannelHandle handle = reinterpret_cast<ChannelHandle>(tmpPtr.get());
+        ChannelHandle handle = ReinterpretAs<ChannelHandle>(tmpPtr.get());
         outHandles[i] = handle;
         HCCL_INFO("%s deviceId[%d], handle[0x%llx], ptr[%p]", __func__, deviceId, handle, tmpPtr.get());
 
@@ -574,7 +575,7 @@ LaunchKernelDeviceParam(const T& channelParam, aclrtBinHandle binHandle, const s
     CHK_RET(hrtMemSyncCopy(
         addr.ptr(), sizeof(T), &channelParam, sizeof(T), HcclRtMemcpyKind::HCCL_RT_MEMCPY_KIND_HOST_TO_DEVICE));
 
-    uint64_t context = reinterpret_cast<uint64_t>(addr.ptr());
+    uint64_t context = ReinterpretAs<uint64_t>(addr.ptr());
 
     uint32_t envTimeout = 0;
     DevType devType;
@@ -606,16 +607,16 @@ LaunchKernel(const HcclChannelUrmaRes& channelParam, aclrtBinHandle binHandle, c
 static HcclResult PackAicpuTsChannelH2DRes(ChannelHandle hostChannelHandle, std::vector<char>& hostPackBuffer)
 {
     CHK_PRT_RET(hostChannelHandle == 0, HCCL_ERROR("[%s] hostChannelHandle is null.", __func__), HCCL_E_PARA);
-    Channel* channel = reinterpret_cast<Channel*>(hostChannelHandle);
+    Channel* channel = ReinterpretAs<Channel*>(hostChannelHandle);
     switch (channel->GetChannelKind()) {
         case HcommChannelKind::AICPU_TS_URMA:
-            return reinterpret_cast<AicpuTsUrmaChannel*>(hostChannelHandle)->H2DResPack(hostPackBuffer);
+            return ReinterpretAs<AicpuTsUrmaChannel*>(hostChannelHandle)->H2DResPack(hostPackBuffer);
         case HcommChannelKind::AICPU_TS_UBOE:
-            return reinterpret_cast<AicpuTsUboeChannel*>(hostChannelHandle)->H2DResPack(hostPackBuffer);
+            return ReinterpretAs<AicpuTsUboeChannel*>(hostChannelHandle)->H2DResPack(hostPackBuffer);
         case HcommChannelKind::AICPU_TS_UB_RTP:
-            return reinterpret_cast<AicpuTsUbRtpChannel*>(hostChannelHandle)->H2DResPack(hostPackBuffer);
+            return ReinterpretAs<AicpuTsUbRtpChannel*>(hostChannelHandle)->H2DResPack(hostPackBuffer);
         case HcommChannelKind::AICPU_TS_ROCE_V2:
-            return reinterpret_cast<AicpuTsRoceChannelV2*>(hostChannelHandle)->H2DResPack(hostPackBuffer);
+            return ReinterpretAs<AicpuTsRoceChannelV2*>(hostChannelHandle)->H2DResPack(hostPackBuffer);
         default:
             HCCL_ERROR(
                 "[%s] unsupported channel kind[%s].", __func__, HcommChannelKindToString(channel->GetChannelKind()));
@@ -694,19 +695,19 @@ HcclResult ChannelProcess::LaunchChannelKernelCommon(
     uint32_t totalListNum = 0;
     for (uint32_t index = 0; index < listNum; index++) {
         if (hcommDesc[index].remoteEndpoint.protocol == CommProtocol::COMM_PROTOCOL_PCIE) {
-            auto aicpuTsP2pChannel = reinterpret_cast<AicpuTsP2pChannel*>(hostChannelHandles[index]);
+            auto aicpuTsP2pChannel = ReinterpretAs<AicpuTsP2pChannel*>(hostChannelHandles[index]);
             CHK_PRT(aicpuTsP2pChannel->H2DResPack(hostPackBuffers[index]));
         } else if (hcommDesc[index].remoteEndpoint.protocol == CommProtocol::COMM_PROTOCOL_UBOE) {
-            auto aicpuTsUboeChannel = reinterpret_cast<AicpuTsUboeChannel*>(hostChannelHandles[index]);
+            auto aicpuTsUboeChannel = ReinterpretAs<AicpuTsUboeChannel*>(hostChannelHandles[index]);
             CHK_PRT(aicpuTsUboeChannel->H2DResPack(hostPackBuffers[index]));
         } else if (hcommDesc[index].remoteEndpoint.protocol == CommProtocol::COMM_PROTOCOL_UB_RTP) {
-            auto aicpuTsUbRtpChannel = reinterpret_cast<AicpuTsUbRtpChannel*>(hostChannelHandles[index]);
+            auto aicpuTsUbRtpChannel = ReinterpretAs<AicpuTsUbRtpChannel*>(hostChannelHandles[index]);
             CHK_PRT(aicpuTsUbRtpChannel->H2DResPack(hostPackBuffers[index]));
         } else if (hcommDesc[index].remoteEndpoint.protocol == CommProtocol::COMM_PROTOCOL_ROCE) {
-            auto aicpuTsRoceChannelV2 = reinterpret_cast<AicpuTsRoceChannelV2*>(hostChannelHandles[index]);
+            auto aicpuTsRoceChannelV2 = ReinterpretAs<AicpuTsRoceChannelV2*>(hostChannelHandles[index]);
             CHK_PRT(aicpuTsRoceChannelV2->H2DResPack(hostPackBuffers[index]));
         } else {
-            auto aicpuTsUrmaChannel = reinterpret_cast<AicpuTsUrmaChannel*>(hostChannelHandles[index]);
+            auto aicpuTsUrmaChannel = ReinterpretAs<AicpuTsUrmaChannel*>(hostChannelHandles[index]);
             CHK_PRT(aicpuTsUrmaChannel->H2DResPack(hostPackBuffers[index]));
         }
         totalListNum += hostPackBuffers[index].size();
@@ -815,7 +816,7 @@ namespace {
         out.sz.resize(n);
         out.kind.resize(n);
         for (uint32_t i = 0; i < n; ++i) {
-            auto* channel = reinterpret_cast<Channel*>(host[i]);
+            auto* channel = ReinterpretAs<Channel*>(host[i]);
             CHK_PTR_NULL(channel);
             CHK_RET(channel->Serialize(out.mem[i]));
             CHK_PTR_NULL(out.mem[i]);
@@ -909,7 +910,7 @@ HcclResult ChannelProcess::LaunchChannelKernel(
 {
     HCCL_RUN_INFO("[%s] listNum[%u]", __func__, listNum);
     CHK_PRT_RET(listNum == 0U, HCCL_ERROR("[%s] listNum is 0", __func__), HCCL_E_PARA);
-    auto* ch = reinterpret_cast<Channel*>(hostChannelHandles[0]);
+    auto* ch = ReinterpretAs<Channel*>(hostChannelHandles[0]);
     CHK_PTR_NULL(ch);
     HcommChannelKind channelKind = ch->GetChannelKind();
     // 防御性校验：同一批 channel 必须走同一路径（950 或 910），不允许混用
@@ -1010,7 +1011,7 @@ HcclResult ChannelProcess::ChannelGet(const ChannelHandle channelHandle, void** 
         HCCL_ERROR("[ChannelProcess][%s] deviceId[%d], channel[%llx] not found.", __func__, deviceId, handle);
         return HcclResult::HCCL_E_NOT_FOUND;
     }
-    *channel = reinterpret_cast<void*>(handleIter->second.get());
+    *channel = ReinterpretAs<void*>(handleIter->second.get());
     return HcclResult::HCCL_SUCCESS;
 }
 
@@ -1217,14 +1218,14 @@ HcclResult ChannelProcess::ChannelUpdateKernelLaunch(
     uint32_t totalListNum = 0;
     std::vector<u32> channelSizeVec{};
     for (uint32_t index = 0; index < listNum; index++) {
-        Channel* channel = reinterpret_cast<Channel*>(hostChannelHandles[index]);
+        Channel* channel = ReinterpretAs<Channel*>(hostChannelHandles[index]);
         if (channel->GetChannelKind() != HcommChannelKind::AICPU_TS_URMA) {
             CHK_RET(PackAicpuTsChannelH2DRes(hostChannelHandles[index], hostPackBuffers[index]));
             totalListNum += hostPackBuffers[index].size();
             channelSizeVec.push_back(hostPackBuffers[index].size());
             continue;
         }
-        auto aicpuTsUrmaChannel = reinterpret_cast<AicpuTsUrmaChannel*>(hostChannelHandles[index]);
+        auto aicpuTsUrmaChannel = ReinterpretAs<AicpuTsUrmaChannel*>(hostChannelHandles[index]);
         CHK_RET(aicpuTsUrmaChannel->H2DResPack(hostPackBuffers[index])); // todo:后续只打包connection
         totalListNum += hostPackBuffers[index].size();
         channelSizeVec.push_back(hostPackBuffers[index].size());

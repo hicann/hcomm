@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include "cast_utils.h"
 #include "hccl_api_data.h"
 #include "new/hccl_primitive_local.h"
 #include "new/hccl_primitive_remote.h"
@@ -64,7 +65,7 @@ int32_t HcommLocalCopyOnThread(ThreadHandle thread, void* dst, const void* src, 
     CHK_PTR_NULL(src);
     AddThreadWithTag(thread);
 
-    Thread* const threadPtr = reinterpret_cast<Thread*>(thread);
+    Thread* const threadPtr = ReinterpretAs<Thread*>(thread);
     CHK_PTR_NULL(threadPtr);
 
     if (threadPtr->IsDeviceA5()) {
@@ -104,7 +105,7 @@ int32_t HcommLocalReduceOnThread(
         HCCL_E_PARA);
     AddThreadWithTag(thread);
 
-    Thread* const threadPtr = reinterpret_cast<Thread*>(thread);
+    Thread* const threadPtr = ReinterpretAs<Thread*>(thread);
     CHK_PTR_NULL(threadPtr);
 
     uint64_t len = count * SIZE_TABLE[dataType];
@@ -137,7 +138,7 @@ int32_t HcommThreadNotifyRecordOnThread(ThreadHandle thread, ThreadHandle dstThr
 
     AddThreadWithTag(thread);
 
-    Thread* const threadPtr = reinterpret_cast<Thread*>(thread);
+    Thread* const threadPtr = ReinterpretAs<Thread*>(thread);
     CHK_PTR_NULL(threadPtr);
 
     if (threadPtr->IsDeviceA5()) {
@@ -174,7 +175,7 @@ int32_t HcommThreadNotifyWaitOnThread(ThreadHandle thread, uint32_t notifyIdx, u
 
     AddThreadWithTag(thread);
 
-    Thread* const threadPtr = reinterpret_cast<Thread*>(thread);
+    Thread* const threadPtr = ReinterpretAs<Thread*>(thread);
     CHK_PTR_NULL(threadPtr);
 
     if (threadPtr->IsDeviceA5()) {
@@ -207,7 +208,7 @@ int32_t HcommAclrtNotifyRecordOnThread(ThreadHandle thread, uint64_t dstNotifyId
 
     AddThreadWithTag(thread);
 
-    Thread* const threadPtr = reinterpret_cast<Thread*>(thread);
+    Thread* const threadPtr = ReinterpretAs<Thread*>(thread);
     CHK_PTR_NULL(threadPtr);
 
     Stream* stream = GetStream(thread);
@@ -227,7 +228,7 @@ int32_t HcommAclrtNotifyWaitOnThread(ThreadHandle thread, uint64_t notifyId, uin
 
     AddThreadWithTag(thread);
 
-    Thread* const threadPtr = reinterpret_cast<Thread*>(thread);
+    Thread* const threadPtr = ReinterpretAs<Thread*>(thread);
     CHK_PTR_NULL(threadPtr);
 
     Stream* stream = GetStream(thread);
@@ -260,7 +261,7 @@ HcclResult CommTaskLaunch(ThreadHandle* threads, uint32_t threadNum) // host fft
     CHK_PTR_NULL(threads);
     CHK_PRT_RET(threadNum < 1, HCCL_ERROR("[CommTaskLaunch]threadNum is less than 1"), HCCL_E_PARA);
 
-    Thread* threadPtr = reinterpret_cast<Thread*>(threads[0]);
+    Thread* threadPtr = ReinterpretAs<Thread*>(threads[0]);
     CHK_PTR_NULL(threadPtr);
 
     std::vector<hccl::Stream> streams;
@@ -298,7 +299,7 @@ int32_t HcommWriteOnThread(ThreadHandle thread, ChannelHandle channel, void* dst
 
     AddThreadWithTag(thread);
 
-    Thread* const threadPtr = reinterpret_cast<Thread*>(thread);
+    Thread* const threadPtr = ReinterpretAs<Thread*>(thread);
     CHK_PTR_NULL(threadPtr);
 
     HcclBuf locBuf{const_cast<void*>(src), len, nullptr};
@@ -307,7 +308,7 @@ int32_t HcommWriteOnThread(ThreadHandle thread, ChannelHandle channel, void* dst
     Stream* stream = GetStream(thread);
     CHK_PTR_NULL(stream);
 
-    HcclResult ret = HcclRemoteWrite(stream, reinterpret_cast<void*>(channel), &rmtBuf, &locBuf);
+    HcclResult ret = HcclRemoteWrite(stream, ReinterpretAs<void*>(channel), &rmtBuf, &locBuf);
     CHK_PRT_RET(
         ret != HCCL_SUCCESS,
         HCCL_ERROR(
@@ -357,7 +358,7 @@ int32_t HcommWriteReduceOnThread(
         HCCL_E_PARA);
     AddThreadWithTag(thread);
 
-    Thread* const threadPtr = reinterpret_cast<Thread*>(thread);
+    Thread* const threadPtr = ReinterpretAs<Thread*>(thread);
     CHK_PTR_NULL(threadPtr);
 
     uint64_t len = count * SIZE_TABLE[dataType];
@@ -369,7 +370,7 @@ int32_t HcommWriteReduceOnThread(
     Stream* stream = GetStream(thread);
     CHK_PTR_NULL(stream);
 
-    HcclResult ret = HcclRemoteWriteReduce(stream, reinterpret_cast<void*>(channel), &rmtBuf, &locBuf, reduceInfo);
+    HcclResult ret = HcclRemoteWriteReduce(stream, ReinterpretAs<void*>(channel), &rmtBuf, &locBuf, reduceInfo);
     CHK_PRT_RET(
         ret != HCCL_SUCCESS,
         HCCL_ERROR(
@@ -404,7 +405,7 @@ HcclResult CommWriteReduceWithNotify(
     CHK_PTR_NULL(stream);
 
     return HcclRemoteWriteReduceWithNotify(
-        stream, reinterpret_cast<void*>(channel), &rmtBuf, &locBuf, reduceInfo, remoteNotifyIdx);
+        stream, ReinterpretAs<void*>(channel), &rmtBuf, &locBuf, reduceInfo, remoteNotifyIdx);
 }
 
 int32_t HcommWriteWithNotifyOnThread(
@@ -425,7 +426,7 @@ int32_t HcommWriteWithNotifyOnThread(
 
     AddThreadWithTag(thread);
 
-    Thread* const threadPtr = reinterpret_cast<Thread*>(thread);
+    Thread* const threadPtr = ReinterpretAs<Thread*>(thread);
     CHK_PTR_NULL(threadPtr);
 
     HcclBuf locBuf{const_cast<void*>(src), len, nullptr};
@@ -435,7 +436,7 @@ int32_t HcommWriteWithNotifyOnThread(
     CHK_PTR_NULL(stream);
 
     HcclResult ret
-        = HcclRemoteWriteWithNotify(stream, reinterpret_cast<void*>(channel), &rmtBuf, &locBuf, remoteNotifyIdx);
+        = HcclRemoteWriteWithNotify(stream, ReinterpretAs<void*>(channel), &rmtBuf, &locBuf, remoteNotifyIdx);
     CHK_PRT_RET(
         ret != HCCL_SUCCESS,
         HCCL_ERROR(
@@ -467,7 +468,7 @@ int32_t HcommWriteReduceWithNotifyOnThread(
 
     AddThreadWithTag(thread);
 
-    Thread* const threadPtr = reinterpret_cast<Thread*>(thread);
+    Thread* const threadPtr = ReinterpretAs<Thread*>(thread);
     CHK_PTR_NULL(threadPtr);
 
     uint64_t len = count * SIZE_TABLE[dataType];
@@ -505,7 +506,7 @@ int32_t HcommReadOnThread(ThreadHandle thread, ChannelHandle channel, void* dst,
 
     AddThreadWithTag(thread);
 
-    Thread* const threadPtr = reinterpret_cast<Thread*>(thread);
+    Thread* const threadPtr = ReinterpretAs<Thread*>(thread);
     CHK_PTR_NULL(threadPtr);
 
     HcclBuf locBuf{dst, len, nullptr};
@@ -514,7 +515,7 @@ int32_t HcommReadOnThread(ThreadHandle thread, ChannelHandle channel, void* dst,
     Stream* stream = GetStream(thread);
     CHK_PTR_NULL(stream);
 
-    HcclResult ret = HcclRemoteRead(stream, reinterpret_cast<void*>(channel), &locBuf, &rmtBuf);
+    HcclResult ret = HcclRemoteRead(stream, ReinterpretAs<void*>(channel), &locBuf, &rmtBuf);
     CHK_PRT_RET(
         ret != HCCL_SUCCESS,
         HCCL_ERROR(
@@ -552,7 +553,7 @@ int32_t HcommReadReduceOnThread(
         HCCL_E_PARA);
     AddThreadWithTag(thread);
 
-    Thread* const threadPtr = reinterpret_cast<Thread*>(thread);
+    Thread* const threadPtr = ReinterpretAs<Thread*>(thread);
     CHK_PTR_NULL(threadPtr);
 
     uint64_t len = count * SIZE_TABLE[dataType];
@@ -564,7 +565,7 @@ int32_t HcommReadReduceOnThread(
     Stream* stream = GetStream(thread);
     CHK_PTR_NULL(stream);
 
-    HcclResult ret = HcclRemoteReadReduce(stream, reinterpret_cast<void*>(channel), &locBuf, &rmtBuf, reduceInfo);
+    HcclResult ret = HcclRemoteReadReduce(stream, ReinterpretAs<void*>(channel), &locBuf, &rmtBuf, reduceInfo);
     CHK_PRT_RET(
         ret != HCCL_SUCCESS,
         HCCL_ERROR(
@@ -636,19 +637,19 @@ int32_t HcommChannelNotifyRecordOnThread(ThreadHandle thread, ChannelHandle chan
     CHK_RET(hrtGetDeviceType(devType));
     if (devType == DevType::DEV_TYPE_950 || devType == DevType::DEV_TYPE_960
         || (thread == 0 && devType == DevType::DEV_TYPE_910B)) {
-        auto* const channelPtr = reinterpret_cast<hcomm::Channel*>(channel);
+        auto* const channelPtr = ReinterpretAs<hcomm::Channel*>(channel);
         CHK_PTR_NULL(channelPtr);
         ret = channelPtr->NotifyRecord(remoteNotifyIdx);
     } else { // Non-950 devices use thread-based notify.
         AddThreadWithTag(thread);
 
-        Thread* threadPtr = reinterpret_cast<Thread*>(thread);
+        Thread* threadPtr = ReinterpretAs<Thread*>(thread);
         CHK_PTR_NULL(threadPtr);
 
         Stream* stream = GetStream(thread);
         CHK_PTR_NULL(stream);
 
-        ret = HcclRemoteNotifyRecord(stream, reinterpret_cast<void*>(channel), remoteNotifyIdx);
+        ret = HcclRemoteNotifyRecord(stream, ReinterpretAs<void*>(channel), remoteNotifyIdx);
     }
     CHK_PRT_RET(
         ret != HCCL_SUCCESS,
@@ -684,19 +685,19 @@ HcommChannelNotifyWaitOnThread(ThreadHandle thread, ChannelHandle channel, uint3
     CHK_RET(hrtGetDeviceType(devType));
     if (devType == DevType::DEV_TYPE_950 || devType == DevType::DEV_TYPE_960
         || (thread == 0 && devType == DevType::DEV_TYPE_910B)) {
-        auto* const channelPtr = reinterpret_cast<hcomm::Channel*>(channel);
+        auto* const channelPtr = ReinterpretAs<hcomm::Channel*>(channel);
         CHK_PTR_NULL(channelPtr);
         ret = channelPtr->NotifyWait(localNotifyIdx, timeOut);
     } else { // Non-950 devices use thread-based notify.
         AddThreadWithTag(thread);
 
-        Thread* threadPtr = reinterpret_cast<Thread*>(thread);
+        Thread* threadPtr = ReinterpretAs<Thread*>(thread);
         CHK_PTR_NULL(threadPtr);
 
         Stream* stream = GetStream(thread);
         CHK_PTR_NULL(stream);
 
-        ret = HcclRemoteNotifyWait(stream, reinterpret_cast<void*>(channel), localNotifyIdx, timeOut);
+        ret = HcclRemoteNotifyWait(stream, ReinterpretAs<void*>(channel), localNotifyIdx, timeOut);
     }
     CHK_PRT_RET(
         ret != HCCL_SUCCESS,
@@ -722,7 +723,7 @@ HcclResult CommFence(ThreadHandle thread, ChannelHandle channel) // 控制前后
     Stream* stream = GetStream(thread);
     CHK_PTR_NULL(stream);
 
-    return HcclRemoteFence(stream, reinterpret_cast<void*>(channel), false);
+    return HcclRemoteFence(stream, ReinterpretAs<void*>(channel), false);
 }
 
 int32_t HcommSetLaunchMode(const char* launchTag, HcommLaunchMode mode)
@@ -738,7 +739,7 @@ int32_t HcommBatchModeEnd(const char* batchTag) { return HcommSetLaunchMode(batc
 int32_t
 HcommThreadRegisterDfx(ThreadHandle thread, std::function<HcclResult(u32, u32, const Hccl::TaskParam&, u64)> callback)
 {
-    Thread* threadPtr = reinterpret_cast<Thread*>(thread);
+    Thread* threadPtr = ReinterpretAs<Thread*>(thread);
     CHK_PTR_NULL(threadPtr);
     CHK_RET(threadPtr->SetAddTaskInfoCallback(callback));
     return HCCL_SUCCESS;
@@ -746,7 +747,7 @@ HcommThreadRegisterDfx(ThreadHandle thread, std::function<HcclResult(u32, u32, c
 
 int32_t HcommThreadRegisterCheckExecStatus(ThreadHandle thread, std::function<HcclResult(bool)> callback)
 {
-    Thread* threadPtr = reinterpret_cast<Thread*>(thread);
+    Thread* threadPtr = ReinterpretAs<Thread*>(thread);
     CHK_PTR_NULL(threadPtr);
     CHK_RET(threadPtr->SetCheckExecStatusCallback(callback));
     return HCCL_SUCCESS;
@@ -755,7 +756,7 @@ int32_t HcommThreadRegisterCheckExecStatus(ThreadHandle thread, std::function<Hc
 int32_t
 HcommDpuChannelRegisterDfx(ChannelHandle channel, std::function<HcclResult(const Hccl::TaskParam&, u64)> callback)
 {
-    auto* const hostCpuRoceChannelPtr = reinterpret_cast<hcomm::HostCpuRoceChannel*>(channel);
+    auto* const hostCpuRoceChannelPtr = ReinterpretAs<hcomm::HostCpuRoceChannel*>(channel);
     CHK_PTR_NULL(hostCpuRoceChannelPtr);
     CHK_RET(hostCpuRoceChannelPtr->SetDfxCallback(callback));
     return HCCL_SUCCESS;
@@ -805,11 +806,11 @@ int32_t HcommChannelDrainOnThread(ThreadHandle thread, ChannelHandle channel)
             CHK_PTR_NULL(ch);
             ret = ch->GetNicOps()->drainOnThread(ch->GetNicCtx(), thread);
         } else {
-            Thread* const threadPtr = reinterpret_cast<Thread*>(thread);
+            Thread* const threadPtr = ReinterpretAs<Thread*>(thread);
             CHK_PTR_NULL(threadPtr);
             Stream* stream = GetStream(thread);
             CHK_PTR_NULL(stream);
-            ret = HcclRemoteDrain(stream, reinterpret_cast<void*>(channel));
+            ret = HcclRemoteDrain(stream, ReinterpretAs<void*>(channel));
         }
     }
     CHK_PRT_RET(

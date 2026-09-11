@@ -10,6 +10,7 @@
 
 #ifndef DFX_CIRCULAR_QUEUE_H
 #define DFX_CIRCULAR_QUEUE_H
+#include "cast_utils.h"
 #include <cstring>
 #include "securec.h"
 #include "hccl/base.h"
@@ -59,7 +60,7 @@ public:
 
     bool IsFull() const { return count_ == CAPACITY; }
 
-    T* GetSlot(u16 index) const { return reinterpret_cast<T*>(buffer_ + static_cast<size_t>(index) * ITEM_SIZE); }
+    T* GetSlot(u16 index) const { return ReinterpretAs<T*>(buffer_ + static_cast<size_t>(index) * ITEM_SIZE); }
 
 private:
     mutable u8 buffer_[CAPACITY * ITEM_SIZE];

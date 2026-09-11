@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include "cast_utils.h"
 #include "aicpu_ts_urma_channel.h"
 #include "endpoint.h"
 #include "../../sockets/socket_mgr.h"
@@ -65,7 +66,7 @@ HcclResult AicpuTsUrmaChannel::ParseInputParam()
         std::shared_ptr<Hccl::LocalUbRmaBuffer>* memHandles = nullptr;
         uint32_t memHandleNum = 0;
         CHK_RET(static_cast<HcclResult>(
-            HcommMemGetAllMemHandles(endpointHandle_, reinterpret_cast<void**>(&memHandles), &memHandleNum)));
+            HcommMemGetAllMemHandles(endpointHandle_, ReinterpretAs<void**>(&memHandles), &memHandleNum)));
         HCCL_INFO("[AicpuTsUrmaChannel][%s] Got memHandleNum[%u].", __func__, memHandleNum);
         for (uint32_t i = 0; i < memHandleNum; ++i) {
             std::shared_ptr<Hccl::LocalUbRmaBuffer>& localUbRmaBuffer = memHandles[i];
@@ -286,7 +287,7 @@ ChannelStatus AicpuTsUrmaChannel::GetStatus()
 
     if (isFirstPrintChannelInfo_ && out == ChannelStatus::READY) {
         std::string channelInfo = "create channel info:channel handle[";
-        channelInfo.append(std::to_string(reinterpret_cast<uint64_t>(this)));
+        channelInfo.append(std::to_string(ReinterpretAs<uint64_t>(this)));
         channelInfo.append("] ");
         HcclResult ret = memTransport_->Describe(channelInfo);
         if (ret != HCCL_SUCCESS) {
@@ -360,7 +361,7 @@ HcclResult AicpuTsUrmaChannel::ResetLocalNotifies()
         if (rtsNotify == nullptr) {
             continue;
         }
-        HcclRtNotify rtNotify = reinterpret_cast<HcclRtNotify>(rtsNotify->GetHandleAddr());
+        HcclRtNotify rtNotify = ReinterpretAs<HcclRtNotify>(rtsNotify->GetHandleAddr());
         if (rtNotify == nullptr) {
             continue;
         }
@@ -451,7 +452,7 @@ HcclResult AicpuTsUrmaChannel::StartListen()
     uint16_t port = channelDesc_.port;
     HCCL_INFO(
         "[AicpuTsUrmaChannel::%s] Start. EndpointHandle[0x%llx], port[%u]", __func__,
-        reinterpret_cast<uint64_t>(endpointHandle_), port);
+        ReinterpretAs<uint64_t>(endpointHandle_), port);
     if (port == 0) {
         port = DEFAULT_LISTENING_PORT;
         HCCL_INFO("[AicpuTsUrmaChannel::%s] channelDesc port is 0, use default port [%u]", __func__, port);

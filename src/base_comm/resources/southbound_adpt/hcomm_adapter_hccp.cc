@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include "cast_utils.h"
 #include "hcomm_adapter_hccp.h"
 
 #include <algorithm>
@@ -116,7 +117,7 @@ RequestResult HccpGetAsyncReqResult(RequestHandle& reqHandle)
     }
 
     int reqResult = 0;
-    int32_t ret = RaGetAsyncReqResult(reinterpret_cast<void*>(reqHandle), &reqResult);
+    int32_t ret = RaGetAsyncReqResult(ReinterpretAs<void*>(reqHandle), &reqResult);
     // 返回 OTHERS_EAGAIN 代表查询到异步任务未完成，需要重新查询，此时保留handle
     if (ret == OTHERS_EAGAIN) {
         return RequestResult::NOT_COMPLETED;
@@ -167,16 +168,16 @@ HcclResult
 HccpUbCreateJetty(const CtxHandle ctxhandle, const HrtRaUbCreateJettyParam& in, HrtRaUbJettyCreatedOutParam& out)
 {
     struct QpCreateAttr attr {};
-    attr.scqHandle = reinterpret_cast<void*>(in.sjfcHandle);
-    attr.rcqHandle = reinterpret_cast<void*>(in.rjfcHandle);
-    attr.srqHandle = reinterpret_cast<void*>(in.sjfcHandle);
+    attr.scqHandle = ReinterpretAs<void*>(in.sjfcHandle);
+    attr.rcqHandle = ReinterpretAs<void*>(in.rjfcHandle);
+    attr.srqHandle = ReinterpretAs<void*>(in.sjfcHandle);
     attr.rqDepth = RQ_DEPTH;
     attr.sqDepth = in.sqDepth;
     attr.transportMode = HRT_TRANSPORT_MODE_MAP.at(in.transMode);
     attr.ub.mode = HRT_JETTY_MODE_MAP.at(in.jettyMode);
 
     attr.ub.tokenValue = in.tokenValue;
-    attr.ub.tokenIdHandle = reinterpret_cast<void*>(in.tokenIdHandle);
+    attr.ub.tokenIdHandle = ReinterpretAs<void*>(in.tokenIdHandle);
     attr.ub.flag.value = 0;
     /* errTime配置值：0-31
        0-7代表芯片配置值b00:512ms
@@ -240,7 +241,7 @@ HccpUbCreateJetty(const CtxHandle ctxhandle, const HrtRaUbCreateJettyParam& in, 
     // 适配URMA，直接组装WQE的TOKENID需要进行移位，包括CCU与AICPU
     constexpr u32 URMA_TOKEN_ID_RIGHT_SHIFT = 8;
 
-    out.handle = reinterpret_cast<JettyHandle>(qpHandle);
+    out.handle = ReinterpretAs<JettyHandle>(qpHandle);
     out.id = info.ub.id;
     out.uasid = info.ub.uasid;
     out.jettyVa = info.va;
@@ -266,16 +267,16 @@ HcclResult HccpUbCreateJettyAsync(
     RequestHandle& reqHandle)
 {
     struct QpCreateAttr attr {};
-    attr.scqHandle = reinterpret_cast<void*>(in.sjfcHandle);
-    attr.rcqHandle = reinterpret_cast<void*>(in.rjfcHandle);
-    attr.srqHandle = reinterpret_cast<void*>(in.sjfcHandle);
+    attr.scqHandle = ReinterpretAs<void*>(in.sjfcHandle);
+    attr.rcqHandle = ReinterpretAs<void*>(in.rjfcHandle);
+    attr.srqHandle = ReinterpretAs<void*>(in.sjfcHandle);
     attr.rqDepth = RQ_DEPTH;
     attr.sqDepth = in.sqDepth;
     attr.transportMode = HRT_TRANSPORT_MODE_MAP.at(in.transMode);
     attr.ub.mode = HRT_JETTY_MODE_MAP.at(in.jettyMode);
 
     attr.ub.tokenValue = in.tokenValue;
-    attr.ub.tokenIdHandle = reinterpret_cast<void*>(in.tokenIdHandle);
+    attr.ub.tokenIdHandle = ReinterpretAs<void*>(in.tokenIdHandle);
     attr.ub.flag.value = 0;
     /* errTime配置值：0-31
        0-7代表芯片配置值b00:512ms
@@ -327,7 +328,7 @@ HcclResult HccpUbCreateJettyAsync(
     void* raReqHandle = nullptr;
     out.resize(sizeof(QpCreateInfo));
     s32 ret
-        = RaCtxQpCreateAsync(ctxhandle, &attr, reinterpret_cast<QpCreateInfo*>(out.data()), &jettyHandle, &raReqHandle);
+        = RaCtxQpCreateAsync(ctxhandle, &attr, ReinterpretAs<QpCreateInfo*>(out.data()), &jettyHandle, &raReqHandle);
     if (ret != 0 || !raReqHandle) {
         HCCL_ERROR(
             "[%s] failed, call interface error[%d], raReqHandle[%p], "
@@ -336,8 +337,8 @@ HcclResult HccpUbCreateJettyAsync(
         return HcclResult::HCCL_E_NETWORK;
     }
     attr.ub.tokenValue = 0; // 清理栈中的token信息
-    HCCL_INFO("[%s] ok, get handle[%llu].", __func__, reinterpret_cast<RequestHandle>(raReqHandle));
-    reqHandle = reinterpret_cast<RequestHandle>(raReqHandle);
+    HCCL_INFO("[%s] ok, get handle[%llu].", __func__, ReinterpretAs<RequestHandle>(raReqHandle));
+    reqHandle = ReinterpretAs<RequestHandle>(raReqHandle);
     return HcclResult::HCCL_SUCCESS;
 }
 
@@ -387,7 +388,7 @@ static HcclResult ImportJetty(
         return HcclResult::HCCL_E_NETWORK;
     }
 
-    out.handle = reinterpret_cast<TargetJettyHandle>(remQpHandle);
+    out.handle = ReinterpretAs<TargetJettyHandle>(remQpHandle);
     out.targetJettyVa = info.out.ub.tjettyHandle;
     out.tpn = info.out.ub.tpn;
     info.in.ub.tokenValue = 0; // 清理栈中的敏感信息
@@ -427,7 +428,7 @@ static HcclResult ImportJettyAsync(
     }
 
     out.resize(sizeof(QpImportInfoT));
-    struct QpImportInfoT* info = reinterpret_cast<QpImportInfoT*>(out.data());
+    struct QpImportInfoT* info = ReinterpretAs<QpImportInfoT*>(out.data());
 
     s32 ret = memcpy_s(info->in.key.value, sizeof(info->in.key.value), in.key, in.keyLen);
     if (ret != 0) {
@@ -463,8 +464,8 @@ static HcclResult ImportJettyAsync(
         return HcclResult::HCCL_E_NETWORK;
     }
     info->in.ub.tokenValue = 0;
-    HCCL_INFO("[%s] ok, get handle[%llu]", __func__, reinterpret_cast<RequestHandle>(raReqHandle));
-    reqHandle = reinterpret_cast<RequestHandle>(raReqHandle);
+    HCCL_INFO("[%s] ok, get handle[%llu]", __func__, ReinterpretAs<RequestHandle>(raReqHandle));
+    reqHandle = ReinterpretAs<RequestHandle>(raReqHandle);
     return HcclResult::HCCL_SUCCESS;
 }
 
@@ -523,7 +524,7 @@ HcclResult HccpBatchQueryJettyStatus(
     std::vector<struct JettyAttr> raJettyAttrs(MAX_JETTY_QUERY_NUM);
     std::vector<void*> qp_handle(jettyHandles.size());
     for (size_t i = 0; i < jettyHandles.size(); ++i) {
-        qp_handle[i] = reinterpret_cast<void*>(jettyHandles[i]);
+        qp_handle[i] = ReinterpretAs<void*>(jettyHandles[i]);
     }
     auto ret = RaCtxQpQueryBatch(qp_handle.data(), raJettyAttrs.data(), &num);
     if (ret != 0) {

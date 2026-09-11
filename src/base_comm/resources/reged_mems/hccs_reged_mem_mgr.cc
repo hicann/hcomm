@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include "cast_utils.h"
 #include "log.h"
 #include "hccs_reged_mem_mgr.h"
 // for hccl_network.h
@@ -34,7 +35,7 @@ HcclResult HccsRegedMemMgr::RegisterMemory(const HcommMem* mem, [[maybe_unused]]
 
     std::shared_ptr<hccl::LocalIpcRmaBuffer> localIpcRmaBuffer = nullptr;
     // LocalIpcRmaBuffer构造函数存在注册动作，在调用该构造函数前需检查是否注册过
-    hccl::BufferKey<uintptr_t, u64> memKey(reinterpret_cast<uintptr_t>(mem->addr), mem->size);
+    hccl::BufferKey<uintptr_t, u64> memKey(ReinterpretAs<uintptr_t>(mem->addr), mem->size);
     auto findPair = localIpcRmaBufferMgr->Find(memKey);
     if (findPair.first) {
         auto parentBuffer = findPair.second;
@@ -87,7 +88,7 @@ HcclResult HccsRegedMemMgr::UnregisterMemory(void* memHandle)
     // IsAlias() 直接区分父子buffer：
     //   - 父buffer (IsAlias()=false): 自己的key在tree中 → Del(ownKey)
     //   - 子buffer (IsAlias()=true):  自己的key不在tree中 → 通过Find找父key做Del
-    hccl::BufferKey<uintptr_t, u64> ownKey(reinterpret_cast<uintptr_t>(addr), size);
+    hccl::BufferKey<uintptr_t, u64> ownKey(ReinterpretAs<uintptr_t>(addr), size);
     hccl::LocalIpcRmaBuffer* refBuffer = buffer;
 
     if (buffer->IsAlias()) {
@@ -101,7 +102,7 @@ HcclResult HccsRegedMemMgr::UnregisterMemory(void* memHandle)
     }
 
     auto refBufferInfo = std::make_pair(refBuffer->GetAddr(), refBuffer->GetSize());
-    hccl::BufferKey<uintptr_t, u64> memKey(reinterpret_cast<uintptr_t>(refBufferInfo.first), refBufferInfo.second);
+    hccl::BufferKey<uintptr_t, u64> memKey(ReinterpretAs<uintptr_t>(refBufferInfo.first), refBufferInfo.second);
     bool resultPair = false;
     EXCEPTION_CATCH(resultPair = localIpcRmaBufferMgr->Del(memKey), return HCCL_E_NOT_FOUND);
     // 无论tree中是否删除（ref是否归零），当前handle都要从allBuffers移除
@@ -238,19 +239,19 @@ HcclResult HccsRegedMemMgr::AddMem(
 {
     CHK_PTR_NULL(remoteIpcRmaBuffer);
     HCCL_INFO(
-        "[HccsRegedMemMgr][%s] addr[%p], size[%lu] start", __FUNCTION__, reinterpret_cast<void*>(memKey.Addr()),
+        "[HccsRegedMemMgr][%s] addr[%p], size[%lu] start", __FUNCTION__, ReinterpretAs<void*>(memKey.Addr()),
         memKey.Size());
 
     auto resultPair = remoteIpcRmaBufferMgr_.Add(memKey, remoteIpcRmaBuffer);
     if (!resultPair.second) {
         HCCL_ERROR(
             "[HccsRegedMemMgr][%s] addr[%p], size[%lu] has already been imported!", __FUNCTION__,
-            reinterpret_cast<void*>(memKey.Addr()), memKey.Size());
+            ReinterpretAs<void*>(memKey.Addr()), memKey.Size());
         return HCCL_E_AGAIN;
     }
 
     HCCL_INFO(
-        "[HccsRegedMemMgr][%s] addr[%p], size[%lu] done", __FUNCTION__, reinterpret_cast<void*>(memKey.Addr()),
+        "[HccsRegedMemMgr][%s] addr[%p], size[%lu] done", __FUNCTION__, ReinterpretAs<void*>(memKey.Addr()),
         memKey.Size());
     return HCCL_SUCCESS;
 }
@@ -258,7 +259,7 @@ HcclResult HccsRegedMemMgr::AddMem(
 HcclResult HccsRegedMemMgr::DeleteMem(hccl::BufferKey<uintptr_t, u64>& memKey)
 {
     HCCL_INFO(
-        "[HccsRegedMemMgr][%s] addr[%p], size[%lu] start", __FUNCTION__, reinterpret_cast<void*>(memKey.Addr()),
+        "[HccsRegedMemMgr][%s] addr[%p], size[%lu] start", __FUNCTION__, ReinterpretAs<void*>(memKey.Addr()),
         memKey.Size());
 
     bool delResultPair = false;
@@ -267,12 +268,12 @@ HcclResult HccsRegedMemMgr::DeleteMem(hccl::BufferKey<uintptr_t, u64>& memKey)
     if (!delResultPair) {
         HCCL_INFO(
             "[HccsRegedMemMgr][%s] addr[%p], size[%lu] reference count is larger than 0", __FUNCTION__,
-            reinterpret_cast<void*>(memKey.Addr()), memKey.Size());
+            ReinterpretAs<void*>(memKey.Addr()), memKey.Size());
         return HCCL_SUCCESS;
     }
 
     HCCL_INFO(
-        "[HccsRegedMemMgr][%s] addr[%p], size[%lu] done", __FUNCTION__, reinterpret_cast<void*>(memKey.Addr()),
+        "[HccsRegedMemMgr][%s] addr[%p], size[%lu] done", __FUNCTION__, ReinterpretAs<void*>(memKey.Addr()),
         memKey.Size());
 
     return HCCL_SUCCESS;
@@ -288,7 +289,7 @@ HcclResult HccsRegedMemMgr::MemoryImport(const void* memDesc, uint32_t descLen, 
     std::shared_ptr<hccl::RemoteIpcRmaBuffer> remoteIpcRmaBuffer = nullptr;
     CHK_RET(DeSerializeFromMemDesc(memDesc, descLen, endpointDesc, remoteIpcRmaBuffer));
     hccl::BufferKey<uintptr_t, u64> memKey(
-        reinterpret_cast<uintptr_t>(remoteIpcRmaBuffer->GetAddr()), remoteIpcRmaBuffer->GetSize());
+        ReinterpretAs<uintptr_t>(remoteIpcRmaBuffer->GetAddr()), remoteIpcRmaBuffer->GetSize());
 
     auto resultPair = remoteIpcRmaBufferMgr_.Find(memKey);
     if (!resultPair.first) {
@@ -297,7 +298,7 @@ HcclResult HccsRegedMemMgr::MemoryImport(const void* memDesc, uint32_t descLen, 
         CHK_RET(AddMem(memKey, remoteIpcRmaBuffer));
     }
 
-    outMem->addr = reinterpret_cast<void*>(remoteIpcRmaBuffer->GetAddr());
+    outMem->addr = ReinterpretAs<void*>(remoteIpcRmaBuffer->GetAddr());
     outMem->size = remoteIpcRmaBuffer->GetSize();
     outMem->type = static_cast<CommMemType>(remoteIpcRmaBuffer->GetMemType());
 
@@ -317,7 +318,7 @@ HcclResult HccsRegedMemMgr::MemoryUnimport(const void* memDesc, uint32_t descLen
     std::shared_ptr<hccl::RemoteIpcRmaBuffer> remoteIpcRmaBufferTmp = nullptr;
     CHK_RET(DeSerializeFromMemDesc(memDesc, descLen, endpointDesc, remoteIpcRmaBufferTmp));
     hccl::BufferKey<uintptr_t, u64> memKey(
-        reinterpret_cast<uintptr_t>(remoteIpcRmaBufferTmp->GetAddr()), remoteIpcRmaBufferTmp->GetSize());
+        ReinterpretAs<uintptr_t>(remoteIpcRmaBufferTmp->GetAddr()), remoteIpcRmaBufferTmp->GetSize());
 
     std::shared_ptr<hccl::RemoteIpcRmaBuffer> remoteIpcRmaBuffer = nullptr;
     auto resultPair = remoteIpcRmaBufferMgr_.Find(memKey);
@@ -332,7 +333,7 @@ HcclResult HccsRegedMemMgr::MemoryUnimport(const void* memDesc, uint32_t descLen
     if (remoteIpcRmaBuffer->IsOpened()) {
         HCCL_INFO(
             "[HccsRegedMemMgr][DeleteMemDesc] memDesc[%p] descLen[%u] addr[%p] size[%lu] need to close first", memDesc,
-            descLen, reinterpret_cast<void*>(memKey.Addr()), memKey.Size());
+            descLen, ReinterpretAs<void*>(memKey.Addr()), memKey.Size());
         return HCCL_SUCCESS;
     }
 
@@ -340,7 +341,7 @@ HcclResult HccsRegedMemMgr::MemoryUnimport(const void* memDesc, uint32_t descLen
 
     HCCL_INFO(
         "[%s] memDesc[%p] descLen[%u] addr[%p] size[%lu] done", __FUNCTION__, memDesc, descLen,
-        reinterpret_cast<void*>(memKey.Addr()), memKey.Size());
+        ReinterpretAs<void*>(memKey.Addr()), memKey.Size());
 
     return HCCL_SUCCESS;
 }

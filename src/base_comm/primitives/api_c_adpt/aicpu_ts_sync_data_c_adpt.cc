@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include "cast_utils.h"
 #include "aicpu_ts_sync_data_c_adpt.h"
 
 #include <chrono>
@@ -69,7 +70,7 @@ extern "C" {
 
 int32_t HcommSendRequest(MsgHandle handle, const char* msgTag, const void* src, size_t sizeByte, uint32_t* msgId)
 {
-    uint8_t* const dstOnDevShmem = reinterpret_cast<uint8_t*>(handle);
+    uint8_t* const dstOnDevShmem = ReinterpretAs<uint8_t*>(handle);
     CHK_PTR_NULL(dstOnDevShmem);
     CHK_PTR_NULL(msgTag);
     CHK_PTR_NULL(src);
@@ -122,7 +123,7 @@ int32_t HcommSendRequest(MsgHandle handle, const char* msgTag, const void* src, 
 
 int32_t HcommWaitResponse(MsgHandle handle, void* dst, size_t sizeByte, uint32_t* msgId)
 {
-    uint8_t* const srcOnDevShmem = reinterpret_cast<uint8_t*>(handle);
+    uint8_t* const srcOnDevShmem = ReinterpretAs<uint8_t*>(handle);
     CHK_PTR_NULL(srcOnDevShmem);
     if (sizeByte > 0) {
         CHK_PTR_NULL(dst);
@@ -164,7 +165,7 @@ int32_t HcommWaitResponse(MsgHandle handle, void* dst, size_t sizeByte, uint32_t
 
 int32_t HcommThreadSynchronize(ThreadHandle thread)
 {
-    hccl::Thread* threadPtr = reinterpret_cast<hccl::Thread*>(thread);
+    hccl::Thread* threadPtr = ReinterpretAs<hccl::Thread*>(thread);
     CHK_PTR_NULL(threadPtr);
 
     HCCL_INFO("[%s] START. thread[0x%llx].", __func__, thread);
