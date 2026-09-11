@@ -783,10 +783,10 @@ HcclResult CollComm::GetCommSymWin(void* ptr, size_t size, HcclCommSymWindow* wi
     CHK_PRT_RET(
         ret != HCCL_SUCCESS, HCCL_ERROR("[CollComm][GetCommSymWin] FindUrmaSymmetricWindow failed, ret[%d]", ret), ret);
     if (devLegacySymWin == nullptr) {
-        // 查询未命中返回HCCL_E_NOT_FOUND，与A3 HCCS场景保持一致。
+        // 保持原有查询语义：未命中不是错误，由调用方根据空句柄回退到普通内存路径。
         *winHandle = nullptr;
         *offset = 0;
-        return HCCL_E_NOT_FOUND;
+        return HCCL_SUCCESS;
     }
     {
         std::shared_lock<std::shared_mutex> lock(hcommWindowMutex_);

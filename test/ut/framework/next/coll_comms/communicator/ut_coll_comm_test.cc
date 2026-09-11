@@ -399,14 +399,14 @@ TEST_F(TestCollComm, Ut_GetCommSymWin_When_UbMemoryEnabled_Expect_UseSharedWindo
     coll.symmetricMemory_->sortedWindows_.clear();
 }
 
-TEST_F(TestCollComm, Ut_GetCommSymWin_When_WindowNotFound_Expect_NotFound)
+TEST_F(TestCollComm, Ut_GetCommSymWin_When_WindowNotFound_Expect_SuccessWithNullHandle)
 {
     hccl::CollComm coll(nullptr, 0, "ut_urma_sym_miss", hccl::ManagerCallbacks{});
     coll.symmetricMemory_.reset(new SymmetricMemory(0, 2, 0, SymmetricMemoryMode::URMA));
 
     HcclCommSymWindow winHandle = reinterpret_cast<HcclCommSymWindow>(0x2000U);
     size_t offset = 0x100U;
-    EXPECT_EQ(coll.GetCommSymWin(reinterpret_cast<void*>(0x3000U), 0x100U, &winHandle, &offset), HCCL_E_NOT_FOUND);
+    EXPECT_EQ(coll.GetCommSymWin(reinterpret_cast<void*>(0x3000U), 0x100U, &winHandle, &offset), HCCL_SUCCESS);
     EXPECT_EQ(winHandle, nullptr);
     EXPECT_EQ(offset, 0U);
 }

@@ -23,7 +23,7 @@
 根据已注册对称内存的地址指针，返回对应的窗口资源句柄及其在窗口内的偏移量。
 
 <!-- npu="950" id6 -->
-- 针对Ascend 950PR/Ascend 950DT，本接口支持URMA和UB Memory场景。查询范围未命中已注册的有效对称内存窗口时，接口返回HCCL_E_NOT_FOUND。
+- 针对Ascend 950PR/Ascend 950DT，本接口支持URMA和UB Memory场景。查询范围未命中已注册的有效对称内存窗口时，接口返回HCCL_SUCCESS，同时将*winHandle设置为NULL、*offset设置为0。
 <!-- end id6 -->
 <!-- npu="A3" id7 -->
 - 针对Atlas A3 训练系列产品/Atlas A3 推理系列产品，本接口支持HCCS链路通信场景。
@@ -52,7 +52,7 @@ HcclResult HcclCommSymWinGet(HcclComm comm, void *ptr, size_t size, HcclCommSymW
 ## 约束说明
 
 <!-- npu="950" id8 -->
-- 针对Ascend 950PR/Ascend 950DT，支持URMA和UB Memory场景。查询范围命中窗口时，ptr和ptr+size必须完整位于同一个有效对称内存窗口内。未命中时返回HCCL_E_NOT_FOUND。
+- 针对Ascend 950PR/Ascend 950DT，支持URMA和UB Memory场景。查询范围命中窗口时，ptr和ptr+size必须完整位于同一个有效对称内存窗口内。未命中时返回HCCL_SUCCESS，同时将*winHandle设置为NULL、*offset设置为0。
 <!-- end id8 -->
 <!-- npu="A3" id9 -->
 - 针对Atlas A3 训练系列产品/Atlas A3 推理系列产品，仅支持HCCS链路通信场景。
