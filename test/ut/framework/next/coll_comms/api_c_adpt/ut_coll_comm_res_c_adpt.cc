@@ -27,6 +27,7 @@
 #include "hccl/hccl_types.h"
 #include "hccp.h"
 #include "my_rank.h"
+#include "roce_channel_desc_configurator.h"
 #include "aiv_urma_channel.h"
 #include "channel_process.h"
 #include "coll_comm_res_c_adpt.h"
@@ -114,7 +115,7 @@ int StubRaGetHostMultiQpCount(RaInfo* info, HccnCfgKey key, char* value, unsigne
     }
     EXPECT_EQ(info->mode, NETWORK_PEER_ONLINE);
     EXPECT_EQ(info->phyId, g_hostConfigDevicePhyId);
-    EXPECT_EQ(*valueLen, MyRankUtils::HOST_NIC_CONFIG_BUFFER_SIZE);
+    EXPECT_EQ(*valueLen, RoceChannelDescConfigurator::HOST_NIC_CONFIG_BUFFER_SIZE);
     g_hostConfigReadKeys.emplace_back(key);
 
     const std::string* configValue = nullptr;
