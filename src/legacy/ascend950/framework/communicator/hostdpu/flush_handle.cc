@@ -210,7 +210,7 @@ HcclResult FlushHandle::DestroyLoopbackQp()
         return HCCL_SUCCESS;
     }
 
-    if (GetPlfDebugConfigValue() & PLF_RES) {
+    if ((GetPlfDebugConfigValue() & PLF_RES) != 0) {
         u32 qpn = HrtGetQpNum(qpHandle);
         PLF_CONFIG_INFO(PLF_RES, "Destroy Qp para: qpn[%u]%s", qpn, (qpn == HRT_INVALID_QPN) ? " (invalid)" : "");
     }
