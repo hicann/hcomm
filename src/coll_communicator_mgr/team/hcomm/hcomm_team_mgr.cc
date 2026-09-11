@@ -412,7 +412,7 @@ void HcommTeamMgr::FreeWindowResources(WindowEntry* entry)
     entry->hostWindow.netWin.baseRemoteMemAddr = 0;
     entry->hostWindow.netWin.windowSize = 0;
 
-    if (entry->devWindow != nullptr) {
+    if (entry->ownsDeviceWindow && entry->devWindow != nullptr) {
         (void)hrtFree(entry->devWindow);
         entry->devWindow = nullptr;
     }
@@ -565,6 +565,7 @@ HcommResult HcommTeamMgr::WindowRegister(void* devLegacySymWin, HcclCommSymWindo
     winEntry->hostWindow.lsaWin.stride = 0;
     winEntry->hostWindow.lsaWin.userSize = 0;
     winEntry->hostWindow.legacySymWindow = reinterpret_cast<uint64_t>(devLegacySymWin);
+    winEntry->ownsDeviceWindow = true;
 
     void* devWin = nullptr;
     HcclResult mallocRet = hrtMalloc(&devWin, sizeof(HcommWindow));
@@ -710,6 +711,86 @@ HcommResult HcommTeamMgr::AllocWindowNetWin(WindowEntry* winEntry, const uint32_
     ret = SyncWindowToDevice(winEntry);
     CHK_PRT_RET(ret != HCOMM_SUCCESS, HCCL_ERROR("[AllocWindowNetWin] SyncWindowToDevice failed, ret[%d]", ret), ret);
     return HCOMM_SUCCESS;
+}
+
+HcommResult HcommTeamMgr::ValidateUbSymmetricWindowLayout(
+    const CommMem* memberMems, uint32_t memberNum, const void* baseVa, size_t stride, size_t userSize) const
+{
+    uintptr_t base = reinterpret_cast<uintptr_t>(baseVa);
+    uint64_t lastMember = static_cast<uint64_t>(memberNum - 1);
+    CHK_PRT_RET(
+        userSize > stride || lastMember > (UINTPTR_MAX - base) / stride,
+        HCCL_ERROR("[%s] symmetric VA layout overflows", __func__), HCOMM_E_PARA);
+    for (uint32_t member = 0; member < memberNum; ++member) {
+        void* expected = reinterpret_cast<void*>(base + static_cast<uint64_t>(member) * stride);
+        CHK_PRT_RET(
+            memberMems[member].addr != expected || memberMems[member].size != userSize
+                || memberMems[member].type != COMM_MEM_TYPE_DEVICE,
+            HCCL_ERROR(
+                "[%s] member[%u] memory does not match fixed VA slot, addr[%p], expected[%p], size[%llu]", __func__,
+                member, memberMems[member].addr, expected, memberMems[member].size),
+            HCOMM_E_PARA);
+    }
+    return HCOMM_SUCCESS;
+}
+
+HcommResult HcommTeamMgr::BindUbSymmetricWindow(
+    HcclCommSymWindow handle, HcommTeamHandle lsaTeam, uint32_t netLayer, const CommMem* memberMems, uint32_t memberNum,
+    void* baseVa, size_t stride, size_t userSize)
+{
+    CHK_PRT_RET(
+        handle == nullptr || lsaTeam == nullptr || memberMems == nullptr || baseVa == nullptr,
+        HCCL_ERROR("[%s] null parameter", __func__), HCOMM_E_PTR);
+    CHK_PRT_RET(
+        memberNum == 0 || stride == 0 || userSize == 0,
+        HCCL_ERROR(
+            "[%s] invalid parameter, layer[%u], memberNum[%u], stride[%zu], userSize[%zu]", __func__, netLayer,
+            memberNum, stride, userSize),
+        HCOMM_E_PARA);
+    HcommResult validateRet = ValidateUbSymmetricWindowLayout(memberMems, memberNum, baseVa, stride, userSize);
+    CHK_PRT_RET(
+        validateRet != HCOMM_SUCCESS, HCCL_ERROR("[%s] invalid UB symmetric window layout", __func__), validateRet);
+
+    {
+        std::shared_lock<std::shared_mutex> lock(teamsRwMutex_);
+        TeamEntry* teamEntry = FindTeamByHandleLocked(lsaTeam);
+        CHK_PRT_RET(
+            teamEntry == nullptr, HCCL_ERROR("[%s] LSA team[%p] not found", __func__, lsaTeam), HCOMM_E_NOT_FOUND);
+        CHK_PRT_RET(
+            teamEntry->isSubTeam, HCCL_ERROR("[%s] LSA team[%p] is not a world team", __func__, lsaTeam), HCOMM_E_PARA);
+        CHK_PRT_RET(
+            teamEntry->hostTeam.netLayer != netLayer,
+            HCCL_ERROR(
+                "[%s] LSA team[%p] netLayer[%u] does not match window netLayer[%u]", __func__, lsaTeam,
+                teamEntry->hostTeam.netLayer, netLayer),
+            HCOMM_E_PARA);
+        CHK_PRT_RET(
+            teamEntry->hostTeam.memberNum != memberNum,
+            HCCL_ERROR(
+                "[%s] LSA team[%p] memberNum[%u] does not match window memberNum[%u]", __func__, lsaTeam,
+                teamEntry->hostTeam.memberNum, memberNum),
+            HCOMM_E_PARA);
+    }
+
+    std::unique_lock<std::shared_mutex> lock(windowsRwMutex_);
+    WindowEntry* winEntry = FindWindowByHandleLocked(handle);
+    CHK_PRT_RET(winEntry == nullptr, HCCL_ERROR("[%s] window[%p] not found", __func__, handle), HCOMM_E_NOT_FOUND);
+    CHK_PRT_RET(
+        winEntry->hostWindow.lsaWin.baseVa != 0 || winEntry->hostWindow.lsaWin.stride != 0
+            || winEntry->hostWindow.lsaWin.userSize != 0,
+        HCCL_ERROR("[%s] window[%p] has already bound UB Memory", __func__, handle), HCOMM_E_PARA);
+
+    // netWin和legacySymWindow由URMA路径维护；UB Memory仅补充同一个HcommWindow中的lsaWin。
+    winEntry->hostWindow.lsaWin.baseVa = reinterpret_cast<uint64_t>(baseVa);
+    winEntry->hostWindow.lsaWin.stride = static_cast<uint64_t>(stride);
+    winEntry->hostWindow.lsaWin.userSize = static_cast<uint64_t>(userSize);
+    HcommResult ret = SyncWindowToDevice(winEntry);
+    if (ret != HCOMM_SUCCESS) {
+        winEntry->hostWindow.lsaWin.baseVa = 0;
+        winEntry->hostWindow.lsaWin.stride = 0;
+        winEntry->hostWindow.lsaWin.userSize = 0;
+    }
+    return ret;
 }
 
 /* 合并语义：selfVa/selfSize 与 selfSlots 各自可选（传空表示保持原值不变）——

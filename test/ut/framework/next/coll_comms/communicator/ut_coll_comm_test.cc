@@ -13,6 +13,7 @@
 #include "coll_comm.h"
 #include "symmetric_memory/symmetric_memory.h"
 #undef private
+#include "ubmem_symmetric_memory.h"
 #include "coll_comm_config.h"
 #include "hcom_common.h"
 
@@ -28,6 +29,7 @@
 #include "hcomm_team_c_adpt.h"
 #include "hccl/hccl_channel.h"
 #include "my_rank.h"
+#include "coll_comm.h"
 
 class TestCollComm : public TestHcommCAdptBase {
 public:
@@ -332,7 +334,11 @@ TEST_F(TestCollComm, Ut_RegisterPendingSymmetricMemHandles_When_PendingConsumed_
 
     void* win = nullptr;
     void* ptr = reinterpret_cast<void*>(0x8000000);
-    EXPECT_EQ(coll.RegisterWindow(ptr, 0x2000, &win), HCCL_SUCCESS);
+    HcclComm comm = reinterpret_cast<HcclComm>(&coll);
+    EXPECT_EQ(coll.RegisterWindow(comm, ptr, 0x2000, &win), HCCL_SUCCESS);
+    HcclComm ownerComm = nullptr;
+    EXPECT_EQ(hccl::GetHcommWindowComm(win, ownerComm), HCCL_SUCCESS);
+    EXPECT_EQ(ownerComm, comm);
 
     EXPECT_EQ(coll.RegisterPendingSymmetricMemHandles(), HCCL_SUCCESS);
 
@@ -362,6 +368,64 @@ TEST_F(TestCollComm, Ut_RegisterPendingSymmetricMemHandles_When_PendingConsumed_
     EXPECT_EQ(memHandles[0], static_cast<HcclMemHandle>(resource.memHandle));
 }
 
+TEST_F(TestCollComm, Ut_GetCommSymWin_When_UbMemoryEnabled_Expect_UseSharedWindowMapping)
+{
+    hccl::CollComm coll(nullptr, 0, "ut_ub_sym_get", hccl::ManagerCallbacks{});
+    const std::vector<uint32_t> worldRanks{0U};
+    coll.ubMemSymmetricMemory_ = std::make_unique<hccl::UbMemSymmetricMemory>(
+        &coll, reinterpret_cast<HcommTeamHandle>(0x1000U), 2U, worldRanks);
+    coll.symmetricMemory_.reset(new SymmetricMemory(0U, 2U, 0U, SymmetricMemoryMode::URMA));
+
+    void* userAddress = reinterpret_cast<void*>(0x3000U);
+    void* legacyWindow = reinterpret_cast<void*>(0x4000U);
+    HcclCommSymWindow hcommWindow = reinterpret_cast<HcclCommSymWindow>(0x5000U);
+    auto urmaWindow = std::make_shared<SymmetricWindow>();
+    urmaWindow->userVa = userAddress;
+    urmaWindow->userSize = 0x1000U;
+    urmaWindow->devWin = legacyWindow;
+    coll.symmetricMemory_->sortedWindows_.emplace_back(urmaWindow);
+    coll.symmetricMemory_->windowMap_.emplace(legacyWindow, urmaWindow);
+    coll.symToHcommMap_.emplace(legacyWindow, hcommWindow);
+
+    HcclCommSymWindow winHandle = reinterpret_cast<HcclCommSymWindow>(0x2000U);
+    size_t offset = 0x100U;
+    EXPECT_EQ(
+        coll.GetCommSymWin(static_cast<uint8_t*>(userAddress) + 0x80U, 0x100U, &winHandle, &offset), HCCL_SUCCESS);
+    EXPECT_EQ(winHandle, hcommWindow);
+    EXPECT_EQ(offset, 0x80U);
+
+    coll.symToHcommMap_.clear();
+    coll.symmetricMemory_->windowMap_.clear();
+    coll.symmetricMemory_->sortedWindows_.clear();
+}
+
+TEST_F(TestCollComm, Ut_GetCommSymWin_When_WindowNotFound_Expect_SuccessWithNullHandle)
+{
+    hccl::CollComm coll(nullptr, 0, "ut_urma_sym_miss", hccl::ManagerCallbacks{});
+    coll.symmetricMemory_.reset(new SymmetricMemory(0, 2, 0, SymmetricMemoryMode::URMA));
+
+    HcclCommSymWindow winHandle = reinterpret_cast<HcclCommSymWindow>(0x2000U);
+    size_t offset = 0x100U;
+    EXPECT_EQ(coll.GetCommSymWin(reinterpret_cast<void*>(0x3000U), 0x100U, &winHandle, &offset), HCCL_SUCCESS);
+    EXPECT_EQ(winHandle, nullptr);
+    EXPECT_EQ(offset, 0U);
+}
+
+TEST_F(TestCollComm, Ut_DeregisterWindow_When_UbDeregisterFails_Expect_FullyRetryable)
+{
+    hccl::CollComm coll(nullptr, 0, "ut_sym_ub_fail", hccl::ManagerCallbacks{});
+    coll.symmetricMemory_.reset(new SymmetricMemory(0, 2, 0, SymmetricMemoryMode::URMA));
+    const std::vector<uint32_t> ranks{0U};
+    coll.ubMemSymmetricMemory_ = std::make_unique<hccl::UbMemSymmetricMemory>(&coll, nullptr, 0U, ranks);
+
+    HcclCommSymWindow window = reinterpret_cast<HcclCommSymWindow>(0x8200000);
+    void* legacyWindow = reinterpret_cast<void*>(0x8300000);
+    coll.hcommToSymMap_[window] = legacyWindow;
+
+    EXPECT_EQ(coll.DeregisterWindow(window), HCCL_E_NOT_FOUND);
+    EXPECT_NE(coll.hcommToSymMap_.find(window), coll.hcommToSymMap_.end());
+}
+
 TEST_F(TestCollComm, Ut_UpdateSymmetricRemoteMem_When_ChannelReturnsRemoteMem_Expect_UpdateWindow)
 {
     MOCKER_CPP(hrtMalloc).stubs().will(invoke(StubCollCommUrmaHrtMalloc));
@@ -374,7 +438,11 @@ TEST_F(TestCollComm, Ut_UpdateSymmetricRemoteMem_When_ChannelReturnsRemoteMem_Ex
     void* win = nullptr;
     void* ptr = reinterpret_cast<void*>(0x9000000);
     constexpr size_t winSize = 0x2000;
-    EXPECT_EQ(coll.RegisterWindow(ptr, winSize, &win), HCCL_SUCCESS);
+    HcclComm comm = reinterpret_cast<HcclComm>(&coll);
+    EXPECT_EQ(coll.RegisterWindow(comm, ptr, winSize, &win), HCCL_SUCCESS);
+    HcclComm ownerComm = nullptr;
+    EXPECT_EQ(hccl::GetHcommWindowComm(win, ownerComm), HCCL_SUCCESS);
+    EXPECT_EQ(ownerComm, comm);
 
     SymmetricMemoryResource resource;
     resource.memHandle = reinterpret_cast<void*>(0x9100000);
@@ -704,9 +772,8 @@ TEST_F(TestCollComm, Ut_CreatePrebuiltWorldTeam_When_CreateSuccess_Expect_Regist
     uint32_t rankIds[2] = {0, 1};
     HcommTeamHandle created = nullptr;
     {
-        // 捕获桩分配的句柄：经 FindWorldTeamByProtoLayer 反查验证
-        /* 新语义：reachableRanks 不含 self(self=0)，实现自动 append self 后排序 */
-        EXPECT_EQ(coll.CreatePrebuiltWorldTeam(COMM_PROTOCOL_UB_CTP, 1, std::vector<uint32_t>{1}), HCCL_SUCCESS);
+        // 捕获桩分配的句柄：经 FindWorldTeamByProtoLayer 反查验证。
+        EXPECT_EQ(coll.CreatePrebuiltWorldTeam(COMM_PROTOCOL_UB_CTP, 1, rankIds, 2, 0), HCCL_SUCCESS);
         created = hccl::HcclTeamMgr::GetInstance().FindWorldTeamByProtoLayer(&coll, COMM_PROTOCOL_UB_CTP, 1);
     }
     ASSERT_NE(created, nullptr);
@@ -722,29 +789,20 @@ TEST_F(TestCollComm, Ut_CreatePrebuiltWorldTeam_When_CreateFail_Expect_ReturnInt
     hccl::CollComm coll(nullptr, 0, "ut_prebuilt_fail", hccl::ManagerCallbacks{});
     uint32_t rankIds[2] = {0, 1};
 
-    EXPECT_EQ(
-        coll.CreatePrebuiltWorldTeam(COMM_PROTOCOL_UB_CTP, 1, std::vector<uint32_t>(rankIds, rankIds + 2)),
-        HCCL_E_INTERNAL);
+    EXPECT_EQ(coll.CreatePrebuiltWorldTeam(COMM_PROTOCOL_UB_CTP, 1, rankIds, 2, 0), HCCL_E_INTERNAL);
 
     EXPECT_EQ(hccl::HcclTeamMgr::GetInstance().FindWorldTeamByProtoLayer(&coll, COMM_PROTOCOL_UB_CTP, 1), nullptr);
     GlobalMockObject::verify();
 }
 
-// 同 (proto,layer) 重复注册：HcommTeamCreate 防重入，直接成功。
-TEST_F(TestCollComm, Ut_CreatePrebuiltWorldTeam_When_DuplicateProtoLayer_Expect_ReturnSuccess)
+// 创建成功后可按 (protocol, netLayer) 查询。
+TEST_F(TestCollComm, Ut_CreatePrebuiltWorldTeam_When_Created_Expect_QuerySuccess)
 {
     MOCKER(HcommTeamCreate).stubs().will(invoke(UtStubHcommTeamCreateOk));
     hccl::CollComm coll(nullptr, 0, "ut_prebuilt_dup", hccl::ManagerCallbacks{});
     uint32_t rankIds[2] = {0, 1};
 
-    ASSERT_EQ(
-        coll.CreatePrebuiltWorldTeam(COMM_PROTOCOL_UB_CTP, 1, std::vector<uint32_t>(rankIds, rankIds + 2)),
-        HCCL_SUCCESS);
-    // 第二次同 (proto,layer)：FindWorldTeamByProtoLayer 已命中即跳过（源码防重入），仍返回 SUCCESS
-    EXPECT_EQ(
-        coll.CreatePrebuiltWorldTeam(COMM_PROTOCOL_UB_CTP, 1, std::vector<uint32_t>(rankIds, rankIds + 2)),
-        HCCL_SUCCESS);
-
+    ASSERT_EQ(coll.CreatePrebuiltWorldTeam(COMM_PROTOCOL_UB_CTP, 1, rankIds, 2, 0), HCCL_SUCCESS);
     HcommTeamHandle created
         = hccl::HcclTeamMgr::GetInstance().FindWorldTeamByProtoLayer(&coll, COMM_PROTOCOL_UB_CTP, 1);
     ASSERT_NE(created, nullptr);
@@ -812,6 +870,29 @@ TEST_F(TestCollComm, Ut_InitWorldTeams_When_UbMemMultiLayer_Expect_OnlyHighestLa
     EXPECT_EQ(sizes[0], 0U);
     EXPECT_EQ(sizes[1], 2U);
     EXPECT_EQ(sizes[2], 2U);
+
+    hccl::HcclTeamMgr::GetInstance().ClearByCollComm(&coll);
+    coll.rankgraph_ = nullptr;
+    GlobalMockObject::verify();
+}
+
+// UB Memory不限定固定NetLayer，多层均可达时选择最高层作为LSA WorldTeam。
+TEST_F(TestCollComm, Ut_InitWorldTeams_When_UbMemHasHigherLayer_Expect_SelectHighestCandidate)
+{
+    MOCKER(HcommTeamCreate).stubs().will(invoke(UtStubHcommTeamCreateOk));
+    hccl::CollComm coll(nullptr, 0, "ut_iwt_ubmem_higher_layer", hccl::ManagerCallbacks{});
+
+    UtRankGraphStub graph;
+    graph.layerBuf = {2, 3};
+    graph.layerRanks[2] = {0, 1};
+    graph.layerRanks[3] = {0, 1};
+    graph.layerLinks[2] = {MakeLink(COMM_PROTOCOL_UB_MEM)};
+    graph.layerLinks[3] = {MakeLink(COMM_PROTOCOL_UB_MEM)};
+    coll.rankgraph_ = &graph;
+
+    EXPECT_EQ(coll.InitWorldTeams(), HCCL_SUCCESS);
+    EXPECT_EQ(hccl::HcclTeamMgr::GetInstance().FindWorldTeamByProtoLayer(&coll, COMM_PROTOCOL_UB_MEM, 2), nullptr);
+    EXPECT_NE(hccl::HcclTeamMgr::GetInstance().FindWorldTeamByProtoLayer(&coll, COMM_PROTOCOL_UB_MEM, 3), nullptr);
 
     hccl::HcclTeamMgr::GetInstance().ClearByCollComm(&coll);
     coll.rankgraph_ = nullptr;
@@ -1080,4 +1161,27 @@ TEST_F(TestCollComm, Ut_ReExchangeWindowsForBoundTeams_When_HasLinkedTeam_Expect
     coll.rankgraph_ = nullptr;
     coll.myRank_ = nullptr;
     GlobalMockObject::verify();
+}
+
+TEST_F(TestCollComm, Ut_HcommWindowOwner_When_EraseWindow_Expect_OtherOwnerKept)
+{
+    HcclCommSymWindow window = reinterpret_cast<HcclCommSymWindow>(0x310000U);
+    HcclCommSymWindow otherWindow = reinterpret_cast<HcclCommSymWindow>(0x312000U);
+    HcclComm expectedComm = reinterpret_cast<HcclComm>(0x320000U);
+    HcclComm otherComm = reinterpret_cast<HcclComm>(0x330000U);
+    HcclComm actualComm = nullptr;
+
+    ASSERT_EQ(hccl::RecordHcommWindowOwner(window, expectedComm), HCCL_SUCCESS);
+    ASSERT_EQ(hccl::RecordHcommWindowOwner(otherWindow, otherComm), HCCL_SUCCESS);
+    EXPECT_EQ(hccl::GetHcommWindowComm(window, actualComm), HCCL_SUCCESS);
+    EXPECT_EQ(actualComm, expectedComm);
+    EXPECT_EQ(hccl::RecordHcommWindowOwner(window, expectedComm), HCCL_E_INTERNAL);
+
+    hccl::EraseHcommWindowOwner(window);
+    EXPECT_EQ(hccl::GetHcommWindowComm(window, actualComm), HCCL_E_NOT_FOUND);
+    EXPECT_EQ(actualComm, nullptr);
+    EXPECT_EQ(hccl::GetHcommWindowComm(otherWindow, actualComm), HCCL_SUCCESS);
+    EXPECT_EQ(actualComm, otherComm);
+
+    hccl::EraseHcommWindowOwner(otherWindow);
 }

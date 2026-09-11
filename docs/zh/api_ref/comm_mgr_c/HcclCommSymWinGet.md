@@ -23,7 +23,7 @@
 根据已注册对称内存的地址指针，返回对应的窗口资源句柄及其在窗口内的偏移量。
 
 <!-- npu="950" id6 -->
-- 针对Ascend 950PR/Ascend 950DT，本接口支持URMA场景。
+- 针对Ascend 950PR/Ascend 950DT，本接口支持URMA和UB Memory场景。查询范围未命中已注册的有效对称内存窗口时，接口返回HCCL_SUCCESS，同时将*winHandle设置为NULL、*offset设置为0。
 <!-- end id6 -->
 <!-- npu="A3" id7 -->
 - 针对Atlas A3 训练系列产品/Atlas A3 推理系列产品，本接口支持HCCS链路通信场景。
@@ -40,10 +40,10 @@ HcclResult HcclCommSymWinGet(HcclComm comm, void *ptr, size_t size, HcclCommSymW
 | 参数名 | 输入/输出 | 描述 |
 | --- | --- | --- |
 | comm | 输入 | HCCL通信域。<br>HcclComm类型的定义可参见[HcclComm](./data_type_definition/HcclComm.md)。 |
-| ptr | 输入 | 已注册对称内存的地址指针，该内存需要已使用[HcclCommSymWinRegister](HcclCommSymWinRegister.md)接口进行注册。<br>Atlas A3 训练系列产品/Atlas A3 推理系列产品的HCCS场景下，该地址为预留并完成物理内存映射的虚拟地址。<br>Ascend 950PR/Ascend 950DT的URMA场景下，该地址为已注册的Device内存地址。 |
+| ptr | 输入 | 已注册对称内存的地址指针，该内存需要已使用[HcclCommSymWinRegister](HcclCommSymWinRegister.md)接口进行注册。<br>Atlas A3 训练系列产品/Atlas A3 推理系列产品的HCCS场景下，该地址为预留并完成物理内存映射的虚拟地址。<br>Ascend 950PR/Ascend 950DT的URMA场景下，该地址为已注册的Device内存地址；UB Memory场景与Atlas A3的HCCS场景保持一致，该地址为预留并完成物理内存映射的虚拟地址。 |
 | size | 输入 | 对称内存窗口大小。<br>假设对称内存窗口大小为symSize，已注册对称内存的地址指针为addr，size需要满足以下条件：<br>  - size > 0<br>  - ptr+size <= addr + symSize |
 | winHandle | 输出 | 指向“对称内存窗口资源句柄”的指针。 |
-| offset | 输出 | 指向偏移量的指针。<br>假设已注册对称内存的地址指针为addr，则*offset = ptr - addr。 |
+| offset | 输出 | 指向偏移量的指针。<br>假设已注册对称内存的地址指针为addr，则\*offset = ptr - addr。 |
 
 ## 返回值
 
@@ -52,7 +52,7 @@ HcclResult HcclCommSymWinGet(HcclComm comm, void *ptr, size_t size, HcclCommSymW
 ## 约束说明
 
 <!-- npu="950" id8 -->
-- 针对Ascend 950PR/Ascend 950DT，仅支持URMA场景。
+- 针对Ascend 950PR/Ascend 950DT，支持URMA和UB Memory场景。查询范围命中窗口时，ptr和ptr+size必须完整位于同一个有效对称内存窗口内。未命中时返回HCCL_SUCCESS，同时将*winHandle设置为NULL、*offset设置为0。
 <!-- end id8 -->
 <!-- npu="A3" id9 -->
 - 针对Atlas A3 训练系列产品/Atlas A3 推理系列产品，仅支持HCCS链路通信场景。

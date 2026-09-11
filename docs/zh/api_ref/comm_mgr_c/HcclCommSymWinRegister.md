@@ -27,7 +27,8 @@
 当前对称内存支持如下场景：
 
 <!-- npu="950" id6 -->
-- Ascend 950PR/Ascend 950DT的URMA场景：用户将已申请的Device内存注册为对称内存窗口。该场景下，HcclCommSymWinRegister仅完成本端对称内存窗口登记；跨rank的内存注册、memHandle交换和远端内存信息更新在相关UB/URMA通信通道创建时完成。使用集合通信接口时，该流程由集合通信算子内部触发。在远端内存信息更新完成前，不应调用[HcclSymWinGetPeerPointer](HcclSymWinGetPeerPointer.md)获取远端地址。
+- Ascend 950PR/Ascend 950DT的URMA场景：用户将已申请的Device内存注册为对称内存窗口。该场景下，HcclCommSymWinRegister仅完成本端对称内存窗口登记；跨rank的内存注册、memHandle交换和远端内存信息更新在相关UB/URMA通信通道创建时完成。使用集合通信接口时，该流程由集合通信算子内部触发。在远端内存信息更新完成前，不应调用[HcclSymWinGetRemoteAddr](HcclSymWinGetRemoteAddr.md)获取远端地址。
+- Ascend 950PR/Ascend 950DT的UB Memory场景：用户在申请虚拟内存和物理内存并完成映射后，将虚拟内存注册为对称内存。底层以addr所属的完整allocation建立共享映射，对外窗口范围仍为用户传入的[addr, addr+size)，并通过提前预留相同大小、相同布局的虚拟地址来实现对称内存。
 <!-- end id6 -->
 <!-- npu="A3" id7 -->
 - Atlas A3 训练系列产品/Atlas A3 推理系列产品的HCCS场景：用户在申请虚拟内存和物理内存并完成映射后，将虚拟内存注册为对称内存。该场景通过提前预留相同大小、相同布局的虚拟地址来实现对称内存。
@@ -74,6 +75,7 @@ HcclResult HcclCommSymWinRegister(HcclComm comm, void *addr, uint64_t size, Hccl
 
 <!-- npu="950" id15 -->
 - Ascend 950PR/Ascend 950DT的URMA场景下，该地址为已申请的Device内存地址，内存需要在调用[HcclCommSymWinDeregister](HcclCommSymWinDeregister.md)解注册前保持有效。
+- Ascend 950PR/Ascend 950DT的UB Memory场景下，该地址为预留并完成物理内存映射的虚拟地址。
 <!-- end id15 -->
 <!-- npu="A3" id16 -->
 - Atlas A3 训练系列产品/Atlas A3 推理系列产品的HCCS场景下，该地址为预留的虚拟内存地址，虚拟内存需要调用aclrtReserveMemAddress接口预留。
@@ -83,6 +85,7 @@ HcclResult HcclCommSymWinRegister(HcclComm comm, void *addr, uint64_t size, Hccl
 
 <!-- npu="950" id17 -->
 - Ascend 950PR/Ascend 950DT的URMA场景下，size需要大于0，且所有rank调用该接口时输入的size需要保持一致。
+- Ascend 950PR/Ascend 950DT的UB Memory场景下，size需要大于0，且size不能超过addr所属allocation的大小。实际注册的对称内存窗口大小等于addr所属allocation的大小。
 <!-- end id17 -->
 <!-- npu="A3" id18 -->
 - Atlas A3 训练系列产品/Atlas A3 推理系列产品的HCCS场景下，0 < size <= HcclCommConfig.hcclSymWinMaxMemSizePerRank，并且size不能超过“与addr做映射的物理内存”大小（即调用aclrtMallocPhysical接口申请的Device物理内存）。对称内存注册按物理内存的大小对齐，实际注册的对称内存窗口大小等于“与addr做映射的物理内存”的大小。
@@ -96,10 +99,10 @@ HcclResult HcclCommSymWinRegister(HcclComm comm, void *addr, uint64_t size, Hccl
 
 <!-- npu="950" id11 -->
 - 针对Ascend 950PR/Ascend 950DT：
-  - 仅支持URMA场景。
-  - 仅支持集合通信算子AllGather。
-  - 依赖集合通信算子内部创建UB/URMA通信通道完成对称内存资源注册和交换，用户无需显式调用HcclChannelAcquire。
-  - 不要求对称组网。
+  - 支持URMA和UB Memory场景。
+  - URMA场景仅支持集合通信算子AllGather，依赖集合通信算子内部创建UB/URMA通信通道完成对称内存资源注册和交换，且不要求对称组网。
+  - UB Memory场景底层以addr所属的完整allocation建立共享映射，对外窗口范围为[addr, addr+size)。同一通信域内所有LSA WorldTeam成员调用本接口时，各成员的注册调用次序及每次注册对应的allocation大小必须保持一致（例如所有成员的第1次调用注册相同大小的allocation、第2次调用同样注册相同大小的allocation，依此类推），否则注册失败。
+  - UB Memory场景的注册包含LSA WorldTeam成员间的集合操作，若集合操作完成后成员本地执行失败（如本地映射失败、资源不足），本通信域的UB Memory对称内存将进入不可用状态，后续注册直接返回错误；此时需解注册已注册的窗口并销毁重建通信域。
 <!-- end id11 -->
 <!-- npu="A3" id12 -->
 - 针对Atlas A3 训练系列产品/Atlas A3 推理系列产品：
@@ -111,7 +114,7 @@ HcclResult HcclCommSymWinRegister(HcclComm comm, void *addr, uint64_t size, Hccl
 <!-- end id12 -->
 - 该接口仅支持通信算子展开模式为AI CPU的场景。
 - 需确保通信域中的所有rank同时调用该注册接口。
-- 所有rank调用该接口时，输入的size参数需要保持一致。
+- 所有rank调用该接口时，URMA场景下输入的size参数需要保持一致；UB Memory场景下各rank对应次序注册的allocation大小需要保持一致。
 - 使用对称内存功能时，算子的输入、输出内存必须调用此接口注册为对称内存。
 - 调用该接口注册的内存需要使用[HcclCommSymWinDeregister](HcclCommSymWinDeregister.md)接口解注册。
 

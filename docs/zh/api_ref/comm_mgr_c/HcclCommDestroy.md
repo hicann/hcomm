@@ -47,6 +47,9 @@ HcclResult HcclCommDestroy(HcclComm comm)
 
   - 当通信域处于非建链卡住状态，或者其他被占用状态（例如通信域建链过程中、通信算子执行过程中等），跨线程调用此接口时会返回HCCL_E_AGAIN错误，并打印WARNING级别日志，日志关键字为“\[HcclCommDestroy\] comm is in use, please try again later”。
 
+- 在UB Memory场景，建议先调用[HcclCommSymWinDeregister](HcclCommSymWinDeregister.md)解注册对称内存窗口，再调用本接口销毁通信域。
+  如果仍有未解注册的UB Memory窗口，本接口会在销毁通信域时兜底释放其本地资源。A3和URMA场景同样不要求先解注册对称内存窗口：销毁通信域时，内部资源管理会遍历所有已注册的对称内存窗口，自动执行解注册并释放对应资源（对称虚拟地址、设备侧窗口副本等），无需用户调用解注册接口，销毁也不会因存在未解注册窗口而失败。
+
 - 多线程场景下，需要确保HCCL接口的调用时序，调用此接口销毁通信域后不再支持调用其他集合通信相关接口。
 
 ## 调用示例

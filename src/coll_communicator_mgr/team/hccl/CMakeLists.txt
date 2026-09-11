@@ -8,11 +8,13 @@
 # See LICENSE in the root of the software repository for the full text of the License.
 # -----------------------------------------------------------------------------------------------------------
 
-# HCCL 层：HcclTeam 进程级管理器 + C 适配
-# 依赖方向：依赖同层 hcomm 子目录（HcommTeam），不反向被 hcomm 依赖
+# HCCL 层：HcclTeam 进程级管理器、UB Memory Window 控制面及 C 适配
+# 依赖方向：依赖同层 hcomm 子目录和 base_comm，不反向被 hcomm/base_comm 依赖
 set(src_list
     hccl_team_mgr.cc
     hccl_team_c_adpt.cc
+    ubmem_symmetric_memory.cc
+    ubmem_symmetric_memory_agent.cc
 )
 
 if(TARGET hcomm)

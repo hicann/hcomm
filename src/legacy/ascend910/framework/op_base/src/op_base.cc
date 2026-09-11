@@ -12,8 +12,10 @@
 #include <algorithm>
 #include <future>
 #include <map>
+#include <new>
 #include <shared_mutex>
 #include <string>
+#include <unordered_map>
 #include <hccl/hccl_types.h>
 
 #include "hccl/base.h"
@@ -22,6 +24,9 @@
 #include "externalinput_pub.h"
 #include "env_config.h"
 #include "env_config/env_config_v2.h"
+#if (!defined(HCCD)) && (!defined(CCL_KERNEL_AICPU))
+#include "coll_comm.h"
+#endif
 #include "../common/src/topo/topoinfo_detect.h"
 #include "../common/src/topo/topoinfo_ranktable_partition.h"
 #include "../common/src/state_guard.h"
@@ -5887,7 +5892,7 @@ HcclResult CommGetCCLBufSizeCfg(HcclComm comm, uint64_t* cclBufSize)
 enum HcclCommSymWindowInnerFlag { HCCL_COMM_SYM_WINDOW_FLAG_DEFAULT = 0, HCCL_COMM_SYM_WINDOW_FLAG_COLL_SYMMETRIC = 1 };
 
 std::unordered_map<HcclCommSymWindow, HcclComm> winHandle2comm;
-std::mutex g_winHandleMtx; // 保护 winHandle2comm
+std::mutex g_winHandleMtx; // 保护所有对称内存Window的winHandle到comm映射
 
 HcclResult HcclCommSymWinRegister(HcclComm comm, void* addr, uint64_t size, HcclCommSymWindow* winHandle, uint32_t flag)
 {
@@ -5902,20 +5907,20 @@ HcclResult HcclCommSymWinRegister(HcclComm comm, void* addr, uint64_t size, Hccl
         if (hcclComm->IsCommunicatorV2()) {
             hccl::CollComm* collComm = hcclComm->GetCollComm();
             CHK_PTR_NULL(collComm);
-            CHK_RET(collComm->RegisterWindow(addr, size, winHandle));
+            CHK_RET(collComm->RegisterWindow(comm, addr, size, winHandle));
         } else {
 #endif
             CHK_RET(hcclComm->RegisterWindow(addr, size, winHandle));
 #if (!defined(HCCD)) && (!defined(CCL_KERNEL_AICPU))
         }
 #endif
-        HCCL_RUN_INFO(
-            "[%s]WindowRegister mem success, group[%s], handle ptr[%p], size[%llu]", __func__,
-            hcclComm->GetIdentifier().c_str(), *winHandle, size);
         {
             std::lock_guard<std::mutex> lock(g_winHandleMtx);
             winHandle2comm[*winHandle] = comm;
         }
+        HCCL_RUN_INFO(
+            "[%s]WindowRegister mem success, group[%s], handle ptr[%p], size[%llu]", __func__,
+            hcclComm->GetIdentifier().c_str(), *winHandle, size);
     } else if (flag == HCCL_COMM_SYM_WINDOW_FLAG_DEFAULT) {
         HCCL_ERROR("[HcclCommSymWinRegister]flag: 0 is not supported yet.");
         return HCCL_E_PARA;
@@ -5930,14 +5935,35 @@ HcclResult HcclCommSymWinDeregister(HcclCommSymWindow winHandle)
 {
     // 入参校验
     CHK_PTR_NULL(winHandle);
-    HcclComm comm = nullptr;
-    std::lock_guard<std::mutex> lock(g_winHandleMtx);
-    auto it = winHandle2comm.find(winHandle);
-    if (it == winHandle2comm.end()) {
-        HCCL_ERROR("[HcclCommSymWinDeregister]Window handle[%p] is not registered.", winHandle);
-        return HCCL_E_PARA;
+#if (!defined(HCCD)) && (!defined(CCL_KERNEL_AICPU))
+    HcclComm hcommWindowComm = nullptr;
+    HcclResult getOwnerRet = hccl::GetHcommWindowComm(winHandle, hcommWindowComm);
+    if (getOwnerRet == HCCL_SUCCESS) {
+        CHK_PTR_NULL(hcommWindowComm);
+        hccl::hcclComm* hcclComm = static_cast<hccl::hcclComm*>(hcommWindowComm);
+        hccl::CollComm* collComm = hcclComm->GetCollComm();
+        CHK_PTR_NULL(collComm);
+        CHK_RET(collComm->DeregisterWindow(winHandle));
+        hccl::EraseHcommWindowOwner(winHandle);
+        {
+            std::lock_guard<std::mutex> lock(g_winHandleMtx);
+            winHandle2comm.erase(winHandle);
+        }
+        HCCL_RUN_INFO("[%s]WindowDeregister mem success, group[%s]", __func__, hcclComm->GetIdentifier().c_str());
+        return HCCL_SUCCESS;
     }
-    comm = it->second;
+    CHK_PRT_RET(
+        getOwnerRet != HCCL_E_NOT_FOUND,
+        HCCL_ERROR("[%s] query HcommWindow[%p] owner failed, ret[%d]", __func__, winHandle, getOwnerRet), getOwnerRet);
+#endif
+
+    // 所有对称内存Window均登记在winHandle2comm中；A5内部索引未命中时也可通过该表查询通信域。
+    std::lock_guard<std::mutex> lock(g_winHandleMtx);
+    auto iter = winHandle2comm.find(winHandle);
+    CHK_PRT_RET(
+        iter == winHandle2comm.end(), HCCL_ERROR("[%s] window handle[%p] is not registered", __func__, winHandle),
+        HCCL_E_PARA);
+    HcclComm comm = iter->second;
     CHK_PTR_NULL(comm);
     hccl::hcclComm* hcclComm = static_cast<hccl::hcclComm*>(comm);
 #if (!defined(HCCD)) && (!defined(CCL_KERNEL_AICPU))
@@ -5951,7 +5977,7 @@ HcclResult HcclCommSymWinDeregister(HcclCommSymWindow winHandle)
 #if (!defined(HCCD)) && (!defined(CCL_KERNEL_AICPU))
     }
 #endif
-    winHandle2comm.erase(it);
+    winHandle2comm.erase(iter);
     HCCL_RUN_INFO("[%s]WindowDeregister mem success, group[%s]", __func__, hcclComm->GetIdentifier().c_str());
     return HCCL_SUCCESS;
 }

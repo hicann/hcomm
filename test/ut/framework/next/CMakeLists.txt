@@ -79,6 +79,7 @@ set(src_to_test_list
     coll_comms/api_c_adpt/ut_hccl_channel_config_test.cc
     coll_comms/team/hccl/ut_hccl_team_c_adpt.cc
     coll_comms/team/hccl/ut_hccl_team_mgr.cc
+    coll_comms/team/hccl/ut_ubmem_symmetric_memory.cc
     comms/endpoints/reged_mems/ut_aicpu_ts_roce_mem.cc
     # Ns recovery相关测试用例
     comms/endpoint_pairs/channels/aicpu/ut_aicpu_ts_urma_channel.cc

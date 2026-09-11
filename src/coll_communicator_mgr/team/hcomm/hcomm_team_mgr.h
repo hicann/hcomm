@@ -38,6 +38,7 @@ struct WindowEntry {
     uint32_t* devWorldTeamAccumulateId{nullptr};
     uint32_t remoteMemsTotal{0}; /* 表总长度 = worldTeamAccumulateId[netLayerNum-1] + 最后一层 size */
     HcommTeamHandle teamHandle{nullptr};
+    bool ownsDeviceWindow{false};
     /* 本端窗口注册信息（RegisterWindow 时由 L2 经 HcommTeamWindowSetSelfInfo 登记用户 VA/size。
      * 回填本端槽位时 addr/size 取自此处；未登记（selfVa 为空）则跳过本端槽位回填 */
     void* selfVa{nullptr};
@@ -78,6 +79,9 @@ public:
     HcommResult TeamDestroy(HcommTeamHandle team);
     HcommResult WindowRegister(void* devLegacySymWin, HcclCommSymWindow* handle);
     HcommResult WindowDeregister(HcclCommSymWindow handle);
+    HcommResult BindUbSymmetricWindow(
+        HcclCommSymWindow handle, HcommTeamHandle lsaTeam, uint32_t netLayer, const CommMem* memberMems,
+        uint32_t memberNum, void* baseVa, size_t stride, size_t userSize);
     // 对各 netLayer 段的槽位更新远端内存并同步到 device（供 CollComm 统一回填 HcommWindow）
     // sizes/sizeNum：各层 worldTeam 大小（首次调用时按 sum(sizes[0..sizeNum-1]) 分配层分段表并填
     // netLayerNum） slots/slotNum：最终槽位数组（值 = worldTeamAccumulateId[L] +
@@ -109,6 +113,8 @@ private:
     HcommResult AllocWindowAddrTable(WindowEntry* winEntry, uint32_t total);
     HcommResult AllocWindowAccumulateIdArray(WindowEntry* winEntry, const uint32_t* sizes, uint32_t sizeNum);
     HcommResult AllocWindowNetWin(WindowEntry* winEntry, const uint32_t* sizes, uint32_t sizeNum);
+    HcommResult ValidateUbSymmetricWindowLayout(
+        const CommMem* memberMems, uint32_t memberNum, const void* baseVa, size_t stride, size_t userSize) const;
     HcommResult AllocAndCopyWorldTeamIds(TeamEntry* entry, const uint32_t* src, uint32_t memberNum);
     HcommResult AllocAndCopyChannels(TeamEntry* entry);
     HcommResult AllocChannelEntities(TeamEntry* entry);

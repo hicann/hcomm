@@ -49,6 +49,9 @@ CommMem BuildValidCommMem(void* addr, uint64_t size, CommMemType type = COMM_MEM
 HcommWindow WrapToHcommWindow(SymmetricWindow* symWin)
 {
     HcommWindow win{};
+    win.header.magicWord = HCOMM_WINDOW_MAGIC_WORD;
+    win.header.version = HCOMM_WINDOW_VERSION;
+    win.header.size = sizeof(HcommWindow);
     win.legacySymWindow = reinterpret_cast<uint64_t>(symWin);
     return win;
 }
@@ -168,4 +171,75 @@ TEST_F(AicpuSymmetricMemoryTest, Ut_HcclSymWinGetRemoteAddr_When_AllValid_Expect
     HcclResult ret = HcclSymWinGetRemoteAddr(reinterpret_cast<HcclCommSymWindow>(&hWin), offset, 1, &ptr);
     EXPECT_EQ(ret, HCCL_SUCCESS);
     EXPECT_EQ(ptr, reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(baseAddr) + offset));
+}
+
+TEST_F(AicpuSymmetricMemoryTest, Ut_HcclSymWinGetPeerPointer_When_UbWindowValid_Expect_UseLsaMemberId)
+{
+    constexpr uintptr_t baseAddress = 0x280000000000ULL;
+    constexpr uint64_t stride = 0x40000000ULL;
+    constexpr uint64_t userSize = 0x200000ULL;
+    constexpr size_t offset = 0x80U;
+    HcommWindow window{};
+    window.header.magicWord = HCOMM_WINDOW_MAGIC_WORD;
+    window.header.version = HCOMM_WINDOW_VERSION;
+    window.header.size = sizeof(HcommWindow);
+    window.lsaWin.baseVa = baseAddress;
+    window.lsaWin.stride = stride;
+    window.lsaWin.userSize = userSize;
+
+    void* ptr = nullptr;
+    EXPECT_EQ(HcclSymWinGetPeerPointer(&window, offset, 1U, &ptr), HCCL_SUCCESS);
+    EXPECT_EQ(ptr, reinterpret_cast<void*>(baseAddress + stride + offset));
+}
+
+TEST_F(AicpuSymmetricMemoryTest, Ut_HcclSymWinGetPeerPointer_When_UbAndUrmaCoexist_Expect_UseLsaMemberId)
+{
+    constexpr uintptr_t baseAddress = 0x280000000000ULL;
+    constexpr uint64_t stride = 0x40000000ULL;
+    HcommWindow window{};
+    window.header.magicWord = HCOMM_WINDOW_MAGIC_WORD;
+    window.header.version = HCOMM_WINDOW_VERSION;
+    window.header.size = sizeof(HcommWindow);
+    window.lsaWin.baseVa = baseAddress;
+    window.lsaWin.stride = stride;
+    window.lsaWin.userSize = 0x200000ULL;
+    window.legacySymWindow = 0x100000U;
+
+    void* ptr = nullptr;
+    EXPECT_EQ(HcclSymWinGetPeerPointer(&window, 0x80U, 1U, &ptr), HCCL_SUCCESS);
+    EXPECT_EQ(ptr, reinterpret_cast<void*>(baseAddress + stride + 0x80U));
+}
+
+TEST_F(AicpuSymmetricMemoryTest, Ut_HcclSymWinGetPeerPointer_When_UbParameterInvalid_Expect_ParaError)
+{
+    constexpr uintptr_t baseAddress = 0x280000000000ULL;
+    constexpr uint64_t stride = 0x40000000ULL;
+    constexpr uint64_t userSize = 0x200000ULL;
+    HcommWindow window{};
+    window.header.magicWord = HCOMM_WINDOW_MAGIC_WORD;
+    window.header.version = HCOMM_WINDOW_VERSION;
+    window.header.size = sizeof(HcommWindow);
+    window.lsaWin.baseVa = baseAddress;
+    window.lsaWin.stride = stride;
+    window.lsaWin.userSize = userSize;
+
+    void* ptr = reinterpret_cast<void*>(0xDEADU);
+    EXPECT_EQ(HcclSymWinGetPeerPointer(&window, userSize, 1U, &ptr), HCCL_E_PARA);
+    EXPECT_EQ(ptr, nullptr);
+}
+
+TEST_F(AicpuSymmetricMemoryTest, Ut_HcclSymWinGetPeerPointer_When_LegacyWindowValid_Expect_UseRankId)
+{
+    constexpr uintptr_t baseAddress = 0x100000U;
+    constexpr size_t stride = 0x10000U;
+    SymmetricWindow window{};
+    window.mode = SymmetricMemoryMode::HCCS;
+    window.rankSize = 4U;
+    window.baseVa = reinterpret_cast<void*>(baseAddress);
+    window.stride = stride;
+    window.userSize = 0x1000U;
+
+    void* ptr = nullptr;
+    EXPECT_EQ(HcclSymWinGetPeerPointer(&window, 0x40U, 2U, &ptr), HCCL_SUCCESS);
+    EXPECT_EQ(ptr, reinterpret_cast<void*>(baseAddress + 2U * stride + 0x40U));
 }

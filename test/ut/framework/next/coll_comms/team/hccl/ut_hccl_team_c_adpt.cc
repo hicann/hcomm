@@ -318,6 +318,67 @@ protected:
     HcclComm comm{nullptr};
 };
 
+TEST_F(TestCollCommTeamCAdpt, Ut_HcclTeamQuery_When_UbWorldTeamRegistered_Expect_CorrectMapping)
+{
+    CollComm* collComm = hcclCommPtr->GetCollComm();
+    ASSERT_NE(collComm, nullptr);
+    const uint32_t rankIds[] = {0U, 2U, 4U, 6U};
+    ASSERT_EQ(
+        HcclTeamMgr::GetInstance().RegisterPrebuiltWorldTeam(
+            g_fakeWorldTeam, collComm, COMM_PROTOCOL_UB_MEM, 0U, rankIds, 4U),
+        HCCL_SUCCESS);
+
+    HcommTeamHandle lsaTeam = nullptr;
+    EXPECT_EQ(HcclTeamGetLsaTeam(comm, &lsaTeam), HCCL_SUCCESS);
+    EXPECT_EQ(lsaTeam, g_fakeWorldTeam);
+
+    uint32_t rankId = 0U;
+    EXPECT_EQ(HcclTeamMemberToRank(comm, lsaTeam, 2U, &rankId), HCCL_SUCCESS);
+    EXPECT_EQ(rankId, 4U);
+
+    uint32_t memberId = 0U;
+    EXPECT_EQ(HcclTeamRankToMember(comm, lsaTeam, 6U, &memberId), HCCL_SUCCESS);
+    EXPECT_EQ(memberId, 3U);
+}
+
+TEST_F(TestCollCommTeamCAdpt, Ut_HcclTeamGetLsaTeam_When_LsaTeamAbsent_Expect_NotFound)
+{
+    HcommTeamHandle lsaTeam = g_fakeWorldTeam;
+    EXPECT_EQ(HcclTeamGetLsaTeam(comm, &lsaTeam), HCCL_E_NOT_FOUND);
+    EXPECT_EQ(lsaTeam, nullptr);
+}
+
+TEST_F(TestCollCommTeamCAdpt, Ut_HcclTeamQuery_When_ParameterInvalid_Expect_Error)
+{
+    HcommTeamHandle lsaTeam = g_fakeWorldTeam;
+    EXPECT_EQ(HcclTeamGetLsaTeam(nullptr, &lsaTeam), HCCL_E_PTR);
+    EXPECT_EQ(lsaTeam, nullptr);
+    EXPECT_EQ(HcclTeamGetLsaTeam(comm, nullptr), HCCL_E_PTR);
+
+    uint32_t id = 0U;
+    EXPECT_EQ(HcclTeamMemberToRank(nullptr, g_fakeWorldTeam, 0U, &id), HCCL_E_PTR);
+    EXPECT_EQ(HcclTeamMemberToRank(comm, nullptr, 0U, &id), HCCL_E_PTR);
+    EXPECT_EQ(HcclTeamMemberToRank(comm, g_fakeWorldTeam, 0U, nullptr), HCCL_E_PTR);
+    EXPECT_EQ(HcclTeamRankToMember(nullptr, g_fakeWorldTeam, 0U, &id), HCCL_E_PTR);
+    EXPECT_EQ(HcclTeamRankToMember(comm, nullptr, 0U, &id), HCCL_E_PTR);
+    EXPECT_EQ(HcclTeamRankToMember(comm, g_fakeWorldTeam, 0U, nullptr), HCCL_E_PTR);
+}
+
+TEST_F(TestCollCommTeamCAdpt, Ut_HcclTeamQuery_When_IdOutsideTeam_Expect_Error)
+{
+    CollComm* collComm = hcclCommPtr->GetCollComm();
+    ASSERT_NE(collComm, nullptr);
+    const uint32_t rankIds[] = {0U, 2U, 4U, 6U};
+    ASSERT_EQ(
+        HcclTeamMgr::GetInstance().RegisterPrebuiltWorldTeam(
+            g_fakeWorldTeam, collComm, COMM_PROTOCOL_UB_MEM, 0U, rankIds, 4U),
+        HCCL_SUCCESS);
+
+    uint32_t id = 0U;
+    EXPECT_EQ(HcclTeamMemberToRank(comm, g_fakeWorldTeam, 4U, &id), HCCL_E_PARA);
+    EXPECT_EQ(HcclTeamRankToMember(comm, g_fakeWorldTeam, 1U, &id), HCCL_E_NOT_FOUND);
+}
+
 // =====================================================================
 // 1. HcclTeamCreate（ut_ain_001~010）
 // =====================================================================

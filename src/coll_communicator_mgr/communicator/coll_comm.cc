@@ -14,20 +14,59 @@
 #include "kfc.h"
 #include "dlhal_function.h"
 #include "hcclCommTaskException.h"
+#include "ubmem_symmetric_memory.h"
 #include "hccl_team_mgr.h"
 #include "hccl_team_c_adpt.h"
 #include "hcomm_team.h"
 #include "hcomm_team_c_adpt.h"
 #include "hccl/hccl_channel.h"
 #include "hccl/hccl_rank_graph.h"
+#include "adapter_rts_common.h"
 
+#include <algorithm>
 #include <cstdint>
 #include <exception>
+#include <set>
 #include <unordered_set>
 #include "launch_aicpu.h"
 #include "launch_device.h"
 
 namespace hccl {
+namespace {
+    std::unordered_map<HcclCommSymWindow, HcclComm> g_hcommWindowCommMap{};
+    std::mutex g_hcommWindowCommMapMutex{};
+} // namespace
+
+HcclResult RecordHcommWindowOwner(HcclCommSymWindow winHandle, HcclComm comm)
+{
+    CHK_PTR_NULL(winHandle);
+    CHK_PTR_NULL(comm);
+    std::lock_guard<std::mutex> lock(g_hcommWindowCommMapMutex);
+    bool inserted = false;
+    EXCEPTION_CATCH(inserted = g_hcommWindowCommMap.emplace(winHandle, comm).second, return HCCL_E_MEMORY);
+    CHK_PRT_RET(!inserted, HCCL_ERROR("[%s] window[%p] owner already exists", __func__, winHandle), HCCL_E_INTERNAL);
+    return HCCL_SUCCESS;
+}
+
+HcclResult GetHcommWindowComm(HcclCommSymWindow winHandle, HcclComm& comm)
+{
+    CHK_PTR_NULL(winHandle);
+    comm = nullptr;
+    std::lock_guard<std::mutex> lock(g_hcommWindowCommMapMutex);
+    auto iter = g_hcommWindowCommMap.find(winHandle);
+    if (iter == g_hcommWindowCommMap.end()) {
+        return HCCL_E_NOT_FOUND;
+    }
+    comm = iter->second;
+    return HCCL_SUCCESS;
+}
+
+void EraseHcommWindowOwner(HcclCommSymWindow winHandle)
+{
+    std::lock_guard<std::mutex> lock(g_hcommWindowCommMapMutex);
+    g_hcommWindowCommMap.erase(winHandle);
+}
+
 void SymmetricMemoryDeleter::operator()(SymmetricMemory* ptr) const { delete ptr; }
 
 CollComm::CollComm(
@@ -57,12 +96,16 @@ CollComm::~CollComm()
 
     CHK_PRT(HcclBinaryUnLoad());
 
+    if (ubMemSymmetricMemory_ != nullptr) {
+        ubMemSymmetricMemory_.reset();
+    }
     // 兜底释放所有team的syncMem本地内存
     HcclTeamMgr::GetInstance().ClearByCollComm(this);
     // 兜底释放所有未注销的 HcommWindow device 副本（legacySymWin 部分由 symmetricMemory_ 析构清理）
     {
         std::unique_lock<std::shared_mutex> lock(hcommWindowMutex_);
         for (auto& pair : hcommToSymMap_) {
+            EraseHcommWindowOwner(pair.first);
             (void)HcommTeamWindowDeregister(pair.first); // 释放 L3 回填资源（remoteMems/sizes）
         }
         hcommToSymMap_.clear();
@@ -141,8 +184,8 @@ CollComm::InitFullMode(void* rankGraph, aclrtBinHandle binHandle, HcclMem cclBuf
         return HCCL_E_PTR);
     CHK_RET(myRank_->Init(cclBuffer, opExpansionMode, rankNum));
     CHK_RET(hrtGetDevice(&deviceLogicId_));
-    CHK_RET(InitSymmetricMemory());
     CHK_RET(InitWorldTeams());
+    CHK_RET(InitSymmetricMemory());
 
     CHK_RET(InitHDCommunicate());
 
@@ -168,44 +211,47 @@ HcclResult CollComm::InitSymmetricMemory()
     HCCL_RUN_INFO(
         "[CollComm][InitSymmetricMemory] commId[%s], rank[%u], rankSize[%u].", commId_.c_str(), rankId_, rankSize);
 
+    // URMA与UB Memory可以同时存在；两种资源最终发布到同一个HcommWindow的不同子结构。
     EXCEPTION_CATCH(
         symmetricMemory_.reset(new SymmetricMemory(rankId_, rankSize, 0, SymmetricMemoryMode::URMA)),
         return HCCL_E_PTR);
     CHK_SMART_PTR_NULL(symmetricMemory_);
+
+    HcommTeamHandle lsaTeam = nullptr;
+    HcclResult getLsaTeamRet = HcclTeamMgr::GetInstance().GetLsaTeam(this, lsaTeam);
+    if (getLsaTeamRet == HCCL_SUCCESS) {
+        uint32_t lsaNetLayer = 0;
+        HcommResult getNetLayerRet = HcommTeamGetNetLayer(lsaTeam, &lsaNetLayer);
+        CHK_PRT_RET(
+            getNetLayerRet != HCOMM_SUCCESS,
+            HCCL_ERROR("[%s] get LSA team net layer failed, team[%p], ret[%d]", __func__, lsaTeam, getNetLayerRet),
+            static_cast<HcclResult>(getNetLayerRet));
+        std::vector<uint32_t> worldRankIds
+            = HcclTeamMgr::GetInstance().GetPrebuiltWorldTeamRanks(this, COMM_PROTOCOL_UB_MEM, lsaNetLayer);
+        CHK_PRT_RET(worldRankIds.empty(), HCCL_ERROR("[%s] UB worldTeam has no members", __func__), HCCL_E_INTERNAL);
+        EXCEPTION_CATCH(
+            ubMemSymmetricMemory_ = std::make_unique<UbMemSymmetricMemory>(this, lsaTeam, lsaNetLayer, worldRankIds),
+            return HCCL_E_PTR);
+        CHK_SMART_PTR_NULL(ubMemSymmetricMemory_);
+        return ubMemSymmetricMemory_->Init();
+    }
+    // 未预制LSA Team表示当前通信域仅使用URMA，属于正常场景；其他返回码表示查询异常。
+    CHK_PRT_RET(
+        getLsaTeamRet != HCCL_E_NOT_FOUND, HCCL_ERROR("[%s] get LSA team failed, ret[%d]", __func__, getLsaTeamRet),
+        getLsaTeamRet);
     return HCCL_SUCCESS;
 }
 
-HcclResult
-CollComm::CreatePrebuiltWorldTeam(CommProtocol protocol, uint32_t netLayer, const std::vector<uint32_t>& reachableRanks)
+HcclResult CollComm::CreatePrebuiltWorldTeam(
+    CommProtocol protocol, uint32_t netLayer, const uint32_t* ranks, uint32_t rankNum, uint32_t selfMemberId)
 {
-    HcommTeamHandle worldTeam = HcclTeamMgr::GetInstance().FindWorldTeamByProtoLayer(this, protocol, netLayer);
-    if (worldTeam != nullptr) {
-        HCCL_INFO(
-            "[CollComm][%s] worldTeam for protocol[%d] netLayer[%u] already exists, handle[%p]", __func__, protocol,
-            netLayer, worldTeam);
-        return HCCL_SUCCESS;
-    }
-    // 构建ranks，包含本rank的id
-    uint32_t selfMemberId = 0;
-    std::vector<uint32_t> ranks = reachableRanks;
-    ranks.emplace_back(rankId_);
-    std::sort(ranks.begin(), ranks.end());
-    uint32_t rankNum = ranks.size();
-    // 查找selfMemberId
-    for (uint32_t i = 0; i < rankNum; ++i) {
-        if (ranks[i] == rankId_) {
-            selfMemberId = i;
-            break;
-        }
-    }
-
     HcommTeamCreateDesc hcommDesc{};
     (void)HcommTeamCreateDescInit(&hcommDesc);
     hcommDesc.memberNum = rankNum;
     hcommDesc.selfMemberId = selfMemberId;
     hcommDesc.netLayer = netLayer;
     hcommDesc.protocol = protocol;
-    hcommDesc.requirement.barrierCount = 1;
+    hcommDesc.requirement.barrierCount = protocol == COMM_PROTOCOL_UB_MEM ? 0 : 1;
 
     HcommTeamHandle newTeam = nullptr;
     uint64_t syncMemSize = 0;
@@ -217,8 +263,8 @@ CollComm::CreatePrebuiltWorldTeam(CommProtocol protocol, uint32_t netLayer, cons
             createRet),
         HCCL_E_INTERNAL);
 
-    HcclResult regRet = HcclTeamMgr::GetInstance().RegisterPrebuiltWorldTeam(
-        newTeam, this, protocol, netLayer, ranks.data(), rankNum);
+    HcclResult regRet
+        = HcclTeamMgr::GetInstance().RegisterPrebuiltWorldTeam(newTeam, this, protocol, netLayer, ranks, rankNum);
     if (regRet != HCCL_SUCCESS) {
         HCCL_ERROR(
             "[CollComm][%s] RegisterPrebuiltWorldTeam failed, protocol[%d] netLayer[%u] ret[%d]", __func__, protocol,
@@ -226,48 +272,113 @@ CollComm::CreatePrebuiltWorldTeam(CommProtocol protocol, uint32_t netLayer, cons
         (void)HcommTeamDestroy(newTeam);
         return regRet;
     }
-    HCCL_INFO("[CollComm][%s] prebuilt worldTeam for protocol[%d] netLayer[%u]", __func__, protocol, netLayer);
+    HCCL_INFO(
+        "[CollComm][%s] prebuilt worldTeam for protocol[%d] netLayer[%u], handle[%p]", __func__, protocol, netLayer,
+        newTeam);
     return HCCL_SUCCESS;
 }
 
-/* 单层可达 rank 收集：遍历本 rank 到该层所有 rank 的全部 link，按协议分别记录可达 rank（同协议多条
- * link 只记一次该 peer）。URMA 各协议与 UB_MEM 分别记录。 */
 void CollComm::CollectLayerReachableRanks(
-    uint32_t netLayer, const uint32_t* ranks, uint32_t rankNum,
-    std::unordered_map<CommProtocol, std::vector<uint32_t>>& protoReachableRanks)
+    uint32_t netLayer, const uint32_t* ranks, uint32_t rankNum, ProtocolRankMap& reachableRanksByProtocol)
 {
-    for (uint32_t ri = 0; ri < rankNum; ++ri) {
-        if (ranks[ri] == rankId_) {
+    for (uint32_t peerIndex = 0; peerIndex < rankNum; ++peerIndex) {
+        if (ranks[peerIndex] == rankId_) {
             continue;
         }
         CommLink* links = nullptr;
         uint32_t linkNum = 0;
-        HcclResult ret = rankgraph_->GetLinks(netLayer, rankId_, ranks[ri], &links, &linkNum);
+        HcclResult ret = rankgraph_->GetLinks(netLayer, rankId_, ranks[peerIndex], &links, &linkNum);
         if (ret != HCCL_SUCCESS || links == nullptr || linkNum == 0) {
             HCCL_INFO(
                 "[CollComm][%s] netLayer[%u] selfRank[%u] remoteRank[%u] has no valid links, skip", __func__, netLayer,
-                rankId_, ranks[ri]);
+                rankId_, ranks[peerIndex]);
             continue;
         }
-        // 两rank之间可能存在多条不同协议的link，需遍历全部；同一协议只记一次该peer
-        for (uint32_t lk = 0; lk < linkNum; ++lk) {
-            CommProtocol proto = links[lk].linkAttr.linkProtocol;
-            auto it = protoReachableRanks.find(proto);
-            if (it == protoReachableRanks.end()) {
+        for (uint32_t linkIndex = 0; linkIndex < linkNum; ++linkIndex) {
+            const CommLink& link = links[linkIndex];
+            auto protocolIt = reachableRanksByProtocol.find(link.linkAttr.linkProtocol);
+            if (protocolIt == reachableRanksByProtocol.end()) {
                 continue;
             }
-            if (std::find(it->second.begin(), it->second.end(), ranks[ri]) == it->second.end()) {
-                it->second.emplace_back(ranks[ri]);
+            if (std::find(protocolIt->second.begin(), protocolIt->second.end(), ranks[peerIndex])
+                == protocolIt->second.end()) {
+                protocolIt->second.emplace_back(ranks[peerIndex]);
             }
         }
     }
 }
 
+HcclResult
+CollComm::CreateUrmaWorldTeams(uint32_t netLayer, uint32_t selfRankId, const ProtocolRankMap& reachableRanksByProtocol)
+{
+    static const std::set<CommProtocol> urmaProtocols
+        = {COMM_PROTOCOL_UB_CTP, COMM_PROTOCOL_UBC_TP, COMM_PROTOCOL_UBOE, COMM_PROTOCOL_UB_RTP};
+    for (CommProtocol protocol : urmaProtocols) {
+        auto protocolIt = reachableRanksByProtocol.find(protocol);
+        if (protocolIt == reachableRanksByProtocol.end() || protocolIt->second.empty()) {
+            continue;
+        }
+        HcommTeamHandle worldTeam = HcclTeamMgr::GetInstance().FindWorldTeamByProtoLayer(this, protocol, netLayer);
+        if (worldTeam != nullptr) {
+            continue;
+        }
+        std::vector<uint32_t> teamRanks = protocolIt->second;
+        teamRanks.emplace_back(selfRankId);
+        std::sort(teamRanks.begin(), teamRanks.end());
+        auto selfIt = std::find(teamRanks.begin(), teamRanks.end(), selfRankId);
+        uint32_t selfMemberId = static_cast<uint32_t>(selfIt - teamRanks.begin());
+        CHK_RET(CreatePrebuiltWorldTeam(
+            protocol, netLayer, teamRanks.data(), static_cast<uint32_t>(teamRanks.size()), selfMemberId));
+    }
+    return HCCL_SUCCESS;
+}
+
+HcclResult CollComm::InitWorldTeamLayer(uint32_t netLayer, uint32_t selfRankId, UbWorldTeamCandidate& ubCandidate)
+{
+    uint32_t* ranks = nullptr;
+    uint32_t rankNum = 0;
+    CHK_RET(rankgraph_->GetInstRanksByNetLayer(netLayer, &ranks, &rankNum));
+    if (ranks == nullptr || rankNum <= 1) {
+        HCCL_INFO("[CollComm][%s] netLayer[%u] has no valid ranks, rankNum[%u], skip", __func__, netLayer, rankNum);
+        return HCCL_SUCCESS;
+    }
+    const uint32_t* selfIt = std::find(ranks, ranks + rankNum, selfRankId);
+    if (selfIt == ranks + rankNum) {
+        HCCL_INFO("[CollComm][%s] self rank[%u] is not in netLayer[%u], skip", __func__, selfRankId, netLayer);
+        return HCCL_SUCCESS;
+    }
+    uint32_t selfMemberId = static_cast<uint32_t>(selfIt - ranks);
+    ProtocolRankMap reachableRanksByProtocol
+        = {{COMM_PROTOCOL_UB_CTP, {}},
+           {COMM_PROTOCOL_UBC_TP, {}},
+           {COMM_PROTOCOL_UBOE, {}},
+           {COMM_PROTOCOL_UB_RTP, {}},
+           {COMM_PROTOCOL_UB_MEM, {}}};
+    CollectLayerReachableRanks(netLayer, ranks, rankNum, reachableRanksByProtocol);
+    CHK_RET(CreateUrmaWorldTeams(netLayer, selfRankId, reachableRanksByProtocol));
+
+    auto ubMemIt = reachableRanksByProtocol.find(COMM_PROTOCOL_UB_MEM);
+    CHK_PRT_RET(
+        ubMemIt == reachableRanksByProtocol.end(),
+        HCCL_ERROR("[CollComm][%s] UB Memory protocol entry is missing", __func__), HCCL_E_INTERNAL);
+    const auto& ubMemReachableRanks = ubMemIt->second;
+    uint32_t leftIndex = (selfMemberId + rankNum - 1) % rankNum;
+    uint32_t rightIndex = (selfMemberId + 1) % rankNum;
+    bool hasLeftUbMemLink = std::find(ubMemReachableRanks.begin(), ubMemReachableRanks.end(), ranks[leftIndex])
+                            != ubMemReachableRanks.end();
+    bool hasRightUbMemLink = std::find(ubMemReachableRanks.begin(), ubMemReachableRanks.end(), ranks[rightIndex])
+                             != ubMemReachableRanks.end();
+    if (hasLeftUbMemLink && hasRightUbMemLink && (ubCandidate.ranks.empty() || netLayer > ubCandidate.netLayer)) {
+        ubCandidate.netLayer = netLayer;
+        ubCandidate.selfMemberId = selfMemberId;
+        ubCandidate.ranks.assign(ranks, ranks + rankNum);
+    }
+    return HCCL_SUCCESS;
+}
+
 HcclResult CollComm::InitWorldTeams()
 {
     CHK_PTR_NULL(rankgraph_);
-
-    // 1. 获取所有netLayer
     uint32_t* netLayers = nullptr;
     uint32_t netLayerNum = 0;
     CHK_RET(rankgraph_->GetNetLayers(&netLayers, &netLayerNum));
@@ -276,48 +387,19 @@ HcclResult CollComm::InitWorldTeams()
         HCCL_ERROR("[CollComm][%s] GetNetLayers returned empty, commId[%s]", __func__, commId_.c_str()),
         HCCL_E_INTERNAL);
 
-    // UB_MEM最高层信息（正序遍历时后覆盖前，最终得到最高层）
-    uint32_t ubMemNetLayer = 0;
-    std::vector<uint32_t> ubMemReachableRanks;
-
-    // 2. 逐netLayer遍历，记录可达rank
-    for (uint32_t li = 0; li < netLayerNum; ++li) {
-        uint32_t netLayer = netLayers[li];
-        uint32_t* ranks = nullptr;
-        uint32_t rankNum = 0;
-        CHK_RET(rankgraph_->GetInstRanksByNetLayer(netLayer, &ranks, &rankNum));
-        if (ranks == nullptr || rankNum <= 1) {
-            HCCL_INFO("[CollComm][%s] netLayer[%u] has no valid ranks, rankNum[%u], skip", __func__, netLayer, rankNum);
-            continue;
-        }
-
-        // 各协议可达rank列表
-        std::unordered_map<CommProtocol, std::vector<uint32_t>> protoReachableRanks
-            = {{COMM_PROTOCOL_UB_CTP, {}},
-               {COMM_PROTOCOL_UBC_TP, {}},
-               {COMM_PROTOCOL_UBOE, {}},
-               {COMM_PROTOCOL_UB_RTP, {}},
-               {COMM_PROTOCOL_UB_MEM, {}}};
-        CollectLayerReachableRanks(netLayer, ranks, rankNum, protoReachableRanks);
-
-        // 创建URMA worldTeam
-        for (auto& [proto, reachableRanks] : protoReachableRanks) {
-            if (proto == COMM_PROTOCOL_UB_MEM || reachableRanks.size() == 0) {
-                continue;
-            }
-            CHK_RET(CreatePrebuiltWorldTeam(proto, netLayer, reachableRanks));
-        }
-
-        // 记录UB_MEM最高层信息（正序遍历，后覆盖前，最终得到最高层）
-        if (protoReachableRanks[COMM_PROTOCOL_UB_MEM].size() > 0) {
-            ubMemNetLayer = netLayer;
-            ubMemReachableRanks = protoReachableRanks[COMM_PROTOCOL_UB_MEM];
-        }
+    UbWorldTeamCandidate ubCandidate;
+    for (uint32_t layerIndex = 0; layerIndex < netLayerNum; ++layerIndex) {
+        CHK_RET(InitWorldTeamLayer(netLayers[layerIndex], GetMyRankId(), ubCandidate));
     }
-
-    // 3. UB_MEM：在记录的最高层预制1个worldTeam
-    if (ubMemReachableRanks.size() > 0) {
-        CHK_RET(CreatePrebuiltWorldTeam(COMM_PROTOCOL_UB_MEM, ubMemNetLayer, ubMemReachableRanks));
+    if (ubCandidate.ranks.empty()) {
+        return HCCL_SUCCESS;
+    }
+    HcommTeamHandle worldTeam
+        = HcclTeamMgr::GetInstance().FindWorldTeamByProtoLayer(this, COMM_PROTOCOL_UB_MEM, ubCandidate.netLayer);
+    if (worldTeam == nullptr) {
+        CHK_RET(CreatePrebuiltWorldTeam(
+            COMM_PROTOCOL_UB_MEM, ubCandidate.netLayer, ubCandidate.ranks.data(),
+            static_cast<uint32_t>(ubCandidate.ranks.size()), ubCandidate.selfMemberId));
     }
     return HCCL_SUCCESS;
 }
@@ -483,52 +565,130 @@ HcclResult CollComm::ReExchangeWindowsForBoundTeams()
     return HCCL_SUCCESS;
 }
 
-HcclResult CollComm::RegisterWindow(void* ptr, size_t size, HcclCommSymWindow* winHandle)
+HcclResult CollComm::RegisterHcommWindowMapping(HcclCommSymWindow devWin, void* devLegacySymWin)
+{
+    std::unique_lock<std::shared_mutex> lock(hcommWindowMutex_);
+    bool inserted = false;
+    HcclResult insertRet = HCCL_SUCCESS;
+    EXCEPTION_CATCH(inserted = hcommToSymMap_.emplace(devWin, devLegacySymWin).second, insertRet = HCCL_E_MEMORY);
+    CHK_PRT_RET(
+        insertRet != HCCL_SUCCESS, HCCL_ERROR("[%s] add HcommWindow[%p] mapping failed", __func__, devWin), insertRet);
+    CHK_PRT_RET(!inserted, HCCL_ERROR("[%s] HcommWindow[%p] already exists", __func__, devWin), HCCL_E_INTERNAL);
+    auto reverseIt = symToHcommMap_.find(devLegacySymWin);
+    if (reverseIt != symToHcommMap_.end()) {
+        reverseIt->second = devWin;
+        return HCCL_SUCCESS;
+    }
+    insertRet = HCCL_SUCCESS;
+    EXCEPTION_CATCH(symToHcommMap_.emplace(devLegacySymWin, devWin), insertRet = HCCL_E_MEMORY);
+    if (insertRet != HCCL_SUCCESS) {
+        hcommToSymMap_.erase(devWin);
+        return insertRet;
+    }
+    return HCCL_SUCCESS;
+}
+
+HcclResult CollComm::FindLegacySymmetricWindow(HcclCommSymWindow devWin, void*& devLegacySymWin)
+{
+    std::shared_lock<std::shared_mutex> lock(hcommWindowMutex_);
+    auto hcommIt = hcommToSymMap_.find(devWin);
+    CHK_PRT_RET(
+        hcommIt == hcommToSymMap_.end(), HCCL_ERROR("[%s] HcommWindow[%p] is not registered", __func__, devWin),
+        HCCL_E_NOT_FOUND);
+    devLegacySymWin = hcommIt->second;
+    return HCCL_SUCCESS;
+}
+
+HcclResult CollComm::UnregisterHcommWindowMapping(HcclCommSymWindow devWin, void*& devLegacySymWin)
+{
+    std::unique_lock<std::shared_mutex> lock(hcommWindowMutex_);
+    auto hcommIt = hcommToSymMap_.find(devWin);
+    CHK_PRT_RET(
+        hcommIt == hcommToSymMap_.end(), HCCL_ERROR("[%s] HcommWindow[%p] is not registered", __func__, devWin),
+        HCCL_E_NOT_FOUND);
+    devLegacySymWin = hcommIt->second;
+    hcommToSymMap_.erase(hcommIt);
+    symToHcommMap_.erase(devLegacySymWin);
+    return HCCL_SUCCESS;
+}
+
+void CollComm::RemoveHcommWindow(HcclCommSymWindow devWin)
+{
+    void* devLegacySymWin = nullptr;
+    HcclResult ret = UnregisterHcommWindowMapping(devWin, devLegacySymWin);
+    if (ret != HCCL_SUCCESS) {
+        HCCL_WARNING("[%s] unregister HcommWindow[%p] mapping failed, ret[%d]", __func__, devWin, ret);
+        return;
+    }
+    (void)HcommTeamWindowDeregister(devWin);
+    CHK_PRT(symmetricMemory_->DeregisterUrmaSymmetricMem(devLegacySymWin));
+}
+
+HcclResult
+CollComm::PrepareSharedSymmetricWindow(void* ptr, size_t size, void*& devLegacySymWin, HcclCommSymWindow& devWin)
+{
+    CHK_RET(symmetricMemory_->RegisterUrmaSymmetricMem(ptr, size, &devLegacySymWin));
+    HcommResult ret = HcommTeamWindowRegister(devLegacySymWin, &devWin);
+    if (ret != HCOMM_SUCCESS) {
+        HCCL_ERROR("[%s] register HcommWindow failed, ret[%d]", __func__, ret);
+        CHK_PRT(symmetricMemory_->DeregisterUrmaSymmetricMem(devLegacySymWin));
+        return HCCL_E_INTERNAL;
+    }
+    HcclResult hcclRet = RegisterHcommWindowMapping(devWin, devLegacySymWin);
+    if (hcclRet != HCCL_SUCCESS) {
+        (void)HcommTeamWindowDeregister(devWin);
+        CHK_PRT(symmetricMemory_->DeregisterUrmaSymmetricMem(devLegacySymWin));
+        return hcclRet;
+    }
+
+    ret = HcommTeamWindowSetSelfInfo(devWin, ptr, size, nullptr, 0);
+    if (ret != HCOMM_SUCCESS) {
+        HCCL_ERROR("[%s] set HcommWindow self information failed, ret[%d]", __func__, ret);
+        RemoveHcommWindow(devWin);
+        return HCCL_E_INTERNAL;
+    }
+    return HCCL_SUCCESS;
+}
+
+HcclResult CollComm::RegisterWindow(HcclComm comm, void* ptr, size_t size, HcclCommSymWindow* winHandle)
 {
     CHK_SMART_PTR_NULL(symmetricMemory_);
     CHK_PTR_NULL(winHandle);
 
-    // 1. 创建 SymmetricWindow（AICPU URMA 路径），得到 devLegacySymWin（device 副本）
-    //    后续失败路径 legacySymWin 部分由 symmetricMemory_ 析构清理
     void* devLegacySymWin = nullptr;
-    CHK_RET(symmetricMemory_->RegisterUrmaSymmetricMem(ptr, size, &devLegacySymWin));
+    HcclCommSymWindow devWin = nullptr;
+    CHK_RET(PrepareSharedSymmetricWindow(ptr, size, devLegacySymWin, devWin));
 
-    // 2. 创建 HcommWindow device 副本
-    void* devWin = nullptr;
-    HcommResult regRet = HcommTeamWindowRegister(devLegacySymWin, &devWin);
-    if (regRet != 0) {
-        HCCL_ERROR("[CollComm][RegisterWindow] HcommTeamWindowRegister failed, ret[%d]", regRet);
-        return HCCL_E_INTERNAL;
-    }
-    // 3. 登记 devHcommWindow↔devLegacySymWin 双向映射（供 DeregisterWindow 注销 SymmetricWindow、
-    //    GetCommSymWin O(1) 反查），并登记到 L3 接管回填资源
-    {
-        std::unique_lock<std::shared_mutex> lock(hcommWindowMutex_);
-        hcommToSymMap_[devWin] = devLegacySymWin;
-        symToHcommMap_[devLegacySymWin] = devWin;
+    // URMA专用的Window后注册补交换：若Team已完成Channel建链，则携带新Window的memHandle
+    //    重新执行通道交换并回填远端内存信息；常规的Window先注册、Team后建链时序下为空操作。
+    HcclResult ret = ReExchangeWindowsForBoundTeams();
+    if (ret != HCCL_SUCCESS) {
+        RemoveHcommWindow(devWin);
+        return ret;
     }
 
-    // 3.5 登记本端窗口注册信息（用户 VA/size），供 HcommWindow.netWin.baseRemoteMemAddr 表回填本端槽位；
-    //     本端层槽位此时未知，先置空，由 UpdateHcommWindowRemoteMem 首次调用时补齐
-    HcommResult selfRet = HcommTeamWindowSetSelfInfo(devWin, ptr, size, nullptr, 0);
-    if (selfRet != 0) {
-        HCCL_ERROR("[CollComm][RegisterWindow] HcommTeamWindowSetSelfInfo failed, ret[%d]", selfRet);
-        (void)HcommTeamWindowDeregister(devWin);
-        {
-            std::unique_lock<std::shared_mutex> lock(hcommWindowMutex_);
-            hcommToSymMap_.erase(devWin);
-            symToHcommMap_.erase(devLegacySymWin);
+    // UB Memory与URMA共用同一个HcommWindow；URMA维护netWin/legacySymWindow，UB Memory补充lsaWin。
+    if (ubMemSymmetricMemory_ != nullptr) {
+        ret = ubMemSymmetricMemory_->RegisterWindow(ptr, size, devWin, comm);
+        if (ret != HCCL_SUCCESS) {
+            HCCL_ERROR(
+                "[CollComm][%s] UB Memory window registration failed, commId[%s], ptr[%p], size[%zu], ret[%d]",
+                __func__, commId_.c_str(), ptr, size, ret);
+            RemoveHcommWindow(devWin);
+            return ret;
         }
-        return HCCL_E_INTERNAL;
+    } else if (IsFullMode()) {
+        ret = RecordHcommWindowOwner(devWin, comm);
+        if (ret != HCCL_SUCCESS) {
+            HCCL_ERROR("[CollComm][%s] record HcommWindow[%p] owner failed, ret[%d]", __func__, devWin, ret);
+            RemoveHcommWindow(devWin);
+            return ret;
+        }
     }
 
     *winHandle = devWin;
 
-    // 4. window 后注册补交换：已存在建链 Team 时，带新 window 的 memHandle 重新建链交换并回填
-    //    （无已建链 Team 的常规时序 window 先于 Team，内部为空操作）
-    CHK_RET(ReExchangeWindowsForBoundTeams());
-
-    HCCL_INFO(
+    HCCL_RUN_INFO(
         "[CollComm][RegisterWindow] success, HcommWindow[%p], devLegacySymWin[%p], ptr[%p], size[%zu]", devWin,
         devLegacySymWin, ptr, size);
     return HCCL_SUCCESS;
@@ -538,25 +698,24 @@ HcclResult CollComm::DeregisterWindow(HcclCommSymWindow winHandle)
 {
     CHK_SMART_PTR_NULL(symmetricMemory_);
 
-    // 1. 从映射取出 devLegacySymWin（双向映射同步清理），注销 L3 回填资源并释放 HcommWindow device 副本
+    // 先通过Host索引取得底层URMA Window，完成窗口内容清理后再销毁外层HcommWindow。
     void* devLegacySymWin = nullptr;
-    {
-        std::unique_lock<std::shared_mutex> lock(hcommWindowMutex_);
-        auto it = hcommToSymMap_.find(winHandle);
-        CHK_PRT_RET(
-            it == hcommToSymMap_.end(),
-            HCCL_ERROR("[CollComm][DeregisterWindow] winHandle[%p] not found in hcommToSymMap_", winHandle),
-            HCCL_E_NOT_FOUND);
-        devLegacySymWin = it->second;
-        hcommToSymMap_.erase(it);
-        symToHcommMap_.erase(devLegacySymWin);
-    }
-    HcommResult unregRet = HcommTeamWindowDeregister(winHandle);
-    if (unregRet != 0) {
-        HCCL_WARNING("[CollComm][DeregisterWindow] HcommTeamWindowDeregister failed, ret[%d]", unregRet);
+    CHK_RET(FindLegacySymmetricWindow(winHandle, devLegacySymWin));
+    HcclResult firstError = HCCL_SUCCESS;
+
+    // UB Memory侧先注销：失败时不推进URMA侧清理；
+    // 避免legacy SymmetricWindow先被销毁而UB窗口记录仍ACTIVE导致的悬空引用。
+    if (ubMemSymmetricMemory_ != nullptr) {
+        HcclResult ubDeregRet = ubMemSymmetricMemory_->DeregisterWindow(winHandle);
+        if (ubDeregRet != HCCL_SUCCESS) {
+            HCCL_ERROR(
+                "[CollComm][%s] deregister UB Memory window[%p] failed, ret[%d]", __func__, winHandle, ubDeregRet);
+            return ubDeregRet;
+        }
     }
 
-    // 2. 注销 SymmetricWindow
+    // 以下各步任一失败都记录首个错误码并继续清理，保证Host索引与HcommWindow始终被移除，
+    // 避免中途失败后索引残留悬空。
     SymmetricMemoryResource resource;
     HcclResult getResourceRet = symmetricMemory_->GetRegisteredMemoryResource(devLegacySymWin, resource);
     // 清理 tagToHcommMap_ 中对应的 tag 条目
@@ -570,8 +729,14 @@ HcclResult CollComm::DeregisterWindow(HcclCommSymWindow winHandle)
             devLegacySymWin, getResourceRet);
     }
 
-    HcclResult ret = symmetricMemory_->DeregisterUrmaSymmetricMem(devLegacySymWin);
-    if (ret == HCCL_SUCCESS && getResourceRet == HCCL_SUCCESS) {
+    HcclResult urmaDeregRet = symmetricMemory_->DeregisterUrmaSymmetricMem(devLegacySymWin);
+    if (urmaDeregRet != HCCL_SUCCESS) {
+        HCCL_ERROR(
+            "[CollComm][%s] deregister URMA symmetric memory[%p] failed, ret[%d]", __func__, devLegacySymWin,
+            urmaDeregRet);
+        firstError = urmaDeregRet;
+    }
+    if (getResourceRet == HCCL_SUCCESS && urmaDeregRet == HCCL_SUCCESS) {
         // 对称内存窗口注销后，同步删除本地memTag到memHandle索引。
         {
             std::unique_lock<std::shared_mutex> lock(registeredSymMemHandleMapMtx_);
@@ -579,7 +744,34 @@ HcclResult CollComm::DeregisterWindow(HcclCommSymWindow winHandle)
         }
         UnregisterSymmetricMemoryResource(resource);
     }
-    return ret;
+
+    void* detachedLegacySymWin = nullptr;
+    HcclResult unregisterMappingRet = UnregisterHcommWindowMapping(winHandle, detachedLegacySymWin);
+    if (unregisterMappingRet != HCCL_SUCCESS) {
+        HCCL_ERROR(
+            "[CollComm][%s] unregister HcommWindow[%p] mapping failed, ret[%d]", __func__, winHandle,
+            unregisterMappingRet);
+        if (firstError == HCCL_SUCCESS) {
+            firstError = unregisterMappingRet;
+        }
+    } else if (detachedLegacySymWin != devLegacySymWin) {
+        HCCL_ERROR(
+            "[CollComm][%s] HcommWindow[%p] legacy window changed from[%p] to[%p]", __func__, winHandle,
+            devLegacySymWin, detachedLegacySymWin);
+        if (firstError == HCCL_SUCCESS) {
+            firstError = HCCL_E_INTERNAL;
+        }
+    }
+
+    // 先移除Host索引，再销毁Device HcommWindow，避免使用已注销的winHandle执行索引操作。
+    HcommResult unregRet = HcommTeamWindowDeregister(winHandle);
+    if (unregRet != HCOMM_SUCCESS) {
+        HCCL_ERROR("[CollComm][%s] deregister HcommWindow[%p] failed, ret[%d]", __func__, winHandle, unregRet);
+        if (firstError == HCCL_SUCCESS) {
+            firstError = HCCL_E_INTERNAL;
+        }
+    }
+    return firstError;
 }
 
 HcclResult CollComm::GetCommSymWin(void* ptr, size_t size, HcclCommSymWindow* winHandle, size_t* offset)
@@ -591,7 +783,7 @@ HcclResult CollComm::GetCommSymWin(void* ptr, size_t size, HcclCommSymWindow* wi
     CHK_PRT_RET(
         ret != HCCL_SUCCESS, HCCL_ERROR("[CollComm][GetCommSymWin] FindUrmaSymmetricWindow failed, ret[%d]", ret), ret);
     if (devLegacySymWin == nullptr) {
-        // A5查询未命中不是错误，返回nullptr让算子侧按普通内存路径处理。
+        // 保持原有查询语义：未命中不是错误，由调用方根据空句柄回退到普通内存路径。
         *winHandle = nullptr;
         *offset = 0;
         return HCCL_SUCCESS;

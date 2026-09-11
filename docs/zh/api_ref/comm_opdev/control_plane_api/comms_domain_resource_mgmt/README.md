@@ -30,3 +30,6 @@
 - [HcclTeamCreateDescInit](HcclTeamCreateDescInit.md)
 - [HcclTeamCreate](HcclTeamCreate.md)
 - [HcclTeamDestroy](HcclTeamDestroy.md)
+- [HcclTeamGetLsaTeam](HcclTeamGetLsaTeam.md)
+- [HcclTeamMemberToRank](HcclTeamMemberToRank.md)
+- [HcclTeamRankToMember](HcclTeamRankToMember.md)
