@@ -411,6 +411,10 @@ private:
 uint32_t gCapturedChannelDescQos = 0U;
 uint32_t gCapturedChannelDescSqDepth = 0U;
 const char* gCapturedChannelDescChannelName = nullptr;
+// 捕获 roceAttr 队列深度与 srcPortList，用于 v4 兼容性验证
+uint32_t gCapturedRoceSqDepth = 0U;
+uint32_t gCapturedRoceScqDepth = 0U;
+uint16_t* gCapturedRoceSrcPortList = nullptr;
 
 HcclResult CaptureCreateChannelsLoop(
     EndpointHandle, CommEngine, HcommChannelDesc* channelDescs, uint32_t channelNum, ChannelHandle*)
@@ -419,6 +423,9 @@ HcclResult CaptureCreateChannelsLoop(
         gCapturedChannelDescQos = channelDescs[0].qos;
         gCapturedChannelDescSqDepth = channelDescs[0].ubAttr.sqDepth;
         gCapturedChannelDescChannelName = channelDescs[0].channelName;
+        gCapturedRoceSqDepth = channelDescs[0].roceAttr.sqDepth;
+        gCapturedRoceScqDepth = channelDescs[0].roceAttr.scqDepth;
+        gCapturedRoceSrcPortList = channelDescs[0].roceAttr.srcPortList;
     }
     return HCCL_SUCCESS;
 }
@@ -889,4 +896,221 @@ TEST_F(HcommCAdptTest, ut_HcommEndpointCheckFeature_When_SupportedFeature_Expect
     HcommResult ret = HcommEndpointCheckFeature(HCOMM_ENDPOINT_FEATURE_NDA, &endpointDesc, &value);
     EXPECT_EQ(ret, HCCL_SUCCESS);
     EXPECT_EQ(value, true);
+}
+
+// ===================== CheckRoceAttr 队列深度校验 UT =====================
+
+/**
+ * 场景: RoCE协议，队列深度字段均为0（使用默认值哨兵）
+ * 预期: 校验通过，返回 HCCL_SUCCESS
+ */
+TEST_F(HcommCAdptTest, Ut_CheckRoceAttr_When_AllDepthsZero_Expect_Success)
+{
+    HcommChannelDesc channelDesc{};
+    ASSERT_EQ(HcommChannelDescInit(&channelDesc, 1), HCCL_SUCCESS);
+    channelDesc.remoteEndpoint.protocol = COMM_PROTOCOL_ROCE;
+    channelDesc.qos = 0xFFFFFFFFU; // 不触发 ApplyRoceQosCompatToSlTc 的外部依赖
+    channelDesc.roceAttr.sqDepth = 0U;
+    channelDesc.roceAttr.scqDepth = 0U;
+
+    HcommResult ret = CheckRoceAttr(channelDesc, ENDPOINT_LOC_TYPE_DEVICE);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+}
+
+/**
+ * 场景: RoCE协议，队列深度字段均为 INVALID_UINT（0xFFFFFFFF，使用默认值哨兵）
+ * 预期: 校验通过，返回 HCCL_SUCCESS
+ */
+TEST_F(HcommCAdptTest, Ut_CheckRoceAttr_When_AllDepthsInvalidUint_Expect_Success)
+{
+    HcommChannelDesc channelDesc{};
+    ASSERT_EQ(HcommChannelDescInit(&channelDesc, 1), HCCL_SUCCESS);
+    channelDesc.remoteEndpoint.protocol = COMM_PROTOCOL_ROCE;
+    channelDesc.qos = 0xFFFFFFFFU;
+    channelDesc.roceAttr.sqDepth = 0xFFFFFFFFU;
+    channelDesc.roceAttr.scqDepth = 0xFFFFFFFFU;
+
+    HcommResult ret = CheckRoceAttr(channelDesc, ENDPOINT_LOC_TYPE_DEVICE);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+}
+
+/**
+ * 场景: RoCE协议，队列深度字段均为合法2的幂值（128/2048）
+ * 预期: 校验通过，返回 HCCL_SUCCESS
+ */
+TEST_F(HcommCAdptTest, Ut_CheckRoceAttr_When_AllDepthsValidPowerOfTwo_Expect_Success)
+{
+    HcommChannelDesc channelDesc{};
+    ASSERT_EQ(HcommChannelDescInit(&channelDesc, 1), HCCL_SUCCESS);
+    channelDesc.remoteEndpoint.protocol = COMM_PROTOCOL_ROCE;
+    channelDesc.qos = 0xFFFFFFFFU;
+    channelDesc.roceAttr.sqDepth = 128U;
+    channelDesc.roceAttr.scqDepth = 2048U;
+
+    HcommResult ret = CheckRoceAttr(channelDesc, ENDPOINT_LOC_TYPE_DEVICE);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+}
+
+/**
+ * 场景: RoCE协议，sqDepth 小于最小值64（如32）
+ * 预期: 校验失败，返回 HCCL_E_PARA
+ */
+TEST_F(HcommCAdptTest, Ut_CheckRoceAttr_When_SqDepthTooSmall_Expect_E_PARA)
+{
+    HcommChannelDesc channelDesc{};
+    ASSERT_EQ(HcommChannelDescInit(&channelDesc, 1), HCCL_SUCCESS);
+    channelDesc.remoteEndpoint.protocol = COMM_PROTOCOL_ROCE;
+    channelDesc.qos = 0xFFFFFFFFU;
+    channelDesc.roceAttr.sqDepth = 32U; // 小于64
+    channelDesc.roceAttr.scqDepth = 0U;
+
+    HcommResult ret = CheckRoceAttr(channelDesc, ENDPOINT_LOC_TYPE_DEVICE);
+    EXPECT_EQ(ret, HCCL_E_PARA);
+}
+
+/**
+ * 场景: RoCE协议，sqDepth 等于最小值64
+ * 预期: 校验通过，返回 HCCL_SUCCESS
+ */
+TEST_F(HcommCAdptTest, Ut_CheckRoceAttr_When_SqDepthIsMin64_Expect_Success)
+{
+    HcommChannelDesc channelDesc{};
+    ASSERT_EQ(HcommChannelDescInit(&channelDesc, 1), HCCL_SUCCESS);
+    channelDesc.remoteEndpoint.protocol = COMM_PROTOCOL_ROCE;
+    channelDesc.qos = 0xFFFFFFFFU;
+    channelDesc.roceAttr.sqDepth = 64U; // 等于最小值64
+    channelDesc.roceAttr.scqDepth = 0U;
+
+    HcommResult ret = CheckRoceAttr(channelDesc, ENDPOINT_LOC_TYPE_DEVICE);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+}
+
+/**
+ * 场景: RoCE协议，sqDepth 大于最大值32768（如65536）
+ * 预期: 校验失败，返回 HCCL_E_PARA
+ */
+TEST_F(HcommCAdptTest, Ut_CheckRoceAttr_When_SqDepthTooLarge_Expect_E_PARA)
+{
+    HcommChannelDesc channelDesc{};
+    ASSERT_EQ(HcommChannelDescInit(&channelDesc, 1), HCCL_SUCCESS);
+    channelDesc.remoteEndpoint.protocol = COMM_PROTOCOL_ROCE;
+    channelDesc.qos = 0xFFFFFFFFU;
+    channelDesc.roceAttr.sqDepth = 65536U; // 大于32768
+    channelDesc.roceAttr.scqDepth = 0U;
+
+    HcommResult ret = CheckRoceAttr(channelDesc, ENDPOINT_LOC_TYPE_DEVICE);
+    EXPECT_EQ(ret, HCCL_E_PARA);
+}
+
+/**
+ * 场景: RoCE协议，sqDepth 非2的幂（如300）
+ * 预期: 校验失败，返回 HCCL_E_PARA
+ */
+TEST_F(HcommCAdptTest, Ut_CheckRoceAttr_When_SqDepthNotPowerOfTwo_Expect_E_PARA)
+{
+    HcommChannelDesc channelDesc{};
+    ASSERT_EQ(HcommChannelDescInit(&channelDesc, 1), HCCL_SUCCESS);
+    channelDesc.remoteEndpoint.protocol = COMM_PROTOCOL_ROCE;
+    channelDesc.qos = 0xFFFFFFFFU;
+    channelDesc.roceAttr.sqDepth = 300U; // 非2的幂
+    channelDesc.roceAttr.scqDepth = 0U;
+
+    HcommResult ret = CheckRoceAttr(channelDesc, ENDPOINT_LOC_TYPE_DEVICE);
+    EXPECT_EQ(ret, HCCL_E_PARA);
+}
+
+/**
+ * 场景: 非RoCE协议（如HCCS），深度字段为非法值
+ * 预期: 不触发深度校验，返回 HCCL_SUCCESS
+ */
+TEST_F(HcommCAdptTest, Ut_CheckRoceAttr_When_NonRoCEProtocol_Expect_Success_NoDepthCheck)
+{
+    HcommChannelDesc channelDesc{};
+    ASSERT_EQ(HcommChannelDescInit(&channelDesc, 1), HCCL_SUCCESS);
+    channelDesc.remoteEndpoint.protocol = COMM_PROTOCOL_HCCS; // 非RoCE协议
+    channelDesc.roceAttr.sqDepth = 64U;                       // 非法值，但不应被校验
+
+    HcommResult ret = CheckRoceAttr(channelDesc, ENDPOINT_LOC_TYPE_DEVICE);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+}
+
+// ===================== ProcessHcommChannelDescs v4 兼容性 UT =====================
+
+/**
+ * 场景: 低版本(VERSION_ONE)desc，设置合法的队列深度值
+ * 预期: 经 ProcessHcommChannelDescs 处理后，深度字段被置为 INVALID_UINT（默认哨兵）
+ */
+TEST_F(HcommCAdptTest, Ut_HcommCollectiveChannelCreate_LowerVersionDesc_ClearsRoceQueueDepth)
+{
+    gCapturedRoceSqDepth = 0U;
+    gCapturedRoceScqDepth = 0U;
+    ScopedChannelAdptStubEndpoint stubEndpoint;
+    EndpointHandle endpointHandle = stubEndpoint.Get();
+    HcommChannelDesc channelDesc{};
+    ASSERT_EQ(HcommChannelDescInit(&channelDesc, 1), HCCL_SUCCESS);
+    channelDesc.header.version = HCOMM_CHANNEL_VERSION_ONE;
+    channelDesc.remoteEndpoint.protocol = COMM_PROTOCOL_ROCE;
+    channelDesc.roceAttr.sqDepth = 256U;
+    channelDesc.roceAttr.scqDepth = 1024U;
+    ChannelHandle channels[1] = {0};
+
+    MOCKER(ChannelProcess::CreateChannelsLoop).stubs().will(invoke(CaptureCreateChannelsLoop));
+
+    HcommResult ret = HcommCollectiveChannelCreate(endpointHandle, COMM_ENGINE_CPU, &channelDesc, 1, channels);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+    // 低版本 desc 经处理后，深度字段应被置为 INVALID_UINT（0xFFFFFFFF）
+    EXPECT_EQ(gCapturedRoceSqDepth, 0xFFFFFFFFU);
+    EXPECT_EQ(gCapturedRoceScqDepth, 0xFFFFFFFFU);
+}
+
+/**
+ * 场景: 当前版本desc，设置合法的队列深度值
+ * 预期: 经 ProcessHcommChannelDescs 处理后，深度字段保持输入值（透传）
+ */
+TEST_F(HcommCAdptTest, Ut_HcommCollectiveChannelCreate_CurrentVersionDesc_KeepsRoceQueueDepth)
+{
+    gCapturedRoceSqDepth = 0U;
+    gCapturedRoceScqDepth = 0U;
+    ScopedChannelAdptStubEndpoint stubEndpoint;
+    EndpointHandle endpointHandle = stubEndpoint.Get();
+    HcommChannelDesc channelDesc{};
+    ASSERT_EQ(HcommChannelDescInit(&channelDesc, 1), HCCL_SUCCESS);
+    channelDesc.header.version = HCOMM_CHANNEL_VERSION;
+    channelDesc.remoteEndpoint.protocol = COMM_PROTOCOL_ROCE;
+    channelDesc.roceAttr.sqDepth = 128U;
+    channelDesc.roceAttr.scqDepth = 1024U;
+    ChannelHandle channels[1] = {0};
+
+    MOCKER(ChannelProcess::CreateChannelsLoop).stubs().will(invoke(CaptureCreateChannelsLoop));
+
+    HcommResult ret = HcommCollectiveChannelCreate(endpointHandle, COMM_ENGINE_CPU, &channelDesc, 1, channels);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+    // 当前版本 desc 经处理后，深度字段应保持输入值
+    EXPECT_EQ(gCapturedRoceSqDepth, 128U);
+    EXPECT_EQ(gCapturedRoceScqDepth, 1024U);
+}
+
+/**
+ * 场景: 当前版本desc，设置 srcPortList 指针
+ * 预期: 经 ProcessHcommChannelDescs 处理后，srcPortList 保持输入值（透传）
+ */
+TEST_F(HcommCAdptTest, Ut_HcommCollectiveChannelCreate_V4Desc_KeepsSrcPortList)
+{
+    uint16_t portList[2] = {100, 200};
+    gCapturedRoceSrcPortList = nullptr;
+    ScopedChannelAdptStubEndpoint stubEndpoint;
+    EndpointHandle endpointHandle = stubEndpoint.Get();
+    HcommChannelDesc channelDesc{};
+    ASSERT_EQ(HcommChannelDescInit(&channelDesc, 1), HCCL_SUCCESS);
+    channelDesc.header.version = HCOMM_CHANNEL_VERSION;
+    channelDesc.remoteEndpoint.protocol = COMM_PROTOCOL_ROCE;
+    channelDesc.roceAttr.srcPortList = portList;
+    ChannelHandle channels[1] = {0};
+
+    MOCKER(ChannelProcess::CreateChannelsLoop).stubs().will(invoke(CaptureCreateChannelsLoop));
+
+    HcommResult ret = HcommCollectiveChannelCreate(endpointHandle, COMM_ENGINE_CPU, &channelDesc, 1, channels);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+    // 当前版本 desc 的 srcPortList 应被正确透传
+    EXPECT_EQ(gCapturedRoceSrcPortList, portList);
 }

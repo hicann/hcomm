@@ -336,7 +336,7 @@ TEST_F(InterfaceHcclVerbsTest, CreateAscendCQWithAttr_NullPtr)
 TEST_F(InterfaceHcclVerbsTest, CreateAscendCQWithAttr_DepthTooSmall)
 {
     AscendCQInfo cqInfo{};
-    cqInfo.cqDepth = 64;
+    cqInfo.cqDepth = 32;
 
     EXPECT_EQ(hcclCreateAscendCQWithAttr(&cqInfo), HCCL_E_PARA);
 }

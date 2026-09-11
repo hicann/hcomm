@@ -40,7 +40,7 @@ namespace {
     constexpr uint32_t kDefaultRocePort = 16666;
     constexpr uint8_t kHcommTrafficClassConfigNotSet = 0xff;
     constexpr uint8_t kHcommServiceLevelConfigNotSet = 0xff;
-    constexpr uint32_t kAicpuTsRoceSqCqDepth = 2048U;
+    constexpr uint32_t kAicpuTsRoceSqCqDepth = 2048U; // SQ/发送CQ默认深度
 
     HcclResult CommAddrToHcclIp(const CommAddr& ca, hccl::HcclIpAddress& out)
     {
@@ -279,8 +279,12 @@ HcclResult AicpuTsRoceChannel::ConfigureMachineParaForTransport()
     machinePara_.isIndOp = true;
     machinePara_.isAicpuModeEn = true;
     machinePara_.notifyNum = 0;
-    machinePara_.queueDepthAttr.sqDepth = kAicpuTsRoceSqCqDepth;
-    machinePara_.queueDepthAttr.sendCqDepth = kAicpuTsRoceSqCqDepth;
+    // 解析用户配置的队列深度：0/INVALID_UINT表示使用默认值，否则使用用户配置（已在CheckRoceAttr校验）
+    auto resolveQueueDepth = [](uint32_t userVal, uint32_t defaultVal) -> u32 {
+        return (userVal != 0U && userVal != INVALID_UINT) ? userVal : defaultVal;
+    };
+    machinePara_.queueDepthAttr.sqDepth = resolveQueueDepth(channelDesc_.roceAttr.sqDepth, kAicpuTsRoceSqCqDepth);
+    machinePara_.queueDepthAttr.sendCqDepth = resolveQueueDepth(channelDesc_.roceAttr.scqDepth, kAicpuTsRoceSqCqDepth);
     machinePara_.sockets.clear();
     machinePara_.sockets.push_back(dataSocket_);
     if (channelDesc_.roceAttr.tc != kHcommTrafficClassConfigNotSet) {

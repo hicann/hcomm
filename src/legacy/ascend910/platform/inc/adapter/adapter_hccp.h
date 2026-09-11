@@ -39,12 +39,12 @@ constexpr u32 AICPU_SQ_CQ_DEPTH = 2048; // 2K
 // QP CQ default attr
 constexpr u32 DEFAULT_OPBASE_MAX_SEND_WR = 32768;
 constexpr u32 DEFAULT_OFFLINE_MAX_SEND_WR = 128;
-constexpr u32 DEFAULT_MAX_RECV_WR = 128;
+constexpr u32 DEFAULT_MAX_RECV_WR = 64;
 constexpr u32 DEFAULT_MAX_SEND_SGE = 1;
 constexpr u32 DEFAULT_MAX_RECV_SGE = 1;
 constexpr u32 DEFAULT_MAX_SEND_CQ_DEPTH = 32768;
 constexpr u32 DEFAULT_MAX_ONE_SIDED_SEND_CQ_DEPTH = 512;
-constexpr u32 DEFAULT_MAX_RECV_CQ_DEPTH = 128;
+constexpr u32 DEFAULT_MAX_RECV_CQ_DEPTH = 64;
 constexpr u32 DEFAULT_MAX_INLINE_DATA = 32;
 constexpr u32 HETEROG_OFFLINE_EXT_MAX_SEND_WR = 512;
 
@@ -63,7 +63,7 @@ constexpr u32 RA_RS_GET_ROCE_API = 96;        // RA_RS_GET_ROCE_API 的 opcode�
 constexpr u32 RA_RS_ATOMIC_WRITE_VERSION = 1; // 支持使用atomic write的版本号为1
 
 constexpr u32 QP_DEPTH_MAX = 32768;
-constexpr u32 QP_DEPTH_MIN = 128;
+constexpr u32 QP_DEPTH_MIN = 64;
 
 using QpConfig = struct QpConfigDef {
     hccl::HcclIpAddress selfIp;

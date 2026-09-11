@@ -162,7 +162,7 @@ const std::map<HrtJettyMode, JettyMode> HRT_JETTY_MODE_MAP
        {HrtJettyMode::CCU_TA_CACHE, JettyMode::JETTY_MODE_CCU_TA_CACHE}};
 
 constexpr uint8_t RNR_RETRY = 7;
-constexpr uint32_t RQ_DEPTH = 256;
+constexpr uint32_t RQ_DEPTH = 64;
 
 HcclResult
 HccpUbCreateJetty(const CtxHandle ctxhandle, const HrtRaUbCreateJettyParam& in, HrtRaUbJettyCreatedOutParam& out)

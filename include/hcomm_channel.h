@@ -56,6 +56,8 @@ typedef struct {
             uint32_t cqAttrFlags; ///< CQ属性标志位，用于配置ibv_cq_init_attr_ex的flags标志位，默认0。
                                   ///< 备注：NPU网卡不支持该配置；第三方网卡场景下是否有效，与各自网卡能力相关
             uint16_t* srcPortList; ///< QP源端口号，用于哈希分流
+            uint32_t sqDepth; ///< SQ队列深度，0/0xffffffff表示使用默认值（默认2K）；有效范围[64, 32K]且为2^n
+            uint32_t scqDepth; ///< 发送CQ队列深度，0/0xffffffff表示使用默认值（默认2K）；有效范围[64, 32K]且为2^n
         } roceAttr;
         struct {
             uint32_t qos; ///< HCCS QoS

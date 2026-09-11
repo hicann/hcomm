@@ -717,3 +717,94 @@ TEST_F(AicpuTsRoceChannelTest, Ut_GetStatus_WhenRoceStatusFailed_Returns_Failed)
 
     EXPECT_EQ(ch.GetStatus(), ChannelStatus::FAILED);
 }
+
+// ===================== ConfigureMachineParaForTransport 队列深度解析 UT =====================
+
+/**
+ * 场景: 队列深度字段为0和INVALID_UINT（使用默认值哨兵）
+ * 预期: queueDepthAttr 使用默认值 sqDepth=2048, sendCqDepth=2048
+ */
+TEST_F(AicpuTsRoceChannelTest, Ut_ConfigureMachineParaForTransport_WhenDepthsDefault_Expect_DefaultValues)
+{
+    DevType devType = DevType::DEV_TYPE_910B;
+    MOCKER(hrtGetDevice).stubs().with(mockcpp::any()).will(invoke(StubHrtGetDeviceWriteZero));
+    MOCKER(hrtGetDeviceType).stubs().with(outBound(devType)).will(returnValue(HCCL_SUCCESS));
+
+    HcommChannelDesc desc{};
+    AicpuTsRoceChannel ch(reinterpret_cast<EndpointHandle>(0x1), desc);
+    ch.isLocalIpClient_ = true;
+    ch.localEp_.loc.locType = ENDPOINT_LOC_TYPE_DEVICE;
+    ch.localEp_.loc.device.devPhyId = 2U;
+    ch.remoteEp_.loc.locType = ENDPOINT_LOC_TYPE_DEVICE;
+    ch.remoteEp_.loc.device.devPhyId = 3U;
+    ch.dataSocket_ = nullptr;
+    ch.channelDesc_.roceAttr.tc = 0xffU;
+    ch.channelDesc_.roceAttr.sl = 0xffU;
+    // 队列深度字段为默认哨兵值（0 和 0xFFFFFFFF）
+    ch.channelDesc_.roceAttr.sqDepth = 0U;
+    ch.channelDesc_.roceAttr.scqDepth = 0xFFFFFFFFU;
+
+    ASSERT_EQ(ch.ConfigureMachineParaForTransport(), HCCL_SUCCESS);
+    // 默认值：sqDepth/scqDepth→2048
+    EXPECT_EQ(ch.machinePara_.queueDepthAttr.sqDepth, 2048U);
+    EXPECT_EQ(ch.machinePara_.queueDepthAttr.sendCqDepth, 2048U);
+}
+
+/**
+ * 场景: 队列深度字段为用户配置的合法值
+ * 预期: queueDepthAttr 透传用户值
+ */
+TEST_F(AicpuTsRoceChannelTest, Ut_ConfigureMachineParaForTransport_WhenDepthsUserConfigured_Expect_PassedThrough)
+{
+    DevType devType = DevType::DEV_TYPE_910B;
+    MOCKER(hrtGetDevice).stubs().with(mockcpp::any()).will(invoke(StubHrtGetDeviceWriteZero));
+    MOCKER(hrtGetDeviceType).stubs().with(outBound(devType)).will(returnValue(HCCL_SUCCESS));
+
+    HcommChannelDesc desc{};
+    AicpuTsRoceChannel ch(reinterpret_cast<EndpointHandle>(0x1), desc);
+    ch.isLocalIpClient_ = true;
+    ch.localEp_.loc.locType = ENDPOINT_LOC_TYPE_DEVICE;
+    ch.localEp_.loc.device.devPhyId = 2U;
+    ch.remoteEp_.loc.locType = ENDPOINT_LOC_TYPE_DEVICE;
+    ch.remoteEp_.loc.device.devPhyId = 3U;
+    ch.dataSocket_ = nullptr;
+    ch.channelDesc_.roceAttr.tc = 0xffU;
+    ch.channelDesc_.roceAttr.sl = 0xffU;
+    // 用户配置的合法深度值
+    ch.channelDesc_.roceAttr.sqDepth = 256U;
+    ch.channelDesc_.roceAttr.scqDepth = 1024U;
+
+    ASSERT_EQ(ch.ConfigureMachineParaForTransport(), HCCL_SUCCESS);
+    // 用户值应透传到 queueDepthAttr 对应字段
+    EXPECT_EQ(ch.machinePara_.queueDepthAttr.sqDepth, 256U);
+    EXPECT_EQ(ch.machinePara_.queueDepthAttr.sendCqDepth, 1024U);
+}
+
+/**
+ * 场景: 部分深度字段配置、部分留默认
+ * 预期: 各自正确解析（用户值透传，默认值使用默认）
+ */
+TEST_F(AicpuTsRoceChannelTest, Ut_ConfigureMachineParaForTransport_WhenMixedDepths_Expect_RespectivelyResolved)
+{
+    DevType devType = DevType::DEV_TYPE_910B;
+    MOCKER(hrtGetDevice).stubs().with(mockcpp::any()).will(invoke(StubHrtGetDeviceWriteZero));
+    MOCKER(hrtGetDeviceType).stubs().with(outBound(devType)).will(returnValue(HCCL_SUCCESS));
+
+    HcommChannelDesc desc{};
+    AicpuTsRoceChannel ch(reinterpret_cast<EndpointHandle>(0x1), desc);
+    ch.isLocalIpClient_ = true;
+    ch.localEp_.loc.locType = ENDPOINT_LOC_TYPE_DEVICE;
+    ch.localEp_.loc.device.devPhyId = 2U;
+    ch.remoteEp_.loc.locType = ENDPOINT_LOC_TYPE_DEVICE;
+    ch.remoteEp_.loc.device.devPhyId = 3U;
+    ch.dataSocket_ = nullptr;
+    ch.channelDesc_.roceAttr.tc = 0xffU;
+    ch.channelDesc_.roceAttr.sl = 0xffU;
+    // 混合：sqDepth 用户配置，scqDepth 留默认
+    ch.channelDesc_.roceAttr.sqDepth = 256U;
+    ch.channelDesc_.roceAttr.scqDepth = 0xFFFFFFFFU;
+
+    ASSERT_EQ(ch.ConfigureMachineParaForTransport(), HCCL_SUCCESS);
+    EXPECT_EQ(ch.machinePara_.queueDepthAttr.sqDepth, 256U);      // 用户值
+    EXPECT_EQ(ch.machinePara_.queueDepthAttr.sendCqDepth, 2048U); // 默认值
+}
