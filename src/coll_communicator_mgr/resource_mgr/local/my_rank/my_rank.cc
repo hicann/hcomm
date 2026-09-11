@@ -851,6 +851,14 @@ HcclResult MyRank::CheckChannelParam(CommEngine engine, const HcclChannelDesc* c
                     index, channelDesc->memHandleNum);
             }
         }
+
+        // HcclChannelAcquire 不支持 CPU+UB
+        if (engine == COMM_ENGINE_CPU && channelDesc[index].channelProtocol != COMM_PROTOCOL_ROCE) {
+            HCCL_ERROR(
+                "[%s] Channeldesc[%u/%u] COMM_ENGINE_CPU only support COMM_PROTOCOL_ROCE, but got protocol[%d]",
+                __func__, index, channelNum, channelDesc[index].channelProtocol);
+            return HCCL_E_PARA;
+        }
         CHK_PRT_RET(
             channelDesc->notifyNum > NOTIFY_NUM_MAX,
             HCCL_ERROR(
