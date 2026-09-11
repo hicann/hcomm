@@ -410,6 +410,17 @@ HcclResult AicpuCacheManager::NeedOpUnfoldCache(
             isCalcAlltoallvMetadata_ = true;
         }
 
+        // alltoallv/alltoallvc 没有对端数据时不走cache
+        bool hasRemoteData = true;
+        CHK_RET(HasRemoteDataAlltoallv(param, hasRemoteData, topoinfo));
+        if (topoinfo.userRankSize > 1 && !hasRemoteData) {
+            HCCL_INFO(
+                "[AicpuCacheManager][NeedOpUnfoldCache] no remote data alltoallv[%u] is not supported for operator "
+                "unfolding cache",
+                opType);
+            return HCCL_SUCCESS;
+        }
+
         // 判断是否为小数据量的alltoallv类算子
         bool isSmallData = false;
         CHK_RET(IsSmallDataAlltoallv(param, isSmallData, topoinfo));
@@ -434,6 +445,68 @@ HcclResult AicpuCacheManager::NeedOpUnfoldCache(
     // 到这里needCache应该为true (如果为false则已经提前返回了)
     CHK_PRT_RET(
         !needCache, HCCL_ERROR("[AicpuCacheManager][NeedOpUnfoldCache] needCache should be true"), HCCL_E_INTERNAL);
+
+    return HCCL_SUCCESS;
+}
+
+HcclResult
+AicpuCacheManager::HasRemoteDataAlltoallv(const OpParam& param, bool& hasRemoteData, const HcclTopoInfo& topoinfo)
+{
+    const uint32_t rankSize = topoinfo.userRankSize;
+    const uint32_t curRank = topoinfo.userRank;
+    hasRemoteData = false;
+    if (param.opType == HcclCMDType::HCCL_CMD_ALLTOALLV) { // alltoallv
+        for (uint32_t tmpRank = 0; tmpRank < rankSize; ++tmpRank) {
+            if (tmpRank == curRank) {
+                continue;
+            }
+
+            // curRank发送到tmpRank的数据量
+            const uint64_t curSendCounts = *(static_cast<const uint64_t*>(param.All2AllDataDes.sendCounts) + tmpRank);
+            const uint64_t curSendLength = curSendCounts * SIZE_TABLE[param.All2AllDataDes.sendType];
+            if (curSendLength > 0) {
+                hasRemoteData = true;
+                return HCCL_SUCCESS;
+            }
+
+            // curRank从tmpRank接收的数据量
+            const uint64_t curRecvCounts = *(static_cast<const uint64_t*>(param.All2AllDataDes.recvCounts) + tmpRank);
+            const uint64_t curRecvLength = curRecvCounts * SIZE_TABLE[param.All2AllDataDes.recvType];
+            if (curRecvLength > 0) {
+                hasRemoteData = true;
+                return HCCL_SUCCESS;
+            }
+        }
+    } else if (param.opType == HcclCMDType::HCCL_CMD_ALLTOALLVC) { // alltoallvc
+        for (uint32_t tmpRank = 0; tmpRank < rankSize; ++tmpRank) {
+            if (tmpRank == curRank) {
+                continue;
+            }
+
+            // curRank发送到tmpRank的数据量
+            const uint64_t curSendCounts
+                = *(static_cast<const u64*>(param.All2AllDataDes.sendCountMatrix) + curRank * rankSize
+                    + tmpRank); // sendCountMatrix[curRank][tmpRank]
+            const uint64_t curSendLength = curSendCounts * SIZE_TABLE[param.All2AllDataDes.sendType];
+            if (curSendLength > 0) {
+                hasRemoteData = true;
+                return HCCL_SUCCESS;
+            }
+
+            // curRank从tmpRank接收的数据量
+            const uint64_t curRecvCounts
+                = *(static_cast<const u64*>(param.All2AllDataDes.sendCountMatrix) + tmpRank * topoinfo.userRankSize
+                    + curRank); // sendCountMatrix[tmpRank][curRank]
+            const uint64_t curRecvLength = curRecvCounts * SIZE_TABLE[param.All2AllDataDes.recvType];
+            if (curRecvLength > 0) {
+                hasRemoteData = true;
+                return HCCL_SUCCESS;
+            }
+        }
+    } else {
+        HCCL_ERROR("[AicpuCacheManager][HasRemoteDataAlltoallv] invalid opType[%u] for alltoallv", param.opType);
+        return HCCL_E_INTERNAL;
+    }
 
     return HCCL_SUCCESS;
 }
