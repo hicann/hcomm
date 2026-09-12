@@ -23,7 +23,6 @@
 #include "rank_consistentcy_checker.h"
 #include "externalinput_pub.h"
 #include "env_config.h"
-#include "env_config/env_config_v2.h"
 #if (!defined(HCCD)) && (!defined(CCL_KERNEL_AICPU))
 #include "coll_comm.h"
 #endif
@@ -47,6 +46,7 @@
 #include "hostdpu/dpu_kernel_entrance.h"
 #if (!defined(HCCD)) && (!defined(CCL_KERNEL_AICPU))
 #include "coll_comm_mgr.h"
+#include "env_ub_config.h"
 #endif
 
 #define DOUBLE_SIZE 2
@@ -4143,7 +4143,7 @@ static HcclResult GetUbMultiChannelNumConfig(uint32_t infoLen, void* info)
         HCCL_ERROR("[%s] infoLen[%u] not expected[%zu].", __func__, infoLen, infoExpectedLen);
         return HcclResult::HCCL_E_PARA;
     }
-    const uint32_t num = Hccl::EnvConfig::GetInstance().GetUbConfig().GetUbMultiChannelNum();
+    const uint32_t num = hccl::GetEnvUbConfig().GetUbMultiChannelNum();
     *static_cast<uint32_t*>(info) = num;
     return HcclResult::HCCL_SUCCESS;
 }

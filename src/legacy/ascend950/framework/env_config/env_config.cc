@@ -26,7 +26,6 @@ void EnvConfig::Parse()
     socketCfg.Parse();
     rtsCfg.Parse();
     rdmaCfg.Parse();
-    ubCfg.Parse();
     algoCfg.Parse();
     logCfg.Parse();
     detourCfg.Parse();
@@ -39,8 +38,6 @@ const EnvSocketConfig& EnvConfig::GetSocketConfig() { return socketCfg; }
 const EnvRtsConfig& EnvConfig::GetRtsConfig() { return rtsCfg; }
 
 const EnvRdmaConfig& EnvConfig::GetRdmaConfig() { return rdmaCfg; }
-
-const EnvUbConfig& EnvConfig::GetUbConfig() { return ubCfg; }
 
 const EnvAlgoConfig& EnvConfig::GetAlgoConfig() { return algoCfg; }
 
