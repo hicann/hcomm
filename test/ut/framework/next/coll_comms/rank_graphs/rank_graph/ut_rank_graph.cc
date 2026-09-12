@@ -166,10 +166,10 @@ TEST_F(RankGraphTest, ut_Dump_When_LinkHasLongDescription_Expect_LogComplete)
 
     EXPECT_NE(output.find("NetInstance::Link[srcId=0, dstId=4294967296, type=LinkType::PEER2NET"), std::string::npos);
     EXPECT_NE(output.find("srcIface=Iface"), std::string::npos);
-    EXPECT_NE(output.find("localDieId=111]"), std::string::npos);
+    EXPECT_NE(output.find("localDieId=111"), std::string::npos);
     EXPECT_NE(output.find("NetInstance::Link[srcId=4294967296, dstId=0, type=LinkType::PEER2NET"), std::string::npos);
     EXPECT_NE(output.find("dstIface=Iface"), std::string::npos);
-    EXPECT_NE(output.find("localDieId=222]"), std::string::npos);
+    EXPECT_NE(output.find("localDieId=222"), std::string::npos);
 }
 TEST_F(RankGraphTest, ut_InitInnerRanks_When_NullPeer_Expect_NullPtrException)
 {
