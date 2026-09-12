@@ -12,6 +12,7 @@
 #include "cluster_monitor.h"
 #include "hcomm_c_adpt.h"
 #include "hcom_common.h"
+#include "shared_jetty_channel_pool.h"
 
 namespace hccl {
 
@@ -46,6 +47,17 @@ CollCommMgr& CollCommMgr::GetInstance()
         return true;
     }();
     (void)baseCommReady;
+    // 预热 SharedJettyChannelPool：使其先于 CollCommMgr 构造，从而后于 CollCommMgr 析构。
+    // 否则 SharedJettyChannelPool 在运行期由 HcommChannelCreate 首次触发，晚于 CollCommMgr 构造，
+    // 进程退出时先于 CollCommMgr 析构；
+    // ~CollCommMgr → ~hcclComm → ~CollComm → ~MyRank
+    // → DestroyAllByMyRank → CollectMyRankChannelsLocked 会命中已析构的
+    // SharedJettyChannelPool 静态对象（mtx_/rankPools_ 已销毁）。
+    static const bool sharedJettyChannelPoolReady = []() {
+        (void)SharedJettyChannelPool::GetInstance();
+        return true;
+    }();
+    (void)sharedJettyChannelPoolReady;
     static CollCommMgr instance;
     return instance;
 }

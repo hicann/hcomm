@@ -143,6 +143,9 @@ public:
     HcclResult BatchExchangeAndCheckConsistency(
         const HcclChannelDesc* channelDescs, const std::vector<HcommChannelDesc>& hcommDescs, uint32_t channelNum,
         const std::vector<std::pair<u32, u32>>& newChannels, CommEngine engine);
+    void GetAbnormalChannelTlsStatus(
+        const HcclChannelDesc* channelDescs, const int32_t* statusList, uint32_t channelNum,
+        std::vector<Hccl::TlsStatus>& tlsStatusList) const;
     HcclResult PrepareMemHandles(
         EndpointHandle epHandle, void** memHandles, uint32_t memHandleNum, std::vector<MemHandle>& memHandleVec);
 
@@ -174,9 +177,6 @@ private:
         uint32_t localRank, uint32_t remoteRank, const EndpointDesc& localEndpointDesc,
         const EndpointDesc& remoteEndpointDesc, uint32_t& listenPort, HcommChannelDesc& hcommDesc);
     HcclResult GetLocalTlsStatus(EndpointLocType localType, Hccl::TlsStatus& tlsStatus) const;
-    void GetAbnormalChannelTlsStatus(
-        const HcclChannelDesc* channelDescs, const int32_t* statusList, uint32_t channelNum,
-        std::vector<Hccl::TlsStatus>& tlsStatusList) const;
     HcclResult RegisterCommMemsToEndpoint(EndpointHandle epHandle);
     HcclResult TryInitCcuInstance();
     HcclResult ReserveCcuMsCommOrFallback();

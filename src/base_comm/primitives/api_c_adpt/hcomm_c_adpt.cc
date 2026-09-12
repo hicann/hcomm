@@ -27,6 +27,7 @@
 #include "exception_handler.h"
 #include "hcclCommDfx.h"
 #include "launch_device.h"
+#include "shared_jetty_mgr.h"
 #include "launch_aicpu.h"
 #include "comm_configer.h"
 #include "hcomm_adapter_runtime.h"
@@ -63,6 +64,13 @@ HcclResult RefreshCommEngineContext(CommEngine engine)
 
 HcommResult HcommResMgrInit(uint32_t devPhyId)
 {
+    // 预热 SharedJettyMgr：使其先于 HcommResMgr 构造（从而先于 CollCommMgr 构造），
+    // 后于两者析构。否则 SharedJettyMgr 在运行期由 HcommChannelCreate/Destroy 首次触发，
+    // 晚于 CollCommMgr 构造，进程退出时先于 CollCommMgr 析构；
+    // ~CollCommMgr → ~hccl::EndpointMgr → HcommEndpointDestroy → CheckEndpointDestroy
+    // 会命中已析构的 SharedJettyMgr 静态对象（mtx_/contexts_ 已销毁）。
+    (void)SharedJettyMgr::GetInstance();
+
     bool noDevice = false;
     if (devPhyId == UINT32_MAX) {
         CHK_RET(ResolveRuntimeDevicePhyId(devPhyId, noDevice));
