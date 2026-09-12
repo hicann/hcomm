@@ -347,6 +347,10 @@ void RankGraphBuilder::BuildFromRankTable()
             peer->AddNetInstance(curNetInstance);
             if (levelInfo.netLayer == 0) {
                 peer->SetPortPortAddrMapLayer0(levelInfo.portAddrMap);
+                if (rankId == myRank_) {
+                    // 记录本rank的level0是否为无UB兜底层（显式标记字段，见rank_info_detect_client）
+                    level0PcieFallback_ = levelInfo.pcieFallback;
+                }
             }
             HCCL_DEBUG(
                 "[RankGraphBuilder][BuildFromRankTable] rankLevelInfo : rankId[%d] level[%u] "
@@ -495,6 +499,78 @@ void RankGraphBuilder::BuildPeer2PeerLinks()
             }
         }
     }
+
+    // 无UB场景兜底：ranktable携带兜底level0（pcie_fallback标记，按server划分）时，
+    // topo文件中的UB边因无地址无法建链，此处为inner域（同server）内rank两两合成PCIE链路（vnic地址），
+    // 使数据面走PCIe P2P传输；跨server流量由上层网络（RoCE等）承载
+
+    if (level0PcieFallback_) {
+        BuildPcieFallbackLinks(innerNetInstance);
+    }
+}
+
+// 无UB场景兜底：inner域内rank两两合成PCIE链路，地址取各卡vnic IP，端口固定d2h
+void RankGraphBuilder::BuildPcieFallbackLinks(NetInstance* innerNetInstance)
+{
+    set<RankId> rankIds = innerNetInstance->GetRankIds();
+    auto peer = rankGraph_->GetPeer(rankGraph_->GetMyRank());
+    auto localDeviceId = peer->GetDeviceId();
+
+    for (const auto srcRankId : rankIds) {
+        for (const auto dstRankId : rankIds) {
+            if (srcRankId == dstRankId) {
+                continue;
+            }
+            shared_ptr<NetInstance::Peer> srcPeer = peers_.at(srcRankId);
+            shared_ptr<NetInstance::Peer> dstPeer = peers_.at(dstRankId);
+
+            LocalId srcLocalId = rankGraph_->GetLocalId(srcRankId);
+            LocalId dstLocalId = rankGraph_->GetLocalId(dstRankId);
+            if (srcLocalId == BACKUP_LOCAL_ID || dstLocalId == BACKUP_LOCAL_ID) {
+                continue;
+            }
+
+            // 从本卡视角查询对端卡的vnic IP，查询失败说明PCIe不可达，跳过该对rank
+            IpAddress srcIp;
+            IpAddress dstIp;
+            bool vnicQueryOk = false;
+            try {
+                HrtRaSocketGetVnicIpInfos(
+                    localDeviceId, DeviceIdType::DEVICE_ID_TYPE_PHY_ID, srcPeer->GetDeviceId(), srcIp);
+                HrtRaSocketGetVnicIpInfos(
+                    localDeviceId, DeviceIdType::DEVICE_ID_TYPE_PHY_ID, dstPeer->GetDeviceId(), dstIp);
+                vnicQueryOk = true;
+            } catch (const HcclException& e) {
+                HCCL_ERROR(
+                    "[RankGraphBuilder][BuildPcieFallbackLinks] get vnic ip failed, skip pcie fallback link, "
+                    "srcRankId[%u] dstRankId[%u], reason[%s].",
+                    srcRankId, dstRankId, e.what());
+            }
+            if (!vnicQueryOk) {
+                continue;
+            }
+
+            std::set<string> pciePorts = {"d2h"};
+            std::set<LinkProtocol> pcieProtocol = {LinkProtocol::PCIE};
+            auto srcIface = make_shared<NetInstance::ConnInterface>(
+                srcIp, pciePorts, AddrPosition::DEVICE, LinkType::PEER2NET, pcieProtocol, TopoType::MESH_1D, 0);
+            auto dstIface = make_shared<NetInstance::ConnInterface>(
+                dstIp, pciePorts, AddrPosition::DEVICE, LinkType::PEER2NET, pcieProtocol, TopoType::MESH_1D, 0);
+
+            srcPeer->AddConnInterfaces(0, {srcIface});
+            dstPeer->AddConnInterfaces(0, {dstIface});
+            auto link = make_shared<NetInstance::Link>(
+                srcPeer, dstPeer, srcIface, dstIface, LinkType::PEER2PEER, pcieProtocol);
+            innerNetInstance->AddLink(link);
+            // 兜底链路统一注册为单个MESH_1D topoInst，供selector层CalcLevel0TopoShape计算level0形状
+            innerNetInstance->UpdateTopoInst(0, TopoType::MESH_1D, srcRankId);
+            innerNetInstance->UpdateTopoInst(0, TopoType::MESH_1D, dstRankId);
+            HCCL_INFO(
+                "[RankGraphBuilder][BuildPcieFallbackLinks] add pcie fallback link, srcRankId[%u] dstRankId[%u], "
+                "srcIp[%s] dstIp[%s].",
+                srcRankId, dstRankId, srcIp.Describe().c_str(), dstIp.Describe().c_str());
+        }
+    }
 }
 
 void RankGraphBuilder::UpdateTopoInstForMyRankOnly()
@@ -507,12 +583,19 @@ void RankGraphBuilder::UpdateTopoInstForMyRankOnly()
 
     auto netInstId = innerNetInstance->GetNetInstId();
     set<RankId> rankIds = innerNetInstance->GetRankIds();
-
     auto phyTopoGraph = PhyTopo::GetInstance()->GetTopoGraph(0);
     if (phyTopoGraph == nullptr) {
         THROW<NullPtrException>(
             StringFormat("[RankGraphBuilder][UpdateTopoInstForMyRankOnly] phyTopoGraph is nullptr"));
     }
+
+    // 无UB场景兜底：topo文件中的UB边不生效，topoInst已由BuildPcieFallbackLinks按PCIE全互连注册为
+    // 单个MESH_1D实例；此处若继续按phytopo的UB边注册，会得到与兜底level0规模不一致的topoInst，
+    // 导致selector层CalcLevel0TopoShape校验失败
+    if (level0PcieFallback_) {
+        return;
+    }
+
     if (rankIds.size() == 1) {
         // 单卡场景直接返回1DMESH
         RankId singleId = *rankIds.begin();

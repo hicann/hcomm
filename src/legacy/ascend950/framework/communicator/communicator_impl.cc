@@ -1309,6 +1309,17 @@ void CommunicatorImpl::CheckRankGraphAddrs() const
     NewRankInfo localRankInfo;
     for (auto& rank : ranktableInfo->ranks) {
         if (rank.deviceId == devPhyId) { // 获取本卡的ip地址
+            // 无UB场景兜底：本rank的level0为pcie fallback（rootinfo探测不到UB时插入的兜底层），
+            // EID查询依赖UB设备，此时查询必然失败，且请求会发到设备侧hccp打出ERROR日志；
+            // PCIE链路本就不在EID校验范围内，直接跳过EID查询与校验。
+            // 依据pcie_fallback显式标记判断（rank_info_detect_client插入时设置），不依赖实例名
+            for (auto& levelInfo : rank.rankLevelInfos) {
+                if (levelInfo.netLayer == 0 && levelInfo.pcieFallback) {
+                    HCCL_WARNING(
+                        "[CommunicatorImpl][%s] level0 is pcie fallback (UB unavailable), skip eid check.", __func__);
+                    return;
+                }
+            }
             HRaInfo info(HrtNetworkMode::HDC, rank.deviceId);
             std::vector<HrtDevEidInfo> localEidInfos = HrtRaGetDevEidInfoList(info);
             for (auto& eidInfo : localEidInfos) {

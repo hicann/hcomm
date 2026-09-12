@@ -50,6 +50,8 @@ void RankLevelInfo::DeserializeNetLayerInfo(const nlohmann::json& rankLevelInfoJ
     }
 
     netAttr = rankLevelInfoJson.value<std::string>("net_attr", "");
+    // 兜底level0的显式标记，正常层无此字段缺省false
+    pcieFallback = rankLevelInfoJson.value<bool>("pcie_fallback", false);
 
     if (rankLevelInfoJson.contains("net_type")) {
         string netTypeStr;
@@ -119,6 +121,9 @@ RankLevelInfo::RankLevelInfo(BinaryStream& binStream)
     u32 netTypeInt{0};
     binStream >> netTypeInt;
     netType = static_cast<NetType::Value>(netTypeInt);
+    u32 pcieFallbackInt{0};
+    binStream >> pcieFallbackInt;
+    pcieFallback = (pcieFallbackInt != 0);
     size_t addrSize{0};
     binStream >> addrSize;
     HCCL_INFO(
@@ -146,6 +151,7 @@ RankLevelInfo::RankLevelInfo(BinaryStream& binStream)
 void RankLevelInfo::GetBinStream(BinaryStream& binStream) const
 {
     binStream << netLayer << netInstId << netAttr << static_cast<u32>(netType);
+    binStream << static_cast<u32>(pcieFallback);
     binStream << rankAddrs.size();
     HCCL_INFO(
         "[%s] net_layer[%u] net_instance_id[%s] netType[%s] addrs size[%u]", __func__, netLayer, netInstId.c_str(),

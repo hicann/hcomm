@@ -36,6 +36,9 @@ public:
     std::string netInstId;
     NetType netType{NetType::CLOS};
     std::string netAttr;
+    // 无UB场景兜底标记：由rank_info_detect_client插入兜底level0时置true（JSON字段pcie_fallback），
+    // 表示该层为合成的PCIe兜底层而非真实UB mesh层；正常层缺省false
+    bool pcieFallback{false};
     std::vector<AddressInfo> rankAddrs;
     std::string Describe() const;
     std::map<std::string, std::vector<IpAddress>> portAddrMap;
