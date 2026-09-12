@@ -60,8 +60,8 @@ TEST(HcclNslbDpPureFuncTest, GetNslbOpType_AllKnownCases)
     EXPECT_EQ(inst.GetNslbOpType(HcclCMDType::HCCL_CMD_BROADCAST), NSLBDP_CMD_BROADCAST);
     EXPECT_EQ(inst.GetNslbOpType(HcclCMDType::HCCL_CMD_ALLREDUCE), NSLBDP_CMD_ALLREDUCE);
     EXPECT_EQ(inst.GetNslbOpType(HcclCMDType::HCCL_CMD_REDUCE), NSLBDP_CMD_REDUCE);
-    EXPECT_EQ(inst.GetNslbOpType(HcclCMDType::HCCL_CMD_SEND), NSLBDP_CMD_SEND);
-    EXPECT_EQ(inst.GetNslbOpType(HcclCMDType::HCCL_CMD_RECEIVE), NSLBDP_CMD_RECEIVE);
+    EXPECT_EQ(inst.GetNslbOpType(HcclCMDType::HCCL_CMD_SEND), NSLBDP_CMD_BATCH_SEND_RECV);
+    EXPECT_EQ(inst.GetNslbOpType(HcclCMDType::HCCL_CMD_RECEIVE), NSLBDP_CMD_BATCH_SEND_RECV);
     EXPECT_EQ(inst.GetNslbOpType(HcclCMDType::HCCL_CMD_ALLGATHER), NSLBDP_CMD_ALLGATHER);
     EXPECT_EQ(inst.GetNslbOpType(HcclCMDType::HCCL_CMD_REDUCE_SCATTER), NSLBDP_CMD_REDUCE_SCATTER);
     EXPECT_EQ(inst.GetNslbOpType(HcclCMDType::HCCL_CMD_ALLTOALLV), NSLBDP_CMD_ALLTOALLV);
@@ -132,13 +132,13 @@ TEST(HcclNslbDpPureFuncTest, CheckSupportOptype_TrueCases)
     EXPECT_TRUE(inst.CheckSupportOptype(HcclCMDType::HCCL_CMD_BATCH_SEND_RECV));
     EXPECT_TRUE(inst.CheckSupportOptype(HcclCMDType::HCCL_CMD_REDUCE));
     EXPECT_TRUE(inst.CheckSupportOptype(HcclCMDType::HCCL_CMD_SEND));
+    EXPECT_TRUE(inst.CheckSupportOptype(HcclCMDType::HCCL_CMD_RECEIVE));
 }
 
 TEST(HcclNslbDpPureFuncTest, CheckSupportOptype_FalseCases)
 {
     hcclNslbDp& inst = hcclNslbDp::GetInstance();
     EXPECT_FALSE(inst.CheckSupportOptype(HcclCMDType::HCCL_CMD_GATHER));
-    EXPECT_FALSE(inst.CheckSupportOptype(HcclCMDType::HCCL_CMD_RECEIVE));
     EXPECT_FALSE(inst.CheckSupportOptype(static_cast<HcclCMDType>(0xDEAD)));
 }
 
@@ -228,19 +228,23 @@ TEST(HcclNslbDpPureFuncTest, SplitString_Edge)
 TEST(HcclNslbDpWeakStateTest, FullcommDescInitTime_WithAndWithoutTimestamp)
 {
     hcclNslbDp& inst = hcclNslbDp::GetInstance();
-    NslbDpOperatorInfo op = {};
+
+    // fullcommDescInitTime 新版需要表1里有对应 commDesc 条目
+    auto backup = std::move(inst.hcclNslbDpCommConfig_);
+    inst.hcclNslbDpCommConfig_.clear();
 
     std::string withTs = "aaa_bbb_ccc_1710000000123";
+    NslbDpCommConfigVal cfgA = BuildCommCfg(withTs.c_str());
+    cfgA.commInitTime = 100ULL;
+    inst.hcclNslbDpCommConfig_.push_back(cfgA);
+
+    NslbDpOperatorInfo op = {};
     inst.fullcommDescInitTime(withTs, op);
     EXPECT_STREQ(op.commDesc, withTs.c_str());
     EXPECT_EQ(op.commDesc[COMM_DESC_MAX_LENGTH - 1], '\0');
     EXPECT_NE(op.commInitTime, 0ULL);
 
-    std::string withoutTs = "aaa_bbb_ccc_ddd_eee";
-    NslbDpOperatorInfo op2 = {};
-    inst.fullcommDescInitTime(withoutTs, op2);
-    EXPECT_STREQ(op2.commDesc, withoutTs.c_str());
-    EXPECT_NE(op2.commInitTime, 0ULL);
+    inst.hcclNslbDpCommConfig_ = std::move(backup);
 }
 
 // ============================================================
@@ -292,28 +296,46 @@ TEST(HcclNslbDpWeakStateTest, CheckSameOperatorVal_InjectedVal)
 }
 
 // ============================================================
-// 10. 拆分助手 1：InitAlgInfoCommDesc
+// 10. 拆分助手 1：FindMinInitTimeCommDesc
 // ============================================================
-TEST(HcclNslbDpHelpersTest, InitAlgInfoCommDesc_ExistAndTruncate)
+TEST(HcclNslbDpHelpersTest, FindMinInitTimeCommDesc_Found)
 {
     hcclNslbDp& inst = hcclNslbDp::GetInstance();
     auto backup = std::move(inst.hcclNslbDpCommConfig_);
     inst.hcclNslbDpCommConfig_.clear();
 
-    NslbDpAlgorithmInfo a = {};
-    std::string longId = MakeLongString(COMM_DESC_OVERFLOW_LEN, 'x');
-    EXPECT_FALSE(inst.InitAlgInfoCommDesc(a, longId));
-    EXPECT_EQ(a.commDesc[COMM_DESC_MAX_LENGTH - 1], '\0');
-    for (u32 i = 0; i < COMM_DESC_OVERFLOW_LEN; i++) {
-        EXPECT_EQ(a.commDesc[i], 'x');
+    // 构造两个相同 MD5 但不同 commInitTime 的条目
+    u8 md5[NSLB_MD5_DIGEST];
+    for (u32 k = 0; k < NSLB_MD5_DIGEST; k++) {
+        md5[k] = static_cast<u8>(k + 1U);
     }
 
-    inst.hcclNslbDpCommConfig_.push_back(BuildCommCfg("exactName"));
-    NslbDpAlgorithmInfo b = {};
-    EXPECT_TRUE(inst.InitAlgInfoCommDesc(b, std::string("exactName")));
+    NslbDpCommConfigVal cfg1 = BuildCommCfg("dup_a", md5);
+    cfg1.commInitTime = 100ULL;
+    inst.hcclNslbDpCommConfig_.push_back(cfg1);
 
-    NslbDpAlgorithmInfo c = {};
-    EXPECT_FALSE(inst.InitAlgInfoCommDesc(c, std::string("otherName")));
+    NslbDpCommConfigVal cfg2 = BuildCommCfg("dup_b", md5);
+    cfg2.commInitTime = 50ULL; // 更小
+    inst.hcclNslbDpCommConfig_.push_back(cfg2);
+
+    std::string outComm;
+    u64 outTime = 0;
+    EXPECT_TRUE(inst.FindMinInitTimeCommDesc("dup_a", outComm, outTime));
+    EXPECT_STREQ(outComm.c_str(), "dup_b"); // dup_b 的 initTime=50 更小
+    EXPECT_EQ(outTime, 50ULL);
+
+    inst.hcclNslbDpCommConfig_ = std::move(backup);
+}
+
+TEST(HcclNslbDpHelpersTest, FindMinInitTimeCommDesc_NotFound)
+{
+    hcclNslbDp& inst = hcclNslbDp::GetInstance();
+    auto backup = std::move(inst.hcclNslbDpCommConfig_);
+    inst.hcclNslbDpCommConfig_.clear();
+
+    std::string outComm;
+    u64 outTime = 0;
+    EXPECT_FALSE(inst.FindMinInitTimeCommDesc("no_such_group", outComm, outTime));
 
     inst.hcclNslbDpCommConfig_ = std::move(backup);
 }

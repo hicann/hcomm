@@ -1,12 +1,12 @@
 /**
- * Copyright (c) 2025 Huawei Technologies Co., Ltd.
- * This program is free software, you can redistribute it and/or modify it under the terms and conditions of
- * CANN Open Software License Agreement Version 2.0 (the "License").
- * Please refer to the License for details. You may not use this file except in compliance with the License.
- * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED,
- * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
- * See LICENSE in the root of the software repository for the full text of the License.
- */
+ * Copyright (c) 2025 Huawei Technologies Co., Ltd.
+ * This program is free software, you can redistribute it and/or modify it under the terms and conditions of
+ * CANN Open Software License Agreement Version 2.0 (the "License").
+ * Please refer to the License for details. You may not use this file except in compliance with the License.
+ * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED,
+ * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
+ * See LICENSE in the root of the software repository for the full text of the License.
+ */
 
 #ifndef HCCL_NSLBDP_H
 #define HCCL_NSLBDP_H
@@ -170,7 +170,7 @@ public:
     u32 Getl4SPortId();
     u64 GetNslbDpFirstFourBit(u8 opType, u8 algType);
     bool CheckAlgoConsistency(HcclCMDType opType, std::string& algName);
-    void SplitString(const std::string& identifier, std::vector<std::string>& splitInfo, const std::string& frag) const;
+    void SplitString(const std::string& identifier, std::vector<std::string>& splitInfo, const std::string& frag);
     void SetGlobalDisRankTable(const HcclBasicRankInfo& rankTable);
     HcclResult SetCommInfo_NoRankTable(const RankTable_t rankTable, std::string identifier, u32 subCommRankId);
     HcclResult SetCommInfo_RankTableExit(RankTable_t rankTable);
@@ -200,8 +200,7 @@ public:
     std::vector<uint8_t> serializeTLV_TableFir(NslbDpCommConfigInfo cominfo);
     HcclResult SendTableProc(u32 rank, u32 packetNum, NslbDpCommConfigVal cominfo);
     HcclResult SendTableFir(uint32_t rank);
-    // 计算总分片数：在 rankTotalNum <= NSLBDP_RANKTOTALNUM_BLOCK_FOU 前提下等价于
-    // ceil(rankTotalNum / BLOCK_FIR)；超出该范围按分段映射固定返回 4
+    // 计算总分片数：ceil(rankTotalNum / BLOCK_FIR)，区间内对应 1/2/3/4 分片
     static u32 CalcPacketNum(u32 rankTotalNum)
     {
         if (rankTotalNum <= NSLBDP_RANKTOTALNUM_BLOCK_FIR) {
@@ -215,7 +214,9 @@ public:
         }
     }
     HcclResult SetH2DTlvInitInfo(u32 buffer_size, void* tlv_handle);
-    u32 ipToUint32(const std::string& ipAddress);
+    static u32 ipToUint32(const std::string& ipAddress);
+    /* 将serverId解析为u32：先剥掉 _<LogicSuperPodId> 后缀再转IP，保证各处口径一致 */
+    static u32 ServerIdToIp(const std::string& serverId);
     HcclResult SendOpAndAdjTable();
     HcclResult SendRankTableOpAndAdj(NslbDpOperatorInfo& tab_f);
     std::vector<uint8_t> serializeTLV_TableOpAndAdj(NslbDpOperatorInfo& info);
@@ -252,7 +253,7 @@ public:
     NslbDpGlobalRankVal hcclNslbDpGlobalRankVal_;
     // 分表5-基础数据，在非ranktble场景下创建通信与场景域场景下的分布式rank表
     NslbDpGlobalDisRankVal hcclNslbDpGlobalDisRankVal_;
-    // 分表6-基础数据，非对称算子 scatter， reduce，bcast 算子场景下会有rootrank表
+    // 分表6-基础数据，非对称算子 statter， reduce，bcast 算子场景下会有rootrabnk表
     NslbDpRootRank hcclNslbDpRootRankVal_;
 
 private:
@@ -261,9 +262,14 @@ private:
     bool CheckAhcCommInfo(NslbDpCommConfigVal comInfo);
     bool CheckAhcSupport(u8 algType, std::string identifier);
     bool InitAlgInfoCommDesc(NslbDpAlgorithmInfo& algorithmInfo, const std::string& identifier);
+    // 按identifier取表1MD5，再取同MD5中commInitTime最小的commDesc；失败返回false
+    bool FindMinInitTimeCommDesc(const std::string& identifier, std::string& commDesc, u64& minInitTime);
+    // 命中"存在不同commDesc但MD5相同的已有条目"时返回true，用于跳过重复下发表1
+    bool ShouldSkipSendByMd5(const NslbDpCommConfigVal& info);
     bool FillAlgInfoCommMd5(NslbDpAlgorithmInfo& algorithmInfo);
     void FillAlgInfoBaseFields(
         NslbDpAlgorithmInfo& algorithmInfo, HcclCMDType opType, u32 srcLocalRankId, u32 rootRank, u8 algType);
+    bool TryFillA3SimulatedAdjInfo(const std::string& identifier, u32 srcLocalRankId, AdjInfo& nslbAdjInfo);
     bool IsAlgAdjacencyDuplicated(const NslbDpAlgorithmInfo& algorithmInfo);
     bool FillAlgInfoAdjInfo(NslbDpAlgorithmInfo& algorithmInfo, const AdjInfo& nslbAdjInfo, u32 srcLocalRankId);
 };
