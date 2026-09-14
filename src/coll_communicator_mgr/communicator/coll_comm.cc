@@ -21,6 +21,7 @@
 #include "hcomm_team_c_adpt.h"
 #include "hccl/hccl_channel.h"
 #include "hccl/hccl_rank_graph.h"
+#include "env_ub_config.h"
 #include "adapter_rts_common.h"
 
 #include <algorithm>
@@ -118,6 +119,8 @@ CollComm::~CollComm()
 
 HcclResult CollComm::Init(void* rankGraph, aclrtBinHandle binHandle, HcclMem cclBuffer, uint32_t opExpansionMode)
 {
+    // UB多channel数量：通信域初始化时解析并缓存，非法配置当场报错；读取期直接取缓存值
+    CHK_RET(GetEnvUbConfig().Parse());
     if (IsFullMode()) { // A5和下一代
         return InitFullMode(rankGraph, binHandle, cclBuffer, opExpansionMode);
     } else { // A2/A3使用简化版CollComm

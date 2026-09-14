@@ -172,22 +172,6 @@ private:
     CfgField<HostRdmaUdpPortsList> hostRdmaUdpPortsList{"HCCL_HOST_RDMA_UDP_PORTS_LIST", {}, CastHostRdmaUdpPortsList};
 };
 
-// UB配置
-class EnvUbConfig : public BaseConfig {
-public:
-    void Parse() override;
-    u32 GetUbMultiChannelNum() const;
-
-    static constexpr u32 HCCL_UB_MULTI_CHANNEL_NUM_DEFAULT = 1; // UB多channel默认数量(1表示不使能)
-    static constexpr u32 HCCL_UB_MULTI_CHANNEL_NUM_MIN = 1;     // UB多channel数量最小值
-    static constexpr u32 HCCL_UB_MULTI_CHANNEL_NUM_MAX = 16;    // UB多channel数量最大值
-
-private:
-    CfgField<u32> ubMultiChannelNum{
-        "HCCL_UB_MULTI_CHANNEL_NUM", u32(HCCL_UB_MULTI_CHANNEL_NUM_DEFAULT), Str2T<u32>,
-        CHK_RANGE_CLOSED<u32>(HCCL_UB_MULTI_CHANNEL_NUM_MIN, HCCL_UB_MULTI_CHANNEL_NUM_MAX)};
-};
-
 // 算法配置
 class EnvAlgoConfig : public BaseConfig {
 public:

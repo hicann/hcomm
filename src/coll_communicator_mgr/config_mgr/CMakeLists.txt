@@ -10,6 +10,7 @@
 
 set(src_list
     coll_comm_config.cc
+    env_ub_config.cc
 )
 
 if(TARGET hcomm)

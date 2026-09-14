@@ -18,8 +18,10 @@ namespace hcomm {
 /**
  * @brief 顶层环境变量聚合配置（对齐 legacy EnvConfig）。
  *
- * 持有各子配置类（如 rdmaCfg），Parse() 统一触发各子配置解析。
- * 业务侧通过 HcommResMgr::GetInstance().GetConfigMgr().GetRdmaConfig() 访问
+ * 持有基础通信层子配置类（如 rdmaCfg，懒解析：getter 触发 EnsureParsed）。
+ * HCCL 语义的环境变量（如 HCCL_UB_MULTI_CHANNEL_NUM）在
+ * coll_communicator_mgr/config_mgr 下解析，不在本层。
+ * 业务侧通过 HcommResMgr::GetInstance().GetConfigMgr() 访问
  */
 class ConfigMgr {
 public:
