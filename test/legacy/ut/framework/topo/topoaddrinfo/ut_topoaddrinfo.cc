@@ -159,9 +159,10 @@ TEST_F(TopoAddrInfoTest, Ut_Card_4P)
         .with(mockcpp::any(), outBoundP(eidList, eidNum * sizeof(dcmi_urma_eid_info_t)), outBoundP(&eidNum))
         .will(returnValue(0));
 
-    char* buf = (char*)malloc(4096);
-    memset(buf, 0x00, 4096);
-    size_t bufSize = 4096;
+    size_t bufSize = 0;
+    EXPECT_EQ(TopoAddrInfoGetSize(0, &bufSize), 0);
+    char* buf = (char*)malloc(bufSize);
+    memset(buf, 0x00, bufSize);
     int ret = TopoAddrInfoGet(0, buf, &bufSize);
     EXPECT_EQ(ret, 0);
     printf("[%s]\n", buf);
@@ -249,7 +250,8 @@ TEST_F(TopoAddrInfoTest, ut_rootinfo_for_pod)
     MOCKER(HalGetUBEntityList).stubs().with(mockcpp::any(), outBoundP(&ueList)).will(returnValue(0));
     MOCKER(hal_get_spod_info).stubs().with(mockcpp::any(), outBoundP(&spinfo)).will(returnValue(0));
 
-    size_t bufSize = 4096;
+    size_t bufSize = 0;
+    EXPECT_EQ(TopoAddrInfoGetSize(0, &bufSize), 0);
     char* buf = (char*)malloc(bufSize);
     memset_s(buf, bufSize, 0x00, bufSize);
     int ret = TopoAddrInfoGet(0, buf, &bufSize);
@@ -472,7 +474,8 @@ TEST_F(TopoAddrInfoTest, ut_rootinfo_for_server_no_uboe1)
     MOCKER(HalGetUBEntityList).stubs().with(mockcpp::any(), outBoundP(&ueList)).will(returnValue(0));
     MOCKER(hal_get_spod_info).stubs().with(mockcpp::any(), outBoundP(&spinfo)).will(returnValue(0));
 
-    size_t bufSize = 4096;
+    size_t bufSize = 0;
+    EXPECT_EQ(TopoAddrInfoGetSize(0, &bufSize), 0);
     char* buf = (char*)malloc(bufSize);
     memset_s(buf, bufSize, 0x00, bufSize);
     int ret = TopoAddrInfoGet(0, buf, &bufSize);
@@ -532,7 +535,8 @@ TEST_F(TopoAddrInfoTest, ut_rootinfo_for_server_no_uboe2)
     MOCKER(HalGetUBEntityList).stubs().with(mockcpp::any(), outBoundP(&ueList)).will(returnValue(0));
     MOCKER(hal_get_spod_info).stubs().with(mockcpp::any(), outBoundP(&spinfo)).will(returnValue(0));
 
-    size_t bufSize = 4096;
+    size_t bufSize = 0;
+    EXPECT_EQ(TopoAddrInfoGetSize(0, &bufSize), 0);
     char* buf = (char*)malloc(bufSize);
     memset_s(buf, bufSize, 0x00, bufSize);
     int ret = TopoAddrInfoGet(0, buf, &bufSize);
@@ -589,7 +593,8 @@ TEST_F(TopoAddrInfoTest, ut_rootinfo_for_server_uboe)
     MOCKER(HalGetUBEntityList).stubs().with(mockcpp::any(), outBoundP(&ueList)).will(returnValue(0));
     MOCKER(hal_get_spod_info).stubs().with(mockcpp::any(), outBoundP(&spinfo)).will(returnValue(0));
 
-    size_t bufSize = 4096;
+    size_t bufSize = 0;
+    EXPECT_EQ(TopoAddrInfoGetSize(0, &bufSize), 0);
     char* buf = (char*)malloc(bufSize);
     memset_s(buf, bufSize, 0x00, bufSize);
     int ret = TopoAddrInfoGet(0, buf, &bufSize);
@@ -600,10 +605,10 @@ TEST_F(TopoAddrInfoTest, ut_rootinfo_for_server_uboe)
     free(buf);
 }
 
-TEST_F(TopoAddrInfoTest, ut_rootinfo_for_ubx1)
+TEST_F(TopoAddrInfoTest, ut_rootinfo_for_350L)
 {
     /*
-    打桩UBX机型, 预期正常输出, 输出的0层地址中包含一个mesh组网和一个clos组网
+    打桩350L机型, 预期正常输出, 输出的0层地址中包含一个mesh组网和一个clos组网
      */
     unsigned int mainboard_id = 0x44;
     char drv_path[256] = "/usr/local/Ascend2";
@@ -639,7 +644,8 @@ TEST_F(TopoAddrInfoTest, ut_rootinfo_for_ubx1)
     MOCKER(HalGetUBEntityList).stubs().with(mockcpp::any(), outBoundP(&ueList)).will(returnValue(0));
     MOCKER(hal_get_spod_info).stubs().with(mockcpp::any(), outBoundP(&spinfo)).will(returnValue(0));
 
-    size_t bufSize = 4096;
+    size_t bufSize = 0;
+    EXPECT_EQ(TopoAddrInfoGetSize(0, &bufSize), 0);
     char* buf = (char*)malloc(bufSize);
     memset_s(buf, bufSize, 0x00, bufSize);
     int ret = TopoAddrInfoGet(0, buf, &bufSize);
@@ -746,10 +752,13 @@ TEST_F(TopoAddrInfoTest, ut_rootinfo_for_server_uboe_16fm)
     MOCKER(hal_get_spod_info).stubs().with(mockcpp::any(), outBoundP(&spinfo)).will(returnValue(0));
 
     size_t bufSize = 4096;
+    size_t memSize = 0;
+    EXPECT_EQ(TopoAddrInfoGetSize(0, &memSize), 0);
     char* buf = (char*)malloc(bufSize);
     memset_s(buf, bufSize, 0x00, bufSize);
     int ret = TopoAddrInfoGet(0, buf, &bufSize);
     EXPECT_EQ(ret, 0);
+    EXPECT_TRUE(bufSize <= memSize) << "bufSize = " << bufSize << " memSize = " << memSize;
     printf("[%s]\n", buf);
 
     //  跨节点MESH
@@ -774,5 +783,202 @@ TEST_F(TopoAddrInfoTest, ut_rootinfo_for_server_uboe_16fm)
     // 校验UBOE IP
     EXPECT_TRUE(strstr(buf, "10.10.20.2") != NULL);
 
+    free(buf);
+}
+
+void mock_uelist_for_pod_flex(UEList* ueList)
+{
+    memset_s(ueList, sizeof(UEList), 0x00, sizeof(UEList));
+    hex32_to_bin16("000000000000020000100000df000101", ueList->ueList[0].eidList[0].eid.raw);
+    ueList->ueList[0].eidNum = 1;
+    hex32_to_bin16("0000000000400a8000100000df001101", ueList->ueList[1].eidList[0].eid.raw);
+    ueList->ueList[1].eidNum = 1;
+    hex32_to_bin16("000000000001040000100000df001200", ueList->ueList[2].eidList[0].eid.raw);
+    hex32_to_bin16("00000000003f040000100000df001b00", ueList->ueList[2].eidList[1].eid.raw);
+    hex32_to_bin16("000000000007040000100000df001800", ueList->ueList[2].eidList[2].eid.raw);
+    hex32_to_bin16("000000000006040000100000df001700", ueList->ueList[2].eidList[3].eid.raw);
+    hex32_to_bin16("000000000005040000100000df001600", ueList->ueList[2].eidList[4].eid.raw);
+    hex32_to_bin16("000000000004040000100000df001500", ueList->ueList[2].eidList[5].eid.raw);
+    hex32_to_bin16("000000000003040000100000df001400", ueList->ueList[2].eidList[6].eid.raw);
+    hex32_to_bin16("000000000002040000100000df001300", ueList->ueList[2].eidList[7].eid.raw);
+    ueList->ueList[2].eidNum = 8;
+    hex32_to_bin16("000000000040020000100000df001200", ueList->ueList[3].eidList[0].eid.raw);
+    hex32_to_bin16("00000000007f020000100000df001b00", ueList->ueList[3].eidList[1].eid.raw);
+    hex32_to_bin16("000000000047020000100000df001800", ueList->ueList[3].eidList[2].eid.raw);
+    hex32_to_bin16("000000000046020000100000df001800", ueList->ueList[3].eidList[3].eid.raw);
+    hex32_to_bin16("000000000045020000100000df001700", ueList->ueList[3].eidList[4].eid.raw);
+    hex32_to_bin16("000000000044020000100000df001600", ueList->ueList[3].eidList[5].eid.raw);
+    hex32_to_bin16("000000000043020000100000df001500", ueList->ueList[3].eidList[6].eid.raw);
+    hex32_to_bin16("000000000042020000100000df001400", ueList->ueList[3].eidList[7].eid.raw);
+    hex32_to_bin16("000000000041020000100000df001300", ueList->ueList[3].eidList[8].eid.raw);
+    ueList->ueList[3].eidNum = 9;
+    ueList->ueNum = 4;
+}
+
+TEST_F(TopoAddrInfoTest, ut_rootinfo_for_pod_flex)
+{
+    /*
+    打桩Atlas 950 SuperPoD Flex机型
+    预期正常输出，带UBG地址
+    */
+    unsigned int mainboard_id = 0x2f;
+    char drv_path[256] = "/usr/local/Ascend2";
+    UEList ueList;
+    mock_uelist_for_pod_flex(&ueList);
+
+    struct dcmi_spod_info spinfo;
+    spinfo.sdid = 0x00000000;
+    spinfo.super_pod_size = 128;
+    spinfo.super_pod_id = 1;
+    spinfo.server_index = 1;
+    spinfo.chassis_id = 0x00000000;
+    spinfo.super_pod_type = 0;
+
+    MOCKER(hal_get_mainboard_id).stubs().with(mockcpp::any(), outBoundP(&mainboard_id)).will(returnValue(0));
+    MOCKER(hal_get_driver_install_path)
+        .stubs()
+        .with(outBoundP(drv_path, strlen(drv_path)), mockcpp::any())
+        .will(returnValue(0));
+    MOCKER(HalGetUBEntityList).stubs().with(mockcpp::any(), outBoundP(&ueList)).will(returnValue(0));
+    MOCKER(hal_get_spod_info).stubs().with(mockcpp::any(), outBoundP(&spinfo)).will(returnValue(0));
+
+    size_t memSize = 0;
+    EXPECT_EQ(TopoAddrInfoGetSize(0, &memSize), 0);
+    size_t bufSize = 4096;
+    char* buf = (char*)malloc(bufSize);
+    memset_s(buf, bufSize, 0x00, bufSize);
+    int ret = TopoAddrInfoGet(9, buf, &bufSize);
+    EXPECT_TRUE(bufSize <= memSize);
+    EXPECT_EQ(ret, 0);
+    printf("[%s]\n", buf);
+
+    EXPECT_TRUE(strstr(buf, "sp_1_srv_1_board1") != NULL);
+    EXPECT_TRUE(strstr(buf, "000000000001040000100000df001200") != NULL);
+    EXPECT_TRUE(strstr(buf, "000000000007040000100000df001800") != NULL);
+    EXPECT_TRUE(strstr(buf, "000000000006040000100000df001700") != NULL);
+    EXPECT_TRUE(strstr(buf, "000000000005040000100000df001600") != NULL);
+    EXPECT_TRUE(strstr(buf, "000000000004040000100000df001500") != NULL);
+    EXPECT_TRUE(strstr(buf, "000000000003040000100000df001400") != NULL);
+    EXPECT_TRUE(strstr(buf, "000000000002040000100000df001300") != NULL);
+
+    EXPECT_TRUE(strstr(buf, "00000000007f020000100000df001b00") != NULL);
+
+    // 校验UBG EID
+    EXPECT_TRUE(strstr(buf, "0000000000400a8000100000df001101") != NULL);
+
+    free(buf);
+}
+
+void mock_uelist_for_pod_server_550_100(UEList* ueList)
+{
+    memset_s(ueList, sizeof(UEList), 0x00, sizeof(UEList));
+    hex32_to_bin16("000000000f40020000100000df07b1f9", ueList->ueList[0].eidList[0].eid.raw);
+    hex32_to_bin16("000000000f7f020000100000df07bbf9", ueList->ueList[0].eidList[1].eid.raw);
+    hex32_to_bin16("000000000f47020000100000df07b8f9", ueList->ueList[0].eidList[2].eid.raw);
+    hex32_to_bin16("000000000f46020000100000df07b7f9", ueList->ueList[0].eidList[3].eid.raw);
+    hex32_to_bin16("000000000f45020000100000df07b6f9", ueList->ueList[0].eidList[4].eid.raw);
+    hex32_to_bin16("000000000f44020000100000df07b5f9", ueList->ueList[0].eidList[5].eid.raw);
+    hex32_to_bin16("000000000f43020000100000df07b4f9", ueList->ueList[0].eidList[6].eid.raw);
+    hex32_to_bin16("000000000f42020000100000df07b3f9", ueList->ueList[0].eidList[7].eid.raw);
+    hex32_to_bin16("000000000f41020000100000df07b2f9", ueList->ueList[0].eidList[8].eid.raw);
+    ueList->ueList[0].eidNum = 9;
+    ueList->ueNum = 1;
+}
+
+TEST_F(TopoAddrInfoTest, ut_rootinfo_for_serv_550EL_100)
+{
+    /*
+    打桩Atlas 550EL
+    */
+    unsigned int mainboard_id = MAIN_BOARD_ID_SERVER_550EL_100;
+    char drv_path[256] = "/usr/local/Ascend2";
+    UEList ueList;
+    mock_uelist_for_pod_server_550_100(&ueList);
+
+    struct dcmi_spod_info spinfo;
+    spinfo.sdid = 0x00000000;
+    spinfo.super_pod_size = 128;
+    spinfo.super_pod_id = 1;
+    spinfo.server_index = 1;
+    spinfo.chassis_id = 0x00000000;
+    spinfo.super_pod_type = 0;
+
+    MOCKER(hal_get_mainboard_id).stubs().with(mockcpp::any(), outBoundP(&mainboard_id)).will(returnValue(0));
+    MOCKER(hal_get_driver_install_path)
+        .stubs()
+        .with(outBoundP(drv_path, strlen(drv_path)), mockcpp::any())
+        .will(returnValue(0));
+    MOCKER(HalGetUBEntityList).stubs().with(mockcpp::any(), outBoundP(&ueList)).will(returnValue(0));
+    MOCKER(hal_get_spod_info).stubs().with(mockcpp::any(), outBoundP(&spinfo)).will(returnValue(0));
+
+    size_t memSize = 0;
+    EXPECT_EQ(TopoAddrInfoGetSize(0, &memSize), 0);
+    size_t bufSize = 4096;
+    char* buf = (char*)malloc(bufSize);
+    memset_s(buf, bufSize, 0x00, bufSize);
+    int ret = TopoAddrInfoGet(0, buf, &bufSize);
+    EXPECT_TRUE(bufSize <= memSize);
+    EXPECT_EQ(ret, 0);
+    printf("[%s]\n", buf);
+    EXPECT_TRUE(strstr(buf, "000000000f7f020000100000df07bbf9") != NULL);
+    free(buf);
+}
+
+void mock_uelist_for_pod_server_550_200(UEList* ueList)
+{
+    memset_s(ueList, sizeof(UEList), 0x00, sizeof(UEList));
+    hex32_to_bin16("000000000f04020000100000df07a5f9", ueList->ueList[0].eidList[0].eid.raw);
+    hex32_to_bin16("000000000f3f020000100000df07abf9", ueList->ueList[0].eidList[1].eid.raw);
+    hex32_to_bin16("000000000f07020000100000df07a8f9", ueList->ueList[0].eidList[2].eid.raw);
+    hex32_to_bin16("000000000f06020000100000df07a7f9", ueList->ueList[0].eidList[3].eid.raw);
+    hex32_to_bin16("000000000f05020000100000df07a6f9", ueList->ueList[0].eidList[4].eid.raw);
+    ueList->ueList[0].eidNum = 5;
+    hex32_to_bin16("000000000f40020000100000df07b1f9", ueList->ueList[1].eidList[0].eid.raw);
+    hex32_to_bin16("000000000f7f020000100000df07bbf9", ueList->ueList[1].eidList[1].eid.raw);
+    hex32_to_bin16("000000000f47020000100000df07b8f9", ueList->ueList[1].eidList[2].eid.raw);
+    hex32_to_bin16("000000000f46020000100000df07b7f9", ueList->ueList[1].eidList[3].eid.raw);
+    hex32_to_bin16("000000000f45020000100000df07b6f9", ueList->ueList[1].eidList[4].eid.raw);
+    hex32_to_bin16("000000000f44020000100000df07b5f9", ueList->ueList[1].eidList[5].eid.raw);
+    hex32_to_bin16("000000000f43020000100000df07b4f9", ueList->ueList[1].eidList[6].eid.raw);
+    hex32_to_bin16("000000000f42020000100000df07b3f9", ueList->ueList[1].eidList[7].eid.raw);
+    hex32_to_bin16("000000000f41020000100000df07b2f9", ueList->ueList[1].eidList[8].eid.raw);
+    ueList->ueList[1].eidNum = 9;
+    ueList->ueNum = 2;
+}
+
+TEST_F(TopoAddrInfoTest, ut_rootinfo_for_serv_550EL_200)
+{
+    /*
+    打桩Atlas 550EL
+    */
+    unsigned int mainboard_id = MAIN_BOARD_ID_SERVER_550EL_200;
+    char drv_path[256] = "/usr/local/Ascend2";
+    UEList ueList;
+    mock_uelist_for_pod_server_550_200(&ueList);
+
+    struct dcmi_spod_info spinfo;
+    spinfo.sdid = 0x00000000;
+    spinfo.super_pod_size = 128;
+    spinfo.super_pod_id = 1;
+    spinfo.server_index = 1;
+    spinfo.chassis_id = 0x00000000;
+    spinfo.super_pod_type = 0;
+
+    MOCKER(hal_get_mainboard_id).stubs().with(mockcpp::any(), outBoundP(&mainboard_id)).will(returnValue(0));
+    MOCKER(hal_get_driver_install_path)
+        .stubs()
+        .with(outBoundP(drv_path, strlen(drv_path)), mockcpp::any())
+        .will(returnValue(0));
+    MOCKER(HalGetUBEntityList).stubs().with(mockcpp::any(), outBoundP(&ueList)).will(returnValue(0));
+    MOCKER(hal_get_spod_info).stubs().with(mockcpp::any(), outBoundP(&spinfo)).will(returnValue(0));
+
+    size_t bufSize = 4096;
+    char* buf = (char*)malloc(bufSize);
+    memset_s(buf, bufSize, 0x00, bufSize);
+    int ret = TopoAddrInfoGet(0, buf, &bufSize);
+    EXPECT_EQ(ret, 0);
+    printf("[%s]\n", buf);
+    EXPECT_TRUE(strstr(buf, "000000000f3f020000100000df07abf9") != NULL);
+    EXPECT_TRUE(strstr(buf, "000000000f7f020000100000df07bbf9") != NULL);
     free(buf);
 }

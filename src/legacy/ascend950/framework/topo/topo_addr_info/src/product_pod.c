@@ -17,6 +17,7 @@
 #include "topo.h"
 #include "eid_util.h"
 #include "securec.h"
+#include "topo_addr_info_log.h"
 
 #define MAX_POD_ROOTINFO_LEN (2048)
 #define PRODUCT_MESH_LEVEL (0)
@@ -222,15 +223,16 @@ int PodGetRootinfo(int npu_id, unsigned mainboard_id, void* buf, size_t* len)
     RootInfoAddRank(&rootinfo, &rank);
     char* rootinfo_buf = RootInfoToString(&rootinfo);
     if (rootinfo_buf == NULL) {
-        return -1;
-    }
-    if ((*len) < strlen(rootinfo_buf)) {
-        (*len) = strlen(rootinfo_buf);
-        free(rootinfo_buf);
+        TOPO_ERR("NPU phy id %d RootInfoToString failed, MainBoardId %u", npu_id, mainboard_id);
         return -1;
     }
     errno_t ret = strcpy_s(buf, *len, rootinfo_buf);
-    (*len) = strlen(buf);
+    if (ret != EOK) {
+        TOPO_ERR(
+            "NPU phy id %d strcpy_s failed MainBoardId %u space %ld actually size %ld", npu_id, mainboard_id, *len,
+            strlen(rootinfo_buf));
+    }
+    (*len) = strlen(rootinfo_buf) + 1;
     free(rootinfo_buf);
     return ret;
 }
