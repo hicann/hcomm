@@ -531,9 +531,16 @@ u32 NetInstance::ConnInterface::GetTopoInstId() const { return topoInstId; }
 
 std::string NetInstance::ConnInterface::Describe() const
 {
+    std::string portsStr;
+    for (auto it = ports.begin(); it != ports.end(); ++it) {
+        if (it != ports.begin()) {
+            portsStr += ",";
+        }
+        portsStr += *it;
+    }
     return StringFormat(
-        "Iface[addr=%s, pos=%s, topoInstId=%u, topoType=%d, localDieId=%u]", addr.Describe().c_str(),
-        pos.Describe().c_str(), topoInstId, topoType, localDieId_);
+        "Iface[addr=%s, pos=%s, topoInstId=%u, topoType=%d, localDieId=%u, ports={%s}]", addr.Describe().c_str(),
+        pos.Describe().c_str(), topoInstId, topoType, localDieId_, portsStr.c_str());
 }
 
 bool NetInstance::ConnInterface::operator==(const NetInstance::ConnInterface& rhs) const

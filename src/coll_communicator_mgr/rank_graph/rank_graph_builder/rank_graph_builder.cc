@@ -662,7 +662,7 @@ std::vector<std::shared_ptr<NetInstance::ConnInterface>> ConstructConnIFromPhyTo
                     newPorts.insert(port);
                     addr2Ports[addr] = newPorts;
                 } else {
-                    it->second.insert("8080");
+                    it->second.insert(port);
                 }
             }
         }
