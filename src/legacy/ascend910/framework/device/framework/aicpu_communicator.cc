@@ -4247,7 +4247,7 @@ HcclResult HcclCommAicpu::PrintTaskExceptionByTaskId(u8 sqeType, u16 taskId, hcc
     SqeRingBuffer* sqeContextBuffer = &(sqeContext->buffer);
     CHK_PTR_NULL(sqeContextBuffer);
     uint8_t* sqeMirrorBufferAddr = sqeContextBuffer->rtsMirrorBuffer + (tail - 1) * HCCL_SQE_SIZE;
-    rtStarsSqeHeader_t* const sqeHeader = (rtStarsSqeHeader_t* const)sqeMirrorBufferAddr;
+    rtStarsSqeHeader_t* const sqeHeader = (rtStarsSqeHeader_t*)sqeMirrorBufferAddr;
 
     s32 taskNum = sqeHeader->taskId - taskId;
     HCCL_DEBUG("[HcclCommAicpu]tail sqe taskId[%u] cqe taskId[%u] cqe type[%u]", sqeHeader->taskId, taskId, sqeType);
@@ -4431,7 +4431,7 @@ void HcclCommAicpu::PrintTaskExceptionTaskQue(u32 sqIdx, SqeRingBuffer* sqeConte
 std::string HcclCommAicpu::GetTaskBriefsInfo(u32 idx, SqeRingBuffer* sqeContextBuffer)
 {
     uint8_t* sqeMirrorBufferAddr = sqeContextBuffer->rtsMirrorBuffer + idx * HCCL_SQE_SIZE;
-    rtStarsSqeHeader_t* const sqeHeader = (rtStarsSqeHeader_t* const)sqeMirrorBufferAddr;
+    rtStarsSqeHeader_t* const sqeHeader = (rtStarsSqeHeader_t*)sqeMirrorBufferAddr;
     uint8_t sqeType = sqeHeader->type;
 
     SqeInfo sqeInfo;

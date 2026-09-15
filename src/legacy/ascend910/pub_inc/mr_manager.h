@@ -39,10 +39,20 @@ using MrInfo = struct TagMrInfo {
     int gloMemRef;
     int tmpMemRef;
 
-    TagMrInfo() : addr(nullptr), size(0), access(0), lkey(0), mrHandle(nullptr), gloMemRef(0), tmpMemRef(0) {}
+    TagMrInfo()
+        : addr(nullptr),
+          devVirAddr(nullptr),
+          size(0),
+          access(0),
+          lkey(0),
+          mrHandle(nullptr),
+          gloMemRef(0),
+          tmpMemRef(0)
+    {}
 
     TagMrInfo(void* addr, u64 size)
         : addr(addr),
+          devVirAddr(nullptr),
           size(size),
           access(0),
           lkey(0),
@@ -51,21 +61,11 @@ using MrInfo = struct TagMrInfo {
           tmpMemRef(0)
     {}
 
-    TagMrInfo& operator=(const TagMrInfo& that)
-    {
-        if (&that != this) {
-            addr = that.addr;
-            devVirAddr = that.devVirAddr;
-            mrHandle = that.mrHandle;
-            size = that.size;
-            access = that.access;
-            lkey = that.lkey;
-            mrHandle = that.mrHandle;
-            gloMemRef = that.gloMemRef;
-            tmpMemRef = that.tmpMemRef;
-        }
-        return *this;
-    }
+    TagMrInfo(const TagMrInfo&) = default;
+    TagMrInfo(TagMrInfo&&) noexcept = default;
+    TagMrInfo& operator=(const TagMrInfo&) = default;
+    TagMrInfo& operator=(TagMrInfo&&) noexcept = default;
+    ~TagMrInfo() = default;
 
     TagMrInfo& operator=(const HcclMrInfo& mrInfo)
     {
