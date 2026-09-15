@@ -28,7 +28,7 @@ using namespace hccl;
 constexpr u32 DEVISOR_VALUE_FOUR = 4;
 constexpr u32 MAX_WQE_PER_DOORBELL = 300;
 constexpr u32 QP_QUEUE_DEPTH_MAX = 32768;
-constexpr u32 QP_QUEUE_DEPTH_MIN = 128;
+constexpr u32 QP_QUEUE_DEPTH_MIN = 64;
 #define HCCN_RESV_MEM_TYPE_PDCCL (0)
 
 struct MrInfoT AscendMrInfo2MrInfo(AscendMrInfo* ascendMrInfo)

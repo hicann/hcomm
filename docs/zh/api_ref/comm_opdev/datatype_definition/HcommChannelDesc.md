@@ -36,12 +36,15 @@ typedef struct {
                                          当通过HcclChannelAcquire创建通道时，HCOMM根据环境变量
                                          HCCL_RDMA_QP_PORT_CONFIG_PATH指向的MultiQpSrcPort.cfg配置文件自动填充此字段。
                                          exchangeAllMems为true时（即单边通信场景）此字段不生效（udpSport置0）。 */
+            uint32_t sqDepth;        /* SQ队列深度，0和0xffffffff表示使用默认值（默认2K）；有效范围[64, 32768]且为2的幂 */
+            uint32_t scqDepth;       /* 发送CQ队列深度，0和0xffffffff表示使用默认值（默认2K）；有效范围[64, 32768]且为2的幂 */
         } roceAttr;
         struct {
             uint32_t qos;             /* HCCS QoS */
         } hccsAttr;
         struct {
             uint32_t sqDepth;         /* UB队列深度，0和0xffffffff表示使用默认值 */
+            uint32_t scqDepth;        /* UB SCQ队列深度，0和0xffffffff表示使用默认值；有效值时JFC以独占模式创建，仅支持HOST和AICPU场景，AIV不支持；HOST场景取值范围[64, 32768]，AICPU场景[64, 16384] */
         } ubAttr;
         struct {
             uint8_t pathMode;         /* UB_MEM访问路径模式，取值范围：0、1、2和0xFF(默认值为0，配置为0xFF时按照0处理）。0：自动模式(优先单路径，若无则使用多路径），1：强制单路径模式，2：强制多路径模式 */

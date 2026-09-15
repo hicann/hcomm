@@ -428,21 +428,21 @@ HcclResult AivUrmaChannel::CreateUbConnectionByProtocol(
             EXCEPTION_CATCH(
                 ubConn = std::make_unique<Hccl::DevUbTpConnection>(
                     rdmaHandle_, ctx.locAddr, ctx.rmtAddr, opMode, devUsed, jfcMode, Hccl::IpAddress(),
-                    Hccl::IpAddress(), ctx.qosPre, taTimeOut, COMM_ENGINE_AIV, ctx.sqDepth, jettyMode),
+                    Hccl::IpAddress(), ctx.qosPre, taTimeOut, COMM_ENGINE_AIV, ctx.sqDepth, ctx.scqDepth, jettyMode),
                 return HCCL_E_PTR);
             break;
         case Hccl::LinkProtocol::UB_CTP:
             EXCEPTION_CATCH(
                 ubConn = std::make_unique<Hccl::DevUbCtpConnection>(
                     rdmaHandle_, ctx.locAddr, ctx.rmtAddr, opMode, devUsed, jfcMode, Hccl::IpAddress(),
-                    Hccl::IpAddress(), ctx.qosPre, taTimeOut, COMM_ENGINE_AIV, ctx.sqDepth, jettyMode),
+                    Hccl::IpAddress(), ctx.qosPre, taTimeOut, COMM_ENGINE_AIV, ctx.sqDepth, ctx.scqDepth, jettyMode),
                 return HCCL_E_PTR);
             break;
         case Hccl::LinkProtocol::UB_RTP:
             EXCEPTION_CATCH(
                 ubConn = std::make_unique<Hccl::DevUbRtpConnection>(
                     rdmaHandle_, ctx.locAddr, ctx.rmtAddr, opMode, devUsed, jfcMode, ctx.locAddr, ctx.rmtAddr,
-                    ctx.qosPre, taTimeOut, COMM_ENGINE_AIV, ctx.sqDepth, jettyMode),
+                    ctx.qosPre, taTimeOut, COMM_ENGINE_AIV, ctx.sqDepth, ctx.scqDepth, jettyMode),
                 return HCCL_E_PTR);
             break;
         default:
@@ -526,6 +526,15 @@ HcclResult AivUrmaChannel::BuildConnection()
     UbConnBuildContext ctx;
     CHK_RET(PrepareUbConnBuildContext(localEp_, remoteEp_, channelDesc_, ctx));
     CHK_RET(CheckUbSqDepth(ctx, devBaseAttr_));
+    // AIV 不支持 scqDepth 配置（见 include/hcomm_channel.h ubAttr.scqDepth 注释），
+    // 有效值时独占 JFC 分支会绕过 CreateAivUrmaJfc 导致 cqInfo_ 关键字段缺失，此处直接拒绝。
+    CHK_PRT_RET(
+        ctx.scqDepth != UB_SCQ_DEPTH_NOT_SET && ctx.scqDepth != 0,
+        HCCL_ERROR(
+            "[AivUrmaChannel][BuildConnection] scqDepth[%u] is not supported on AIV, "
+            "please use HOST or AICPU instead.",
+            ctx.scqDepth),
+        HCCL_E_PARA);
 
     // 共享 jetty 模式：主 connection 构造时传 EXTERNAL_INJECT，跳过建 JFC/jetty，等 SetSharedJettyFields 填充
     auto jettyMode = IsSharedJetty() ? Hccl::DevUbConnection::JettyMode::EXTERNAL_INJECT :

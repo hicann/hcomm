@@ -49,6 +49,8 @@ HcclResult AicpuTsUbRtpChannel::BuildConnection()
 {
     UbConnBuildContext ctx;
     CHK_RET(PrepareUbConnBuildContext(localEp_, remoteEp_, channelDesc_, ctx));
+    CHK_RET(CheckUbSqDepth(ctx, devBaseAttr_));
+    CHK_RET(CheckUbScqDepth(ctx, HrtUbJfcMode::STARS_POLL));
 
     Hccl::OpMode opMode = Hccl::OpMode::OPBASE;
     bool devUsed = true; // aicpu 为 true
@@ -66,7 +68,7 @@ HcclResult AicpuTsUbRtpChannel::BuildConnection()
     taTimeOut = static_cast<u8>(taTimeOutValue);
     std::unique_ptr<Hccl::DevUbConnection> ubConn = std::make_unique<Hccl::DevUbRtpConnection>(
         rdmaHandle_, locAddr_, rmtAddr_, opMode, devUsed, Hccl::HrtUbJfcMode::STARS_POLL, locAddr_, rmtAddr_,
-        ctx.qosPre, taTimeOut);
+        ctx.qosPre, taTimeOut, COMM_ENGINE_AICPU_TS, ctx.sqDepth, ctx.scqDepth);
     CHK_SMART_PTR_NULL(ubConn);
 
     if (devBaseAttr_.maxReadSize == 0 || devBaseAttr_.maxWriteSize == 0) {

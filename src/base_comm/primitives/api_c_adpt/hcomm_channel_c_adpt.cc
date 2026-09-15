@@ -271,6 +271,24 @@ HcommResult CheckRoceAttr(HcommChannelDesc& channelDesc, EndpointLocType localLo
         HCCL_INFO("[%s] set roceAttr.cqAttrFlags to 0.", __func__);
     }
 
+    // 校验RoCE队列深度：0/INVALID_UINT表示使用默认值；否则需为2^n且在[64, 32K]范围内，不满足则报错退出
+    auto validateQueueDepth = [](uint32_t depth, const char* fieldName) -> HcclResult {
+        constexpr uint32_t kRoceQueueDepthMin = 64U;
+        constexpr uint32_t kRoceQueueDepthMax = 32768U;
+        if (depth == 0U || depth == INVALID_UINT) {
+            return HCCL_SUCCESS; // 使用默认值
+        }
+        if (depth < kRoceQueueDepthMin || depth > kRoceQueueDepthMax || (depth & (depth - 1U)) != 0U) {
+            HCCL_ERROR(
+                "[CheckRoceAttr] invalid roceAttr.%s[%u], should be power of 2 and in [%u, %u], or 0 for default.",
+                fieldName, depth, kRoceQueueDepthMin, kRoceQueueDepthMax);
+            return HCCL_E_PARA;
+        }
+        return HCCL_SUCCESS;
+    };
+    CHK_RET(validateQueueDepth(channelDesc.roceAttr.sqDepth, "sqDepth"));
+    CHK_RET(validateQueueDepth(channelDesc.roceAttr.scqDepth, "scqDepth"));
+
     return ApplyRoceQosCompatToSlTc(channelDesc, localLocType);
 }
 
@@ -366,11 +384,28 @@ HcommResult ProcessHcommChannelDescs(const HcommChannelDesc& channelDesc, HcommC
         }
     }
 
-    // v4：roceAttr.srcPortList，低版本时 union 内该位置为脏数据，置 NULL
+    // v5：ubAttr.sqDepth/scqDepth，低版本时 union 内该位置为脏数据，置默认哨兵
+    if (channelDesc.header.version < HCOMM_CHANNEL_VERSION) {
+        channelDescFinal.ubAttr.sqDepth = UB_SQ_DEPTH_NOT_SET;
+        channelDescFinal.ubAttr.scqDepth = UB_SCQ_DEPTH_NOT_SET;
+    }
     if (channelDesc.header.version < HCOMM_CHANNEL_VERSION) {
         channelDescFinal.roceAttr.srcPortList = nullptr;
     } else {
         channelDescFinal.roceAttr.srcPortList = channelDesc.roceAttr.srcPortList;
+    }
+
+    // v4：roceAttr 队列深度（sqDepth/scqDepth），低版本时 union 内该位置为脏数据，置默认哨兵
+    if (channelDesc.header.version < HCOMM_CHANNEL_VERSION) {
+        channelDescFinal.roceAttr.sqDepth = INVALID_UINT;
+        channelDescFinal.roceAttr.scqDepth = INVALID_UINT;
+    }
+
+    // v4：ubAttr.scqDepth，低版本时 union 内该位置为脏数据，置默认哨兵值。
+    if (channelDesc.header.version < HCOMM_CHANNEL_VERSION) {
+        channelDescFinal.ubAttr.scqDepth = UB_SCQ_DEPTH_NOT_SET;
+    } else {
+        channelDescFinal.ubAttr.scqDepth = channelDesc.ubAttr.scqDepth;
     }
 
     return HCOMM_SUCCESS;
