@@ -523,6 +523,8 @@ int32_t HcommWriteOnThread(ThreadHandle thread, ChannelHandle channel, void* dst
             ret);
         const Hccl::Buffer rmtBuf{reinterpret_cast<uintptr_t>(dst), len};
 
+        ret = transportLitePtr->CheckOverflow(len, false);
+        CHK_PRT_RET(ret != HCCL_SUCCESS, HCCL_WARNING("[%s] overflow check failed, len[%llu].", __func__, len), ret);
         EXCEPTION_CATCH(transportLitePtr->Write(locRmaBuf, rmtBuf, *streamLitePtr), ret = HCCL_E_INTERNAL);
     } else {
         HcclBuf locBuf{const_cast<void*>(src), len, nullptr};
@@ -600,6 +602,8 @@ int32_t HcommWriteReduceOnThread(
 
         Hccl::ReduceIn reduceIn{mapHcommDataTypeToA5.at(dataType), mapHcommReduceOpToA5.at(reduceOp)};
 
+        ret = transportLitePtr->CheckOverflow(len, false);
+        CHK_PRT_RET(ret != HCCL_SUCCESS, HCCL_WARNING("[%s] overflow check failed, len[%llu].", __func__, len), ret);
         EXCEPTION_CATCH(
             transportLitePtr->WriteReduce(locRmaBuf, rmtBuf, reduceIn, *streamLitePtr), ret = HCCL_E_INTERNAL);
     } else {
@@ -685,6 +689,8 @@ int32_t HcommWriteWithNotifyOnThread(
 
         Hccl::WithNotifyIn withNotify{Hccl::TransportNotifyType::NORMAL, remoteNotifyIdx};
 
+        ret = transportLitePtr->CheckOverflow(len, false, true);
+        CHK_PRT_RET(ret != HCCL_SUCCESS, HCCL_WARNING("[%s] overflow check failed, len[%llu].", __func__, len), ret);
         EXCEPTION_CATCH(
             transportLitePtr->WriteWithNotify(locRmaBuf, rmtBuf, withNotify, *streamLitePtr), ret = HCCL_E_INTERNAL);
     } else {
@@ -758,6 +764,8 @@ int32_t HcommWriteReduceWithNotifyOnThread(
 
         Hccl::WithNotifyIn withNotify{Hccl::TransportNotifyType::NORMAL, remoteNotifyIdx};
 
+        ret = transportLitePtr->CheckOverflow(len, false, true);
+        CHK_PRT_RET(ret != HCCL_SUCCESS, HCCL_WARNING("[%s] overflow check failed, len[%llu].", __func__, len), ret);
         EXCEPTION_CATCH(
             transportLitePtr->WriteReduceWithNotify(locRmaBuf, rmtBuf, reduceIn, withNotify, *streamLitePtr),
             ret = HCCL_E_INTERNAL);
@@ -808,6 +816,8 @@ int32_t HcommReadOnThread(ThreadHandle thread, ChannelHandle channel, void* dst,
             ret);
         const Hccl::Buffer rmtBuf{reinterpret_cast<uintptr_t>(src), len};
 
+        ret = transportLitePtr->CheckOverflow(len, true);
+        CHK_PRT_RET(ret != HCCL_SUCCESS, HCCL_WARNING("[%s] overflow check failed, len[%llu].", __func__, len), ret);
         EXCEPTION_CATCH(transportLitePtr->Read(locRmaBuf, rmtBuf, *streamLitePtr), ret = HCCL_E_INTERNAL);
     } else {
         HcclBuf locBuf{dst, len, nullptr};
@@ -876,6 +886,8 @@ int32_t HcommReadReduceOnThread(
             ret);
         Hccl::ReduceIn reduceIn{mapHcommDataTypeToA5.at(dataType), mapHcommReduceOpToA5.at(reduceOp)};
 
+        ret = transportLitePtr->CheckOverflow(len, true);
+        CHK_PRT_RET(ret != HCCL_SUCCESS, HCCL_WARNING("[%s] overflow check failed, len[%llu].", __func__, len), ret);
         EXCEPTION_CATCH(
             transportLitePtr->ReadReduce(locRmaBuf, rmtBuf, reduceIn, *streamLitePtr), ret = HCCL_E_INTERNAL);
     } else {
@@ -928,6 +940,7 @@ int32_t HcommBatchTransferOnThread(
         auto* const streamLitePtr = static_cast<Hccl::StreamLite*>(threadPtr->GetStreamLitePtr());
         CHK_PTR_NULL(streamLitePtr);
         ret = ubTransportLitePtr->ExecuteBatchTransfer(streamLitePtr, transferDescs, transferDescNum);
+        CHK_PRT_RET(ret == HCCL_E_AGAIN, HCCL_WARNING("[%s] jetty SQ overflow, need retry", __func__), ret);
     } else {
         Stream* stream = GetStream(thread);
         CHK_PTR_NULL(stream);
@@ -1024,6 +1037,8 @@ int32_t HcommChannelNotifyRecordOnThread(ThreadHandle thread, ChannelHandle chan
         CHK_PTR_NULL(streamLitePtr);
         HCCL_INFO("channel streamlite ptr %p.", streamLitePtr);
 
+        ret = transportLitePtr->CheckOverflow(1, false);
+        CHK_PRT_RET(ret != HCCL_SUCCESS, HCCL_WARNING("[%s] overflow check failed, len[1].", __func__), ret);
         EXCEPTION_CATCH(transportLitePtr->Post(remoteNotifyIdx, *streamLitePtr), ret = HCCL_E_INTERNAL);
     } else {
         Stream* stream = GetStream(thread);
@@ -1284,6 +1299,11 @@ int32_t HcommChannelDrainOnThread(ThreadHandle thread, ChannelHandle channel)
         auto* const streamLitePtr = static_cast<Hccl::StreamLite*>(threadPtr->GetStreamLitePtr());
         CHK_PTR_NULL(streamLitePtr);
 
+        u64 drainSize = transportLitePtr->GetDrainSize();
+        ret = transportLitePtr->CheckOverflow(drainSize, true);
+        CHK_PRT_RET(
+            ret != HCCL_SUCCESS, HCCL_WARNING("[%s] overflow check failed, drainSize[%llu].", __func__, drainSize),
+            ret);
         EXCEPTION_CATCH(transportLitePtr->Drain(*streamLitePtr), ret = HCCL_E_INTERNAL);
     } else {
         Stream* stream = GetStream(thread);

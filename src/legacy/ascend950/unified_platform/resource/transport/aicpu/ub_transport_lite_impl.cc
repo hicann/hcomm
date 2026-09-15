@@ -96,7 +96,7 @@ void UbTransportLiteImpl::Init(std::vector<char>& uniqueId)
 UbTransportLiteImpl::~UbTransportLiteImpl()
 {
     for (auto& it : connUniqueIdVec) {
-        DECTOR_TRY_CATCH("UbTransportLiteImpl", UbConnLiteMgr::GetInstance().Clear(it));
+        DECTOR_TRY_CATCH("UbTransportLiteImpl", UbConnLiteMgr::GetInstance().Clear(it, this));
     }
 }
 
@@ -249,16 +249,23 @@ void UbTransportLiteImpl::ParseConnVec(std::vector<char>& data)
         std::vector<char> connUniqueId(start, end);
         connUniqueIdVec.push_back(connUniqueId);
         // connLite的复用由 ubConnLiteMgr管理
-        auto lite = UbConnLiteMgr::GetInstance().Get(connUniqueId);
+        auto lite = UbConnLiteMgr::GetInstance().Get(connUniqueId, this);
         connVec.push_back(lite);
         HCCL_INFO("[%s]idx=%u, %s", __func__, idx, lite->Describe().c_str());
     }
+
+    cachedConn_ = connVec[0];
+
     CheckConnVec("after ParseConnVec");
 }
 
 void UbTransportLiteImpl::BuildUbDbSendTask(const StreamLite& stream, const UbJettyLiteId& jettyLiteId, u32 pi)
 {
-    stream.GetRtsq()->UbDbSend(jettyLiteId, pi);
+    UbTransportLiteImpl* transport = ciTrackerEnabled_ ? this : nullptr;
+    stream.GetRtsq()->UbDbSend(jettyLiteId, static_cast<u16>(pi), dbSendSeqIdx_, transport);
+    if (ciTrackerEnabled_) {
+        dbSendSeqIdx_++;
+    }
 }
 
 void UbTransportLiteImpl::BuildNotifyWaitTask(const StreamLite& stream, u32 notifyId)
@@ -1074,6 +1081,7 @@ HcclResult UbTransportLiteImpl::ExecuteBatchTransfer(
     transferOps.reserve(transferDescNum);
     notifyIdxs.reserve(transferDescNum);
 
+    u32 pendingWqeCount = 0;
     for (uint32_t i = 0; i < transferDescNum; i++) {
         Hccl::RmaBufferLite locRmaBuf;
         void* rmt = nullptr;
@@ -1095,6 +1103,13 @@ HcclResult UbTransportLiteImpl::ExecuteBatchTransfer(
                     "dataType[%d], reduceOp[%d].",
                     __func__, i, rmt, loc, len, tfType, dataType, reduceOp),
                 ret);
+            bool isRead = (tfType == Hccl::TransferType::READ || tfType == Hccl::TransferType::READ_REDUCE);
+            bool isNotify
+                = (tfType == Hccl::TransferType::WRITE_WITH_NOTIFY
+                   || tfType == Hccl::TransferType::WRITE_REDUCE_WITH_NOTIFY);
+            pendingWqeCount += cachedConn_->CalcWqeCount(len, isRead, isNotify);
+        } else {
+            pendingWqeCount += 1;
         }
         if (tfType == Hccl::TransferType::NOTIFY_RECORD || tfType == Hccl::TransferType::WRITE_WITH_NOTIFY
             || tfType == Hccl::TransferType::WRITE_REDUCE_WITH_NOTIFY) {
@@ -1119,6 +1134,10 @@ HcclResult UbTransportLiteImpl::ExecuteBatchTransfer(
             "reduceOp[%d].",
             __func__, i, rmt, loc, len, tfType, dataType, reduceOp);
     }
+    HcclResult overflowRet = CheckBatchOverflow(pendingWqeCount);
+    CHK_PRT_RET(
+        overflowRet != HCCL_SUCCESS,
+        HCCL_INFO("[%s] overflow check failed. pendingWqeCount[%u].", __func__, pendingWqeCount), overflowRet);
     EXCEPTION_CATCH(
         BatchTransferAll(locSlices, rmtSlices, transferOps, notifyIdxs, *streamLitePtr), return HCCL_E_INTERNAL);
     return HCCL_SUCCESS;
@@ -1466,9 +1485,10 @@ HcclResult UbTransportLiteImpl::Clean()
     rmtBufferVec.clear();
     rmtBufferMap.clear();
 
+    cachedConn_ = nullptr;
     // 清理connVec，connLite由UbConnLiteMgr管理
     for (auto& it : connUniqueIdVec) {
-        DECTOR_TRY_CATCH("UbTransportLiteImpl", UbConnLiteMgr::GetInstance().Clear(it));
+        DECTOR_TRY_CATCH("UbTransportLiteImpl", UbConnLiteMgr::GetInstance().Clear(it, this));
     }
     connUniqueIdVec.clear();
     connVec.clear();
@@ -1504,4 +1524,7 @@ bool UbTransportLiteImpl::IsReportTask() const
 {
     return taskExceptionEnable_ || DfxProfilingHandlerLite::GetInstance().GetProfL1State();
 }
+
+u64 UbTransportLiteImpl::GetDrainSize() const { return drainNotify_.size; }
+
 } // namespace Hccl
