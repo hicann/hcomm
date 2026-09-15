@@ -13,6 +13,8 @@
 
 #include <hccl/base.h>
 #include <hccl/hccl_types.h>
+#include <atomic>
+#include <chrono>
 #include <thread>
 #include <vector>
 #include "topoinfo_struct.h"
@@ -22,6 +24,17 @@
 #include "hccl_network_pub.h"
 
 namespace hccl {
+// 多root（scalable）建链时，root间全互联mesh所需的建链信息。
+// 由 TopoInfoDetectScalable 组装，在启动 server 线程前设置到 TopoInfoExchangeServer。
+struct ScalableServerInfo {
+    u32 nRoot{0};                                 // root总个数
+    u32 rootIndex{INVALID_UINT};                  // 本root的index
+    u32 groupSize{0};                             // 本组rank个数（含root自身）
+    s32 deviceLogicId{INVALID_INT};               // 本root所在device，mesh accept线程建device上下文用
+    std::vector<RootMeshInfo> meshInfos;          // 所有root的ip+meshPort，下标=rootIndex
+    std::shared_ptr<HcclSocket> meshListenSocket; // root间mesh全互联监听socket
+};
+
 class TopoInfoExchangeServer : public TopoInfoExchangeBase {
 public:
     explicit TopoInfoExchangeServer(
@@ -33,13 +46,49 @@ public:
         const std::string& identifier);
     ~TopoInfoExchangeServer() override;
     HcclResult Setup();
+    HcclResult SetupScalable();
     HcclResult SetupGroupLeader();
     HcclResult SetupByMasterInfo();
     HcclResult Teardown();
     HcclResult GetConnections(std::map<u32, std::shared_ptr<HcclSocket>>& connectSockets);
+    HcclResult SetScalableInfo(const ScalableServerInfo& info);
 
 private:
+    HcclResult SetupScalableCore();
+    // 通过dispatcher把ranktable广播给各rank，并更新/唤醒广播阶段状态
+    HcclResult BroadcastRankTableAndStatus(
+        const std::map<std::string, std::shared_ptr<HcclSocket>>& connectSockets, const RankTable_t& rankTable,
+        const std::string& failedAgentIdList);
+    // accept循环每轮的状态：可accept / 剩余不足1s跳过本轮 / 整体超时
+    enum class SocketAcceptStatus {
+        ACCEPT_WAIT,
+        ACCEPT_SKIP,
+        ACCEPT_TIMEOUT,
+    };
     HcclResult Connect(std::map<std::string, std::shared_ptr<HcclSocket>>& connectSockets, u32& rankSize);
+    HcclResult ScalableConnect(std::map<std::string, std::shared_ptr<HcclSocket>>& connectSockets, u32& rankSize);
+    HcclResult AcceptLoop(
+        std::map<std::string, std::shared_ptr<HcclSocket>>& connectSockets, u32& rankSize, u32 expectSocketNumInit,
+        bool isScalable);
+    HcclResult AcceptSocket(
+        std::map<std::string, std::shared_ptr<HcclSocket>>& connectSockets, u32& rankSize, u32 waitTime,
+        u32& expectSocketNum, u32& previousRankNum, bool& isFirstAcceptTimeOut, bool isScalable);
+    SocketAcceptStatus GetSocketAcceptStatus(
+        const std::chrono::steady_clock::time_point& startTime, const std::chrono::seconds& timeout, u32& waitTime);
+    void LogAcceptTimeout(bool isScalable) const;
+    // root间全互联：收集所有root的组内子ranktable并合并出全局ranktable
+    HcclResult RootMeshAllGatherAndMerge(const RankTable_t& groupRankTable);
+    HcclResult MeshConnectToLargerRoots();
+    HcclResult MeshAcceptWorker();
+    HcclResult MeshAcceptWorkerCore();
+    HcclResult MeshSendPartial(std::shared_ptr<HcclSocket> socket, const RankTable_t& partial);
+    // Connect()仅发起异步连接，fdHandle在连接建立后才可用；发送前需轮询等待连接建立
+    HcclResult WaitMeshConnectionEstablished(const std::shared_ptr<HcclSocket>& socket) const;
+    // 构建root间mesh连接tag：各root的identifier互不相同不能用于tag，
+    // 改用有序对<较小root, 较大root> +
+    // 较大root的meshPort（双方均可从meshInfos_算出一致的值），保证连接/接受双方tag一致且pair唯一
+    std::string BuildMeshTag(u32 smallerRoot, u32 largerRoot) const;
+    HcclResult MergeRankTables(RankTable_t& mergedTable);
     HcclResult GroupLeaderConnect(std::map<std::string, std::shared_ptr<HcclSocket>>& connectSockets);
     HcclResult GetConnection(std::map<std::string, std::shared_ptr<HcclSocket>>& connectSockets);
     HcclResult Disconnect(std::map<std::string, std::shared_ptr<HcclSocket>>& connectSockets);
@@ -88,6 +137,15 @@ private:
     RankTable_t rankTable_;
     u32 expectSocketNum_ = 1;
     u32 previousRankNum_ = 0;
+    // 多root（scalable）mesh全互联相关
+    u32 nRoot_{0};
+    u32 rootIndex_{INVALID_UINT};
+    u32 groupSize_{0};
+    s32 deviceLogicId_{INVALID_INT}; // 本root所在device，mesh accept线程建device上下文用
+    std::vector<RootMeshInfo> meshInfos_;
+    std::shared_ptr<HcclSocket> meshListenSocket_{nullptr};
+    std::vector<RankTable_t> partials_; // partials_[rootIndex]=组内子表，其余为其他root的子表
+    std::atomic<u32> meshRecvCount_{0}; // 已收到的其他root的partial个数
 };
 } // namespace hccl
 

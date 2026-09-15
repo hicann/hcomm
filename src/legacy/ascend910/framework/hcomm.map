@@ -137,6 +137,7 @@ global:
     HcclCommInitClusterInfoMemConfig;
     HcclCommInitRootInfo;
     HcclCommInitRootInfoConfig;
+    HcclCommInitRootInfoScalable;
     HcclCommMemReg;
     HcclCommPrepare;
     HcclCommQueryAssignedCcuIns;
@@ -191,6 +192,7 @@ global:
     HcclGetRankSize;
     HcclGetRemoteIpcHcclBuf;
     HcclGetRootInfo;
+    HcclGetRootInfoScalable;
     HcclGetTopoDesc;
     HcclGroupEnd;
     HcclGroupStart;

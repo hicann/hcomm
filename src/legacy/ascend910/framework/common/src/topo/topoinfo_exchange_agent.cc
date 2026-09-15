@@ -69,6 +69,12 @@ HcclResult TopoInfoExchangeAgent::SetIsInterSuperPodRetryEnable(bool isInterSupe
     return HCCL_SUCCESS;
 }
 
+HcclResult TopoInfoExchangeAgent::SetIsScalable(bool isScalable)
+{
+    isScalable_ = isScalable;
+    return HCCL_SUCCESS;
+}
+
 HcclResult TopoInfoExchangeAgent::Setup()
 {
     connSize_ = localRankInfo_.rankSize;
@@ -87,7 +93,7 @@ HcclResult TopoInfoExchangeAgent::Setup()
         "TopoExchangeAgent: client connect with server ip[%s] port[%u] success.", serverIP_.GetReadableAddress(),
         serverPort_);
 
-    if (!isByMasterInfo_ && localRankInfo_.rankSize > TOPO_HIERARCHICAL_ENABLE_THRESHOLD) {
+    if (!isByMasterInfo_ && !isScalable_ && localRankInfo_.rankSize > TOPO_HIERARCHICAL_ENABLE_THRESHOLD) {
         ret = socket_->Send(&localRankHandle_, sizeof(localRankHandle_));
         CHK_PRT_RET(
             ret != HCCL_SUCCESS,

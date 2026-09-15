@@ -128,6 +128,18 @@ using HcclRootHandle = struct HcclRootHandleDef {
 
 using HcclRankHandle = HcclRootHandle;
 
+// scalable 多root建链时，单个 root 的完整信息：agent服务地址 + root间mesh全互联监听端口。
+using HcclScalableRootHandle = struct HcclScalableRootHandleDef {
+    HcclRootHandle rootHandle;            // 本root的agent服务地址（ip/port/identifier/rankId）
+    uint32_t meshPort{HCCL_INVALID_PORT}; // root间mesh全互联监听端口
+};
+
+// root间mesh全互联时，对端root的连接信息（ip + mesh端口），由HcclScalableRootHandle提炼得到。
+using RootMeshInfo = struct RootMeshInfoDef {
+    char ip[IP_ADDRESS_BUFFER_LEN]{0};
+    uint32_t meshPort{HCCL_INVALID_PORT};
+};
+
 using GroupLeader_t = struct tagGroupLeaderInfo {
     u32 grpLeaderNum{0};
     std::vector<HcclRankHandle> GroupLeaderList;

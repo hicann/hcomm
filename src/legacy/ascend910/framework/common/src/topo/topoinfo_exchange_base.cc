@@ -26,6 +26,12 @@ TopoInfoExchangeBase::TopoInfoExchangeBase() : currentStep_(0) {}
 
 TopoInfoExchangeBase::~TopoInfoExchangeBase() {}
 
+std::string TopoInfoExchangeBase::BuildMeshTag(u32 smallerRoot, u32 largerRoot, u32 largerRootMeshPort)
+{
+    return TOPO_DETECT_TAG + "_mesh_" + std::to_string(smallerRoot) + "_" + std::to_string(largerRoot) + "_"
+           + std::to_string(largerRootMeshPort);
+}
+
 HcclResult TopoInfoExchangeBase::DisconnectSocket(std::shared_ptr<HcclSocket> socket) const
 {
     if (socket) {

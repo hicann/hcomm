@@ -55,6 +55,17 @@ struct hcclCommInitConfigAsyncJob : public hcclAsyncJob {
     const HcclCommConfig* config;
 };
 
+struct hcclCommInitScalableAsyncJob : public hcclAsyncJob {
+    u32 nRanks;
+    u32 nRoot;
+    const HcclRootInfo* rootInfoList;
+    u32 rank;
+    u32 nExtRoot;
+    s32 devId;
+    HcclComm* initComm;
+    const HcclCommConfig* config;
+};
+
 struct hcclCommInitRankTableAsyncJob : public hcclAsyncJob {
     const char* clusterInfo;
     u32 rank;
