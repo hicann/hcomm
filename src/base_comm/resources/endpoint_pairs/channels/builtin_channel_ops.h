@@ -11,6 +11,7 @@
 #ifndef BUILTIN_CHANNEL_OPS_H
 #define BUILTIN_CHANNEL_OPS_H
 
+#include "cast_utils.h"
 #include "hcomm_nic_plugin.h"
 #include "nic_plugin_manager.h"
 #include "channel.h"
@@ -231,7 +232,7 @@ inline int32_t BuiltinDrainOnThread(void* ctx, ThreadHandle thread)
     DevType devType;
     CHK_RET(hrtGetDeviceType(devType));
     if (devType == DevType::DEV_TYPE_950 || devType == DevType::DEV_TYPE_960) {
-        auto* const channelPtr = reinterpret_cast<hcomm::Channel*>(ctx);
+        auto* const channelPtr = ReinterpretAs<hcomm::Channel*>(ctx);
         CHK_PTR_NULL(channelPtr);
         ret = channelPtr->ChannelDrain();
     } else {

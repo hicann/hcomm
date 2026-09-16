@@ -98,11 +98,11 @@ HcclResult ContextManager::CopyCommEngineCtx(
         CHK_RET(GetCommEngineCtx(tag, engine, &dstCtx, &dstSize));
         // 从Host内存拷贝到Device Context内存上
         CHK_RET(hrtMemSyncCopy(
-            reinterpret_cast<uint8_t*>(dstCtx) + dstCtxOffset, size, srcCtx, size,
+            static_cast<uint8_t*>(dstCtx) + dstCtxOffset, size, srcCtx, size,
             HcclRtMemcpyKind::HCCL_RT_MEMCPY_KIND_HOST_TO_DEVICE));
     } else if (engine == COMM_ENGINE_CPU || engine == COMM_ENGINE_CPU_TS || engine == COMM_ENGINE_CCU) {
         CHK_RET(GetCommEngineCtx(tag, engine, &dstCtx, &dstSize));
-        (void)memcpy_s(reinterpret_cast<uint8_t*>(dstCtx) + dstCtxOffset, size, srcCtx, size);
+        (void)memcpy_s(static_cast<uint8_t*>(dstCtx) + dstCtxOffset, size, srcCtx, size);
     } else {
         HCCL_ERROR(
             "[%s]copy engine ctx failed, Unsupported engine[%s], tag[%s]", __func__,

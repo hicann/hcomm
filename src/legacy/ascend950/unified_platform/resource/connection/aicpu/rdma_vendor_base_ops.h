@@ -11,6 +11,7 @@
 #ifndef RDMA_BASE_VENDOR_OPS_H
 #define RDMA_BASE_VENDOR_OPS_H
 
+#include "cast_utils.h"
 #include <chrono>
 #include <cstddef>
 #include <cstdint>
@@ -263,12 +264,12 @@ protected:
         // 写wqe到va
         auto sqDepth = sqContext_->depth;
         uint32_t sqPIMask = sqDepth - 1;
-        u8* va = reinterpret_cast<u8*>(sqContext_->sqVa + (sqHead_ & sqPIMask) * wqeSize);
+        u8* va = ReinterpretAs<u8*>(sqContext_->sqVa + (sqHead_ & sqPIMask) * wqeSize);
 
         HCCL_INFO(
             "[RdmaBaseOps][Wqe Write] before copy, sqHead[%u], slot[%u], sqVa[0x%llx], dst[0x%llx], size[%u]", sqHead_,
             sqHead_ & sqPIMask, static_cast<unsigned long long>(sqContext_->sqVa),
-            reinterpret_cast<unsigned long long>(va), wqeSize);
+            ReinterpretAs<unsigned long long>(va), wqeSize);
 
         auto ret = memcpy_sp(va, wqeSize, wqe, wqeSize);
         if (UNLIKELY(ret != 0)) {
@@ -317,7 +318,7 @@ protected:
             static_cast<unsigned long long>(sqContext_->dbSwVa));
 
         auto status
-            = memcpy_sp(reinterpret_cast<void*>(sqContext_->dbSwVa), sizeof(uint32_t), &sqHeadNum, sizeof(uint32_t));
+            = memcpy_sp(ReinterpretAs<void*>(sqContext_->dbSwVa), sizeof(uint32_t), &sqHeadNum, sizeof(uint32_t));
         if (UNLIKELY(status != 0)) {
             THROW<InternalException>(StringFormat("[RdmaBaseOps::%s] Ring Sw DB failed, ret = %d", __func__, status));
         }

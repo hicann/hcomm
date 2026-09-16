@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include "cast_utils.h"
 #include "host_cpu_roce_channel.h"
 #include "endpoint.h"
 #include "dpu_notify/dpu_notify_manager.h"
@@ -99,16 +100,15 @@ HcclResult HostCpuRoceChannel::ParseInputParam()
     // 1. 从 endpointHandle_，获得 localEp_ 和 rdmaHandle_
     CHK_PTR_NULL(endpointHandle_);
     HCCL_INFO(
-        "[HostCpuRoceChannel][%s] Start. endpointHandle[0x%llx]", __func__,
-        reinterpret_cast<uint64_t>(endpointHandle_));
-    Endpoint* localEpPtr = reinterpret_cast<Endpoint*>(endpointHandle_);
+        "[HostCpuRoceChannel][%s] Start. endpointHandle[0x%llx]", __func__, ReinterpretAs<uint64_t>(endpointHandle_));
+    Endpoint* localEpPtr = ReinterpretAs<Endpoint*>(endpointHandle_);
     localEp_ = localEpPtr->GetEndpointDesc();
     rdmaHandle_ = localEpPtr->GetRdmaHandle();
     CHK_PTR_NULL(rdmaHandle_);
 
     // 2. 从 channelDesc_，获得 remoteEp_, socket_ 和 notifyNum
     remoteEp_ = channelDesc_.remoteEndpoint;
-    socket_ = reinterpret_cast<Hccl::Socket*>(channelDesc_.socket);
+    socket_ = ReinterpretAs<Hccl::Socket*>(channelDesc_.socket);
     // If HIXL, socket is nullptr for now, will be built later.
     notifyNum_ = channelDesc_.notifyNum;
 
@@ -118,7 +118,7 @@ HcclResult HostCpuRoceChannel::ParseInputParam()
         std::shared_ptr<Hccl::LocalRdmaRmaBuffer>* memHandles = nullptr;
         uint32_t memHandleNum = 0;
         CHK_RET(static_cast<HcclResult>(
-            HcommMemGetAllMemHandles(endpointHandle_, reinterpret_cast<void**>(&memHandles), &memHandleNum)));
+            HcommMemGetAllMemHandles(endpointHandle_, ReinterpretAs<void**>(&memHandles), &memHandleNum)));
         HCCL_INFO("[HostCpuRoceChannel][%s] Got memHandleNum[%u].", __func__, memHandleNum);
         for (uint32_t i = 0; i < memHandleNum; ++i) {
             std::shared_ptr<Hccl::LocalRdmaRmaBuffer>& localRdmaBuffer = memHandles[i];
@@ -167,7 +167,7 @@ HcclResult HostCpuRoceChannel::StartListen()
     uint16_t port = channelDesc_.port;
     HCCL_INFO(
         "[HostCpuRoceChannel::%s] Start. EndpointHandle[0x%llx], port[%u]", __func__,
-        reinterpret_cast<uint64_t>(endpointHandle_), port);
+        ReinterpretAs<uint64_t>(endpointHandle_), port);
     if (port == 0) {
         port = DEFAULT_LISTENING_PORT;
         HCCL_INFO("[HostCpuRoceChannel::%s] channelDesc port is 0, use default port [%u]", __func__, port);
@@ -302,7 +302,7 @@ HcclResult HostCpuRoceChannel::SyncAfterModifyQp() const
     // 告知对端ModifyQp完成
     uint8_t sendFlag = 1;
     CHK_PRT_RET(
-        !socket_->Send(reinterpret_cast<void*>(&sendFlag), sizeof(sendFlag)),
+        !socket_->Send(ReinterpretAs<void*>(&sendFlag), sizeof(sendFlag)),
         HCCL_ERROR("[HostCpuRoceChannel::%s] Send sendFlag failed", __func__), HCCL_E_NETWORK);
     HCCL_INFO(
         "[HostCpuRoceChannel::%s] Send sendFlag[%u] of data success. [%llu] bytes sent.", __func__, sendFlag,
@@ -311,7 +311,7 @@ HcclResult HostCpuRoceChannel::SyncAfterModifyQp() const
     // 等待对端ModifyQp完成
     uint8_t recvFlag = 0;
     CHK_PRT_RET(
-        !socket_->Recv(reinterpret_cast<void*>(&recvFlag), sizeof(recvFlag)),
+        !socket_->Recv(ReinterpretAs<void*>(&recvFlag), sizeof(recvFlag)),
         HCCL_ERROR("[HostCpuRoceChannel::%s] Recv recvFlag failed", __func__), HCCL_E_NETWORK);
     HCCL_INFO(
         "[HostCpuRoceChannel::%s] Receive recvFlag[%u] of data success. [%llu] bytes received.", __func__, recvFlag,
@@ -429,7 +429,7 @@ HcclResult HostCpuRoceChannel::ExchangeData()
     EXCEPTION_HANDLE_BEGIN
     // 同步发送数据包尺寸
     CHK_PRT_RET(
-        !socket_->Send(reinterpret_cast<void*>(&sendSize), sizeof(sendSize)),
+        !socket_->Send(ReinterpretAs<void*>(&sendSize), sizeof(sendSize)),
         HCCL_ERROR("[HostCpuRoceChannel::%s] Send sendSize failed", __func__), HCCL_E_NETWORK);
     HCCL_INFO(
         "[HostCpuRoceChannel::%s] Send size[%llu] of data success. [%llu] bytes sent.", __func__, sendSize,
@@ -437,7 +437,7 @@ HcclResult HostCpuRoceChannel::ExchangeData()
 
     // 同步接收数据包尺寸
     CHK_PRT_RET(
-        !socket_->Recv(reinterpret_cast<void*>(&recvSize), sizeof(recvSize)),
+        !socket_->Recv(ReinterpretAs<void*>(&recvSize), sizeof(recvSize)),
         HCCL_ERROR("[HostCpuRoceChannel::%s] Recv recvSize failed", __func__), HCCL_E_NETWORK);
     HCCL_INFO(
         "[HostCpuRoceChannel::%s] Receive size[%llu] of data success. [%llu] bytes received.", __func__, recvSize,
@@ -445,7 +445,7 @@ HcclResult HostCpuRoceChannel::ExchangeData()
 
     // 同步发送数据
     CHK_PRT_RET(
-        !socket_->Send(reinterpret_cast<void*>(sendData.data()), sendSize),
+        !socket_->Send(ReinterpretAs<void*>(sendData.data()), sendSize),
         HCCL_ERROR("[HostCpuRoceChannel::%s] Send exchange data failed", __func__), HCCL_E_NETWORK);
     HCCL_INFO("[HostCpuRoceChannel::%s] Send Exchange Data success. [%llu] bytes sent.", __func__, sendSize);
 
@@ -453,7 +453,7 @@ HcclResult HostCpuRoceChannel::ExchangeData()
     HCCL_INFO("[HostCpuRoceChannel::%s] Start to Receive Exchange Data", __func__);
     recvData.resize(recvSize);
     CHK_PRT_RET(
-        !socket_->Recv(reinterpret_cast<void*>(recvData.data()), recvSize),
+        !socket_->Recv(ReinterpretAs<void*>(recvData.data()), recvSize),
         HCCL_ERROR("[HostCpuRoceChannel::%s] Recv exchange data failed", __func__), HCCL_E_NETWORK);
     HCCL_INFO("[HostCpuRoceChannel::%s] Receive Exchange Data success. [%llu] bytes received.", __func__, recvSize);
     EXCEPTION_HANDLE_END
@@ -771,7 +771,7 @@ HcclResult HostCpuRoceChannel::PrepareNotifyWrResource(
     notifyRecordWr.wr.rdma.remote_addr = static_cast<uint64_t>(rmtRmaBuffers_[0]->GetAddr()); // 远端地址
 
     taskParam.taskType = Hccl::TaskParamType::TASK_DPU_INLINE_WRITE;
-    taskParam.taskPara.DMA.dst = reinterpret_cast<void*>(static_cast<uint64_t>(rmtRmaBuffers_[0]->GetAddr()));
+    taskParam.taskPara.DMA.dst = ReinterpretAs<void*>(static_cast<uint64_t>(rmtRmaBuffers_[0]->GetAddr()));
     taskParam.taskPara.DMA.size = len;
     taskParam.taskPara.DMA.notifyID = dpuNotifyId;
     taskParam.taskPara.DMA.notifyValue = 1;
@@ -795,7 +795,7 @@ HcclResult HostCpuRoceChannel::BuildNotifyWrHybird(const uint32_t remoteNotifyId
 {
     hccl::MemType type = NotifyIdToMemtypeHybird(remoteNotifyIdx);
 
-    notifRecordWr.sg_list->addr = reinterpret_cast<uint64_t>(localMemMsg_[hccl::NOTIFY_SRC_MEM].addr);
+    notifRecordWr.sg_list->addr = ReinterpretAs<uint64_t>(localMemMsg_[hccl::NOTIFY_SRC_MEM].addr);
     notifRecordWr.sg_list->length = localMemMsg_[hccl::NOTIFY_SRC_MEM].len;
     notifRecordWr.sg_list->lkey = localMemMsg_[hccl::NOTIFY_SRC_MEM].lkey;
     notifRecordWr.opcode = IBV_WR_RDMA_WRITE;
@@ -804,7 +804,7 @@ HcclResult HostCpuRoceChannel::BuildNotifyWrHybird(const uint32_t remoteNotifyId
     notifRecordWr.num_sge = 1;
     notifRecordWr.wr_id = 0;
     notifRecordWr.wr.rdma.rkey = remoteMemMsg_[type].lkey;
-    notifRecordWr.wr.rdma.remote_addr = reinterpret_cast<uint64_t>(remoteMemMsg_[type].addr);
+    notifRecordWr.wr.rdma.remote_addr = ReinterpretAs<uint64_t>(remoteMemMsg_[type].addr);
 
     return HCCL_SUCCESS;
 }
@@ -861,7 +861,7 @@ HcclResult HostCpuRoceChannel::NotifyRecord(const uint32_t remoteNotifyIdx)
 
     taskParam.endTime = Hccl::DfxDlProfFunction::GetInstance().dlMsprofSysCycleTime();
     if (dfxCallback_ != nullptr) {
-        return dfxCallback_(taskParam, reinterpret_cast<u64>(this));
+        return dfxCallback_(taskParam, ReinterpretAs<u64>(this));
     }
     return HCCL_SUCCESS;
 }
@@ -949,7 +949,7 @@ HcclResult HostCpuRoceChannel::NotifyWait(const uint32_t localNotifyIdx, const u
     taskParam.taskPara.Notify.value = 1;
     taskParam.endTime = Hccl::DfxDlProfFunction::GetInstance().dlMsprofSysCycleTime();
     if (dfxCallback_ != nullptr) {
-        return dfxCallback_(taskParam, reinterpret_cast<u64>(this));
+        return dfxCallback_(taskParam, ReinterpretAs<u64>(this));
     }
     return HCCL_SUCCESS;
 }
@@ -1004,11 +1004,11 @@ HcclResult HostCpuRoceChannel::PrepareWriteWrResource(
         HCCL_E_PARA);
 
     size_t localIdx = 0;
-    CHK_RET(FindLocalBuffer(reinterpret_cast<uint64_t>(src), len, localIdx));
+    CHK_RET(FindLocalBuffer(ReinterpretAs<uint64_t>(src), len, localIdx));
     size_t rmtIdx = 0;
-    CHK_RET(FindRemoteBuffer(reinterpret_cast<uint64_t>(dst), len, rmtIdx));
+    CHK_RET(FindRemoteBuffer(ReinterpretAs<uint64_t>(dst), len, rmtIdx));
 
-    writeWithNotifyWr.sg_list->addr = reinterpret_cast<uint64_t>(src); // 本端起始地址
+    writeWithNotifyWr.sg_list->addr = ReinterpretAs<uint64_t>(src); // 本端起始地址
     writeWithNotifyWr.sg_list->length = static_cast<uint32_t>(len);
     writeWithNotifyWr.sg_list->lkey = localRmaBuffers_[localIdx]->GetLkey(); // 本端的访问秘钥
 
@@ -1019,7 +1019,7 @@ HcclResult HostCpuRoceChannel::PrepareWriteWrResource(
     writeWithNotifyWr.wr_id = 0;
     writeWithNotifyWr.imm_data = dpuNotifyId;
     writeWithNotifyWr.wr.rdma.rkey = rmtRmaBuffers_[rmtIdx]->GetRkey();
-    writeWithNotifyWr.wr.rdma.remote_addr = reinterpret_cast<uint64_t>(dst);
+    writeWithNotifyWr.wr.rdma.remote_addr = ReinterpretAs<uint64_t>(dst);
 
     taskParam.taskType = Hccl::TaskParamType::TASK_DPU_WRITE_WITH_NOTIFY;
     taskParam.taskPara.DMA.src = src;
@@ -1112,7 +1112,7 @@ HostCpuRoceChannel::WriteWithNotify(void* dst, const void* src, const uint64_t l
     fenceFlag_ = false;
     taskParam.endTime = Hccl::DfxDlProfFunction::GetInstance().dlMsprofSysCycleTime();
     if (dfxCallback_ != nullptr) {
-        return dfxCallback_(taskParam, reinterpret_cast<u64>(this));
+        return dfxCallback_(taskParam, ReinterpretAs<u64>(this));
     }
 
     return HCCL_SUCCESS;
@@ -1123,7 +1123,7 @@ void HostCpuRoceChannel::BuildRdmaWr(
     size_t localIdx, size_t rmtIdx, struct ibv_send_wr& wr, struct ibv_sge& sg) const
 {
     wr.sg_list = &sg;
-    wr.sg_list->addr = reinterpret_cast<uint64_t>(localAddr);
+    wr.sg_list->addr = ReinterpretAs<uint64_t>(localAddr);
     wr.sg_list->length = static_cast<uint32_t>(len);
     wr.sg_list->lkey = localRmaBuffers_[localIdx]->GetLkey();
 
@@ -1133,7 +1133,7 @@ void HostCpuRoceChannel::BuildRdmaWr(
     wr.num_sge = 1;
     wr.wr_id = 0;
     wr.wr.rdma.rkey = rmtRmaBuffers_[rmtIdx]->GetRkey();
-    wr.wr.rdma.remote_addr = reinterpret_cast<uint64_t>(remoteAddr);
+    wr.wr.rdma.remote_addr = ReinterpretAs<uint64_t>(remoteAddr);
 }
 
 HcclResult
@@ -1193,9 +1193,9 @@ HcclResult HostCpuRoceChannel::PostRdmaOp(
     // 1. 查找 buffer 索引
     auto startTime = std::chrono::steady_clock::now();
     size_t localIdx = 0;
-    CHK_RET(FindLocalBuffer(reinterpret_cast<uint64_t>(localAddr), len, localIdx));
+    CHK_RET(FindLocalBuffer(ReinterpretAs<uint64_t>(localAddr), len, localIdx));
     size_t rmtIdx = 0;
-    CHK_RET(FindRemoteBuffer(reinterpret_cast<uint64_t>(remoteAddr), len, rmtIdx));
+    CHK_RET(FindRemoteBuffer(ReinterpretAs<uint64_t>(remoteAddr), len, rmtIdx));
     auto endTime = std::chrono::steady_clock::now();
     auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(endTime - startTime).count();
     HCCL_INFO("[HostCpuRoceChannel::%s] check buffer takes time [%lld]us", caller, elapsed);
@@ -1450,7 +1450,7 @@ HcclResult HostCpuRoceChannel::ChannelFence()
     taskParam.taskPara.Notify.value = 1;
     taskParam.endTime = Hccl::DfxDlProfFunction::GetInstance().dlMsprofSysCycleTime();
     if (dfxCallback_ != nullptr) {
-        return dfxCallback_(taskParam, reinterpret_cast<u64>(this));
+        return dfxCallback_(taskParam, ReinterpretAs<u64>(this));
     }
     return HCCL_SUCCESS;
 }
@@ -1477,7 +1477,7 @@ HcclResult HostCpuRoceChannel::GetHcclBuffer(void*& addr, uint64_t& size)
             __func__);
         return HCCL_E_INTERNAL;
     }
-    addr = reinterpret_cast<void*>(rmtRmaBuffers_[0]->GetAddr());
+    addr = ReinterpretAs<void*>(rmtRmaBuffers_[0]->GetAddr());
     size = static_cast<uint64_t>(rmtRmaBuffers_[0]->GetSize());
     return HCCL_SUCCESS;
 }
@@ -1530,7 +1530,7 @@ HcclResult HostCpuRoceChannel::CreateNotifyValueBufferHybird()
             hccl::MemType::NOTIFY_SRC_MEM);
         return HCCL_E_MEMORY;
     }
-    *reinterpret_cast<uint32_t*>(localMemMsg_[hccl::MemType::NOTIFY_SRC_MEM].addr) = 1;
+    *ReinterpretAs<uint32_t*>(localMemMsg_[hccl::MemType::NOTIFY_SRC_MEM].addr) = 1;
     return HCCL_SUCCESS;
 }
 
@@ -1542,7 +1542,7 @@ HostCpuRoceChannel::CreateNotifyBufferHybird(hccl::MemType notifyType, uint32_t 
         return HCCL_E_MEMORY;
     }
 
-    CHK_SAFETY_FUNC_RET(memcpy_s(data, size, reinterpret_cast<void*>(&localMemMsg_[notifyType]), sizeof(hccl::MemMsg)));
+    CHK_SAFETY_FUNC_RET(memcpy_s(data, size, ReinterpretAs<void*>(&localMemMsg_[notifyType]), sizeof(hccl::MemMsg)));
 
     data += sizeof(hccl::MemMsg);
     size -= sizeof(hccl::MemMsg);
@@ -1574,7 +1574,7 @@ HcclResult HostCpuRoceChannel::ExchangeCapability()
     HCCL_INFO("[Hybrid][HostCpuRoceChannel] recvCap success");
 
     // 4. 先检查魔数，如果不对可能是旧版本，需要回退
-    if (!RoCECapability::CheckMagic(reinterpret_cast<uint8_t*>(&recvCap), sizeof(recvCap))) {
+    if (!RoCECapability::CheckMagic(ReinterpretAs<uint8_t*>(&recvCap), sizeof(recvCap))) {
         HCCL_WARNING("[Hybrid][HostCpuRoceChannel] Magic mismatch, peer may be old version. "
                      "Falling back to native mode.");
         // 回退到原生模式
@@ -1585,7 +1585,7 @@ HcclResult HostCpuRoceChannel::ExchangeCapability()
     }
 
     // 5. 魔数正确，解析对端能力
-    if (!remoteCap_.Deserialize(reinterpret_cast<uint8_t*>(&recvCap), sizeof(recvCap))) {
+    if (!remoteCap_.Deserialize(ReinterpretAs<uint8_t*>(&recvCap), sizeof(recvCap))) {
         HCCL_ERROR("[Hybrid][HostCpuRoceChannel] Failed to deserialize capability");
         return HCCL_E_PARA;
     }
@@ -1622,13 +1622,13 @@ constexpr u32 DEFAULT_MRINFO_ACCESS = 7;
 HcclResult HostCpuRoceChannel::RegisterUserMemHybird()
 {
     struct MrInfoT mrInfo = {};
-    mrInfo.addr = reinterpret_cast<void*>(localRmaBuffers_[0]->GetAddr());
+    mrInfo.addr = ReinterpretAs<void*>(localRmaBuffers_[0]->GetAddr());
     mrInfo.size = localRmaBuffers_[0]->GetSize();
     mrInfo.access = DEFAULT_MRINFO_ACCESS;
     auto qpInfo = connections_[0]->GetQpInfo();
     CHK_RET(HrtRaMrReg(qpInfo.qpHandle, &mrInfo));
 
-    localMemMsg_[hccl::USER_OUTPUT_MEM].addr = reinterpret_cast<void*>(localRmaBuffers_[0]->GetAddr());
+    localMemMsg_[hccl::USER_OUTPUT_MEM].addr = ReinterpretAs<void*>(localRmaBuffers_[0]->GetAddr());
     localMemMsg_[hccl::USER_OUTPUT_MEM].lkey = mrInfo.lkey;
     localMemMsg_[hccl::USER_OUTPUT_MEM].memType = hccl::USER_OUTPUT_MEM;
     localMemMsg_[hccl::USER_OUTPUT_MEM].len = localRmaBuffers_[0]->GetSize();
@@ -1663,16 +1663,16 @@ HcclResult HostCpuRoceChannel::BuildExchangeDataHybird()
     u64 size = exchangeDataTotalSize_;
 
     u32 qpNum = 1;
-    CHK_SAFETY_FUNC_RET(memcpy_s(data, size, reinterpret_cast<void*>(&qpNum), sizeof(u32)));
+    CHK_SAFETY_FUNC_RET(memcpy_s(data, size, ReinterpretAs<void*>(&qpNum), sizeof(u32)));
     data += sizeof(u32);
     size -= sizeof(u32);
 
     CHK_SAFETY_FUNC_RET(
-        memcpy_s(data, size, reinterpret_cast<void*>(&localMemMsg_[hccl::USER_OUTPUT_MEM]), sizeof(hccl::MemMsg)));
+        memcpy_s(data, size, ReinterpretAs<void*>(&localMemMsg_[hccl::USER_OUTPUT_MEM]), sizeof(hccl::MemMsg)));
     data += sizeof(hccl::MemMsg);
     size -= sizeof(hccl::MemMsg);
     CHK_SAFETY_FUNC_RET(
-        memcpy_s(data, size, reinterpret_cast<void*>(&localMemMsg_[hccl::USER_OUTPUT_MEM]), sizeof(hccl::MemMsg)));
+        memcpy_s(data, size, ReinterpretAs<void*>(&localMemMsg_[hccl::USER_OUTPUT_MEM]), sizeof(hccl::MemMsg)));
     data += sizeof(hccl::MemMsg);
     size -= sizeof(hccl::MemMsg);
 
@@ -1682,7 +1682,7 @@ HcclResult HostCpuRoceChannel::BuildExchangeDataHybird()
     CHK_RET(CreateNotifyBufferHybird(hccl::DATA_ACK_NOTIFY_MEM, DATA_ACK_NOTIFY_ID, data, size));
 
     u8 atomicWrite = 1;
-    CHK_SAFETY_FUNC_RET(memcpy_s(data, size, reinterpret_cast<void*>(&atomicWrite), sizeof(u8)));
+    CHK_SAFETY_FUNC_RET(memcpy_s(data, size, ReinterpretAs<void*>(&atomicWrite), sizeof(u8)));
     data += sizeof(u8);
     size -= sizeof(u8);
 
@@ -1709,7 +1709,7 @@ HcclResult HostCpuRoceChannel::ParseRecvExchangeDataHybird()
     u64 size = exchangeDataTotalSize_;
 
     u32 remoteQpNum = 0;
-    CHK_SAFETY_FUNC_RET(memcpy_s(reinterpret_cast<void*>(&remoteQpNum), sizeof(u32), data, sizeof(u32)));
+    CHK_SAFETY_FUNC_RET(memcpy_s(ReinterpretAs<void*>(&remoteQpNum), sizeof(u32), data, sizeof(u32)));
     data += sizeof(u32);
     size -= sizeof(u32);
 
@@ -1829,7 +1829,7 @@ HcclResult HostCpuRoceChannel::WriteWithNotifyHybrid(void* dst, const void* src,
     struct ibv_sge notifySge {};
 
     // 1. 数据 WR（RDMA Write）
-    dataSge.addr = reinterpret_cast<uint64_t>(src);
+    dataSge.addr = ReinterpretAs<uint64_t>(src);
     dataSge.length = len;
     dataSge.lkey = localRmaBuffers_[0]->GetLkey();
 
@@ -1838,11 +1838,11 @@ HcclResult HostCpuRoceChannel::WriteWithNotifyHybrid(void* dst, const void* src,
     dataWr.send_flags = IBV_SEND_SIGNALED; // 需要 CQE 确认完成
     dataWr.sg_list = &dataSge;
     dataWr.num_sge = 1;
-    dataWr.wr.rdma.remote_addr = reinterpret_cast<uint64_t>(dst);
+    dataWr.wr.rdma.remote_addr = ReinterpretAs<uint64_t>(dst);
     dataWr.wr.rdma.rkey = rmtRmaBuffers_[0]->GetRkey();
 
     // 2. Notify WR（写入对端 TransportIbverbs 的 Notify 内存）
-    notifySge.addr = reinterpret_cast<uint64_t>(localMemMsg_[hccl::NOTIFY_SRC_MEM].addr);
+    notifySge.addr = ReinterpretAs<uint64_t>(localMemMsg_[hccl::NOTIFY_SRC_MEM].addr);
     notifySge.length = localMemMsg_[hccl::NOTIFY_SRC_MEM].len;
     notifySge.lkey = localMemMsg_[hccl::NOTIFY_SRC_MEM].lkey; // 使用本地 buffer 的 lkey
 
@@ -1852,7 +1852,7 @@ HcclResult HostCpuRoceChannel::WriteWithNotifyHybrid(void* dst, const void* src,
     notifyWr.sg_list = &notifySge;
     notifyWr.num_sge = 1;
     // Notify 写入对端 hostNotifyAddr 的偏移位置
-    notifyWr.wr.rdma.remote_addr = reinterpret_cast<uint64_t>(remoteMemMsg_[type].addr);
+    notifyWr.wr.rdma.remote_addr = ReinterpretAs<uint64_t>(remoteMemMsg_[type].addr);
     notifyWr.wr.rdma.rkey = remoteMemMsg_[type].lkey;
 
     // 链接 WR 链：dataWr -> notifyWr
@@ -1880,7 +1880,7 @@ HcclResult HostCpuRoceChannel::NotifyWaitHybrid(uint32_t localNotifyIdx, uint32_
     uint32_t pollInterval = 1;
 
     // 使用原子操作读取 Notify 内存
-    std::atomic<uint32_t>* notifyAddr = reinterpret_cast<std::atomic<uint32_t>*>(localMemMsg_[type].addr);
+    std::atomic<uint32_t>* notifyAddr = ReinterpretAs<std::atomic<uint32_t>*>(localMemMsg_[type].addr);
     const uint64_t expectedValue = 1;
 
     auto startTime = std::chrono::steady_clock::now();

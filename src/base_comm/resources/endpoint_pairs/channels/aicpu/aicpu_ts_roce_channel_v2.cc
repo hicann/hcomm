@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include "cast_utils.h"
 #include "endpoint.h"
 #include "aicpu_res_package_helper.h"
 #include "hcomm_c_adpt.h"
@@ -87,7 +88,7 @@ namespace {
         if (section.size == 0) {
             return nullptr;
         }
-        return reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(base) + section.offset);
+        return ReinterpretAs<void*>(ReinterpretAs<uintptr_t>(base) + section.offset);
     }
 
     template <typename T>
@@ -115,7 +116,7 @@ namespace {
         CHK_PTR_NULL(sectionPtr);
         Hccl::HrtMemcpy(
             sectionPtr, section.size, hostArray, section.size, Hccl::tagRtMemcpyKind::RT_MEMCPY_HOST_TO_DEVICE);
-        *deviceArrayPtr = reinterpret_cast<T*>(sectionPtr);
+        *deviceArrayPtr = ReinterpretAs<T*>(sectionPtr);
         HCCL_INFO(
             "[AicpuTsRoceChannelV2::CopyArrayToSlab] %s: host[%p] -> dev[%p], num[%u], size[%zu]", arrayName, hostArray,
             sectionPtr, arrayNum, section.size);
@@ -216,8 +217,7 @@ HcclResult AicpuTsRoceChannelV2::ParseInputParam()
     // 1. 从 endpointHandle_，获得 localEp_ 和 rdmaHandle_
     CHK_PTR_NULL(endpointHandle_);
     HCCL_INFO(
-        "[AicpuTsRoceChannelV2][%s] Start. endpointHandle[0x%llx]", __func__,
-        reinterpret_cast<uint64_t>(endpointHandle_));
+        "[AicpuTsRoceChannelV2][%s] Start. endpointHandle[0x%llx]", __func__, ReinterpretAs<uint64_t>(endpointHandle_));
     Endpoint* localEpPtr = static_cast<Endpoint*>(endpointHandle_);
     localEp_ = localEpPtr->GetEndpointDesc();
     rdmaHandle_ = localEpPtr->GetRdmaHandle();
@@ -236,7 +236,7 @@ HcclResult AicpuTsRoceChannelV2::StartListen()
     uint16_t port = channelDesc_.port;
     HCCL_INFO(
         "[AicpuTsRoceChannelV2::%s] Start. EndpointHandle[0x%llx], port[%u]", __func__,
-        reinterpret_cast<uint64_t>(endpointHandle_), port);
+        ReinterpretAs<uint64_t>(endpointHandle_), port);
     if (port == 0) {
         port = DEFAULT_LISTENING_PORT;
         HCCL_INFO("[AicpuTsRoceChannelV2::%s] channelDesc port is 0, use default port [%u]", __func__, port);
@@ -328,7 +328,7 @@ HcclResult AicpuTsRoceChannelV2::BuildBuffer()
         std::shared_ptr<Hccl::LocalRdmaRmaBuffer>* memHandles = nullptr;
         uint32_t memHandleNum = 0;
         CHK_RET(static_cast<HcclResult>(
-            HcommMemGetAllMemHandles(endpointHandle_, reinterpret_cast<void**>(&memHandles), &memHandleNum)));
+            HcommMemGetAllMemHandles(endpointHandle_, ReinterpretAs<void**>(&memHandles), &memHandleNum)));
         HCCL_INFO("[AicpuTsRoceChannelV2][%s] Got memHandleNum[%u].", __func__, memHandleNum);
         for (uint32_t i = 0; i < memHandleNum; ++i) {
             std::shared_ptr<Hccl::LocalRdmaRmaBuffer>& localRdmaBuffer = memHandles[i];
@@ -348,7 +348,7 @@ HcclResult AicpuTsRoceChannelV2::BuildBuffer()
         CHK_PTR_NULL(channelDesc_.memHandles);
         for (uint32_t i = 0; i < channelDesc_.memHandleNum; ++i) {
             CHK_PTR_NULL(channelDesc_.memHandles[i]);
-            auto* localRdmaBuffer = reinterpret_cast<Hccl::LocalRdmaRmaBuffer*>(channelDesc_.memHandles[i]);
+            auto* localRdmaBuffer = ReinterpretAs<Hccl::LocalRdmaRmaBuffer*>(channelDesc_.memHandles[i]);
             HCCL_INFO(
                 "[AicpuTsRoceChannelV2][%s] Got memHandle No.%u: addr[0x%llx], size[0x%llx], memType[%d], memInfo[%s].",
                 __func__, i, static_cast<unsigned long long>(localRdmaBuffer->GetAddr()),
@@ -377,7 +377,7 @@ HcclResult AicpuTsRoceChannelV2::BuildNotifyValueBuffer()
         notifyValueMem_->GetSize());
     u64 notifyValue = 1; // notify值写1表示record
     Hccl::HrtMemcpy(
-        reinterpret_cast<void*>(notifyValueMem_->GetAddr()), notifyValueMem_->GetSize(), &notifyValue, notifysize,
+        ReinterpretAs<void*>(notifyValueMem_->GetAddr()), notifyValueMem_->GetSize(), &notifyValue, notifysize,
         Hccl::tagRtMemcpyKind::RT_MEMCPY_HOST_TO_DEVICE);
     EXCEPTION_CATCH(
         (notifyValueBuffer_ = std::make_unique<Hccl::LocalRdmaRmaBuffer>(notifyValueMem_, rdmaHandle_)),
@@ -886,7 +886,7 @@ HcclResult AicpuTsRoceChannelV2::BuildAndGetDevChannelEntity(uint64_t* devChanne
     CHK_PTR_NULL(devChannelEntityPtr);
 
     if (devChannelEntitySlab_ != nullptr) {
-        *devChannelEntityPtr = reinterpret_cast<uint64_t>(devChannelEntitySlab_);
+        *devChannelEntityPtr = ReinterpretAs<uint64_t>(devChannelEntitySlab_);
         HCCL_INFO(
             "[AicpuTsRoceChannelV2::%s] already built, return cached devPtr=0x%lx", __func__, *devChannelEntityPtr);
         return HCCL_SUCCESS;
@@ -914,7 +914,7 @@ HcclResult AicpuTsRoceChannelV2::BuildAndGetDevChannelEntity(uint64_t* devChanne
     devChannelEntitySlab_ = slabGuard.Release();
     devChannelEntitySlabSize_ = layout.slabSize;
 
-    *devChannelEntityPtr = reinterpret_cast<uint64_t>(entityDevPtr);
+    *devChannelEntityPtr = ReinterpretAs<uint64_t>(entityDevPtr);
     HCCL_INFO(
         "[AicpuTsRoceChannelV2::%s] Success, devPtr=0x%lx, slabPtr=%p, slabSize=%zu", __func__, *devChannelEntityPtr,
         devChannelEntitySlab_, devChannelEntitySlabSize_);
@@ -926,7 +926,7 @@ HcclResult AicpuTsRoceChannelV2::PreAllocDevChannelEntity(uint64_t* devChannelEn
     CHK_PTR_NULL(devChannelEntityPtr);
 
     if (devChannelEntitySlab_ != nullptr) {
-        *devChannelEntityPtr = reinterpret_cast<uint64_t>(devChannelEntitySlab_);
+        *devChannelEntityPtr = ReinterpretAs<uint64_t>(devChannelEntitySlab_);
         HCCL_INFO(
             "[AicpuTsRoceChannelV2::%s] already built, return cached devPtr=0x%lx", __func__, *devChannelEntityPtr);
         return HCCL_SUCCESS;
@@ -949,7 +949,7 @@ HcclResult AicpuTsRoceChannelV2::PreAllocDevChannelEntity(uint64_t* devChannelEn
 
     devChannelEntitySlab_ = slabGuard.Release();
     devChannelEntitySlabSize_ = layout.slabSize;
-    *devChannelEntityPtr = reinterpret_cast<uint64_t>(devChannelEntitySlab_);
+    *devChannelEntityPtr = ReinterpretAs<uint64_t>(devChannelEntitySlab_);
 
     HCCL_INFO(
         "[AicpuTsRoceChannelV2::%s] pre-alloc success, slabPtr=%p, slabSize=%zu", __func__, devChannelEntitySlab_,

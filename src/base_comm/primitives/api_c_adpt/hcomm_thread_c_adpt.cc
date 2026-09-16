@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include "cast_utils.h"
 #include <memory>
 #include <mutex>
 #include <unordered_map>
@@ -173,7 +174,7 @@ HcommResult HcommThreadAllocWithStream(CommEngine engine, rtStream_t stream, uin
     CHK_RET(handle->Init());
 
     // 返回第一个句柄
-    *thread = reinterpret_cast<ThreadHandle>(handle.get());
+    *thread = ReinterpretAs<ThreadHandle>(handle.get());
     {
         std::lock_guard<std::mutex> lock(hcomm::g_ThreadMapMtx);
         hcomm::g_ThreadMap.emplace(*thread, handle);
@@ -273,7 +274,7 @@ HcommResult HcommThreadExportToCommEngineAiCpu(
         CHK_RET(hccl::LookupThreadByHandle(handles[i], threadPtr));
         hccl::Thread* exported = threadPtr->FindThreadByCommEngine(dstEngine);
         if (exported != nullptr) {
-            outHandles[i] = reinterpret_cast<ThreadHandle>(exported);
+            outHandles[i] = ReinterpretAs<ThreadHandle>(exported);
         } else {
             hostThreads.push_back(std::move(threadPtr));
             missIdx.push_back(i);
@@ -294,7 +295,7 @@ HcommResult HcommThreadExportToCommEngineAiCpu(
             outHandles[missIdx[i]] = aicpuHandle[i];
             CHK_RET(hostThreads[i]->AddThreadHandleToMap(dstEngine, aicpuHandle[i]));
             // 入 g_ThreadD2HMap（device->host）
-            ThreadHandle hostHandle = reinterpret_cast<ThreadHandle>(hostThreads[i].get());
+            ThreadHandle hostHandle = ReinterpretAs<ThreadHandle>(hostThreads[i].get());
             CHK_RET(hccl::FillThreadD2HMap(&aicpuHandle[i], &hostHandle, 1));
         }
     }

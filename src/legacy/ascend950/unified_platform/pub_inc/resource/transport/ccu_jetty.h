@@ -11,6 +11,7 @@
 #ifndef HCCL_CCU_JETTY_H
 #define HCCL_CCU_JETTY_H
 
+#include "cast_utils.h"
 #include <memory>
 #include <unordered_map>
 #include <vector>
@@ -33,7 +34,7 @@ public:
     HrtRaUbCreateJettyParam GetCreateJettyParam() const;
     HrtRaUbJettyCreatedOutParam GetJettyedOutParam() const;
 
-    JettyHandle GetJettyHandle() const { return reinterpret_cast<JettyHandle>(jettyHandlePtr_); }
+    JettyHandle GetJettyHandle() const { return ReinterpretAs<JettyHandle>(jettyHandlePtr_); }
     RdmaHandle GetRdmaHandle() const { return rdmaHandle_; }
     uint16_t GetJettyId() const { return jettyInfo_.taJettyId; }
     HcclResult Clean();

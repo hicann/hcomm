@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include "cast_utils.h"
 #include "ub_mem_transport.h"
 #include "serializable.h"
 #include "exchange_ub_buffer_dto.h"
@@ -73,7 +74,7 @@ HcclResult UbMemTransport::BuildDrainResource()
         EXCEPTION_CATCH(constMem = std::make_shared<Hccl::DevBuffer>(notifySize), return HCCL_E_PTR);
 
         Hccl::HrtMemcpy(
-            reinterpret_cast<void*>(constMem->GetAddr()), constMem->GetSize(), &NORMAL_NOTIFY_VAL,
+            ReinterpretAs<void*>(constMem->GetAddr()), constMem->GetSize(), &NORMAL_NOTIFY_VAL,
             sizeof(NORMAL_NOTIFY_VAL), RT_MEMCPY_HOST_TO_DEVICE);
 
         EXCEPTION_CATCH(
@@ -226,8 +227,8 @@ void UbMemTransport::Read(const RmaBufferSlice& locSlice, const RmtRmaBufferSlic
 
     taskParam.taskType = TaskParamType::TASK_RDMA;
     taskParam.endTime = DlProfFunc::GetInstance().dlMsprofSysCycleTime();
-    taskParam.taskPara.DMA.src = reinterpret_cast<const void*>(locSlice.addr);
-    taskParam.taskPara.DMA.dst = reinterpret_cast<const void*>(rmtSlice.addr);
+    taskParam.taskPara.DMA.src = ReinterpretAs<const void*>(locSlice.addr);
+    taskParam.taskPara.DMA.dst = ReinterpretAs<const void*>(rmtSlice.addr);
     taskParam.taskPara.DMA.size = rmtSlice.size;
     taskParam.taskPara.DMA.notifyID = INVALID_VALUE_NOTIFYID;
     taskParam.taskPara.DMA.linkType = DfxLinkType::UB;
@@ -250,8 +251,8 @@ void UbMemTransport::ReadReduce(
 
     taskParam.taskType = TaskParamType::TASK_UB_REDUCE_INLINE;
     taskParam.endTime = DlProfFunc::GetInstance().dlMsprofSysCycleTime();
-    taskParam.taskPara.DMA.src = reinterpret_cast<const void*>(locSlice.addr);
-    taskParam.taskPara.DMA.dst = reinterpret_cast<const void*>(rmtSlice.addr);
+    taskParam.taskPara.DMA.src = ReinterpretAs<const void*>(locSlice.addr);
+    taskParam.taskPara.DMA.dst = ReinterpretAs<const void*>(rmtSlice.addr);
     taskParam.taskPara.DMA.size = rmtSlice.size;
     taskParam.taskPara.DMA.notifyID = INVALID_VALUE_NOTIFYID;
     taskParam.taskPara.DMA.linkType = DfxLinkType::UB;
@@ -271,8 +272,8 @@ void UbMemTransport::Write(const RmaBufferSlice& locSlice, const RmtRmaBufferSli
         commonLocRes.connVec[0]->PrepareWrite(GetRmtMemBuffer(rmtSlice), GetLocMemBuffer(locSlice), config), stream);
     taskParam.taskType = TaskParamType::TASK_RDMA;
     taskParam.endTime = DlProfFunc::GetInstance().dlMsprofSysCycleTime();
-    taskParam.taskPara.DMA.src = reinterpret_cast<const void*>(locSlice.addr);
-    taskParam.taskPara.DMA.dst = reinterpret_cast<const void*>(rmtSlice.addr);
+    taskParam.taskPara.DMA.src = ReinterpretAs<const void*>(locSlice.addr);
+    taskParam.taskPara.DMA.dst = ReinterpretAs<const void*>(rmtSlice.addr);
     taskParam.taskPara.DMA.size = locSlice.size;
     taskParam.taskPara.DMA.notifyID = INVALID_VALUE_NOTIFYID;
     taskParam.taskPara.DMA.linkType = DfxLinkType::UB;
@@ -296,8 +297,8 @@ void UbMemTransport::WriteReduce(
 
     taskParam.taskType = TaskParamType::TASK_UB_REDUCE_INLINE;
     taskParam.endTime = DlProfFunc::GetInstance().dlMsprofSysCycleTime();
-    taskParam.taskPara.DMA.src = reinterpret_cast<const void*>(locSlice.addr);
-    taskParam.taskPara.DMA.dst = reinterpret_cast<const void*>(rmtSlice.addr);
+    taskParam.taskPara.DMA.src = ReinterpretAs<const void*>(locSlice.addr);
+    taskParam.taskPara.DMA.dst = ReinterpretAs<const void*>(rmtSlice.addr);
     taskParam.taskPara.DMA.size = locSlice.size;
     taskParam.taskPara.DMA.notifyID = INVALID_VALUE_NOTIFYID;
     taskParam.taskPara.DMA.linkType = DfxLinkType::UB;
@@ -386,8 +387,8 @@ void UbMemTransport::SubmitWriteWithNotify(
 
     taskParam.taskType = TaskParamType::TASK_WRITE_WITH_NOTIFY;
     taskParam.endTime = DlProfFunc::GetInstance().dlMsprofSysCycleTime();
-    taskParam.taskPara.DMA.src = reinterpret_cast<const void*>(loc.addr);
-    taskParam.taskPara.DMA.dst = reinterpret_cast<const void*>(rmt.addr);
+    taskParam.taskPara.DMA.src = ReinterpretAs<const void*>(loc.addr);
+    taskParam.taskPara.DMA.dst = ReinterpretAs<const void*>(rmt.addr);
     taskParam.taskPara.DMA.size = loc.size;
     taskParam.taskPara.DMA.notifyID = INVALID_VALUE_NOTIFYID;
     taskParam.taskPara.DMA.linkType = DfxLinkType::UB;
@@ -412,8 +413,8 @@ void UbMemTransport::SubmitWriteReduceWithNotify(
 
     taskParam.taskType = TaskParamType::TASK_WRITE_REDUCE_WITH_NOTIFY;
     taskParam.endTime = DlProfFunc::GetInstance().dlMsprofSysCycleTime();
-    taskParam.taskPara.DMA.src = reinterpret_cast<const void*>(loc.addr);
-    taskParam.taskPara.DMA.dst = reinterpret_cast<const void*>(rmt.addr);
+    taskParam.taskPara.DMA.src = ReinterpretAs<const void*>(loc.addr);
+    taskParam.taskPara.DMA.dst = ReinterpretAs<const void*>(rmt.addr);
     taskParam.taskPara.DMA.size = loc.size;
     taskParam.taskPara.DMA.notifyID = INVALID_VALUE_NOTIFYID;
     taskParam.taskPara.DMA.linkType = DfxLinkType::UB;
@@ -632,7 +633,7 @@ HcclResult UbMemTransport::RecvDataSize()
     if (isHost_) {
         ret = socket->Recv(&exchangeDataSize, sizeof(exchangeDataSize));
     } else {
-        socket->RecvAsync(reinterpret_cast<u8*>(&exchangeDataSize), sizeof(exchangeDataSize));
+        socket->RecvAsync(ReinterpretAs<u8*>(&exchangeDataSize), sizeof(exchangeDataSize));
         ret = true;
     }
     if (!ret) {
@@ -671,7 +672,7 @@ HcclResult UbMemTransport::RecvExchangeData()
     if (isHost_) {
         ret = socket->Recv(recvData.data(), recvData.size());
     } else {
-        socket->RecvAsync(reinterpret_cast<u8*>(recvData.data()), recvData.size());
+        socket->RecvAsync(ReinterpretAs<u8*>(recvData.data()), recvData.size());
         ret = true;
     }
     if (!ret) {
@@ -935,7 +936,7 @@ HcclResult UbMemTransport::RecvFinish()
     if (isHost_) {
         ret = socket->Recv(recvFinishMsg.data(), FINISH_MSG_SIZE);
     } else {
-        socket->RecvAsync(reinterpret_cast<u8*>(recvFinishMsg.data()), FINISH_MSG_SIZE);
+        socket->RecvAsync(ReinterpretAs<u8*>(recvFinishMsg.data()), FINISH_MSG_SIZE);
         ret = true;
     }
     if (!ret) {
@@ -999,7 +1000,7 @@ std::vector<char> UbMemTransport::GetUniqueIdV2()
     binaryStream << rmtNotifyUniqueIds;
 
     for (auto& it : commonLocRes.bufferVec) {
-        locBufferVec.emplace_back(reinterpret_cast<LocalUbRmaBuffer*>(it));
+        locBufferVec.emplace_back(ReinterpretAs<LocalUbRmaBuffer*>(it));
     }
 
     auto locBufferUniqueIds = GetLocBufferUniqueIds(locBufferVec, UbRmtBufType::BUFFER);
@@ -1280,7 +1281,7 @@ HcclResult UbMemTransport::GetRemoteSeg(const void* addr, u64 len, u64* seg)
     bool isAddrInRange = false;
     for (auto& it : rmtBufferVec) {
         Buffer iterBuf(it->GetAddr(), it->GetSize());
-        if (iterBuf.Contains(reinterpret_cast<uintptr_t>(addr), len)) {
+        if (iterBuf.Contains(ReinterpretAs<uintptr_t>(addr), len)) {
             *seg = it->GetSegVa();
             isAddrInRange = true;
             break;

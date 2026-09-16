@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include "cast_utils.h"
 #include "sqe_mgr.h"
 #include <chrono>
 #include "stl_util.h"
@@ -76,7 +77,7 @@ HcclResult SqeMgr::Add(u32 sqId, HcclSqe* sqe)
 
     HCCL_INFO("SqeMgr::%s sqe->GetSqe() %llu", __func__, sqe->GetSqe());
 
-    AddSqeToBuffer(nextBufferAddr, reinterpret_cast<void*>(sqe->GetSqe()));
+    AddSqeToBuffer(nextBufferAddr, ReinterpretAs<void*>(sqe->GetSqe()));
     sqInfo->sqeCnt++;
     HCCL_INFO("SqeMgr::%s end sqInfo->sqeCnt[%u]", __func__, sqInfo->sqeCnt);
     return HcclResult::HCCL_SUCCESS;
@@ -111,7 +112,7 @@ HcclResult SqeMgr::Commit(u32 sqId)
         HCCL_INFO(
             "SqeMgr::%s copy sqe from sqe buffer, cur tail: %u, size: %u", __func__, sqInfo->sqTail, sqInfo->sqeCnt);
         int ret = memcpy_s(
-            reinterpret_cast<u8*>(sqInfo->sqBaseAddr) + sqInfo->sqTail * AC_SQE_SIZE, sqInfo->sqeCnt * AC_SQE_SIZE,
+            ReinterpretAs<u8*>(sqInfo->sqBaseAddr) + sqInfo->sqTail * AC_SQE_SIZE, sqInfo->sqeCnt * AC_SQE_SIZE,
             sqInfo->sqeBuffer, sqInfo->sqeCnt * AC_SQE_SIZE);
         if (ret != 0) {
             THROW<InternalException>(StringFormat("SqeMgr::%s sqe memcpy_s failed, ret = %d", __func__, ret));
@@ -122,7 +123,7 @@ HcclResult SqeMgr::Commit(u32 sqId)
             depthLeft);
         // 先拷贝rtsq里剩余空间大小
         int ret = memcpy_s(
-            reinterpret_cast<u8*>(sqInfo->sqBaseAddr) + sqInfo->sqTail * AC_SQE_SIZE, depthLeft * AC_SQE_SIZE,
+            ReinterpretAs<u8*>(sqInfo->sqBaseAddr) + sqInfo->sqTail * AC_SQE_SIZE, depthLeft * AC_SQE_SIZE,
             sqInfo->sqeBuffer, depthLeft * AC_SQE_SIZE);
         if (ret != 0) {
             THROW<InternalException>(
@@ -130,7 +131,7 @@ HcclResult SqeMgr::Commit(u32 sqId)
         }
         // 拷贝剩余sqe
         ret = memcpy_s(
-            reinterpret_cast<u8*>(sqInfo->sqBaseAddr), sqInfo->sqHead * AC_SQE_SIZE,
+            ReinterpretAs<u8*>(sqInfo->sqBaseAddr), sqInfo->sqHead * AC_SQE_SIZE,
             sqInfo->sqeBuffer + depthLeft * AC_SQE_SIZE, (sqInfo->sqeCnt - depthLeft) * AC_SQE_SIZE);
         if (ret != 0) {
             THROW<InternalException>(StringFormat("SqeMgr::%s remaining sqe memcpy_s failed, ret = %d", __func__, ret));

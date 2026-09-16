@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include "cast_utils.h"
 #include "hccl_api_data.h"
 #include "new/hccl_primitive_local.h"
 #include "new/hccl_primitive_remote.h"
@@ -62,7 +63,7 @@ bool IsSupportReduce(HcommDataType dataType, HcommReduceOp op)
 
 HcclResult HcommThreadGetNotifyId(ThreadHandle thread, uint32_t notifyIdx, uint32_t* notifyId)
 {
-    Thread* const threadPtr = reinterpret_cast<Thread*>(thread);
+    Thread* const threadPtr = ReinterpretAs<Thread*>(thread);
     CHK_PTR_NULL(threadPtr);
     LocalNotify* const notifyPtr = threadPtr->GetNotify(notifyIdx);
     CHK_PTR_NULL(notifyPtr);
@@ -112,7 +113,7 @@ HcclResult HcclDfxRegOpInfoByCommIdImpl(char* commId, void* hcclDfxOpInfo)
         return HCCL_SUCCESS;
     }
 
-    HcclDfxOpInfo* aicpuDfxInfo = reinterpret_cast<HcclDfxOpInfo*>(hcclDfxOpInfo);
+    HcclDfxOpInfo* aicpuDfxInfo = ReinterpretAs<HcclDfxOpInfo*>(hcclDfxOpInfo);
     CHK_RET(HcommThreadGetNotifyId(
         aicpuDfxInfo->cpuTsThread, aicpuDfxInfo->cpuWaitAicpuNotifyIdx, &aicpuDfxInfo->cpuWaitAicpuNotifyId));
     CollCommAicpu* currentComm = CollCommAicpuMgr::GetInstance().GetCurrentComm();
@@ -132,7 +133,7 @@ int32_t HcommLocalCopyOnThread(ThreadHandle thread, void* dst, const void* src, 
     CHK_PTR_NULL(src);
     AddThread(thread);
 
-    Thread* const threadPtr = reinterpret_cast<Thread*>(thread);
+    Thread* const threadPtr = ReinterpretAs<Thread*>(thread);
     CHK_PTR_NULL(threadPtr);
 
     HcclResult ret = HCCL_SUCCESS;
@@ -163,7 +164,7 @@ int32_t HcommLocalReduceOnThread(
     CHK_PTR_NULL(src);
     AddThread(thread);
 
-    Thread* const threadPtr = reinterpret_cast<Thread*>(thread);
+    Thread* const threadPtr = ReinterpretAs<Thread*>(thread);
     CHK_PTR_NULL(threadPtr);
 
     uint64_t len = count * SIZE_TABLE[dataType];
@@ -204,9 +205,9 @@ int32_t HcommThreadNotifyRecordOnThread(ThreadHandle thread, ThreadHandle dstThr
 
     AddThread(thread);
 
-    Thread* const threadPtr = reinterpret_cast<Thread*>(thread);
+    Thread* const threadPtr = ReinterpretAs<Thread*>(thread);
     CHK_PTR_NULL(threadPtr);
-    Thread* const dstThreadPtr = reinterpret_cast<Thread*>(dstThread);
+    Thread* const dstThreadPtr = ReinterpretAs<Thread*>(dstThread);
     CHK_PTR_NULL(dstThreadPtr);
 
     HcclResult ret = HCCL_SUCCESS;
@@ -239,7 +240,7 @@ int32_t HcommThreadNotifyWaitOnThread(ThreadHandle thread, uint32_t notifyIdx, u
 
     AddThread(thread);
 
-    Thread* const threadPtr = reinterpret_cast<Thread*>(thread);
+    Thread* const threadPtr = ReinterpretAs<Thread*>(thread);
     CHK_PTR_NULL(threadPtr);
 
     HcclResult ret = HCCL_SUCCESS;
@@ -269,7 +270,7 @@ int32_t HcommAclrtNotifyRecordOnThread(ThreadHandle thread, uint64_t dstNotifyId
 
     AddThread(thread);
 
-    Thread* const threadPtr = reinterpret_cast<Thread*>(thread);
+    Thread* const threadPtr = ReinterpretAs<Thread*>(thread);
     CHK_PTR_NULL(threadPtr);
 
     HcclResult ret = HCCL_SUCCESS;
@@ -294,7 +295,7 @@ int32_t HcommAclrtNotifyWaitOnThread(ThreadHandle thread, uint64_t notifyId, uin
 
     AddThread(thread);
 
-    Thread* const threadPtr = reinterpret_cast<Thread*>(thread);
+    Thread* const threadPtr = ReinterpretAs<Thread*>(thread);
     CHK_PTR_NULL(threadPtr);
 
     HcclResult ret = HCCL_SUCCESS;
@@ -331,13 +332,13 @@ HcclResult CommTaskLaunch(ThreadHandle* threads, uint32_t threadNum) // host fft
     CHK_PTR_NULL(threads);
     CHK_PRT_RET(threadNum < 1, HCCL_ERROR("[CommTaskLaunch]threadNum is less than 1"), HCCL_E_PARA);
 
-    Thread* threadPtr = reinterpret_cast<Thread*>(threads[0]);
+    Thread* threadPtr = ReinterpretAs<Thread*>(threads[0]);
     CHK_PTR_NULL(threadPtr);
 
     if (threadPtr->IsDeviceA5()) {
         HCCL_INFO("[%s] Running on A5.", __func__);
         for (uint32_t i = 0; i < threadNum; i++) {
-            Thread* threadPtrLoop = reinterpret_cast<Thread*>(threads[i]);
+            Thread* threadPtrLoop = ReinterpretAs<Thread*>(threads[i]);
             CHK_PTR_NULL(threadPtrLoop);
             HCCL_INFO("[%s] Launching task in thread[0x%llx].", __func__, threads[i]);
             EXCEPTION_CATCH(threadPtrLoop->LaunchTask(), return HCCL_E_INTERNAL);
@@ -360,7 +361,7 @@ HcclResult DispatchAllStreams(const ThreadHandle* threads, uint32_t threadNum)
     CHK_PTR_NULL(threads);
     CHK_PRT_RET(threadNum < 1, HCCL_ERROR("[DispatchAllStreams]threadNum is less than 1"), HCCL_E_PARA);
 
-    Thread* threadPtr = reinterpret_cast<Thread*>(threads[0]);
+    Thread* threadPtr = ReinterpretAs<Thread*>(threads[0]);
     CHK_PTR_NULL(threadPtr);
 
     if (!threadPtr->IsDeviceA5()) {
@@ -369,7 +370,7 @@ HcclResult DispatchAllStreams(const ThreadHandle* threads, uint32_t threadNum)
     }
 
     for (uint32_t i = 0; i < threadNum; i++) {
-        Thread* threadPtrLoop = reinterpret_cast<Thread*>(threads[i]);
+        Thread* threadPtrLoop = ReinterpretAs<Thread*>(threads[i]);
         CHK_PTR_NULL(threadPtrLoop);
         EXCEPTION_CATCH(threadPtrLoop->TryLaunchTask(), return HCCL_E_INTERNAL);
     }
@@ -502,18 +503,18 @@ int32_t HcommWriteOnThread(ThreadHandle thread, ChannelHandle channel, void* dst
     CHK_RET(UnwrapChannelHandle(channel));
     AddThread(thread);
 
-    Thread* const threadPtr = reinterpret_cast<Thread*>(thread);
+    Thread* const threadPtr = ReinterpretAs<Thread*>(thread);
     CHK_PTR_NULL(threadPtr);
 
     HcclResult ret = HCCL_SUCCESS;
     if (threadPtr->IsDeviceA5()) {
-        auto* const transportLitePtr = reinterpret_cast<Hccl::BaseTransportLiteImpl*>(channel);
+        auto* const transportLitePtr = ReinterpretAs<Hccl::BaseTransportLiteImpl*>(channel);
         CHK_PTR_NULL(transportLitePtr);
         auto* const streamLitePtr = static_cast<Hccl::StreamLite*>(threadPtr->GetStreamLitePtr());
         CHK_PTR_NULL(streamLitePtr);
 
         Hccl::RmaBufferLite locRmaBuf;
-        ret = transportLitePtr->BuildLocRmaBufferLite(reinterpret_cast<uintptr_t>(src), len, locRmaBuf);
+        ret = transportLitePtr->BuildLocRmaBufferLite(ReinterpretAs<uintptr_t>(src), len, locRmaBuf);
         CHK_PRT_RET(
             ret != HCCL_SUCCESS,
             HCCL_ERROR(
@@ -521,7 +522,7 @@ int32_t HcommWriteOnThread(ThreadHandle thread, ChannelHandle channel, void* dst
                 "len[%llu].",
                 __func__, thread, channel, dst, src, len),
             ret);
-        const Hccl::Buffer rmtBuf{reinterpret_cast<uintptr_t>(dst), len};
+        const Hccl::Buffer rmtBuf{ReinterpretAs<uintptr_t>(dst), len};
 
         ret = transportLitePtr->CheckOverflow(len, false);
         CHK_PRT_RET(ret != HCCL_SUCCESS, HCCL_WARNING("[%s] overflow check failed, len[%llu].", __func__, len), ret);
@@ -533,7 +534,7 @@ int32_t HcommWriteOnThread(ThreadHandle thread, ChannelHandle channel, void* dst
         Stream* stream = GetStream(thread);
         CHK_PTR_NULL(stream);
 
-        ret = HcclRemoteWrite(stream, reinterpret_cast<void*>(channel), &rmtBuf, &locBuf);
+        ret = HcclRemoteWrite(stream, ReinterpretAs<void*>(channel), &rmtBuf, &locBuf);
     }
     CHK_PRT_RET(
         ret != HCCL_SUCCESS,
@@ -559,7 +560,7 @@ int32_t HcommWriteReduceOnThread(
     CHK_RET(UnwrapChannelHandle(channel));
     AddThread(thread);
 
-    Thread* const threadPtr = reinterpret_cast<Thread*>(thread);
+    Thread* const threadPtr = ReinterpretAs<Thread*>(thread);
     CHK_PTR_NULL(threadPtr);
 
     HcclResult ret = HCCL_SUCCESS;
@@ -584,13 +585,13 @@ int32_t HcommWriteReduceOnThread(
     uint64_t len = count * SIZE_TABLE[dataType];
 
     if (threadPtr->IsDeviceA5()) {
-        auto* const transportLitePtr = reinterpret_cast<Hccl::BaseTransportLiteImpl*>(channel);
+        auto* const transportLitePtr = ReinterpretAs<Hccl::BaseTransportLiteImpl*>(channel);
         CHK_PTR_NULL(transportLitePtr);
         auto* const streamLitePtr = static_cast<Hccl::StreamLite*>(threadPtr->GetStreamLitePtr());
         CHK_PTR_NULL(streamLitePtr);
 
         Hccl::RmaBufferLite locRmaBuf;
-        ret = transportLitePtr->BuildLocRmaBufferLite(reinterpret_cast<uintptr_t>(src), len, locRmaBuf);
+        ret = transportLitePtr->BuildLocRmaBufferLite(ReinterpretAs<uintptr_t>(src), len, locRmaBuf);
         CHK_PRT_RET(
             ret != HCCL_SUCCESS,
             HCCL_ERROR(
@@ -598,7 +599,7 @@ int32_t HcommWriteReduceOnThread(
                 "count[%llu], dataType[%d], reduceOp[%d].",
                 __func__, thread, channel, dst, src, count, dataType, reduceOp),
             ret);
-        const Hccl::Buffer rmtBuf{reinterpret_cast<uintptr_t>(dst), len};
+        const Hccl::Buffer rmtBuf{ReinterpretAs<uintptr_t>(dst), len};
 
         Hccl::ReduceIn reduceIn{mapHcommDataTypeToA5.at(dataType), mapHcommReduceOpToA5.at(reduceOp)};
 
@@ -614,7 +615,7 @@ int32_t HcommWriteReduceOnThread(
         Stream* stream = GetStream(thread);
         CHK_PTR_NULL(stream);
 
-        ret = HcclRemoteWriteReduce(stream, reinterpret_cast<void*>(channel), &rmtBuf, &locBuf, reduceInfo);
+        ret = HcclRemoteWriteReduce(stream, ReinterpretAs<void*>(channel), &rmtBuf, &locBuf, reduceInfo);
     }
     CHK_PRT_RET(
         ret != HCCL_SUCCESS,
@@ -650,7 +651,7 @@ HcclResult CommWriteReduceWithNotify(
     CHK_PTR_NULL(stream);
 
     return HcclRemoteWriteReduceWithNotify(
-        stream, reinterpret_cast<void*>(channel), &rmtBuf, &locBuf, reduceInfo, remoteNotifyIdx);
+        stream, ReinterpretAs<void*>(channel), &rmtBuf, &locBuf, reduceInfo, remoteNotifyIdx);
 }
 
 int32_t HcommWriteWithNotifyOnThread(
@@ -665,19 +666,19 @@ int32_t HcommWriteWithNotifyOnThread(
     CHK_RET(UnwrapChannelHandle(channel));
     AddThread(thread);
 
-    Thread* const threadPtr = reinterpret_cast<Thread*>(thread);
+    Thread* const threadPtr = ReinterpretAs<Thread*>(thread);
     CHK_PTR_NULL(threadPtr);
 
     HcclResult ret = HCCL_SUCCESS;
     if (threadPtr->IsDeviceA5()) {
         HCCL_DEBUG("[%s] Running on A5.", __func__);
-        auto* const transportLitePtr = reinterpret_cast<Hccl::BaseTransportLiteImpl*>(channel);
+        auto* const transportLitePtr = ReinterpretAs<Hccl::BaseTransportLiteImpl*>(channel);
         CHK_PTR_NULL(transportLitePtr);
         auto* const streamLitePtr = static_cast<Hccl::StreamLite*>(threadPtr->GetStreamLitePtr());
         CHK_PTR_NULL(streamLitePtr);
 
         Hccl::RmaBufferLite locRmaBuf;
-        ret = transportLitePtr->BuildLocRmaBufferLite(reinterpret_cast<uintptr_t>(src), len, locRmaBuf);
+        ret = transportLitePtr->BuildLocRmaBufferLite(ReinterpretAs<uintptr_t>(src), len, locRmaBuf);
         CHK_PRT_RET(
             ret != HCCL_SUCCESS,
             HCCL_ERROR(
@@ -685,7 +686,7 @@ int32_t HcommWriteWithNotifyOnThread(
                 "len[%llu], remoteNotifyIdx[%u].",
                 __func__, thread, channel, dst, src, len, remoteNotifyIdx),
             ret);
-        const Hccl::Buffer rmtBuf{reinterpret_cast<uintptr_t>(dst), len};
+        const Hccl::Buffer rmtBuf{ReinterpretAs<uintptr_t>(dst), len};
 
         Hccl::WithNotifyIn withNotify{Hccl::TransportNotifyType::NORMAL, remoteNotifyIdx};
 
@@ -700,7 +701,7 @@ int32_t HcommWriteWithNotifyOnThread(
         Stream* stream = GetStream(thread);
         CHK_PTR_NULL(stream);
 
-        ret = HcclRemoteWriteWithNotify(stream, reinterpret_cast<void*>(channel), &rmtBuf, &locBuf, remoteNotifyIdx);
+        ret = HcclRemoteWriteWithNotify(stream, ReinterpretAs<void*>(channel), &rmtBuf, &locBuf, remoteNotifyIdx);
     }
     CHK_PRT_RET(
         ret != HCCL_SUCCESS,
@@ -728,7 +729,7 @@ int32_t HcommWriteReduceWithNotifyOnThread(
 
     AddThread(thread);
 
-    Thread* const threadPtr = reinterpret_cast<Thread*>(thread);
+    Thread* const threadPtr = ReinterpretAs<Thread*>(thread);
     CHK_PTR_NULL(threadPtr);
 
     uint64_t len = count * SIZE_TABLE[dataType];
@@ -736,13 +737,13 @@ int32_t HcommWriteReduceWithNotifyOnThread(
     HcclResult ret = HCCL_SUCCESS;
     if (threadPtr->IsDeviceA5()) {
         HCCL_DEBUG("[%s] Running on A5.", __func__);
-        auto* const transportLitePtr = reinterpret_cast<Hccl::BaseTransportLiteImpl*>(channel);
+        auto* const transportLitePtr = ReinterpretAs<Hccl::BaseTransportLiteImpl*>(channel);
         CHK_PTR_NULL(transportLitePtr);
         auto* const streamLitePtr = static_cast<Hccl::StreamLite*>(threadPtr->GetStreamLitePtr());
         CHK_PTR_NULL(streamLitePtr);
 
         Hccl::RmaBufferLite locRmaBuf;
-        ret = transportLitePtr->BuildLocRmaBufferLite(reinterpret_cast<uintptr_t>(src), len, locRmaBuf);
+        ret = transportLitePtr->BuildLocRmaBufferLite(ReinterpretAs<uintptr_t>(src), len, locRmaBuf);
         CHK_PRT_RET(
             ret != HCCL_SUCCESS,
             HCCL_ERROR(
@@ -750,7 +751,7 @@ int32_t HcommWriteReduceWithNotifyOnThread(
                 "count[%llu], dataType[%d], reduceOp[%d], remoteNotifyIdx[%u].",
                 __func__, thread, channel, dst, src, count, dataType, reduceOp, remoteNotifyIdx),
             ret);
-        const Hccl::Buffer rmtBuf{reinterpret_cast<uintptr_t>(dst), len};
+        const Hccl::Buffer rmtBuf{ReinterpretAs<uintptr_t>(dst), len};
 
         ret = CheckDataTypeAndReduceOp(dataType, reduceOp);
         CHK_PRT_RET(
@@ -795,18 +796,18 @@ int32_t HcommReadOnThread(ThreadHandle thread, ChannelHandle channel, void* dst,
 
     AddThread(thread);
 
-    Thread* const threadPtr = reinterpret_cast<Thread*>(thread);
+    Thread* const threadPtr = ReinterpretAs<Thread*>(thread);
     CHK_PTR_NULL(threadPtr);
 
     HcclResult ret = HCCL_SUCCESS;
     if (threadPtr->IsDeviceA5()) {
-        auto* const transportLitePtr = reinterpret_cast<Hccl::BaseTransportLiteImpl*>(channel);
+        auto* const transportLitePtr = ReinterpretAs<Hccl::BaseTransportLiteImpl*>(channel);
         CHK_PTR_NULL(transportLitePtr);
         auto* const streamLitePtr = static_cast<Hccl::StreamLite*>(threadPtr->GetStreamLitePtr());
         CHK_PTR_NULL(streamLitePtr);
 
         Hccl::RmaBufferLite locRmaBuf;
-        ret = transportLitePtr->BuildLocRmaBufferLite(reinterpret_cast<uintptr_t>(dst), len, locRmaBuf);
+        ret = transportLitePtr->BuildLocRmaBufferLite(ReinterpretAs<uintptr_t>(dst), len, locRmaBuf);
         CHK_PRT_RET(
             ret != HCCL_SUCCESS,
             HCCL_ERROR(
@@ -814,7 +815,7 @@ int32_t HcommReadOnThread(ThreadHandle thread, ChannelHandle channel, void* dst,
                 "len[%llu].",
                 __func__, thread, channel, dst, src, len),
             ret);
-        const Hccl::Buffer rmtBuf{reinterpret_cast<uintptr_t>(src), len};
+        const Hccl::Buffer rmtBuf{ReinterpretAs<uintptr_t>(src), len};
 
         ret = transportLitePtr->CheckOverflow(len, true);
         CHK_PRT_RET(ret != HCCL_SUCCESS, HCCL_WARNING("[%s] overflow check failed, len[%llu].", __func__, len), ret);
@@ -826,7 +827,7 @@ int32_t HcommReadOnThread(ThreadHandle thread, ChannelHandle channel, void* dst,
         Stream* stream = GetStream(thread);
         CHK_PTR_NULL(stream);
 
-        ret = HcclRemoteRead(stream, reinterpret_cast<void*>(channel), &locBuf, &rmtBuf);
+        ret = HcclRemoteRead(stream, ReinterpretAs<void*>(channel), &locBuf, &rmtBuf);
     }
     CHK_PRT_RET(
         ret != HCCL_SUCCESS,
@@ -853,20 +854,20 @@ int32_t HcommReadReduceOnThread(
 
     AddThread(thread);
 
-    Thread* const threadPtr = reinterpret_cast<Thread*>(thread);
+    Thread* const threadPtr = ReinterpretAs<Thread*>(thread);
     CHK_PTR_NULL(threadPtr);
 
     uint64_t len = count * SIZE_TABLE[dataType];
 
     HcclResult ret = HCCL_SUCCESS;
     if (threadPtr->IsDeviceA5()) {
-        auto* const transportLitePtr = reinterpret_cast<Hccl::BaseTransportLiteImpl*>(channel);
+        auto* const transportLitePtr = ReinterpretAs<Hccl::BaseTransportLiteImpl*>(channel);
         CHK_PTR_NULL(transportLitePtr);
         auto* const streamLitePtr = static_cast<Hccl::StreamLite*>(threadPtr->GetStreamLitePtr());
         CHK_PTR_NULL(streamLitePtr);
 
         Hccl::RmaBufferLite locRmaBuf;
-        ret = transportLitePtr->BuildLocRmaBufferLite(reinterpret_cast<uintptr_t>(dst), len, locRmaBuf);
+        ret = transportLitePtr->BuildLocRmaBufferLite(ReinterpretAs<uintptr_t>(dst), len, locRmaBuf);
         CHK_PRT_RET(
             ret != HCCL_SUCCESS,
             HCCL_ERROR(
@@ -874,7 +875,7 @@ int32_t HcommReadReduceOnThread(
                 "count[%llu], dataType[%d], reduceOp[%d].",
                 __func__, thread, channel, dst, src, count, dataType, reduceOp),
             ret);
-        const Hccl::Buffer rmtBuf{reinterpret_cast<uintptr_t>(src), len};
+        const Hccl::Buffer rmtBuf{ReinterpretAs<uintptr_t>(src), len};
 
         ret = CheckDataTypeAndReduceOp(dataType, reduceOp);
         CHK_PRT_RET(
@@ -905,7 +906,7 @@ int32_t HcommReadReduceOnThread(
         Stream* stream = GetStream(thread);
         CHK_PTR_NULL(stream);
 
-        ret = HcclRemoteReadReduce(stream, reinterpret_cast<void*>(channel), &locBuf, &rmtBuf, reduceInfo);
+        ret = HcclRemoteReadReduce(stream, ReinterpretAs<void*>(channel), &locBuf, &rmtBuf, reduceInfo);
     }
     CHK_PRT_RET(
         ret != HCCL_SUCCESS,
@@ -930,12 +931,12 @@ int32_t HcommBatchTransferOnThread(
 
     CHK_PRT_RET(transferDescNum == 0, HCCL_ERROR("[%s] transferDescNum is 0.", __func__), HCCL_E_PARA);
 
-    Thread* const threadPtr = reinterpret_cast<Thread*>(thread);
+    Thread* const threadPtr = ReinterpretAs<Thread*>(thread);
     CHK_PTR_NULL(threadPtr);
     AddThread(thread);
     HcclResult ret = HCCL_SUCCESS;
     if (threadPtr->IsDeviceA5()) {
-        auto* const ubTransportLitePtr = reinterpret_cast<Hccl::UbTransportLiteImpl*>(channel);
+        auto* const ubTransportLitePtr = ReinterpretAs<Hccl::UbTransportLiteImpl*>(channel);
         CHK_PTR_NULL(ubTransportLitePtr);
         auto* const streamLitePtr = static_cast<Hccl::StreamLite*>(threadPtr->GetStreamLitePtr());
         CHK_PTR_NULL(streamLitePtr);
@@ -944,7 +945,7 @@ int32_t HcommBatchTransferOnThread(
     } else {
         Stream* stream = GetStream(thread);
         CHK_PTR_NULL(stream);
-        hccl::Transport* transport = reinterpret_cast<hccl::Transport*>(channel);
+        hccl::Transport* transport = ReinterpretAs<hccl::Transport*>(channel);
         CHK_PTR_NULL(transport);
         ret = transport->BatchTransferAsync(transferDescs, transferDescNum, *stream);
         if (ret == HCCL_E_NOT_SUPPORT) {
@@ -1025,13 +1026,13 @@ int32_t HcommChannelNotifyRecordOnThread(ThreadHandle thread, ChannelHandle chan
 
     AddThread(thread);
 
-    Thread* const threadPtr = reinterpret_cast<Thread*>(thread);
+    Thread* const threadPtr = ReinterpretAs<Thread*>(thread);
     CHK_PTR_NULL(threadPtr);
 
     HcclResult ret = HCCL_SUCCESS;
     if (threadPtr->IsDeviceA5()) {
         HCCL_DEBUG("[%s] Running on A5.", __func__);
-        auto* const transportLitePtr = reinterpret_cast<Hccl::BaseTransportLiteImpl*>(channel);
+        auto* const transportLitePtr = ReinterpretAs<Hccl::BaseTransportLiteImpl*>(channel);
         CHK_PTR_NULL(transportLitePtr);
         auto* const streamLitePtr = static_cast<Hccl::StreamLite*>(threadPtr->GetStreamLitePtr());
         CHK_PTR_NULL(streamLitePtr);
@@ -1044,7 +1045,7 @@ int32_t HcommChannelNotifyRecordOnThread(ThreadHandle thread, ChannelHandle chan
         Stream* stream = GetStream(thread);
         CHK_PTR_NULL(stream);
 
-        ret = HcclRemoteNotifyRecord(stream, reinterpret_cast<void*>(channel), remoteNotifyIdx);
+        ret = HcclRemoteNotifyRecord(stream, ReinterpretAs<void*>(channel), remoteNotifyIdx);
     }
     CHK_PRT_RET(
         ret != HCCL_SUCCESS,
@@ -1073,13 +1074,13 @@ HcommChannelNotifyWaitOnThread(ThreadHandle thread, ChannelHandle channel, uint3
 
     AddThread(thread);
 
-    Thread* const threadPtr = reinterpret_cast<Thread*>(thread);
+    Thread* const threadPtr = ReinterpretAs<Thread*>(thread);
     CHK_PTR_NULL(threadPtr);
 
     HcclResult ret = HCCL_SUCCESS;
     if (threadPtr->IsDeviceA5()) {
         HCCL_DEBUG("[%s] Running on A5.", __func__);
-        auto* const transportLitePtr = reinterpret_cast<Hccl::BaseTransportLiteImpl*>(channel);
+        auto* const transportLitePtr = ReinterpretAs<Hccl::BaseTransportLiteImpl*>(channel);
         CHK_PTR_NULL(transportLitePtr);
         auto* const streamLitePtr = static_cast<Hccl::StreamLite*>(threadPtr->GetStreamLitePtr());
         CHK_PTR_NULL(streamLitePtr);
@@ -1090,7 +1091,7 @@ HcommChannelNotifyWaitOnThread(ThreadHandle thread, ChannelHandle channel, uint3
         Stream* stream = GetStream(thread);
         CHK_PTR_NULL(stream);
 
-        ret = HcclRemoteNotifyWait(stream, reinterpret_cast<void*>(channel), localNotifyIdx, timeOut);
+        ret = HcclRemoteNotifyWait(stream, ReinterpretAs<void*>(channel), localNotifyIdx, timeOut);
     }
     CHK_PRT_RET(
         ret != HCCL_SUCCESS,
@@ -1116,7 +1117,7 @@ HcclResult CommFence(ThreadHandle thread, ChannelHandle channel) // 控制前后
     Stream* stream = GetStream(thread);
     CHK_PTR_NULL(stream);
 
-    return HcclRemoteFence(stream, reinterpret_cast<void*>(channel), false);
+    return HcclRemoteFence(stream, ReinterpretAs<void*>(channel), false);
 }
 
 int32_t HcommSetLaunchMode(const char* launchTag, HcommLaunchMode mode)
@@ -1157,7 +1158,7 @@ int32_t HcommChannelRegisterDfx(
 int32_t
 HcommThreadRegisterDfx(ThreadHandle thread, std::function<HcclResult(u32, u32, const Hccl::TaskParam&, u64)> callback)
 {
-    Thread* threadPtr = reinterpret_cast<Thread*>(thread);
+    Thread* threadPtr = ReinterpretAs<Thread*>(thread);
     CHK_PTR_NULL(threadPtr);
     CHK_RET(threadPtr->SetAddTaskInfoCallback(callback));
     HCCL_INFO("[HcommThreadRegisterDfx] ThreadHandle[0x%llx] Init success", thread);
@@ -1166,7 +1167,7 @@ HcommThreadRegisterDfx(ThreadHandle thread, std::function<HcclResult(u32, u32, c
 
 int32_t HcommThreadRegisterCheckExecStatus(ThreadHandle thread, std::function<HcclResult(bool)> callback)
 {
-    Thread* threadPtr = reinterpret_cast<Thread*>(thread);
+    Thread* threadPtr = ReinterpretAs<Thread*>(thread);
     CHK_PTR_NULL(threadPtr);
     CHK_RET(threadPtr->SetCheckExecStatusCallback(callback));
     return HCCL_SUCCESS;
@@ -1174,7 +1175,7 @@ int32_t HcommThreadRegisterCheckExecStatus(ThreadHandle thread, std::function<Hc
 
 int32_t HcommNewThreadRegisterDfx(ThreadHandle thread, std::function<void(Hccl::TaskInfoCircularQueue*)> callback)
 {
-    hccl::AicpuTsThread* tsThread = reinterpret_cast<hccl::AicpuTsThread*>(thread);
+    hccl::AicpuTsThread* tsThread = ReinterpretAs<hccl::AicpuTsThread*>(thread);
     CHK_PTR_NULL(tsThread);
     tsThread->SetReportStreamTaskCallback(std::move(callback));
     HCCL_INFO("[HcommNewThreadRegisterDfx] ThreadHandle[0x%llx] Init success", thread);
@@ -1183,7 +1184,7 @@ int32_t HcommNewThreadRegisterDfx(ThreadHandle thread, std::function<void(Hccl::
 
 int32_t HcommNewThreadRegisterGetLatestDfxOpInfo(ThreadHandle thread, std::function<const void*()> callback)
 {
-    hccl::AicpuTsThread* tsThread = reinterpret_cast<hccl::AicpuTsThread*>(thread);
+    hccl::AicpuTsThread* tsThread = ReinterpretAs<hccl::AicpuTsThread*>(thread);
     CHK_PTR_NULL(tsThread);
     tsThread->SetGetLatestDfxOpInfoCallback(std::move(callback));
     HCCL_INFO("[HcommNewThreadRegisterGetLatestDfxOpInfo] ThreadHandle[0x%llx] Init success", thread);
@@ -1220,10 +1221,10 @@ int32_t HcommChannelFenceOnThread(ThreadHandle thread, ChannelHandle channel)
     CHK_RET(UnwrapChannelHandle(channel));
 
     HCCL_DEBUG("[%s] thread[0x%llx], channel[0x%llx].", __func__, thread, channel);
-    Thread* const threadPtr = reinterpret_cast<Thread*>(thread);
+    Thread* const threadPtr = ReinterpretAs<Thread*>(thread);
     CHK_PTR_NULL(threadPtr);
     if (threadPtr->IsDeviceA5()) {
-        auto* const transportLitePtr = reinterpret_cast<Hccl::BaseTransportLiteImpl*>(channel);
+        auto* const transportLitePtr = ReinterpretAs<Hccl::BaseTransportLiteImpl*>(channel);
         CHK_PTR_NULL(transportLitePtr);
         CHK_RET(transportLitePtr->Fence());
     }
@@ -1239,7 +1240,7 @@ int32_t HcommChannelFence(ChannelHandle channel)
 
 int32_t HcommThreadJoin(ThreadHandle thread, uint32_t timeout)
 {
-    hccl::Thread* threadPtr = reinterpret_cast<hccl::Thread*>(thread);
+    hccl::Thread* threadPtr = ReinterpretAs<hccl::Thread*>(thread);
     CHK_PTR_NULL(threadPtr);
 
     HCCL_INFO("[%s] START. thread[0x%llx].", __func__, thread);
@@ -1288,13 +1289,13 @@ int32_t HcommChannelDrainOnThread(ThreadHandle thread, ChannelHandle channel)
     CHK_RET(UnwrapChannelHandle(channel));
 
     AddThread(thread);
-    Thread* const threadPtr = reinterpret_cast<Thread*>(thread);
+    Thread* const threadPtr = ReinterpretAs<Thread*>(thread);
     CHK_PTR_NULL(threadPtr);
 
     HcclResult ret = HCCL_SUCCESS;
     if (threadPtr->IsDeviceA5()) {
         HCCL_DEBUG("[%s] Running on A5.", __func__);
-        auto* const transportLitePtr = reinterpret_cast<Hccl::BaseTransportLiteImpl*>(channel);
+        auto* const transportLitePtr = ReinterpretAs<Hccl::BaseTransportLiteImpl*>(channel);
         CHK_PTR_NULL(transportLitePtr);
         auto* const streamLitePtr = static_cast<Hccl::StreamLite*>(threadPtr->GetStreamLitePtr());
         CHK_PTR_NULL(streamLitePtr);
@@ -1308,7 +1309,7 @@ int32_t HcommChannelDrainOnThread(ThreadHandle thread, ChannelHandle channel)
     } else {
         Stream* stream = GetStream(thread);
         CHK_PTR_NULL(stream);
-        ret = HcclRemoteDrain(stream, reinterpret_cast<void*>(channel));
+        ret = HcclRemoteDrain(stream, ReinterpretAs<void*>(channel));
     }
 
     CHK_PRT_RET(
@@ -1355,7 +1356,7 @@ HcclResult HcommProfilingReportKernelStartTask(uint64_t thread, const char* grou
     CollCommAicpu* currentComm = CollCommAicpuMgr::GetInstance().GetCurrentComm();
     CHK_PTR_NULL(currentComm);
     CHK_RET(currentComm->UpdateTask());
-    Thread* const threadPtr = reinterpret_cast<Thread*>(thread);
+    Thread* const threadPtr = ReinterpretAs<Thread*>(thread);
     CHK_PTR_NULL(threadPtr);
     auto* const streamLitePtr = static_cast<Hccl::StreamLite*>(threadPtr->GetStreamLitePtr());
     CHK_PTR_NULL(streamLitePtr);
@@ -1381,7 +1382,7 @@ HcclResult HcommProfilingReportKernelEndTask(uint64_t thread, const char* groupn
         return HCCL_SUCCESS;
     }
 
-    Thread* const threadPtr = reinterpret_cast<Thread*>(thread);
+    Thread* const threadPtr = ReinterpretAs<Thread*>(thread);
     CHK_PRT_RET(threadPtr == nullptr, HCCL_ERROR("[%s] threadPtr is null", __func__), HCCL_E_PTR);
     auto* const streamLitePtr = static_cast<Hccl::StreamLite*>(threadPtr->GetStreamLitePtr());
     CHK_PRT_RET(streamLitePtr == nullptr, HCCL_ERROR("[%s] streamLitePtr is null", __func__), HCCL_E_PTR);

@@ -11,6 +11,7 @@
 #ifndef RDMA_VENDOR_1825_OPS_H
 #define RDMA_VENDOR_1825_OPS_H
 
+#include "cast_utils.h"
 #include "rma_conn_lite.h"
 #include "rdma_vendor_base_ops.h"
 
@@ -232,7 +233,7 @@ public:
             dbValue = dbValue32;
 
             // Ring Cq Soft DB
-            auto ret = memcpy_sp(reinterpret_cast<void*>(dbAddr), sizeof(uint32_t), &dbValue32, sizeof(uint32_t));
+            auto ret = memcpy_sp(ReinterpretAs<void*>(dbAddr), sizeof(uint32_t), &dbValue32, sizeof(uint32_t));
             if (UNLIKELY(ret != 0)) {
                 THROW<InternalException>(
                     StringFormat("[Rdma1825Ops::%s] write soft Cq DB failed, ret = %d", __func__, ret));
@@ -313,7 +314,7 @@ protected:
         uint8_t ownerSl = ((nextIdx & sqDepth) == 0) ? 0xff : 0x7f;
 
         auto* dst
-            = reinterpret_cast<void*>(sqContext_->sqVa + static_cast<uint64_t>(nextIdx & sqMask) * sqContext_->wqeSize);
+            = ReinterpretAs<void*>(sqContext_->sqVa + static_cast<uint64_t>(nextIdx & sqMask) * sqContext_->wqeSize);
 
         auto ret = memcpy_sp(dst, sizeof(ownerSl), &ownerSl, sizeof(ownerSl));
         if (UNLIKELY(ret != 0)) {
@@ -495,8 +496,8 @@ private:
         uint32_t cqeSlot = consIndex & cqeMask;
 
         // Calculate Cqe Addr
-        auto cqeAddr = reinterpret_cast<Roce3CqeEntry*>(
-            reinterpret_cast<uint8_t*>(cqContext_->cqVa) + static_cast<size_t>(cqeSlot * cqeSize));
+        auto cqeAddr = ReinterpretAs<Roce3CqeEntry*>(
+            ReinterpretAs<uint8_t*>(cqContext_->cqVa) + static_cast<size_t>(cqeSlot * cqeSize));
 
         // Memcpy Cqe
         auto ret = memcpy_sp(&cqeReadback_, sizeof(cqeReadback_), cqeAddr, sizeof(cqeReadback_));

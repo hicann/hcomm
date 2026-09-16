@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include "cast_utils.h"
 #include <cmath>
 #include "p2p_transport_lite_impl.h"
 #include "binary_stream.h"
@@ -260,8 +261,8 @@ void P2PTransportLiteImpl::BuildP2PRead(const StreamLite& stream, const RmaBuffe
             TaskParam taskParam{};
             taskParam.taskType = TaskParamType::TASK_SDMA;
             taskParam.beginTime = ProfGetCurCpuTimestamp();
-            taskParam.taskPara.DMA.src = reinterpret_cast<void*>(src);
-            taskParam.taskPara.DMA.dst = reinterpret_cast<void*>(dst);
+            taskParam.taskPara.DMA.src = ReinterpretAs<void*>(src);
+            taskParam.taskPara.DMA.dst = ReinterpretAs<void*>(dst);
             taskParam.taskPara.DMA.size = blockSize;
             taskParam.taskPara.DMA.notifyID = INVALID_VALUE_NOTIFYID;
             taskParam.taskPara.DMA.linkType = DfxLinkType::PCIE;
@@ -273,10 +274,10 @@ void P2PTransportLiteImpl::BuildP2PRead(const StreamLite& stream, const RmaBuffe
         slot->sqId = stream.GetSqId();
         slot->taskId = taskId;
         const void* opInfo = stream.GetLatestDfxOpInfo();
-        slot->dfxOpInfo = (opInfo != nullptr) ? reinterpret_cast<u64>(opInfo) : INVALID_U64;
+        slot->dfxOpInfo = (opInfo != nullptr) ? ReinterpretAs<u64>(opInfo) : INVALID_U64;
         slot->linkType = DfxLinkTypeVal::LINK_PCIE;
         slot->transportType = static_cast<u8>(DfxTransportType::DFX_TRANSPORT_TYPE_SDMA);
-        slot->channelHandle = reinterpret_cast<u64>(this);
+        slot->channelHandle = ReinterpretAs<u64>(this);
         slot->taskPara.Dma.sqeAddr = stream.GetRtsq()->GetSqeAddr();
         PLF_CONFIG_INFO(Hccl::PLF_TASK, "[%s] %s", __func__, slot->Describe().c_str());
         src += offset;
@@ -329,8 +330,8 @@ void P2PTransportLiteImpl::BuildP2PReadReduce(
             TaskParam taskParam{};
             taskParam.taskType = TaskParamType::TASK_REDUCE_INLINE;
             taskParam.beginTime = ProfGetCurCpuTimestamp();
-            taskParam.taskPara.Reduce.src = reinterpret_cast<void*>(src);
-            taskParam.taskPara.Reduce.dst = reinterpret_cast<void*>(dst);
+            taskParam.taskPara.Reduce.src = ReinterpretAs<void*>(src);
+            taskParam.taskPara.Reduce.dst = ReinterpretAs<void*>(dst);
             taskParam.taskPara.Reduce.size = blockSize;
             taskParam.taskPara.Reduce.notifyID = INVALID_VALUE_NOTIFYID;
             taskParam.taskPara.Reduce.linkType = DfxLinkType::PCIE;
@@ -343,10 +344,10 @@ void P2PTransportLiteImpl::BuildP2PReadReduce(
         slot->sqId = stream.GetSqId();
         slot->taskId = taskId;
         const void* opInfo = stream.GetLatestDfxOpInfo();
-        slot->dfxOpInfo = (opInfo != nullptr) ? reinterpret_cast<u64>(opInfo) : INVALID_U64;
+        slot->dfxOpInfo = (opInfo != nullptr) ? ReinterpretAs<u64>(opInfo) : INVALID_U64;
         slot->linkType = DfxLinkTypeVal::LINK_PCIE;
         slot->transportType = static_cast<u8>(DfxTransportType::DFX_TRANSPORT_TYPE_SDMA);
-        slot->channelHandle = reinterpret_cast<u64>(this);
+        slot->channelHandle = ReinterpretAs<u64>(this);
         slot->taskPara.Reduce.sqeAddr = stream.GetRtsq()->GetSqeAddr();
         slot->taskPara.Reduce.srcAddr = src;
         slot->taskPara.Reduce.dstAddr = dst;
@@ -392,10 +393,10 @@ void P2PTransportLiteImpl::Post(u32 index, const StreamLite& stream)
     slot->sqId = stream.GetSqId();
     slot->taskId = taskId;
     const void* opInfo = stream.GetLatestDfxOpInfo();
-    slot->dfxOpInfo = (opInfo != nullptr) ? reinterpret_cast<u64>(opInfo) : INVALID_U64;
+    slot->dfxOpInfo = (opInfo != nullptr) ? ReinterpretAs<u64>(opInfo) : INVALID_U64;
     slot->linkType = DfxLinkTypeVal::LINK_PCIE;
     slot->transportType = static_cast<u8>(DfxTransportType::DFX_TRANSPORT_TYPE_SDMA);
-    slot->channelHandle = reinterpret_cast<u64>(this);
+    slot->channelHandle = ReinterpretAs<u64>(this);
     slot->taskPara.Notify.sqeAddr = stream.GetRtsq()->GetSqeAddr();
     PLF_CONFIG_INFO(Hccl::PLF_TASK, "[%s] %s", __func__, slot->Describe().c_str());
     return;
@@ -427,10 +428,10 @@ void P2PTransportLiteImpl::WaitWithTimeout(u32 index, const StreamLite& stream, 
     slot->sqId = stream.GetSqId();
     slot->taskId = taskId;
     const void* opInfo = stream.GetLatestDfxOpInfo();
-    slot->dfxOpInfo = (opInfo != nullptr) ? reinterpret_cast<u64>(opInfo) : INVALID_U64;
+    slot->dfxOpInfo = (opInfo != nullptr) ? ReinterpretAs<u64>(opInfo) : INVALID_U64;
     slot->linkType = DfxLinkTypeVal::LINK_PCIE;
     slot->transportType = static_cast<u8>(DfxTransportType::DFX_TRANSPORT_TYPE_SDMA);
-    slot->channelHandle = reinterpret_cast<u64>(this);
+    slot->channelHandle = ReinterpretAs<u64>(this);
     slot->taskPara.Notify.sqeAddr = stream.GetRtsq()->GetSqeAddr();
     PLF_CONFIG_INFO(Hccl::PLF_TASK, "[%s] %s", __func__, slot->Describe().c_str());
     return;

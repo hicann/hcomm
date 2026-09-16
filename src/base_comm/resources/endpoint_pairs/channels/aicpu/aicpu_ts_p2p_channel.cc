@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include "cast_utils.h"
 #include "aicpu_ts_p2p_channel.h"
 #include "endpoint.h"
 #include "../../sockets/socket_mgr.h"
@@ -53,7 +54,7 @@ HcclResult AicpuTsP2pChannel::ParseInputParam()
         std::shared_ptr<Hccl::LocalIpcRmaBuffer>* memHandles = nullptr;
         uint32_t memHandleNum = 0;
         CHK_RET(static_cast<HcclResult>(
-            HcommMemGetAllMemHandles(endpointHandle_, reinterpret_cast<void**>(&memHandles), &memHandleNum)));
+            HcommMemGetAllMemHandles(endpointHandle_, ReinterpretAs<void**>(&memHandles), &memHandleNum)));
         HCCL_INFO("[AicpuTsP2pChannel][%s] Got memHandleNum[%u].", __func__, memHandleNum);
         for (uint32_t i = 0; i < memHandleNum; ++i) {
             std::shared_ptr<Hccl::LocalIpcRmaBuffer>& localIpcRmaBuffer = memHandles[i];

@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include "cast_utils.h"
 #include "hcomm_c_adpt.h"
 #include "hcomm_c_adpt_common.h"
 #include "log.h"
@@ -117,13 +118,13 @@ HcommResult HcommDfxKernelLaunch(const std::string& commTag, aclrtBinHandle binH
     };
 
     InitTask customInitTask = {0, ""};
-    customInitTask.context = reinterpret_cast<u64>(devicePackBuf.ptr());
+    customInitTask.context = ReinterpretAs<u64>(devicePackBuf.ptr());
     s32 sRet = strncpy_s(customInitTask.commTag, sizeof(customInitTask.commTag), commTag.c_str(), TAG_MAX_LENGTH - 1);
     CHK_PRT_RET(sRet != EOK, HCCL_ERROR("[%s] str copy fail. return[%d]", __func__, sRet), HCCL_E_INTERNAL);
 
     CHK_RET(hccl::AicpuAclKernelLaunch(
-        localStream.ptr(), reinterpret_cast<void*>(&customInitTask), sizeof(customInitTask), binHandle, kernelName,
-        true, NOTIFY_DEFAULT_WAIT_TIME));
+        localStream.ptr(), ReinterpretAs<void*>(&customInitTask), sizeof(customInitTask), binHandle, kernelName, true,
+        NOTIFY_DEFAULT_WAIT_TIME));
 
     CHK_RET(
         hcclStreamSynchronize(localStream.ptr(), hccl::CommConfiger::GetInstance().GetCommConfigExecTimeOut(commTag)));

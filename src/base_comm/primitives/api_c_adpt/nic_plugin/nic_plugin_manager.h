@@ -11,6 +11,7 @@
 #ifndef HCOMM_NIC_PLUGIN_MANAGER_H
 #define HCOMM_NIC_PLUGIN_MANAGER_H
 
+#include "cast_utils.h"
 #include <stddef.h>
 #include <stdint.h>
 
@@ -38,7 +39,7 @@ inline ChannelHandle MakePluginChHandle(ChannelHandle h)
 
 inline ::hcomm::Channel* ChannelFromHandle(ChannelHandle h)
 {
-    return reinterpret_cast<::hcomm::Channel*>(
+    return ReinterpretAs<::hcomm::Channel*>(
         static_cast<uintptr_t>(h) & ~static_cast<uintptr_t>(HCOMM_PLUGIN_HANDLE_FLAG));
 }
 

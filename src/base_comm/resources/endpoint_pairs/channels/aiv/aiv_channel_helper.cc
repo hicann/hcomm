@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include "cast_utils.h"
 #include "aiv_channel_helper.h"
 #include "channel_process.h"
 #include "channel.h"
@@ -84,16 +85,16 @@ HcclResult AivChannelHelper::PreAllocChannels(
 
         if (protocol == COMM_PROTOCOL_ROCE) {
             needD2HMap = true;
-            auto* channel = reinterpret_cast<AicpuTsRoceChannelV2*>(targetChannels[i]);
+            auto* channel = ReinterpretAs<AicpuTsRoceChannelV2*>(targetChannels[i]);
             CHK_PTR_NULL(channel);
             CHK_RET(channel->PreAllocDevChannelEntity(&userChannels[i]));
             HCCL_INFO(
                 "[%s] channel[%u] pre-alloc dev entity success, devEntityPtr[%p]", __func__, i,
-                reinterpret_cast<void*>(static_cast<uintptr_t>(userChannels[i])));
+                ReinterpretAs<void*>(static_cast<uintptr_t>(userChannels[i])));
         } else if (
             protocol == COMM_PROTOCOL_UB_CTP || protocol == COMM_PROTOCOL_UBC_TP || protocol == COMM_PROTOCOL_UB_RTP) {
             needD2HMap = true;
-            auto* channel = reinterpret_cast<AivUrmaChannel*>(targetChannels[i]);
+            auto* channel = ReinterpretAs<AivUrmaChannel*>(targetChannels[i]);
             CHK_PTR_NULL(channel);
 
             void* devChannelEntity = nullptr;
@@ -102,10 +103,10 @@ HcclResult AivChannelHelper::PreAllocChannels(
                 ret != HCCL_SUCCESS,
                 HCCL_ERROR("[%s] channel[%u] PreAllocChannelEntityToDevice failed, ret[%d]", __func__, i, ret), ret);
             CHK_PTR_NULL(devChannelEntity);
-            userChannels[i] = static_cast<ChannelHandle>(reinterpret_cast<uintptr_t>(devChannelEntity));
+            userChannels[i] = static_cast<ChannelHandle>(ReinterpretAs<uintptr_t>(devChannelEntity));
             HCCL_INFO(
                 "[%s] channel[%u] pre-alloc dev entity success, devEntityPtr[%p]", __func__, i,
-                reinterpret_cast<void*>(static_cast<uintptr_t>(userChannels[i])));
+                ReinterpretAs<void*>(static_cast<uintptr_t>(userChannels[i])));
         } else {
             userChannels[i] = targetChannels[i];
             HCCL_INFO(

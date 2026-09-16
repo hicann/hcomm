@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include "cast_utils.h"
 #include "hccl_sqe.h"
 #include "exception_util.h"
 #include "not_support_exception.h"
@@ -33,7 +34,7 @@ void HcclNotifyWaitSqe::Config(u16 streamId, u16 taskId, u64 notifyId)
     HCCL_INFO("[SQE] notify wait: notifyId=%llu, streamId=%u, taskId=%u.", notifyId, streamId, taskId);
 }
 
-u64 HcclNotifyWaitSqe::GetSqe() { return reinterpret_cast<u64>(sqe.get()); }
+u64 HcclNotifyWaitSqe::GetSqe() { return ReinterpretAs<u64>(sqe.get()); }
 
 HcclNotifyRecordSqe::HcclNotifyRecordSqe()
 {
@@ -48,7 +49,7 @@ void HcclNotifyRecordSqe::Config(u16 streamId, u16 taskId, u64 notifyId)
     sqe->header.taskId = taskId;
     HCCL_INFO("[SQE] notify record: notifyId=%llu, streamId=%u, taskId=%u.", notifyId, streamId, taskId);
 }
-u64 HcclNotifyRecordSqe::GetSqe() { return reinterpret_cast<u64>(sqe.get()); }
+u64 HcclNotifyRecordSqe::GetSqe() { return ReinterpretAs<u64>(sqe.get()); }
 
 HcclWriteValueSqe::HcclWriteValueSqe()
 {
@@ -69,7 +70,7 @@ void HcclWriteValueSqe::Config(u16 streamId, u16 taskId, u64 notifyWRAddr)
     HCCL_INFO("[SQE] write value: writePtr=0x%llx, streamId=%u, taskId=%u.", notifyWRAddr, streamId, taskId);
 }
 
-u64 HcclWriteValueSqe::GetSqe() { return reinterpret_cast<u64>(sqe.get()); }
+u64 HcclWriteValueSqe::GetSqe() { return ReinterpretAs<u64>(sqe.get()); }
 
 HcclSdmaSqe::HcclSdmaSqe()
 {
@@ -185,6 +186,6 @@ u8 HcclSdmaSqe::ConvertToMemcpyOpType(u32 copyKind) const
     return opcode;
 }
 
-u64 HcclSdmaSqe::GetSqe() { return reinterpret_cast<u64>(sqe.get()); }
+u64 HcclSdmaSqe::GetSqe() { return ReinterpretAs<u64>(sqe.get()); }
 
 } // namespace Hccl

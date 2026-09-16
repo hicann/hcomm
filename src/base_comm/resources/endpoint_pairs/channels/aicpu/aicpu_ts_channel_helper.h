@@ -11,6 +11,7 @@
 #ifndef AICPU_TS_CHANNEL_HELPER_H
 #define AICPU_TS_CHANNEL_HELPER_H
 
+#include "cast_utils.h"
 #include <memory>
 #include <mutex>
 #include <vector>
@@ -39,7 +40,7 @@ public:
     {
         ctxMem_ = std::make_shared<hccl::DeviceMem>(hccl::DeviceMem::alloc(sizeof(HcommAicpuChannelCtx)));
         CHK_PTR_NULL(ctxMem_->ptr());
-        outHandle = reinterpret_cast<ChannelHandle>(ctxMem_->ptr());
+        outHandle = ReinterpretAs<ChannelHandle>(ctxMem_->ptr());
         HCCL_INFO("[AicpuTsChannelHelper] pre-alloc ctx success, ctxPtr[%p]", ctxMem_->ptr());
         return HCCL_SUCCESS;
     }
@@ -76,14 +77,14 @@ inline HcclResult UnwrapChannelHandle(ChannelHandle& handle)
         HCCL_ERROR("[%s] handle is 0.", __func__);
         return HCCL_E_PTR;
     }
-    const auto* ctx = reinterpret_cast<const HcommAicpuChannelCtx*>(static_cast<uintptr_t>(handle));
+    const auto* ctx = ReinterpretAs<const HcommAicpuChannelCtx*>(static_cast<uintptr_t>(handle));
     if (ctx->abiHeader.version == HCOMM_AICPU_CHANNEL_CTX_VERSION
         && ctx->abiHeader.magicWord == HCOMM_AICPU_CHANNEL_CTX_MAGIC_WORD) {
         if (ctx->deviceChannel == nullptr) {
             HCCL_ERROR("[%s] ctx deviceChannel is null.", __func__);
             return HCCL_E_INTERNAL;
         }
-        handle = reinterpret_cast<ChannelHandle>(ctx->deviceChannel);
+        handle = ReinterpretAs<ChannelHandle>(ctx->deviceChannel);
     }
     return HCCL_SUCCESS;
 }

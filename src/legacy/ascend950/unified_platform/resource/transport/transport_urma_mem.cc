@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include "cast_utils.h"
 #include "transport_urma_mem.h"
 
 namespace Hccl {
@@ -26,8 +27,8 @@ HcclResult TransportUrmaMem::FillRmaBufferSlice(
     void* remoteAddr = remoteMem.addr;
     void* localAddr = localMem.addr;
     u64 byteSize = std::min(remoteMem.size, localMem.size);
-    auto localKey = BufferKey<uintptr_t, u64>(reinterpret_cast<uintptr_t>(localAddr), byteSize);
-    auto remoteKey = BufferKey<uintptr_t, u64>(reinterpret_cast<uintptr_t>(remoteAddr), byteSize);
+    auto localKey = BufferKey<uintptr_t, u64>(ReinterpretAs<uintptr_t>(localAddr), byteSize);
+    auto remoteKey = BufferKey<uintptr_t, u64>(ReinterpretAs<uintptr_t>(remoteAddr), byteSize);
 
     auto localBuffer = LocalUbRmaBufferManager::GetInstance()->Find(localKey);
     CHK_PRT_RET(
@@ -47,14 +48,14 @@ HcclResult TransportUrmaMem::FillRmaBufferSlice(
     u64 localDataOffSet
         = static_cast<u8*>(localAddr) - static_cast<u8*>((void*)(localBuffer.second->GetBuf()->GetAddr()));
     u64 remoteDataOffSet
-        = static_cast<u8*>(remoteAddr) - static_cast<u8*>(reinterpret_cast<void*>(remoteBuffer->GetAddr()));
+        = static_cast<u8*>(remoteAddr) - static_cast<u8*>(ReinterpretAs<void*>(remoteBuffer->GetAddr()));
 
     localRmaBufferSlice.addr
-        = reinterpret_cast<u64>(static_cast<u8*>((void*)(localBuffer.second->GetBuf()->GetAddr())) + localDataOffSet);
+        = ReinterpretAs<u64>(static_cast<u8*>((void*)(localBuffer.second->GetBuf()->GetAddr())) + localDataOffSet);
     localRmaBufferSlice.size = byteSize;
     localRmaBufferSlice.buf = localBuffer.second.get();
 
-    remoteRmaBufferSlice.addr = reinterpret_cast<u64>(remoteBuffer->GetAddr() + remoteDataOffSet);
+    remoteRmaBufferSlice.addr = ReinterpretAs<u64>(remoteBuffer->GetAddr() + remoteDataOffSet);
     remoteRmaBufferSlice.size = byteSize;
     remoteRmaBufferSlice.buf = remoteBuffer;
 

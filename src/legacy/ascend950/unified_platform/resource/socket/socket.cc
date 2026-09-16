@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include "cast_utils.h"
 #include "socket.h"
 
 #include "sal.h"
@@ -280,7 +281,7 @@ bool Socket::CheckSendRequestResult()
     if (sendLeftSize != 0) {
         sendSize = 0;
         reqHandle = HrtRaSocketSendAsync(
-            fdHandle, reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(sendDataBuff) + totalSendSize), sendLeftSize,
+            fdHandle, ReinterpretAs<void*>(ReinterpretAs<uintptr_t>(sendDataBuff) + totalSendSize), sendLeftSize,
             sendSize);
 
         if (CheckLogTime(lastLogTime)) {
@@ -346,7 +347,7 @@ bool Socket::CheckRecvRequestResult()
     if (recvLeftSize != 0) {
         recvSize = 0;
         reqHandle = HrtRaSocketRecvAsync(
-            fdHandle, reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(recvDataBuff) + totalRecvSize), recvLeftSize,
+            fdHandle, ReinterpretAs<void*>(ReinterpretAs<uintptr_t>(recvDataBuff) + totalRecvSize), recvLeftSize,
             recvSize);
 
         if (CheckLogTime(lastLogTime)) {

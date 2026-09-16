@@ -11,6 +11,7 @@
 #ifndef HCCL_CCU_RES_PACK_H
 #define HCCL_CCU_RES_PACK_H
 
+#include "cast_utils.h"
 #include <vector>
 
 #include "ccu_device_manager.h"
@@ -26,7 +27,7 @@ struct CcuResPack {
         if (handles.empty()) {
             return 0;
         }
-        return reinterpret_cast<uintptr_t>(handles.front());
+        return ReinterpretAs<uintptr_t>(handles.front());
     }
     ~CcuResPack() { HCCL_DEBUG("~CcuResPack"); }
 };

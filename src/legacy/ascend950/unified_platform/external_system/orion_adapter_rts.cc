@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include "cast_utils.h"
 #include "orion_adapter_rts.h"
 #include "hccl_common_v2.h"
 #include "runtime_api_exception.h"
@@ -229,8 +230,7 @@ constexpr char RTS_SO_NAME[] = "libruntime.so";
 DlRtsFunctionV2<RTS_SO_NAME> g_dlRts;
 HcclResult HrtResetXpuDevice(uint32_t devType, const uint32_t devId)
 {
-    static auto funcPtr
-        = reinterpret_cast<rtError_t (*)(uint32_t, const uint32_t)>(g_dlRts.Handle<RT_RESET_XPU_DEVICE>());
+    static auto funcPtr = ReinterpretAs<rtError_t (*)(uint32_t, const uint32_t)>(g_dlRts.Handle<RT_RESET_XPU_DEVICE>());
     CHK_PTR_NULL(funcPtr);
     rtError_t ret = funcPtr(devType, devId);
     if (ret != RT_ERROR_NONE) {
@@ -242,8 +242,7 @@ HcclResult HrtResetXpuDevice(uint32_t devType, const uint32_t devId)
 
 HcclResult HrtSetXpuDevice(uint32_t devType, const uint32_t devId)
 {
-    static auto funcPtr
-        = reinterpret_cast<rtError_t (*)(uint32_t, const uint32_t)>(g_dlRts.Handle<RT_SET_XPU_DEVICE>());
+    static auto funcPtr = ReinterpretAs<rtError_t (*)(uint32_t, const uint32_t)>(g_dlRts.Handle<RT_SET_XPU_DEVICE>());
     CHK_PTR_NULL(funcPtr);
     rtError_t ret = funcPtr(devType, devId);
     if (ret != RT_ERROR_NONE) {
@@ -318,7 +317,7 @@ HcclResult HrtGetDeviceInfo(uint32_t deviceLogicId, int32_t moduleType, aclrtDev
     if (moduleType != DEV_MODULE_TYPE::MODULE_TYPE_SYSTEM) {
         THROW<NotSupportException>(StringFormat("[hrtGetDeviceInfo]Unsupported moduleType[%d].", moduleType));
     }
-    aclError ret = aclrtGetDeviceInfo(deviceLogicId, infoType, reinterpret_cast<int64_t*>(&val));
+    aclError ret = aclrtGetDeviceInfo(deviceLogicId, infoType, ReinterpretAs<int64_t*>(&val));
     HCCL_INFO(
         "[HrtGetDeviceInfo]deviceLogicId[%u], moduleType[%d], infoType[%d], return[%d], val[%lld].", deviceLogicId,
         moduleType, infoType, ret, val);
@@ -626,8 +625,8 @@ void HrtIpcSetMemoryName(void* ptr, char_t* name, u64 ptrMaxLen, u32 nameMaxLen)
 
 void HrtIpcDestroyMemoryName(const char_t* name)
 {
-    aclError ret = aclrtIpcMemClose(reinterpret_cast<const char*>(name));
-    HCCL_INFO("Call aclrtIpcMemClose, return[%d], para: name[%s]", ret, reinterpret_cast<const char*>(name));
+    aclError ret = aclrtIpcMemClose(ReinterpretAs<const char*>(name));
+    HCCL_INFO("Call aclrtIpcMemClose, return[%d], para: name[%s]", ret, ReinterpretAs<const char*>(name));
     if (ret != ACL_SUCCESS) {
         string msg = StringFormat(
             "[Destroy][IpcMemoryName]errNo[0x%016llx] "
@@ -654,8 +653,8 @@ void* HrtIpcOpenMemory(const char_t* name)
 
 void HrtIpcCloseMemory(const void* ptr)
 {
-    aclError ret = aclrtIpcMemClose(reinterpret_cast<const char*>(ptr));
-    HCCL_INFO("Call aclrtIpcMemClose, return[%d], para: name[%s].", ret, reinterpret_cast<const char*>(ptr));
+    aclError ret = aclrtIpcMemClose(ReinterpretAs<const char*>(ptr));
+    HCCL_INFO("Call aclrtIpcMemClose, return[%d], para: name[%s].", ret, ReinterpretAs<const char*>(ptr));
     if (ret != ACL_SUCCESS) {
         string msg = StringFormat(
             "[Close][IpcMemory]errNo[0x%016llx] "
@@ -682,7 +681,7 @@ aclrtPtrAttributes HrtPointerGetAttributes(const void* ptr)
 {
     HCCL_INFO("[HrtPointerGetAttributes] ptr[%p].", ptr);
     aclrtPtrAttributes ptrAttr;
-    aclError ret = aclrtPointerGetAttributes(ptr, reinterpret_cast<aclrtPtrAttributes*>(&ptrAttr));
+    aclError ret = aclrtPointerGetAttributes(ptr, ReinterpretAs<aclrtPtrAttributes*>(&ptrAttr));
     if (ret != ACL_SUCCESS) {
         string msg = StringFormat(
             "[Get][PointAttr]errNo[0x%016llx] rt get point attr failed, "
@@ -717,9 +716,9 @@ void HrtDevMemAlignWithPage(void* ptr, u64 size, void*& ipcPtr, u64& ipcSize, u6
         return;
     }
 
-    u64 tmpPtr = reinterpret_cast<u64>(ptr);
-    ipcPtr = reinterpret_cast<void*>((reinterpret_cast<u64>(ptr)) & (~(static_cast<u64>(memAttr.pageSize) - 1)));
-    ipcOff = tmpPtr - reinterpret_cast<u64>(ipcPtr);
+    u64 tmpPtr = ReinterpretAs<u64>(ptr);
+    ipcPtr = ReinterpretAs<void*>((ReinterpretAs<u64>(ptr)) & (~(static_cast<u64>(memAttr.pageSize) - 1)));
+    ipcOff = tmpPtr - ReinterpretAs<u64>(ipcPtr);
     ipcSize = size + ipcOff;
 }
 

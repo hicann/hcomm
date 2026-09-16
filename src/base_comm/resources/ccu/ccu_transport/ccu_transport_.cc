@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include "cast_utils.h"
 #include "ccu_transport_.h"
 
 #include "exception_handler.h"
@@ -334,7 +335,7 @@ HcclResult CcuTransport::RecvDataSize()
 {
     // 接收数据包尺寸
     EXCEPTION_HANDLE_BEGIN
-    socket_->RecvAsync(reinterpret_cast<u8*>(&exchangeDataSize_), sizeof(exchangeDataSize_));
+    socket_->RecvAsync(ReinterpretAs<u8*>(&exchangeDataSize_), sizeof(exchangeDataSize_));
     EXCEPTION_HANDLE_END
     HCCL_INFO(
         "[CcuTransport::%s] Receive size[%u] of data success. [%zu] bytes received.", __func__, exchangeDataSize_,
@@ -355,7 +356,7 @@ HcclResult CcuTransport::RecvConnAndTransInfo()
 {
     recvData_.resize(exchangeDataSize_);
     EXCEPTION_HANDLE_BEGIN
-    socket_->RecvAsync(reinterpret_cast<u8*>(recvData_.data()), recvData_.size());
+    socket_->RecvAsync(ReinterpretAs<u8*>(recvData_.data()), recvData_.size());
     EXCEPTION_HANDLE_END
     return HcclResult::HCCL_SUCCESS;
 }
@@ -417,7 +418,7 @@ HcclResult CcuTransport::RecvTransInfo()
 {
     recvTrans_.resize(exchangeDataSize_);
     EXCEPTION_HANDLE_BEGIN
-    socket_->RecvAsync(reinterpret_cast<u8*>(recvTrans_.data()), recvTrans_.size());
+    socket_->RecvAsync(ReinterpretAs<u8*>(recvTrans_.data()), recvTrans_.size());
     EXCEPTION_HANDLE_END
     return HcclResult::HCCL_SUCCESS;
 }
@@ -580,7 +581,7 @@ HcclResult CcuTransport::BufferInfoUnpack(Hccl::BinaryStream& binaryStream)
             rmtHcclBufferInfo_ = rmtBufferInfo;
         }
         rmtBufferVec_.push_back(std::make_unique<Hccl::RemoteUbRmaBuffer>(
-            reinterpret_cast<uintptr_t>(rmtBufferInfo.addr), rmtBufferInfo.size, rmtBufferInfo.tokenId,
+            ReinterpretAs<uintptr_t>(rmtBufferInfo.addr), rmtBufferInfo.size, rmtBufferInfo.tokenId,
             rmtBufferInfo.tokenValue, Hccl::CommMemTypeToHcclMemType(rmtBufferInfo.type), memInfo));
     }
     return HcclResult::HCCL_SUCCESS;
@@ -599,7 +600,7 @@ HcclResult CcuTransport::RecvFinish()
 {
     recvFinishMsg_.resize(FINISH_MSG_SIZE);
     EXCEPTION_HANDLE_BEGIN
-    socket_->RecvAsync(reinterpret_cast<u8*>(recvFinishMsg_.data()), FINISH_MSG_SIZE);
+    socket_->RecvAsync(ReinterpretAs<u8*>(recvFinishMsg_.data()), FINISH_MSG_SIZE);
     EXCEPTION_HANDLE_END
     return HcclResult::HCCL_SUCCESS;
 }
