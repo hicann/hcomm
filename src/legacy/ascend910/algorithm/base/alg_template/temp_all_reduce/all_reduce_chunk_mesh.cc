@@ -134,7 +134,7 @@ HcclResult AllReduceChunkMesh::RunAsync(const u32 rank, const u32 rankSize, cons
 
     // 如果ranksize为1, inline reduce和普通跨片reduce操作一致，从input->output
     if (rankSize == 1) {
-        if (opInfo_->inputAddr != opInfo_->outputAddr) {
+        if (opInfo_->outputAddr != opInfo_->inputAddr) {
             DeviceMem userMemIn = DeviceMem::create(opInfo_->inputAddr, count_ * DataUnitSize(dataType_));
             DeviceMem userMemOut = DeviceMem::create(opInfo_->outputAddr, count_ * DataUnitSize(dataType_));
             ret = HcclD2DMemcpyAsync(dispatcher_, userMemOut, userMemIn, stream_);
@@ -153,7 +153,7 @@ HcclResult AllReduceChunkMesh::RunAsync(const u32 rank, const u32 rankSize, cons
     CHK_PRT_RET(
         ret != HCCL_SUCCESS,
         HCCL_ERROR(
-            "[AllReduceRing][RunAsync]rank[%u] count[%llu] failed in reducescater "
+            "[AllReduceRing][RunAsync]rank[%u] count[%llu] failed in ReduceScatter "
             "step",
             rank, count_),
         ret);
@@ -331,7 +331,7 @@ HcclResult AllReduceChunkMesh::RunAllGather(u32 rank, u32 rankSize, const std::v
 
         CHK_RET(links[dstRank]->TxDataSignal(subStream));
         CHK_RET(links[dstRank]->RxDataSignal(subStream));
-        HCCL_DEBUG("[AllReduceChunkMesh]round %u success");
+        HCCL_DEBUG("[AllReduceChunkMesh]round %u success", round);
     }
 
     CHK_RET(HcclD2DMemcpyAsync(dispatcher_, emptyDst, emptySrc, stream_));

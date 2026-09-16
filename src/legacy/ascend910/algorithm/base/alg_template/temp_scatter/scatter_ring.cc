@@ -80,7 +80,7 @@ HcclResult ScatterRing::RunScatterOnEndRank()
     CHK_RET(linkLeft_->TxAck(stream_));
 
     dst = outputMem_.range(scatterOffset, scatterResult);
-    HCCL_DEBUG("last rank[%u] rx data ouputoffset[%llu] size[%llu]", interRank_, scatterOffset, scatterResult);
+    HCCL_DEBUG("last rank[%u] rx data outputoffset[%llu] size[%llu]", interRank_, scatterOffset, scatterResult);
     HcclResult ret
         = linkLeft_->RxAsync(UserMemType::OUTPUT_MEM, scatterOffset + baseOffset_, dst.ptr(), scatterResult, stream_);
     CHK_PRT_RET(
@@ -485,14 +485,14 @@ ScatterRing::GetNslbAdjInfo(const u32 rank, const u32 rankSize, const std::vecto
     if (rankSize == 1) {
         return HCCL_E_NOT_SUPPORT;
     }
-    u32 ringNextRank = (rank + 1) % rankSize;
+    u32 ringNextRank = (1 + rank) % rankSize;
     LINK nslbNext = links[ringNextRank];
 
     NslbDpAdjInfo adjInfoStep = {};
     nslbAdjInfo.dstRankNum = 1;
     adjInfoStep.dstLocalRankId = nslbNext->GetRemoteRank();
-    adjInfoStep.phaseId = 1;
     adjInfoStep.rev = 0;
+    adjInfoStep.phaseId = 1;
     nslbAdjInfo.nsAdjInfo.push_back(adjInfoStep);
 
     return HCCL_SUCCESS;

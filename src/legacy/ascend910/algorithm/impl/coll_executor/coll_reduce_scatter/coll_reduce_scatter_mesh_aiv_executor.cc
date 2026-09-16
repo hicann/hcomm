@@ -95,7 +95,7 @@ HcclResult CollReduceScatterMeshAivExecutor::CalNumBlocks(
     }
 
     HCCL_INFO(
-        "[CollReduceScatterMeshAivExecutor][CalNumBlocks] numBlocks is set to [%u], limit[%u], recommanded[%u]",
+        "[CollReduceScatterMeshAivExecutor][CalNumBlocks] numBlocks is set to [%u], limit[%u], recommended[%u]",
         numBlocks, numBlocks_, bestNumBlocks);
     return HCCL_SUCCESS;
 }
@@ -135,7 +135,7 @@ HcclResult CollReduceScatterMeshAivExecutor::GetAivExecParam(
         }
     }
     HCCL_INFO(
-        "SPK, buffersIn [%p] [%p] [%p] [%p]"
+        "[CollReduceScatterMeshAivExecutor][GetAivExecParam], buffersIn [%p] [%p] [%p] [%p] "
         "buffersOut [%p] [%p] [%p] [%p]",
         args.buffersIn[0], args.buffersIn[1], args.buffersIn[2], args.buffersIn[3], args.buffersOut[0],
         args.buffersOut[1], args.buffersOut[2], args.buffersOut[3]);
@@ -154,7 +154,7 @@ HcclResult CollReduceScatterMeshAivExecutor::GetAivExecParam(
             HCCL_ERROR_CODE(ret), param.tag.c_str()),
         ret);
     HCCL_INFO(
-        "SPK [CollReduceScatterMeshAivExecutor][GetAivExecParam], rank[%llu], rankSize[%llu], "
+        "[CollReduceScatterMeshAivExecutor][GetAivExecParam], rank[%llu], rankSize[%llu], "
         "len[%llu],datatype[%llu], op[%llu], devType[%u]",
         args.rank, args.rankSize, args.len, args.dataType, args.reduceOp, args.devType);
 
@@ -204,7 +204,7 @@ HcclResult CollReduceScatterMeshAivExecutor::KernelRun(const OpParam& param, Exe
 {
     HCCL_CONFIG_INFO(HCCL_ALG, "[%s] ReduceScatter aiv enter.", __func__);
 
-    CHK_RET(CheckCommSize(COMM_LEVEL0, COMM_INDEX_0 + 1));
+    CHK_RET(CheckCommSize(COMM_LEVEL0, 1 + COMM_INDEX_0));
     SubCommInfo level0CommInfo = GetSubCommInfo(COMM_LEVEL0, COMM_INDEX_0);
 
     void* buffersIn[MAX_RANK_SIZE];
@@ -216,16 +216,16 @@ HcclResult CollReduceScatterMeshAivExecutor::KernelRun(const OpParam& param, Exe
         "[CollReduceScatterMeshAivExecutor][KernelRun] userRank [%d] localRank [%d]", topoAttr_.userRank, localRank);
 
     for (u32 i = 0; i < localRankSize; i++) {
-        if (i != localRank) {
+        if (localRank != i) {
             CHK_RET(level0CommInfo.links[i]->GetRemoteMem(UserMemType::INPUT_MEM, &(buffersIn[i])));
             CHK_RET(level0CommInfo.links[i]->GetRemoteMem(UserMemType::OUTPUT_MEM, &(buffersOut[i])));
         } else {
-            buffersIn[i] = execMem.inputMem.ptr();
             buffersOut[i] = execMem.outputMem.ptr();
+            buffersIn[i] = execMem.inputMem.ptr();
         }
     }
     u32 numBlocks;
-    bool isOpbase = (GetWorkflowMode() == HcclWorkflowMode::HCCL_WORKFLOW_MODE_OP_BASE);
+    bool isOpbase = (HcclWorkflowMode::HCCL_WORKFLOW_MODE_OP_BASE == GetWorkflowMode());
     HCCL_DEBUG("[CollReduceScatterMeshAivExecutor][KernelRun]isOpbase is %d", isOpbase);
 
     AivOpArgs opArgs{
@@ -245,8 +245,8 @@ HcclResult CollReduceScatterMeshAivExecutor::KernelRun(const OpParam& param, Exe
     numBlocks_ = numBlocks;
     AivResourceArgs resourceArgs{param.tag,  param.stream.ptr(), buffersIn, buffersOut, execMem.inputMem.size(),
                                  numBlocks_, param.aivTag};
-    struct AivProfilingInfo aivProfilingInfo;
     AivAlgArgs algArgs{};
+    struct AivProfilingInfo aivProfilingInfo;
     algArgs.execTimeOut = topoMatcher_->GetExecTimeOutConfig();
     algArgs.execTimeOutSet = true;
     aivProfilingInfo.counter = opCounter_;

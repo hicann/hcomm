@@ -44,18 +44,18 @@ HcclResult AllGatherVPipeline::Prepare(
     subStream_ = subStream;
 
     // DMAMem + interNotify from Link
-    intraRankSize_ = level0CommInfo.localRankSize;
     interRankSize_ = level1CommInfo.localRankSize;
     intraRankId_ = level0CommInfo.localRank;
     interRankId_ = level1CommInfo.localRank;
     intraLinks_ = level0CommInfo.links;
     interLinks_ = level1CommInfo.links;
+    intraRankSize_ = level0CommInfo.localRankSize;
 
     // streamNotify, size: n
     streamNotifyMain_ = notifyMain;
     if (streamNotifyMain_.size() < intraRankSize_) {
         HCCL_ERROR(
-            "[AllGatherVPipeline][Prepare]rank[%u] streamNotifyMain_ size[%u] error, is smaller than,"
+            "[AllGatherVPipeline][Prepare]rank[%u] streamNotifyMain_ size[%u] is smaller than "
             "intraRankSize_[%u]",
             userRank_, streamNotifyMain_.size(), intraRankSize_);
         return HCCL_E_INTERNAL;
@@ -63,7 +63,7 @@ HcclResult AllGatherVPipeline::Prepare(
     streamNotifySub_ = notifySub;
     if (streamNotifySub_.size() < intraRankSize_) {
         HCCL_ERROR(
-            "[AllGatherVPipeline][Prepare]rank[%u] streamNotifySub_ size[%u] error, is smaller than, "
+            "[AllGatherVPipeline][Prepare]rank[%u] streamNotifySub_ size[%u] is smaller than "
             "intraRankSize_[%u]",
             userRank_, streamNotifySub_.size(), intraRankSize_);
         return HCCL_E_INTERNAL;
@@ -143,7 +143,7 @@ HcclResult AllGatherVPipeline::RunAsync()
         = DeviceMem::create(static_cast<u8*>(dmaMem_[dmaMemSliceId].ptr()) + localOffset, memSliceCount_ * unitSize);
     CHK_RET(HcclD2DMemcpyAsync(dispatcher_, locDMAInMem, locSrc, stream_));
 
-    for (u32 step = 0; step < interRankSize_; step++) {
+    for (u32 step = 0; interRankSize_ > step; step++) {
         // 主从流同步
         CHK_RET(MainRecordSub());
         CHK_RET(SubWaitMain());
@@ -168,7 +168,7 @@ HcclResult AllGatherVPipeline::RunAsync()
                 static_cast<u8*>(dmaMem_[srcDMAMemSliceId].ptr()) + serverOffsetByte,
                 userMemSlice_[serverRankOffset].size, subStream_[0]));
             HCCL_DEBUG(
-                "[AllGatherVPipeline][RunAsync] local rank[%u] localOffset[%llu]tx with remoteRank[%u],"
+                "[AllGatherVPipeline][RunAsync] local rank[%u] localOffset[%llu] tx with remoteRank[%u], "
                 "remoteOffset[%llu] with slice[%llu]",
                 userRank_, serverOffsetByte, nextInterRankId, serverOffsetByte, userMemSlice_[serverRankOffset].size);
             // 对于RDM RxAsync，内存属性入参无效 RDMA::Wait
@@ -178,7 +178,7 @@ HcclResult AllGatherVPipeline::RunAsync()
                 static_cast<u8*>(dmaMem_[dstDMAMemSliceId].ptr()) + readRemoteOffsetByte,
                 userMemSlice_[readRemoteOffset].size, subStream_[0])); // wait
             HCCL_DEBUG(
-                "[AllGatherVPipeline][RunAsync]read local rank[%u] localOffset[%llu]tx with remoteRank[%u],"
+                "[AllGatherVPipeline][RunAsync]read local rank[%u] localOffset[%llu] tx with remoteRank[%u], "
                 "remoteOffset[%llu] with slice[%llu]",
                 userRank_, readRemoteOffsetByte, readRemoteOffset, readRemoteOffsetByte,
                 userMemSlice_[readRemoteOffset].size);
@@ -190,7 +190,7 @@ HcclResult AllGatherVPipeline::RunAsync()
             }
         }
 
-        for (u32 i = 1; i < intraRankSize_; i++) {
+        for (u32 i = 1; intraRankSize_ > i; i++) {
             u32 remIntraRankId = (intraRankId_ + i) % intraRankSize_;
             CHK_RET(intraLinks_[remIntraRankId]->TxAck(subStream_[i])); // ack record
             CHK_RET(intraLinks_[remIntraRankId]->RxAck(subStream_[i]));

@@ -310,14 +310,14 @@ HcclResult ReduceScatterNHRV1::RunLastCopyStep(const u32 rank, const std::vector
         ret = links[peerRank]->TxAck(stream_);
         CHK_PRT_RET(
             ret != HCCL_SUCCESS,
-            HCCL_ERROR("[ReduceScatterNHRV1][RunLastCopyStep]rank[%u] tx ack from peerank[%u] failed", rank, peerRank),
+            HCCL_ERROR("[ReduceScatterNHRV1][RunLastCopyStep]rank[%u] tx ack from peerRank[%u] failed", rank, peerRank),
             ret);
 
         // RxAck
         ret = links[peerRank]->RxAck(stream_);
         CHK_PRT_RET(
             ret != HCCL_SUCCESS,
-            HCCL_ERROR("[ReduceScatterNHRV1][RunLastCopyStep]rank[%u] rx ack from peerank[%u] failed", rank, peerRank),
+            HCCL_ERROR("[ReduceScatterNHRV1][RunLastCopyStep]rank[%u] rx ack from peerRank[%u] failed", rank, peerRank),
             ret);
 
         if (hIndex == info.GetRowSize() - 1) { // 发数据
