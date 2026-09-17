@@ -387,14 +387,14 @@ typedef struct {
 | `readNbiOnThread`                      | `HcommReadNbiOnThread`                      |   |
 | `readOnThread`                         | `HcommReadOnThread`                         |   |
 | `readReduceOnThread`                   | `HcommReadReduceOnThread`                   |   |
-| `notifyRecord`                         | `HcommNotifyRecord`                         |   |
-| `notifyRecordOnThread`                 | `HcommNotifyRecordOnThread`                 |   |
-| `notifyWait`                           | `HcommNotifyWait`                           |   |
-| `notifyWaitOnThread`                   | `HcommNotifyWaitOnThread`                   |   |
-| `notifyWaitOnThreadWithDefaultTimeout` | `HcommNotifyWaitOnThreadWithDefaultTimeout` |   |
+| `notifyRecord`                         | `HcommChannelNotifyRecord`                         |   |
+| `notifyRecordOnThread`                 | `HcommChannelNotifyRecordOnThread`                 |   |
+| `notifyWait`                           | `HcommChannelNotifyWait`                           |   |
+| `notifyWaitOnThread`                   | `HcommChannelNotifyWaitOnThread`                   |   |
+| `notifyWaitOnThreadWithDefaultTimeout` | `HcommChannelNotifyWaitOnThreadWithDefaultTimeout` |   |
 | `batchTransferOnThread`                | `HcommBatchTransferOnThread`                |   |
-| `fence`                                | `HcommFence`                                |   |
-| `fenceOnThread`                        | `HcommFenceOnThread`                        |   |
+| `fence`                                | `HcommChannelFence`                                |   |
+| `fenceOnThread`                        | `HcommChannelFenceOnThread`                        |   |
 | `drainOnThread`                        | `HcommChannelDrainOnThread`                 |   |
 
 ##### Endpoint ops 表
@@ -1110,25 +1110,20 @@ static HcommNicChannelOps kMyChannelOps = {
 
 ### 7.4 构建与部署
 
+插件只依赖 HCOMM 的 SDK ABI 头文件 `hcomm_nic_plugin.h`（`src/base_comm/primitives/api_c_adpt/nic_plugin/hcomm_nic_plugin.h`），不链接 `libhcomm.so`。
+
+新写一个插件时可参考自包含示例 `experimental/base_comm/nic_plugin/example_plugin/`，它实现了 3 个导出符号 + 两张空 ops 表，可脱离顶层构建独立编译：
+
 ```bash
-# 1. 构建
-cd experimental/base_comm/nic_plugin/<my_plugin>
+# 1. 构建（在示例插件目录独立执行）
+cd experimental/base_comm/nic_plugin/example_plugin
 mkdir build && cd build
 cmake .. && make -j
+# 产物：build/libexample_plugin.so
 
-# CMakeLists.txt 要点：
-# - 不链接 libhcomm.so
-# - 编译选项与 hcomm_nic_plugin.h 头文件路径对齐
-# - 生成 .so 文件（如 libmy_plugin.so）
+# 2. 部署（手动调试）
+cp build/libexample_plugin.so ${ASCEND_HOME_PATH}/hcomm_plugin/
 
-# 2. 部署
-cp build/libmy_plugin.so ${ASCEND_HOME_PATH}/hcomm_plugin/
-
-# 3. 验证
-# 重启进程，检查日志中 "[NicPlugin] protocol[X] is handled by plugin[my_plugin]" 信息
-
-# 4. 调试（备选路径）
-export HCOMM_NIC_PLUGIN_SO=/path/to/build/libmy_plugin.so
 ```
 
 ### 7.5 协议号选取
