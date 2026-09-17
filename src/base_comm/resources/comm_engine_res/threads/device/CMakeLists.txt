@@ -11,7 +11,6 @@
 set(src_list
     aicpu_thread_process.cc
     aicpu_thread_kernel.cc
-    aicpu_rtsq_poll_daemon.cc
 )
 
 if(TARGET ccl_kernel)

@@ -81,8 +81,8 @@ TEST_F(P2PTransportLiteImplWaitWithTimeoutTest, P2PTransportLiteImpl_WaitWithTim
     liteBinaryStream.Dump(uniqueId);
 
     StreamLite stream(uniqueId);
-    stream.rtsq = std::make_unique<RtsqA5>(fakeDevPhyId, fakeStreamId, fakeSqId);
-    RtsqA5& rtsq = *static_cast<RtsqA5*>(stream.rtsq.get());
+    RtsqA5 rtsq(fakeDevPhyId, fakeStreamId, fakeSqId);
+    stream.rtsq = std::make_unique<RtsqA5>(rtsq);
 
     std::vector<char> notifyUniqueId = GetNotifyUniqueId(0, fakeDevPhyId);
     BinaryStream binaryStream;
@@ -121,8 +121,8 @@ TEST_F(P2PTransportLiteImplWaitWithTimeoutTest, P2PTransportLiteImpl_WaitWithTim
     liteBinaryStream.Dump(uniqueId);
 
     StreamLite stream(uniqueId);
-    stream.rtsq = std::make_unique<RtsqA5>(fakeDevPhyId, fakeStreamId, fakeSqId);
-    RtsqA5& rtsq = *static_cast<RtsqA5*>(stream.rtsq.get());
+    RtsqA5 rtsq(fakeDevPhyId, fakeStreamId, fakeSqId);
+    stream.rtsq = std::make_unique<RtsqA5>(rtsq);
 
     std::vector<char> notifyUniqueId = GetNotifyUniqueId(0, fakeDevPhyId);
     BinaryStream binaryStream;
@@ -161,8 +161,8 @@ TEST_F(P2PTransportLiteImplWaitWithTimeoutTest, P2PTransportLiteImpl_WaitWithTim
     liteBinaryStream.Dump(uniqueId);
 
     StreamLite stream(uniqueId);
-    stream.rtsq = std::make_unique<RtsqA5>(fakeDevPhyId, fakeStreamId, fakeSqId);
-    RtsqA5& rtsq = *static_cast<RtsqA5*>(stream.rtsq.get());
+    RtsqA5 rtsq(fakeDevPhyId, fakeStreamId, fakeSqId);
+    stream.rtsq = std::make_unique<RtsqA5>(rtsq);
 
     std::vector<char> notifyUniqueId = GetNotifyUniqueId(0, fakeDevPhyId);
     BinaryStream binaryStream;

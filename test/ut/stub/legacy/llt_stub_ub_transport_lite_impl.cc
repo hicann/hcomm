@@ -22,11 +22,7 @@ UbTransportLiteImpl::UbTransportLiteImpl(
 {
     callback_ = nullptr;
 }
-UbTransportLiteImpl::UbTransportLiteImpl(std::vector<char>& uniqueId)
-{
-    static RmaConnLite dummyConn;
-    cachedConn_ = &dummyConn;
-}
+UbTransportLiteImpl::UbTransportLiteImpl(std::vector<char>& uniqueId) {}
 
 UbTransportLiteImpl::~UbTransportLiteImpl() {}
 

@@ -26,7 +26,13 @@ std::string UbConnLiteMgr::GetKey(const UbConnLiteParam& liteParam) const
     return result;
 }
 
-bool UbConnLiteMgr::IsExist(const std::string& key) { return ubConnLiteMap.find(key) != ubConnLiteMap.end(); }
+bool UbConnLiteMgr::IsExist(const std::string& key)
+{
+    if (ubConnLiteMap.find(key) == ubConnLiteMap.end()) {
+        return false;
+    }
+    return true;
+}
 
 UbConnLiteMgr& UbConnLiteMgr::GetInstance()
 {
@@ -34,28 +40,20 @@ UbConnLiteMgr& UbConnLiteMgr::GetInstance()
     return ubConnLiteMgr;
 }
 
-RmaConnLite* UbConnLiteMgr::Get(std::vector<char>& uniqueId, UbTransportLiteImpl* transport)
+RmaConnLite* UbConnLiteMgr::Get(std::vector<char>& uniqueId)
 {
     UbConnLiteParam liteParam(uniqueId);
     auto key = GetKey(liteParam);
     std::unique_lock<std::shared_mutex> lock(mtx_);
     if (IsExist(key)) {
-        auto conn = ubConnLiteMap[key].get();
-        if (transport != nullptr) {
-            ciTrackerMap_[transport] = static_cast<UbConnLite*>(conn);
-        }
-        return conn;
+        return ubConnLiteMap[key].get();
     }
 
     ubConnLiteMap[key] = make_unique<UbConnLite>(liteParam);
-    auto conn = ubConnLiteMap[key].get();
-    if (transport != nullptr) {
-        ciTrackerMap_[transport] = conn;
-    }
-    return conn;
+    return ubConnLiteMap[key].get();
 }
 
-void UbConnLiteMgr::Clear(std::vector<char>& uniqueId, UbTransportLiteImpl* transport)
+void UbConnLiteMgr::Clear(std::vector<char>& uniqueId)
 {
     UbConnLiteParam liteParam(uniqueId);
     auto key = GetKey(liteParam);
@@ -65,18 +63,6 @@ void UbConnLiteMgr::Clear(std::vector<char>& uniqueId, UbTransportLiteImpl* tran
     }
 
     ubConnLiteMap.erase(key);
-    if (transport != nullptr) {
-        ciTrackerMap_.erase(transport);
-    }
-}
-
-void UbConnLiteMgr::AppendCompletedCis(UbTransportLiteImpl* transport, const std::pair<u16, u16>* slots, size_t count)
-{
-    std::shared_lock<std::shared_mutex> lock(mtx_);
-    auto it = ciTrackerMap_.find(transport);
-    if (it != ciTrackerMap_.end() && it->second != nullptr) {
-        it->second->UpdateCi(slots, count);
-    }
 }
 
 } // namespace Hccl
