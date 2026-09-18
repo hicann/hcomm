@@ -28,9 +28,15 @@ public:
           psn(psn)
     {}
 
-    void Serialize(Hccl::BinaryStream& stream) override { stream << tokenValue << qpKey << eid << tpHandle << psn; }
+    void Serialize(Hccl::BinaryStream& stream) override
+    {
+        stream << tokenValue << qpKeySize << qpKey << eid << tpHandle << psn;
+    }
 
-    void Deserialize(Hccl::BinaryStream& stream) override { stream >> tokenValue >> qpKey >> eid >> tpHandle >> psn; }
+    void Deserialize(Hccl::BinaryStream& stream) override
+    {
+        stream >> tokenValue >> qpKeySize >> qpKey >> eid >> tpHandle >> psn;
+    }
 
     std::string Describe() const override
     {

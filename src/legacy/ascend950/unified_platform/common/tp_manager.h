@@ -87,6 +87,8 @@ public:
     /// `isSync==true`：同步路径（HOST_NET ctx + HrtRa* 同步接口），一次返回 SUCCESS。
     /// `isSync==false`：异步三阶段，轮询返回 HCCL_E_AGAIN。
     HcclResult GetTpInfo(const RaUbGetTpInfoParam& param, TpInfo& tpInfo, bool isSync = false);
+    // UB_RTP 的多个 Jetty 可能复用同一 TP。PSN 必须跟随 TP 缓存稳定复用，不能依赖异步完成顺序。
+    HcclResult GetOrSetLocalPsn(const RaUbGetTpInfoParam& param, const TpInfo& tpInfo, uint32_t& localPsn);
     // unimport jetty 会 URMA 销毁 tp 资源，hccl 配套删除记录
     HcclResult ReleaseTpInfo(const RaUbGetTpInfoParam& param, const TpInfo& tpInfo);
     HcclResult GetTpAttr(const GetTpAttrParam& param, TpAttrInfo& tpAttrInfo, RdmaHandle rdmaHandle);
@@ -112,6 +114,8 @@ private:
     struct TpInfoCtx {
         TpInfo tpInfo{};
         uint32_t useCnt{0};
+        uint32_t localPsn{0};
+        bool hasLocalPsn{false};
 
         TpInfoCtx() = default;
         TpInfoCtx(const TpInfo& info, const uint32_t cnt) : tpInfo(info), useCnt(cnt) {}

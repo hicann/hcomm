@@ -799,3 +799,108 @@ TEST_F(TpManagerTest, Ut_CalcTaTimeout_Jetty_Tp_Boundary_8000msEqual_Expect_Upgr
 {
     EXPECT_EQ(TpManager::CalcTaTimeout(TpProtocol::TP, TpManager::TA_TIMEOUT_NOT_SET, 8000U), 24U);
 }
+
+TEST_F(TpManagerTest, tp_manager_ub_rtp_get_or_set_local_psn_reuse_success)
+{
+    HcclResult result;
+    const int32_t devLogicId = 0;
+    IpAddress locAddr("30.0.0.1");
+    IpAddress rmtAddr("30.0.0.2");
+    RaUbGetTpInfoParam param{locAddr, rmtAddr, TpProtocol::UB_RTP};
+    param.qos = 1U;
+    TpInfo tpInfo{};
+
+    result = TpManager::GetInstance(devLogicId).GetTpInfo(param, tpInfo);
+    EXPECT_EQ(result, HCCL_E_AGAIN);
+    result = TpManager::GetInstance(devLogicId).GetTpInfo(param, tpInfo);
+    EXPECT_EQ(result, HCCL_SUCCESS);
+    EXPECT_NE(tpInfo.tpHandle, 0U);
+
+    // 首次：缓存无 PSN，写入随机生成的入参 PSN 并原样返回
+    uint32_t psnFirst = 111U;
+    result = TpManager::GetInstance(devLogicId).GetOrSetLocalPsn(param, tpInfo, psnFirst);
+    EXPECT_EQ(result, HCCL_SUCCESS);
+    EXPECT_EQ(psnFirst, 111U);
+
+    // 二次：同一 (locAddr, rmtAddr, qos, tpHandle) 复用首次写入的 PSN
+    uint32_t psnSecond = 222U;
+    result = TpManager::GetInstance(devLogicId).GetOrSetLocalPsn(param, tpInfo, psnSecond);
+    EXPECT_EQ(result, HCCL_SUCCESS);
+    EXPECT_EQ(psnSecond, 111U);
+}
+
+TEST_F(TpManagerTest, tp_manager_ub_rtp_get_or_set_local_psn_tp_handle_mismatch)
+{
+    HcclResult result;
+    const int32_t devLogicId = 0;
+    IpAddress locAddr("31.0.0.1");
+    IpAddress rmtAddr("31.0.0.2");
+    RaUbGetTpInfoParam param{locAddr, rmtAddr, TpProtocol::UB_RTP};
+    param.qos = 1U;
+    TpInfo tpInfo{};
+
+    result = TpManager::GetInstance(devLogicId).GetTpInfo(param, tpInfo);
+    EXPECT_EQ(result, HCCL_E_AGAIN);
+    result = TpManager::GetInstance(devLogicId).GetTpInfo(param, tpInfo);
+    EXPECT_EQ(result, HCCL_SUCCESS);
+
+    uint32_t psnFirst = 111U;
+    result = TpManager::GetInstance(devLogicId).GetOrSetLocalPsn(param, tpInfo, psnFirst);
+    EXPECT_EQ(result, HCCL_SUCCESS);
+    EXPECT_EQ(psnFirst, 111U);
+
+    // tpHandle 与缓存不一致：跳过复用，保持入参 PSN，不污染缓存
+    TpInfo mismatchTpInfo{};
+    mismatchTpInfo.tpHandle = tpInfo.tpHandle + 1U;
+    uint32_t psnMismatch = 222U;
+    result = TpManager::GetInstance(devLogicId).GetOrSetLocalPsn(param, mismatchTpInfo, psnMismatch);
+    EXPECT_EQ(result, HCCL_SUCCESS);
+    EXPECT_EQ(psnMismatch, 222U);
+
+    // 再以正确 tpHandle 调用仍复用首次 PSN，证明 mismatch 调用未覆盖缓存
+    uint32_t psnThird = 333U;
+    result = TpManager::GetInstance(devLogicId).GetOrSetLocalPsn(param, tpInfo, psnThird);
+    EXPECT_EQ(result, HCCL_SUCCESS);
+    EXPECT_EQ(psnThird, 111U);
+}
+
+TEST_F(TpManagerTest, tp_manager_ub_rtp_get_or_set_local_psn_cache_miss)
+{
+    HcclResult result;
+    const int32_t devLogicId = 0;
+
+    // locAddr 未建链：保持入参 PSN
+    RaUbGetTpInfoParam locMissParam{IpAddress("32.0.0.1"), IpAddress("32.0.0.2"), TpProtocol::UB_RTP};
+    TpInfo tpInfo{};
+    uint32_t psnLocMiss = 111U;
+    result = TpManager::GetInstance(devLogicId).GetOrSetLocalPsn(locMissParam, tpInfo, psnLocMiss);
+    EXPECT_EQ(result, HCCL_SUCCESS);
+    EXPECT_EQ(psnLocMiss, 111U);
+
+    // 建链后验证 rmtAddr / qos 不命中
+    IpAddress locAddr("33.0.0.1");
+    IpAddress rmtAddr("33.0.0.2");
+    RaUbGetTpInfoParam param{locAddr, rmtAddr, TpProtocol::UB_RTP};
+    param.qos = 5U;
+
+    result = TpManager::GetInstance(devLogicId).GetTpInfo(param, tpInfo);
+    EXPECT_EQ(result, HCCL_E_AGAIN);
+    result = TpManager::GetInstance(devLogicId).GetTpInfo(param, tpInfo);
+    EXPECT_EQ(result, HCCL_SUCCESS);
+
+    // rmtAddr 未建链：保持入参 PSN
+    RaUbGetTpInfoParam rmtMissParam{locAddr, IpAddress("33.0.0.9"), TpProtocol::UB_RTP};
+    rmtMissParam.qos = 5U;
+    uint32_t psnRmtMiss = 222U;
+    result = TpManager::GetInstance(devLogicId).GetOrSetLocalPsn(rmtMissParam, tpInfo, psnRmtMiss);
+    EXPECT_EQ(result, HCCL_SUCCESS);
+    EXPECT_EQ(psnRmtMiss, 222U);
+
+    // qos 未建链：保持入参 PSN
+    RaUbGetTpInfoParam qosMissParam{locAddr, rmtAddr, TpProtocol::UB_RTP};
+    qosMissParam.qos = 6U;
+    uint32_t psnQosMiss = 333U;
+    result = TpManager::GetInstance(devLogicId).GetOrSetLocalPsn(qosMissParam, tpInfo, psnQosMiss);
+    EXPECT_EQ(result, HCCL_SUCCESS);
+    EXPECT_EQ(psnQosMiss, 333U);
+}

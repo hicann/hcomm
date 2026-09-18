@@ -587,7 +587,6 @@ HcclResult AivUrmaChannel::BuildChannelEntityToDevice(void** devChannelPtr)
     }
 
     CHK_PTR_NULL(transport_.get());
-
     ChannelEntity hostChannel;
     CHK_RET(SecureMemset(&hostChannel, sizeof(ChannelEntity), 0, sizeof(ChannelEntity), "hostChannel"));
 
