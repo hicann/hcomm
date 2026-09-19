@@ -111,7 +111,9 @@ HcommResult HcommThreadAllocWithStream(CommEngine engine, rtStream_t stream, uin
 HcommResult HcommThreadAllocWithConfig(
     CommEngine engine, uint32_t threadNum, ThreadType type, const ThreadConfig* config, ThreadHandle* threads);
 
-HcommResult HcommThreadFreeWithStream(const ThreadHandle* threads, uint32_t threadNum);
+HcommResult HcommThreadAllocWithCommConfig(
+    CommEngine engine, const char* commId, uint32_t threadNum, ThreadType type, const ThreadConfig* config,
+    ThreadHandle* threads);
 
 HcommResult HcommEngineCtxCreate(CommEngine engine, uint64_t size, void** ctx);
 
@@ -138,8 +140,6 @@ HcommResult CheckChannelDescQos(const HcommChannelDesc& channelDesc);
 HcommResult CheckRoceAttr(HcommChannelDesc& channelDesc, EndpointLocType localLocType);
 #ifdef __cplusplus
 }
-
-HcommResult HcommThreadAlloc(CommEngine engine, uint32_t threadNum, uint32_t notifyNumPerThread, ThreadHandle* threads);
 #endif // __cplusplus
 
 #endif // HCOMM_C_ADPT_H
