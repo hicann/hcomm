@@ -427,7 +427,7 @@ TEST_F(TestHcclThread, UT_TestHcommThreadAllocWithStream_When_EngineAiv_expect_r
     delete stream;
 }
 
-TEST_F(TestHcclThread, UT_TestHcommThreadAllocWithStream_When_EngineCcu_expect_return_HCCL_E_PARA)
+TEST_F(TestHcclThread, UT_TestHcommThreadAllocWithStream_When_EngineCcu_expect_return_HcclSuccess)
 {
     bool isDeviceSide{false};
     MOCKER(GetRunSideIsDevice).stubs().with(outBound(isDeviceSide)).will(returnValue(HCCL_SUCCESS));
@@ -435,7 +435,10 @@ TEST_F(TestHcclThread, UT_TestHcommThreadAllocWithStream_When_EngineCcu_expect_r
     void* rtStream = stream->ptr();
     ThreadHandle thread;
     HcommResult ret = HcommThreadAllocWithStream(COMM_ENGINE_CCU, rtStream, 3, &thread);
-    EXPECT_EQ(ret, HCCL_E_PARA);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+
+    HcommResult freeRet = HcommThreadFree(&thread, 1);
+    EXPECT_EQ(freeRet, HCCL_SUCCESS);
     delete stream;
 }
 
