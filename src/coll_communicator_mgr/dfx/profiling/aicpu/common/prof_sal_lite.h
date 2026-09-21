@@ -12,6 +12,7 @@
 #define PROF_SAL_LITE_H
 
 #include <sys/syscall.h>
+#include <unistd.h>
 #include <cstdint>
 
 namespace Hccl {

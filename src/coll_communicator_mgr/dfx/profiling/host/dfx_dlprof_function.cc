@@ -10,6 +10,7 @@
 
 #include "dfx_dlprof_function.h"
 #include "log.h"
+#include <dlfcn.h>
 
 namespace Hccl {
 
