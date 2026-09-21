@@ -3294,7 +3294,7 @@ HcclResult HcclCommWorkingDevNicSetV2(const HcclComm comm, uint32_t* ranks, bool
 }
 
 HcclResult
-HcclCommSetMemoryRangeV2(const HcclComm comm, void* baseVirPtr, size_t size, size_t alignment, uint64_t flags)
+HcclCommSetMemoryRangeV2(const HcclComm comm, const void* baseVirPtr, size_t size, size_t alignment, uint64_t flags)
 {
     (void)comm;
     (void)baseVirPtr;
@@ -3305,7 +3305,7 @@ HcclCommSetMemoryRangeV2(const HcclComm comm, void* baseVirPtr, size_t size, siz
     return HCCL_E_NOT_SUPPORT;
 }
 
-HcclResult HcclCommUnsetMemoryRangeV2(const HcclComm comm, void* baseVirPtr)
+HcclResult HcclCommUnsetMemoryRangeV2(const HcclComm comm, const void* baseVirPtr)
 {
     (void)comm;
     (void)baseVirPtr;
@@ -3314,7 +3314,7 @@ HcclResult HcclCommUnsetMemoryRangeV2(const HcclComm comm, void* baseVirPtr)
 }
 
 HcclResult HcclCommActivateCommMemoryV2(
-    const HcclComm comm, void* virPtr, size_t size, size_t offset, void* handle, uint64_t flags)
+    const HcclComm comm, const void* virPtr, size_t size, size_t offset, const void* handle, uint64_t flags)
 {
     (void)comm;
     (void)virPtr;
@@ -3326,7 +3326,7 @@ HcclResult HcclCommActivateCommMemoryV2(
     return HCCL_E_NOT_SUPPORT;
 }
 
-HcclResult HcclCommDeactivateCommMemoryV2(const HcclComm comm, void* virPtr)
+HcclResult HcclCommDeactivateCommMemoryV2(const HcclComm comm, const void* virPtr)
 {
     (void)comm;
     (void)virPtr;

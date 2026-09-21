@@ -55,7 +55,7 @@ public:
         return notifys_[index].get();
     }
 
-    inline u32 GetNotifyNum() { return notifyNum_; }
+    inline u32 GetNotifyNum() const { return notifyNum_; }
 #endif
 private:
     static HcclResult
