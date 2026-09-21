@@ -23,6 +23,9 @@
 #include "hal.h"
 #include "hal.h"
 
+extern "C" int load_dcmi();
+extern "C" void reinit();
+
 /**
  * @brief 将32字符十六进制字符串转为16字节二进制数组
  * @param hex_str  输入：32位十六进制字符串（必须以'\0'结尾）
@@ -274,11 +277,17 @@ TEST_F(TopoAddrInfoTest, ut_rootinfo_for_pod)
     free(buf);
 }
 
+static int g_mock_dcmi_init_ret = 0;
+static int g_mock_dcmi_init_calls = 0;
+/**
+ * @brief 模拟dcmi_init函数，返回值由g_mock_dcmi_init_ret指定
+ */
 int mock_dcmi_init()
 {
     // 模拟初始化耗时
     sleep(1);
-    return 0;
+    g_mock_dcmi_init_calls++;
+    return g_mock_dcmi_init_ret;
 }
 
 int mock_dcmiv2_get_mainboard_id(int npu_id, unsigned int* mainboard_id)
@@ -981,4 +990,32 @@ TEST_F(TopoAddrInfoTest, ut_rootinfo_for_serv_550EL_200)
     EXPECT_TRUE(strstr(buf, "000000000f3f020000100000df07abf9") != NULL);
     EXPECT_TRUE(strstr(buf, "000000000f7f020000100000df07bbf9") != NULL);
     free(buf);
+}
+
+TEST_F(TopoAddrInfoTest, ut_init)
+{
+    MOCKER(hal_dlopen).stubs().with(mockcpp::any(), mockcpp::any()).will(invoke(mock_dlopen));
+    MOCKER(hal_dlsym).stubs().with(mockcpp::any(), mockcpp::any()).will(invoke(mock_dlsym));
+    g_mock_dcmi_init_ret = 0;
+    int ret = load_dcmi();
+    EXPECT_TRUE(ret == 0); // check already initialized
+
+    // 场景1： 重新初始化
+    reinit();
+    ret = load_dcmi();
+    EXPECT_TRUE(ret == 0);
+
+    // 场景2： 初始化失败
+    reinit();
+    g_mock_dcmi_init_ret = -1;
+    g_mock_dcmi_init_calls = 0; // 重置调用次数
+    ret = load_dcmi();
+    EXPECT_TRUE(ret == -1);
+    // 重置返回值
+    g_mock_dcmi_init_ret = 0;
+    // 再次load成功
+    ret = load_dcmi();
+    EXPECT_TRUE(ret == 0);
+    // 验证dcmi_init被调用2次, 而非缓存
+    EXPECT_EQ(g_mock_dcmi_init_calls, 2);
 }

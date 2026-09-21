@@ -46,6 +46,12 @@
 #define INFO_TYPE_CHASSI_ID (48)
 #define INFO_TYPE_SPOD_TYPE (49)
 
+#ifdef OPEN_HCCL_TEST
+#define STATIC
+#else
+#define STATIC static
+#endif
+
 enum dcmi_main_cmd {
     DCMI_MAIN_CMD_DVPP = 0,
     DCMI_MAIN_CMD_ISP,
@@ -96,12 +102,35 @@ void* hal_dlopen(const char* filename, int flag) { return dlopen(filename, flag)
 
 void* hal_dlsym(void* handle, const char* symbol) { return dlsym(handle, symbol); }
 
-int load_dcmi()
+// 测试代码,用于UT测试
+#ifdef OPEN_HCCL_TEST
+static void* dcmi = NULL;
+static void* acl = NULL;
+static int isInit = HAL_FALSE;
+/**
+ * @brief 重置文件级 static 变量，用于UT打桩，不涉及多线程执行
+ */
+void reinit()
+{
+    dcmi = NULL;
+    acl = NULL;
+    isInit = HAL_FALSE;
+}
+#endif
+
+/**
+ * @brief 加载dcmi库, 添加constructor 确保在其他库加载前加载.
+ *  加载过程会调用系统命令判断容器和虚机,该判断过程不能在通信初始阶段完成,因此提前初始化
+ * @return int 0:成功 -1:失败
+ */
+__attribute__((constructor)) STATIC int load_dcmi()
 {
     static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+#ifndef OPEN_HCCL_TEST
     static void* dcmi = NULL;
     static void* acl = NULL;
     static int isInit = HAL_FALSE;
+#endif
     pthread_mutex_lock(&mutex);
     if (dcmi != NULL && acl != NULL && isInit == HAL_TRUE) {
         pthread_mutex_unlock(&mutex);
@@ -136,10 +165,14 @@ int load_dcmi()
         pthread_mutex_unlock(&mutex);
         return -1;
     }
-    (void)dcmi_init(); //  dcmi_init可能已经调用过了
-    isInit = HAL_TRUE;
+    int ret = dcmi_init();
+    if (ret == 0) {
+        isInit = HAL_TRUE;
+    } else {
+        TOPO_ERR("Init driver failed %d", ret);
+    }
     pthread_mutex_unlock(&mutex);
-    return 0;
+    return (ret == 0) ? 0 : -1;
 }
 
 int hal_get_mainboard_id(int phyId, unsigned int* mainboardId)
