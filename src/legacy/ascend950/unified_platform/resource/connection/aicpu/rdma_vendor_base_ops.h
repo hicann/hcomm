@@ -13,7 +13,6 @@
 
 #include "cast_utils.h"
 #include <chrono>
-#include <cstddef>
 #include <cstdint>
 #include <vector>
 #include <securec.h>

@@ -1263,11 +1263,11 @@ HcclResult AicpuTaskCacheEntry::ReportDbSqeProfiling_(
         case TaskParamTypeVal::TASK_UB_INLINE_WRITE:
         case TaskParamTypeVal::TASK_UB:
         case TaskParamTypeVal::TASK_WRITE_WITH_NOTIFY:
-            CHK_RET(FillSlotUbDma_(slot, dbSqePtr, it->second, ubTransportLitePtr, streamLite, taskId));
+            CHK_RET(FillSlotUbDma_(slot, it->second, ubTransportLitePtr, streamLite, taskId));
             break;
         case TaskParamTypeVal::TASK_UB_REDUCE_INLINE:
         case TaskParamTypeVal::TASK_WRITE_REDUCE_WITH_NOTIFY:
-            CHK_RET(FillSlotReduce_(slot, dbSqePtr, it->second, ubTransportLitePtr, streamLite, taskId));
+            CHK_RET(FillSlotReduce_(slot, it->second, ubTransportLitePtr, streamLite, taskId));
             break;
         default:
             HCCL_ERROR(
@@ -1331,7 +1331,7 @@ inline u8 AicpuTaskCacheEntry::ConvertSdmaOpCodeToReduceOp_(uint8_t opcode) cons
 }
 
 inline HcclResult AicpuTaskCacheEntry::FillSlotUbDma_(
-    Hccl::DfxTaskInfo* slot, const uint8_t* sqePtr, const DbSqeProfAndRefreshInfo& profAndRefreshInfo,
+    Hccl::DfxTaskInfo* slot, const DbSqeProfAndRefreshInfo& profAndRefreshInfo,
     UbTransportLiteImpl* ubTransportLiteImplPtr, StreamLite* streamLite, u32 taskId) const
 {
     const DbSqeProfInfo& profInfo = profAndRefreshInfo.dbSqeProfInfo;
@@ -1339,7 +1339,6 @@ inline HcclResult AicpuTaskCacheEntry::FillSlotUbDma_(
     FillSlotCommonFields_(
         slot, streamLite, taskId, GetUbLinkTypeVal_(ubTransportLiteImplPtr),
         static_cast<u8>(Hccl::DfxTransportType::DFX_TRANSPORT_TYPE_UB), ReinterpretAs<u64>(ubTransportLiteImplPtr));
-    slot->taskPara.ubDma.sqeAddr = ReinterpretAs<u64>(sqePtr);
     slot->taskPara.ubDma.srcAddr = profInfo.locAddr;
     slot->taskPara.ubDma.dstAddr = profInfo.rmtAddr;
     slot->taskPara.ubDma.size = profInfo.size;
@@ -1352,7 +1351,7 @@ inline HcclResult AicpuTaskCacheEntry::FillSlotUbDma_(
 }
 
 inline HcclResult AicpuTaskCacheEntry::FillSlotReduce_(
-    Hccl::DfxTaskInfo* slot, const uint8_t* sqePtr, const DbSqeProfAndRefreshInfo& profAndRefreshInfo,
+    Hccl::DfxTaskInfo* slot, const DbSqeProfAndRefreshInfo& profAndRefreshInfo,
     UbTransportLiteImpl* ubTransportLiteImplPtr, StreamLite* streamLite, u32 taskId) const
 {
     const DbSqeProfInfo& profInfo = profAndRefreshInfo.dbSqeProfInfo;
@@ -1360,7 +1359,6 @@ inline HcclResult AicpuTaskCacheEntry::FillSlotReduce_(
     FillSlotCommonFields_(
         slot, streamLite, taskId, GetUbLinkTypeVal_(ubTransportLiteImplPtr),
         static_cast<u8>(Hccl::DfxTransportType::DFX_TRANSPORT_TYPE_UB), ReinterpretAs<u64>(ubTransportLiteImplPtr));
-    slot->taskPara.Reduce.sqeAddr = ReinterpretAs<u64>(sqePtr);
     slot->taskPara.Reduce.srcAddr = profInfo.locAddr;
     slot->taskPara.Reduce.dstAddr = profInfo.rmtAddr;
     slot->taskPara.Reduce.size = profInfo.size;
@@ -1421,7 +1419,9 @@ inline HcclResult AicpuTaskCacheEntry::FillSlotNotify_(
     FillSlotCommonFields_(
         slot, streamLite, taskId, Hccl::DfxLinkTypeVal::LINK_ONCHIP,
         static_cast<u8>(Hccl::DfxTransportType::DFX_TRANSPORT_TYPE_LOCAL), DFX_INVALID_U64);
-    slot->taskPara.Notify.sqeAddr = ReinterpretAs<u64>(sqePtr);
+    const Hccl::Rt91095StarsNotifySqe* notifySqe
+        = static_cast<const Hccl::Rt91095StarsNotifySqe*>(static_cast<const void*>(sqePtr));
+    slot->taskPara.Notify.notifyId = notifySqe->notifyId;
     PLF_CONFIG_INFO(PLF_TASK, "[%s] %s", __func__, slot->Describe().c_str());
     return HCCL_SUCCESS;
 }
@@ -1434,13 +1434,17 @@ inline HcclResult AicpuTaskCacheEntry::FillSlotSdma_(
     FillSlotCommonFields_(
         slot, streamLite, taskId, Hccl::DfxLinkTypeVal::LINK_ONCHIP,
         static_cast<u8>(Hccl::DfxTransportType::DFX_TRANSPORT_TYPE_LOCAL), DFX_INVALID_U64);
+    constexpr uint32_t UINT32_BIT_WIDTH = 32;
     if (sdmaSqe->opcode == SDMA_OPCODE_MEMCPY) {
         slot->taskType = static_cast<u8>(Hccl::TaskParamTypeVal::TASK_SDMA);
-        slot->taskPara.Dma.sqeAddr = ReinterpretAs<u64>(sqePtr);
+        slot->taskPara.Dma.srcAddr = (static_cast<uint64_t>(sdmaSqe->u.strideMode0.srcAddrHigh) << UINT32_BIT_WIDTH)
+                                     | sdmaSqe->u.strideMode0.srcAddrLow;
+        slot->taskPara.Dma.dstAddr = (static_cast<uint64_t>(sdmaSqe->u.strideMode0.dstAddrHigh) << UINT32_BIT_WIDTH)
+                                     | sdmaSqe->u.strideMode0.dstAddrLow;
+        slot->taskPara.Dma.size = sdmaSqe->u.strideMode0.lengthMove;
+        slot->taskPara.Dma.notifyId = INVALID_U32;
     } else {
-        constexpr uint32_t UINT32_BIT_WIDTH = 32;
         slot->taskType = static_cast<u8>(Hccl::TaskParamTypeVal::TASK_REDUCE_INLINE);
-        slot->taskPara.Reduce.sqeAddr = ReinterpretAs<u64>(sqePtr);
         slot->taskPara.Reduce.srcAddr = (static_cast<uint64_t>(sdmaSqe->u.strideMode0.srcAddrHigh) << UINT32_BIT_WIDTH)
                                         | sdmaSqe->u.strideMode0.srcAddrLow;
         slot->taskPara.Reduce.dstAddr = (static_cast<uint64_t>(sdmaSqe->u.strideMode0.dstAddrHigh) << UINT32_BIT_WIDTH)
