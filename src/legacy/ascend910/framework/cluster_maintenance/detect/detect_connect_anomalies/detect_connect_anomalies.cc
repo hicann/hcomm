@@ -144,14 +144,12 @@ std::string DetectConnectionAnomalies::BuildGroupedDetectMessage()
             std::sort(devices.begin(), devices.end());
             devices.erase(std::unique(devices.begin(), devices.end()), devices.end());
             std::ostringstream deviceList;
-            deviceList << "[";
             for (size_t i = 0; i < devices.size(); ++i) {
                 if (i != 0) {
                     deviceList << ",";
                 }
                 deviceList << devices[i];
             }
-            deviceList << "]";
             if (!firstMsg) {
                 result << "\n";
             }

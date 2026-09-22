@@ -497,8 +497,8 @@ void RankConsistentcyChecker::ReportCommonError(
         }
     }
     RPT_INPUT_ERR(
-        true, "EI0005", std::vector<std::string>({"ccl_op", "group", "para_name", "local_para", "remote_para"}),
-        std::vector<std::string>({opInfo, hcclCMDInfo.group, paraName, localParaStr, remoteParaStr}));
+        true, "EI0005", std::vector<std::string>({"ccl_op", "para_name", "local_para", "remote_para"}),
+        std::vector<std::string>({opInfo, paraName, localParaStr, remoteParaStr}));
     HCCL_ERROR(
         "[%s][%s]%s %s check fail. local[%s], remote[%s]", LOG_KEYWORDS_INIT_CHANNEL.c_str(),
         LOG_KEYWORDS_PARAMETER_CONFLICT.c_str(), errorMsg.c_str(), paraName.c_str(), localParaStr.c_str(),
