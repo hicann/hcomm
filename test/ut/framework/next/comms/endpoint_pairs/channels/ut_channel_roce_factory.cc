@@ -25,6 +25,7 @@
 #include "hcomm_channel.h"
 #include "endpoint.h"
 #include "tp_manager.h"
+#include "plf_debug_config.h"
 
 using namespace hcomm;
 
@@ -261,6 +262,8 @@ public:
     HcclResult Write(void*, const void*, uint64_t) override { return HCCL_E_NOT_SUPPORT; }
     HcclResult Read(void*, const void*, uint64_t) override { return HCCL_E_NOT_SUPPORT; }
     HcclResult ChannelFence() override { return HCCL_E_NOT_SUPPORT; }
+
+    Hccl::TransportStatus GetLastTransportStatus() const { return lastTransportStatus_; }
 };
 } // namespace
 
@@ -289,25 +292,92 @@ TEST_F(UtChannelRoceFactory, TransportStatusToChannelStatus_AllStates_Returns_Ma
     ASSERT_EQ(inet_pton(AF_INET, "10.20.30.2", &channelDesc.remoteEndpoint.commAddr.addr), 1);
     channelDesc.channelName = "ut-socket-tag";
 
+    ChannelDefaultsTestDouble ch;
     EXPECT_EQ(
-        Channel::TransportStatusToChannelStatus(Hccl::TransportStatus::INIT, localEp, channelDesc),
-        ChannelStatus::INIT);
+        ch.TransportStatusToChannelStatus(Hccl::TransportStatus::INIT, localEp, channelDesc), ChannelStatus::INIT);
     EXPECT_EQ(
-        Channel::TransportStatusToChannelStatus(Hccl::TransportStatus::SOCKET_OK, localEp, channelDesc),
+        ch.TransportStatusToChannelStatus(Hccl::TransportStatus::SOCKET_OK, localEp, channelDesc),
         ChannelStatus::SOCKET_OK);
     EXPECT_EQ(
-        Channel::TransportStatusToChannelStatus(Hccl::TransportStatus::SOCKET_TIMEOUT, localEp, channelDesc),
+        ch.TransportStatusToChannelStatus(Hccl::TransportStatus::SOCKET_TIMEOUT, localEp, channelDesc),
         ChannelStatus::SOCKET_TIMEOUT);
     EXPECT_EQ(
-        Channel::TransportStatusToChannelStatus(Hccl::TransportStatus::READY, localEp, channelDesc),
-        ChannelStatus::READY);
+        ch.TransportStatusToChannelStatus(Hccl::TransportStatus::READY, localEp, channelDesc), ChannelStatus::READY);
 }
 
 TEST_F(UtChannelRoceFactory, TransportStatusToChannelStatus_InvalidStatus_Returns_FAILED)
 {
     EndpointDesc localEp{};
     HcommChannelDesc channelDesc{};
+    ChannelDefaultsTestDouble ch;
     EXPECT_EQ(
-        Channel::TransportStatusToChannelStatus(Hccl::TransportStatus::INVALID, localEp, channelDesc),
-        ChannelStatus::FAILED);
+        ch.TransportStatusToChannelStatus(Hccl::TransportStatus::INVALID, localEp, channelDesc), ChannelStatus::FAILED);
+}
+
+TEST_F(UtChannelRoceFactory, TransportStatusToChannelStatus_SameTs_Dedup)
+{
+    EndpointDesc localEp{};
+    localEp.commAddr.type = COMM_ADDR_TYPE_IP_V4;
+    ASSERT_EQ(inet_pton(AF_INET, "10.20.30.1", &localEp.commAddr.addr), 1);
+
+    HcommChannelDesc channelDesc{};
+    channelDesc.remoteEndpoint.commAddr.type = COMM_ADDR_TYPE_IP_V4;
+    ASSERT_EQ(inet_pton(AF_INET, "10.20.30.2", &channelDesc.remoteEndpoint.commAddr.addr), 1);
+    channelDesc.channelName = "ut-socket-tag";
+
+    ChannelDefaultsTestDouble ch;
+
+    // 初始态为 __COUNT__，首个 INIT 会触发更新
+    EXPECT_EQ(
+        ch.TransportStatusToChannelStatus(Hccl::TransportStatus::INIT, localEp, channelDesc), ChannelStatus::INIT);
+    EXPECT_EQ(ch.GetLastTransportStatus(), Hccl::TransportStatus::INIT);
+
+    // 相同 ts 再次调用 → lastTransportStatus_ 不变（去重生效）
+    EXPECT_EQ(
+        ch.TransportStatusToChannelStatus(Hccl::TransportStatus::INIT, localEp, channelDesc), ChannelStatus::INIT);
+    EXPECT_EQ(ch.GetLastTransportStatus(), Hccl::TransportStatus::INIT);
+
+    // ts 变化 → lastTransportStatus_ 更新
+    EXPECT_EQ(
+        ch.TransportStatusToChannelStatus(Hccl::TransportStatus::READY, localEp, channelDesc), ChannelStatus::READY);
+    EXPECT_EQ(ch.GetLastTransportStatus(), Hccl::TransportStatus::READY);
+
+    // 相同 ts 再次调用 → 再次去重
+    EXPECT_EQ(
+        ch.TransportStatusToChannelStatus(Hccl::TransportStatus::READY, localEp, channelDesc), ChannelStatus::READY);
+    EXPECT_EQ(ch.GetLastTransportStatus(), Hccl::TransportStatus::READY);
+}
+
+TEST_F(UtChannelRoceFactory, TransportStatusToChannelStatus_SameTs_Dedup_PlfChannel_Enabled)
+{
+    EndpointDesc localEp{};
+    localEp.commAddr.type = COMM_ADDR_TYPE_IP_V4;
+    ASSERT_EQ(inet_pton(AF_INET, "10.20.30.1", &localEp.commAddr.addr), 1);
+
+    HcommChannelDesc channelDesc{};
+    channelDesc.remoteEndpoint.commAddr.type = COMM_ADDR_TYPE_IP_V4;
+    ASSERT_EQ(inet_pton(AF_INET, "10.20.30.2", &channelDesc.remoteEndpoint.commAddr.addr), 1);
+    channelDesc.channelName = "ut-socket-tag";
+
+    ChannelDefaultsTestDouble ch;
+
+    u64 savedPlfConfig = Hccl::GetPlfDebugConfigValue();
+    Hccl::SetPlfDebugConfigValue(savedPlfConfig | Hccl::PLF_CHANNEL);
+
+    // 初始态为 __COUNT__，首个 INIT 会触发更新（PLF_CHANNEL 门控开启时也打印 PLF 日志）
+    EXPECT_EQ(
+        ch.TransportStatusToChannelStatus(Hccl::TransportStatus::INIT, localEp, channelDesc), ChannelStatus::INIT);
+    EXPECT_EQ(ch.GetLastTransportStatus(), Hccl::TransportStatus::INIT);
+
+    // 相同 ts 再次调用 → lastTransportStatus_ 不变（去重生效，不重复打印 PLF 日志）
+    EXPECT_EQ(
+        ch.TransportStatusToChannelStatus(Hccl::TransportStatus::INIT, localEp, channelDesc), ChannelStatus::INIT);
+    EXPECT_EQ(ch.GetLastTransportStatus(), Hccl::TransportStatus::INIT);
+
+    // ts 变化 → lastTransportStatus_ 更新
+    EXPECT_EQ(
+        ch.TransportStatusToChannelStatus(Hccl::TransportStatus::READY, localEp, channelDesc), ChannelStatus::READY);
+    EXPECT_EQ(ch.GetLastTransportStatus(), Hccl::TransportStatus::READY);
+
+    Hccl::SetPlfDebugConfigValue(savedPlfConfig);
 }
