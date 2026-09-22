@@ -177,7 +177,7 @@ HcommResult HcommThreadFree(const ThreadHandle* threads, uint32_t threadNum)
     return hccl::FreeThreads(threads, threadNum, HcommResMgr::GetBinHandle());
 }
 
-HcommResult HcommThreadAllocWithStream(CommEngine engine, rtStream_t stream, uint32_t notifyNum, ThreadHandle* thread)
+HcommResult HcommThreadAllocWithStream(CommEngine engine, aclrtStream stream, uint32_t notifyNum, ThreadHandle* thread)
 {
     CHK_PTR_NULL(thread);
 

@@ -19,16 +19,6 @@ extern "C" {
 #endif // __cplusplus
 
 /**
- * @brief 基于已有 rtStream 分配单个通信线程，写入统一映射表并返回句柄
- * @param[in] engine 通信引擎类型（如 COMM_ENGINE_CPU_TS）
- * @param[in] stream 已有的 rtStream 句柄
- * @param[in] notifyNum 该线程所需的 notify 资源数量
- * @param[out] thread 输出的线程句柄，失败时不会被修改
- * @return HcommResult 成功返回 HCCL_SUCCESS，失败返回对应错误码
- */
-HcommResult HcommThreadAllocWithStream(CommEngine engine, rtStream_t stream, uint32_t notifyNum, ThreadHandle* thread);
-
-/**
  * @brief 批量补充线程 notify 资源；线程所属引擎类型由 handles 中句柄内部记录确定，
  *        仅 AICPU 引擎线程额外触发 device 侧批量 kernel launch。
  *        契约：单次调用所有线程须属同一引擎，混传不同引擎线程返回错误码
