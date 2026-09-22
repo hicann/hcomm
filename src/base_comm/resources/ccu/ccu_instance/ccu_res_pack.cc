@@ -17,7 +17,7 @@ namespace hcomm {
 
 CcuResPack::~CcuResPack()
 {
-    if (resHandle_ == 0) {
+    if (resHandle_ == nullptr) {
         return;
     }
 
@@ -25,7 +25,7 @@ CcuResPack::~CcuResPack()
     if (ret != HcclResult::HCCL_SUCCESS) {
         HCCL_ERROR("[CcuResPack][%s] failed, resHandle[%p] devLogicId[%d].", __func__, resHandle_, devLogicId_);
     }
-    resHandle_ = 0;
+    resHandle_ = nullptr;
 }
 
 CcuResult CcuResPack::Reset()

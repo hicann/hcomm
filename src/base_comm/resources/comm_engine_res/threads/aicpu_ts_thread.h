@@ -59,7 +59,7 @@ public:
         void* dst, const void* src, uint64_t size, HcommDataType dataType, HcommReduceOp reduceOp) const override;
 
     // Non-override functions
-    HcclResult GetSqHeadAndTail(uint32_t& sqHead, uint32_t& sqTail);
+    HcclResult GetSqHeadAndTail(uint32_t& sqHead, uint32_t& sqTail) const;
     bool GetMaster() const override;
     void SetIsMaster(bool isMaster) override;
 

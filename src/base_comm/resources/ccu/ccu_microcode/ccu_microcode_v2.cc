@@ -569,8 +569,8 @@ namespace CcuRep {
 
         // MSA~MSH Reduce到 MSA
         inline void Reduce(
-            CcuInstr* instr, const uint16_t* ms, uint16_t count, uint16_t castEn, uint16_t dataType, uint16_t setCKEId,
-            uint16_t setCKEMask, uint16_t xnIdLength)
+            CcuInstr* instr, const uint16_t (&ms)[CCU_REDUCE_MAX_MS], uint16_t count, uint16_t castEn,
+            uint16_t dataType, uint16_t setCKEId, uint16_t setCKEMask, uint16_t xnIdLength)
         {
             // 由调用者保证传入的count >= 2(reduce的数据源)
             if (count < CCU_REDUCE_MIN_MS) {
@@ -591,8 +591,8 @@ namespace CcuRep {
         }
 
         void ReduceAdd(
-            CcuInstr* instr, const uint16_t* ms, uint16_t count, uint16_t castEn, uint16_t dataType, uint16_t setCKEId,
-            uint16_t setCKEMask, uint16_t XnIdLength)
+            CcuInstr* instr, const uint16_t (&ms)[CCU_REDUCE_MAX_MS], uint16_t count, uint16_t castEn,
+            uint16_t dataType, uint16_t setCKEId, uint16_t setCKEMask, uint16_t XnIdLength)
         {
             if (instr == nullptr) {
                 HCCL_ERROR("[CcuV2::ReduceAdd] instr is nullptr!");
@@ -603,8 +603,8 @@ namespace CcuRep {
         }
 
         void ReduceMax(
-            CcuInstr* instr, const uint16_t* ms, uint16_t count, uint16_t dataType, uint16_t setCKEId,
-            uint16_t setCKEMask, uint16_t XnIdLength)
+            CcuInstr* instr, const uint16_t (&ms)[CCU_REDUCE_MAX_MS], uint16_t count, uint16_t dataType,
+            uint16_t setCKEId, uint16_t setCKEMask, uint16_t XnIdLength)
         {
             if (instr == nullptr) {
                 HCCL_ERROR("[CcuV2::ReduceMax] instr is nullptr!");
@@ -615,8 +615,8 @@ namespace CcuRep {
         }
 
         void ReduceMin(
-            CcuInstr* instr, const uint16_t* ms, uint16_t count, uint16_t dataType, uint16_t setCKEId,
-            uint16_t setCKEMask, uint16_t XnIdLength)
+            CcuInstr* instr, const uint16_t (&ms)[CCU_REDUCE_MAX_MS], uint16_t count, uint16_t dataType,
+            uint16_t setCKEId, uint16_t setCKEMask, uint16_t XnIdLength)
         {
             if (instr == nullptr) {
                 HCCL_ERROR("[CcuV2::ReduceMin] instr is nullptr!");

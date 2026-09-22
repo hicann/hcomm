@@ -130,7 +130,7 @@ public:
         std::vector<NotifyHandle>& aicpuNotifys, uint32_t notifyNum, const std::string& commId,
         aclrtBinHandle binCustomHandle);
     static HcclResult KernelLaunchAicpuCustom(
-        uint64_t context, std::string kernelName, rtStream_t aicpuInitStream, aclrtBinHandle binCustomHandle);
+        uint64_t context, const std::string& kernelName, rtStream_t aicpuInitStream, aclrtBinHandle binCustomHandle);
 
 private:
     HcclResult AiCpuStreamAllocAndGet(rtStream_t& aiCpuStream);

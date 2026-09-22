@@ -227,7 +227,7 @@ TpMgr& TpMgr::GetInstance(const uint32_t devicePhyId)
         devPhyId = MAX_MODULE_DEVICE_NUM;
     }
 
-    tpMgr[devPhyId].devPhyId_ = devPhyId;
+    tpMgr[devPhyId].devPhyId_.store(devPhyId, std::memory_order_relaxed);
 
     return tpMgr[devPhyId];
 }
@@ -306,7 +306,8 @@ HcclResult TpMgr::BeginGetTpInfoListRequest(const GetTpInfoParam& param, ReqQosM
     HCCL_INFO(
         "[TpMgr][GetTpInfo] RaGetTpInfoListAsync submitted, devPhyId[%u] reqHandle[%llu] phase[WAIT_LIST] "
         "param[%s].",
-        devPhyId_, static_cast<unsigned long long>(reqCtx.handle), param.Describe().c_str());
+        devPhyId_.load(std::memory_order_relaxed), static_cast<unsigned long long>(reqCtx.handle),
+        param.Describe().c_str());
     return HcclResult::HCCL_E_AGAIN;
 }
 
@@ -322,14 +323,14 @@ HcclResult TpMgr::AdvanceGetTpInfoWaitList(
         return HcclResult::HCCL_E_NOT_FOUND;
     }
     bool isPcieStd = false;
-    CHK_RET(IsPcieStdMainboardByPhyId(devPhyId_, isPcieStd));
+    CHK_RET(IsPcieStdMainboardByPhyId(devPhyId_.load(std::memory_order_relaxed), isPcieStd));
     if (isPcieStd) {
         const struct HccpTpInfo* list = reinterpret_cast<const struct HccpTpInfo*>(reqCtx.dataBuffer.data());
         HCCL_INFO(
             "[TpMgr][%s] pcie std mainboard: skip GetTpAttr, devPhyId[%u] tpInfoNum[%u] mappedSl[%u] "
             "tpHandle[%llu] param[%s].",
-            __func__, devPhyId_, reqCtx.tpInfoNum, kPcieStdMappedSl, static_cast<unsigned long long>(list[0].tpHandle),
-            param.Describe().c_str());
+            __func__, devPhyId_.load(std::memory_order_relaxed), reqCtx.tpInfoNum, kPcieStdMappedSl,
+            static_cast<unsigned long long>(list[0].tpHandle), param.Describe().c_str());
         RequestCtx completedReqCtx = std::move(it->second);
         qosMap.erase(it);
         reqCtxLock.unlock();
@@ -338,8 +339,9 @@ HcclResult TpMgr::AdvanceGetTpInfoWaitList(
     }
     const struct HccpTpInfo* list = reinterpret_cast<const struct HccpTpInfo*>(reqCtx.dataBuffer.data());
     HCCL_INFO(
-        "[TpMgr][GetTpInfo] list stage ok, devPhyId[%u] tpInfoNum[%u] firstTpHandle[%llu] param[%s].", devPhyId_,
-        reqCtx.tpInfoNum, static_cast<unsigned long long>(list[0].tpHandle), param.Describe().c_str());
+        "[TpMgr][GetTpInfo] list stage ok, devPhyId[%u] tpInfoNum[%u] firstTpHandle[%llu] param[%s].",
+        devPhyId_.load(std::memory_order_relaxed), reqCtx.tpInfoNum, static_cast<unsigned long long>(list[0].tpHandle),
+        param.Describe().c_str());
     try {
         CHK_RET(StartGetTpAttrForFirstTp(param, reqCtx));
     } catch (...) {
@@ -349,7 +351,8 @@ HcclResult TpMgr::AdvanceGetTpInfoWaitList(
     HCCL_INFO(
         "[TpMgr][GetTpInfo] RaGetTpAttrAsync submitted, devPhyId[%u] reqHandle[%llu] phase[WAIT_TP_ATTR] "
         "tpAttrBitmap[0x%x] param[%s].",
-        devPhyId_, static_cast<unsigned long long>(reqCtx.handle), reqCtx.tpAttrBitmap, param.Describe().c_str());
+        devPhyId_.load(std::memory_order_relaxed), static_cast<unsigned long long>(reqCtx.handle), reqCtx.tpAttrBitmap,
+        param.Describe().c_str());
     return HcclResult::HCCL_E_AGAIN;
 }
 
@@ -492,8 +495,8 @@ HcclResult TpMgr::StartGetTpInfoListRequest(const GetTpInfoParam& param, Request
 
     Hccl::IpAddress ipAddr{};
     CHK_RET(CommAddrToIpAddress(param.locAddr, ipAddr));
-    const CtxHandle ctxHandle
-        = static_cast<CtxHandle>(Hccl::RdmaHandleManager::GetInstance().GetByIp(devPhyId_, ipAddr));
+    const CtxHandle ctxHandle = static_cast<CtxHandle>(
+        Hccl::RdmaHandleManager::GetInstance().GetByIp(devPhyId_.load(std::memory_order_relaxed), ipAddr));
     CHK_PTR_NULL(ctxHandle);
 
     CHK_RET(GetTpInfoListAsync(ctxHandle, param, reqCtx.dataBuffer, reqCtx.tpInfoNum, reqCtx.handle));
@@ -514,8 +517,8 @@ HcclResult TpMgr::StartGetTpAttrForFirstTp(const GetTpInfoParam& param, RequestC
 
     Hccl::IpAddress ipAddr{};
     CHK_RET(CommAddrToIpAddress(param.locAddr, ipAddr));
-    const CtxHandle ctxHandle
-        = static_cast<CtxHandle>(Hccl::RdmaHandleManager::GetInstance().GetByIp(devPhyId_, ipAddr));
+    const CtxHandle ctxHandle = static_cast<CtxHandle>(
+        Hccl::RdmaHandleManager::GetInstance().GetByIp(devPhyId_.load(std::memory_order_relaxed), ipAddr));
     CHK_PTR_NULL(ctxHandle);
 
     void* raReqHandle = nullptr;
@@ -725,15 +728,16 @@ HcclResult TpMgr::BuildTpInfoAndCommitQosAttr(
     tpInfo.hasMappedJettyPriority = true;
 
     bool isPcieStd = false;
-    CHK_RET(IsPcieStdMainboardByPhyId(devPhyId_, isPcieStd));
+    CHK_RET(IsPcieStdMainboardByPhyId(devPhyId_.load(std::memory_order_relaxed), isPcieStd));
     if (isPcieStd) {
         HCCL_INFO(
             "[TpMgr][%s] pcie std mainboard: skip SetTpAttr, devPhyId[%u] tpProtocol[%s] tpHandle[%llu] "
             "param[%s].",
-            __func__, devPhyId_, param.tpProtocol.Describe().c_str(), static_cast<unsigned long long>(tpInfo.tpHandle),
-            param.Describe().c_str());
+            __func__, devPhyId_.load(std::memory_order_relaxed), param.tpProtocol.Describe().c_str(),
+            static_cast<unsigned long long>(tpInfo.tpHandle), param.Describe().c_str());
     } else if (param.tpProtocol == TpProtocol::RTP || param.tpProtocol == TpProtocol::UBOE) {
-        CHK_RET(CommitMappedSlToTpAttr(devPhyId_, param.locAddr, tpInfo.tpHandle, mappedSl));
+        CHK_RET(CommitMappedSlToTpAttr(
+            devPhyId_.load(std::memory_order_relaxed), param.locAddr, tpInfo.tpHandle, mappedSl));
     }
     if (!isPcieStd && param.tpProtocol == TpProtocol::UBOE && reqCtx.tpAttr.dscpConfigMode == 0) {
         const uint8_t dscpBefore = static_cast<uint8_t>(reqCtx.tpAttr.dscp & 0x3FU);
@@ -741,8 +745,9 @@ HcclResult TpMgr::BuildTpInfoAndCommitQosAttr(
         const uint16_t slMask = ReadSlAvailableMask16(reqCtx.tpAttr);
         const uint8_t dscpLookupQos = ResolveUboeDscpLookupQos(param, reqCtx.tpInfoNum, slMask);
         uint8_t dscp = Hccl::kUboeDefaultDscp;
-        (void)Hccl::TpQosGetDscpByQosFromHccnCfg(devPhyId_, dscpLookupQos, dscp);
-        CHK_RET(CommitUboeDscpToTpAttr(devPhyId_, param.locAddr, tpInfo.tpHandle, dscp));
+        (void)Hccl::TpQosGetDscpByQosFromHccnCfg(devPhyId_.load(std::memory_order_relaxed), dscpLookupQos, dscp);
+        CHK_RET(
+            CommitUboeDscpToTpAttr(devPhyId_.load(std::memory_order_relaxed), param.locAddr, tpInfo.tpHandle, dscp));
         HCCL_INFO(
             "[TpMgr][%s] UBOE dscp updated: tpHandle[%llu] requestQos[%u] dscpLookupQos[%u] dscpBefore[%u] "
             "dscpAfter[%u].",
@@ -799,7 +804,7 @@ HcclResult TpMgr::HandleCompletedRequest(RequestCtx reqCtx, const GetTpInfoParam
 
     const struct HccpTpInfo* baseInfoPtr = reinterpret_cast<const struct HccpTpInfo*>(reqCtx.dataBuffer.data());
     bool isPcieStd = false;
-    CHK_RET(IsPcieStdMainboardByPhyId(devPhyId_, isPcieStd));
+    CHK_RET(IsPcieStdMainboardByPhyId(devPhyId_.load(std::memory_order_relaxed), isPcieStd));
     if (isPcieStd) {
         tpInfo.tpHandle = baseInfoPtr[0].tpHandle;
         tpInfo.mappedJettyPriority = kPcieStdMappedSl;
@@ -807,8 +812,8 @@ HcclResult TpMgr::HandleCompletedRequest(RequestCtx reqCtx, const GetTpInfoParam
         HCCL_INFO(
             "[TpMgr][%s] pcie std mainboard: skip GetTpAttr/SetTpAttr, devPhyId[%u] tpInfoNum[%u] "
             "mappedSl[%u] tpHandle[%llu] param[%s].",
-            __func__, devPhyId_, tpInfoNum, kPcieStdMappedSl, static_cast<unsigned long long>(tpInfo.tpHandle),
-            param.Describe().c_str());
+            __func__, devPhyId_.load(std::memory_order_relaxed), tpInfoNum, kPcieStdMappedSl,
+            static_cast<unsigned long long>(tpInfo.tpHandle), param.Describe().c_str());
         return CommitTpInfoToCache(param, tpInfo);
     }
 

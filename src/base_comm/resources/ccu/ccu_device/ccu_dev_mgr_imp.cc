@@ -547,12 +547,13 @@ HcclResult CcuDevMgrImp::AllocResHandle(const int32_t deviceLogicId, const CcuRe
     return ret;
 }
 
-HcclResult CcuDevMgrImp::ReleaseResHandle(const int32_t deviceLogicId, const CcuResHandle handle)
+HcclResult CcuDevMgrImp::ReleaseResHandle(const int32_t deviceLogicId, const CcuResHandle resHandle)
 {
     HcclResult ret;
     EXCEPTION_HANDLE_BEGIN
-    ret = CheckCcuOpenSourceEnable() ? CcuResBatchAllocator::GetInstance(deviceLogicId).ReleaseResHandle(handle) :
-                                       Hccl::CcuResBatchAllocator::GetInstance(deviceLogicId).ReleaseResHandle(handle);
+    ret = CheckCcuOpenSourceEnable() ?
+              CcuResBatchAllocator::GetInstance(deviceLogicId).ReleaseResHandle(resHandle) :
+              Hccl::CcuResBatchAllocator::GetInstance(deviceLogicId).ReleaseResHandle(resHandle);
     EXCEPTION_HANDLE_END
     return ret;
 }

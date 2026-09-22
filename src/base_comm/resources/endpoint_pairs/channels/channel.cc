@@ -138,7 +138,7 @@ ChannelStatus Channel::TransportStatusToChannelStatus(
 {
     const EndpointDesc& remoteEp = channelDesc.remoteEndpoint;
 
-    if (Hccl::GetPlfDebugConfigValue() & PLF_CHANNEL) {
+    if ((Hccl::GetPlfDebugConfigValue() & PLF_CHANNEL) != 0) {
         Hccl::IpAddress localAddr{};
         std::string localEid = "invalid";
         if (CommAddrToIpAddress(localEp.commAddr, localAddr) == HCCL_SUCCESS) {

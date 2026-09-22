@@ -459,7 +459,7 @@ HcclResult AicpuTsThread::DeviceInit()
     return HCCL_SUCCESS;
 }
 
-HcclResult AicpuTsThread::GetSqHeadAndTail([[maybe_unused]] uint32_t& sqHead, [[maybe_unused]] uint32_t& sqTail)
+HcclResult AicpuTsThread::GetSqHeadAndTail([[maybe_unused]] uint32_t& sqHead, [[maybe_unused]] uint32_t& sqTail) const
 {
 #ifdef CCL_KERNEL_AICPU
 
