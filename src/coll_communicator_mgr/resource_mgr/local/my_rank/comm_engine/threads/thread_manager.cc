@@ -10,7 +10,6 @@
 
 #include "thread_manager.h"
 #include <algorithm>
-#include <cstring>
 #include "hcomm_thread_c_adpt.h"
 #include "res_pub.h"
 #include "hcomm_c_adpt.h"
@@ -33,24 +32,34 @@ ThreadMgr::ThreadMgr(
 
 ThreadMgr::~ThreadMgr()
 {
+    // 按步骤释放，失败用返回值定位：单步失败不阻断后续清理
     // 1. 释放专用线程（AICPU_LAUNCH 类型），单句柄释放
     auto it = dedicatedThreadMap_.find(HCCL_DED_THREAD_TYPE_AICPU_LAUNCH);
     if (it != dedicatedThreadMap_.end()) {
         ThreadHandle thread = it->second;
-        HcommThreadFree(&thread, 1);
+        HcommResult ret = HcommThreadFree(&thread, 1);
+        if (ret != HCCL_SUCCESS) {
+            HCCL_ERROR(
+                "[~ThreadMgr] dedicated thread free failed, handle[%llu], ret[%d], commId[%s].", thread, ret,
+                commId_.c_str());
+        }
     }
-
-    // 线程对象由底层接口 HcommThreadFree 统一释放：这里若直接删，底层的全局线程表会残留句柄，造成泄漏
     // 2. 释放复用池线程（engineToThreadsMap_）
-    FreeEngineToThreads();
+    HcommResult engineRet = FreeEngineToThreads();
+    if (engineRet != HCCL_SUCCESS) {
+        HCCL_ERROR("[~ThreadMgr] FreeEngineToThreads incomplete, ret[%d], commId[%s].", engineRet, commId_.c_str());
+    }
     // 3. 释放主流线程（mainThread_）
-    FreeMainThreads();
-
+    HcommResult mainRet = FreeMainThreads();
+    if (mainRet != HCCL_SUCCESS) {
+        HCCL_ERROR("[~ThreadMgr] FreeMainThreads incomplete, ret[%d], commId[%s].", mainRet, commId_.c_str());
+    }
     HCCL_INFO("[~ThreadMgr] Hcom[%s] destroy done.", commId_.c_str());
 }
 
-void ThreadMgr::FreeEngineToThreads()
+HcommResult ThreadMgr::FreeEngineToThreads()
 {
+    HcommResult firstErr = HCCL_SUCCESS;
     std::lock_guard<std::mutex> lock(engineToThreadMutex_);
     for (auto& kv : engineToThreadsMap_) {
         auto& threadVec = kv.second;
@@ -72,13 +81,15 @@ void ThreadMgr::FreeEngineToThreads()
                 HCCL_ERROR(
                     "[~ThreadMgr] engineToThreads free failed, engine[%u] type[%d] ret[%d]",
                     static_cast<uint32_t>(kv.first.first), static_cast<int32_t>(kv.first.second), ret);
+                firstErr = (firstErr == HCCL_SUCCESS) ? ret : firstErr;
             }
         }
         threadVec.clear();
     }
+    return firstErr;
 }
 
-void ThreadMgr::FreeMainThreads()
+HcommResult ThreadMgr::FreeMainThreads()
 {
     // 释放主流线程（mainThread_：stream 到 ThreadMeta 的映射，HcclThreadAcquireWithStream 分配）
     std::lock_guard<std::mutex> lock(mainThreadMutex_);
@@ -89,13 +100,15 @@ void ThreadMgr::FreeMainThreads()
             handles.push_back(kv.second.handle);
         }
     }
+    HcommResult ret = HCCL_SUCCESS;
     if (!handles.empty()) {
-        HcommResult ret = HcommThreadFree(handles.data(), static_cast<uint32_t>(handles.size()));
+        ret = HcommThreadFree(handles.data(), static_cast<uint32_t>(handles.size()));
         if (ret != HCCL_SUCCESS) {
             HCCL_ERROR("[~ThreadMgr] mainThread free failed, ret[%d]", ret);
         }
     }
     mainThread_.clear();
+    return ret;
 }
 
 uint64_t ThreadMgr::GetMaxNotifyTotal()
@@ -243,7 +256,7 @@ HcclResult ThreadMgr::SupplementNotify(
     HcommResult ret = HcommThreadSupplementNotify(needSupplement.data(), existNum, supplementNums.data());
     CHK_PRT_RET(
         ret != HCCL_SUCCESS, HCCL_ERROR("[%s] HcommThreadSupplementNotify failed, ret[%d]", __func__, ret),
-        (HcclResult)ret);
+        static_cast<HcclResult>(ret));
 
     usedNotifyNum_ += totalSupplement;
     for (u32 i = 0; i < existNum; ++i) {
@@ -271,7 +284,7 @@ HcclResult ThreadMgr::SupplementThread(
         engine, commId_.c_str(), supplementThreadNum, type, &config[offset], newHandles.data());
     CHK_PRT_RET(
         ret != HCCL_SUCCESS, HCCL_ERROR("[%s] HcommThreadAllocWithConfig failed, ret[%d]", __func__, ret),
-        (HcclResult)ret);
+        static_cast<HcclResult>(ret));
 
     // 3. 查询 stream/sqId
     std::vector<ThreadMeta> metas;
@@ -283,9 +296,10 @@ HcclResult ThreadMgr::SupplementThread(
         meta.type = type;
         meta.notifyNum = config[offset + i].notifyNumPerThread;
 
-        ThreadResTypeStream stream;
-        uint32_t size = sizeof(ThreadResTypeStream);
-        HcclResult infoRet = HcclThreadResGetInfo(newHandles[i], THREAD_RES_TYPE_STREAM, size, (void**)&stream);
+        void* streamInfo = nullptr;
+        HcclResult infoRet
+            = HcclThreadResGetInfo(newHandles[i], THREAD_RES_TYPE_STREAM, sizeof(streamInfo), &streamInfo);
+        ThreadResTypeStream stream = static_cast<ThreadResTypeStream>(streamInfo);
         if (infoRet != HCCL_SUCCESS || stream == nullptr) {
             HCCL_ERROR("[ThreadMgr][%s] HcclThreadResGetInfo failed, ret[%d], stream[%p]", __func__, infoRet, stream);
             // 回滚本批已分配但未入池的句柄，避免泄漏
@@ -328,7 +342,7 @@ HcclResult ThreadMgr::HcclGetNotifyNumInThread(ThreadHandle thread, uint32_t* no
     HcommResult ret = HcommThreadGetNotifyNum(thread, notifyNum);
     CHK_PRT_RET(
         ret != HCCL_SUCCESS, HCCL_ERROR("[ThreadMgr][%s] HcommThreadGetNotifyNum failed, ret[%d]", __func__, ret),
-        (HcclResult)ret);
+        static_cast<HcclResult>(ret));
     HCCL_INFO("[ThreadMgr] Hcom[%s] HcclGetNotifyNumInThread done: notifyPerThread[%u]", commId_.c_str(), *notifyNum);
     return HCCL_SUCCESS;
 }
@@ -348,7 +362,7 @@ ThreadMgr::HcclThreadAcquireWithStream(CommEngine engine, rtStream_t stream, uin
             HcommResult ret = HcommThreadSupplementNotify(&handle, 1, &supplementNum);
             CHK_PRT_RET(
                 ret != HCCL_SUCCESS, HCCL_ERROR("[%s] HcommThreadSupplementNotify failed, ret[%d]", __func__, ret),
-                (HcclResult)ret);
+                static_cast<HcclResult>(ret));
             it->second.notifyNum = notifyNum;
         }
         *thread = it->second.handle;
@@ -359,7 +373,7 @@ ThreadMgr::HcclThreadAcquireWithStream(CommEngine engine, rtStream_t stream, uin
     HcommResult ret = HcommThreadAllocWithStream(engine, stream, notifyNum, thread);
     CHK_PRT_RET(
         ret != HCCL_SUCCESS, HCCL_ERROR("[%s] HcommThreadAllocWithStream failed, ret[%d]", __func__, ret),
-        (HcclResult)ret);
+        static_cast<HcclResult>(ret));
     ThreadMeta meta;
     meta.handle = *thread;
     meta.engine = engine;
@@ -397,7 +411,7 @@ HcclResult ThreadMgr::HcclThreadExportToCommEngine(
         = HcommThreadExportToCommEngine(threads, commId_.c_str(), threadNum, dstCommEngine, exportedThreads);
     CHK_PRT_RET(
         ret != HCCL_SUCCESS, HCCL_ERROR("[ThreadMgr][%s] HcommThreadExportToCommEngine failed, ret[%d]", __func__, ret),
-        (HcclResult)ret);
+        static_cast<HcclResult>(ret));
 
     if ((dstCommEngine == COMM_ENGINE_AICPU || dstCommEngine == COMM_ENGINE_AICPU_TS)
         && callbacks_.reportProfilingKernel != nullptr) {
@@ -411,7 +425,8 @@ HcclResult ThreadMgr::HcclThreadExportToCommEngine(
     return HCCL_SUCCESS;
 }
 
-HcclResult ThreadMgr::HcclThreadResGetInfo(ThreadHandle thread, ThreadResType resType, uint32_t infoLen, void** info)
+HcclResult
+ThreadMgr::HcclThreadResGetInfo(ThreadHandle thread, ThreadResType resType, uint32_t infoLen, void** info) const
 {
     CHK_PRT_RET(
         resType != ThreadResType::THREAD_RES_TYPE_STREAM,
@@ -421,7 +436,7 @@ HcclResult ThreadMgr::HcclThreadResGetInfo(ThreadHandle thread, ThreadResType re
     HcommResult ret = HcommThreadResGetInfo(thread, resType, infoLen, info);
     CHK_PRT_RET(
         ret != HCCL_SUCCESS, HCCL_ERROR("[%s] HcommThreadGetStreamInfo failed, ret[%d]", __func__, ret),
-        (HcclResult)ret);
+        static_cast<HcclResult>(ret));
     HCCL_INFO(
         "[%s] success. thread[0x%llx] resType[%d] info[%p]", __func__, thread, static_cast<int32_t>(resType), *info);
     return HCCL_SUCCESS;
@@ -441,14 +456,14 @@ ThreadMgr::HcclUnfoldThreadAcquire(HcclDedicatedThreadType useType, uint32_t not
         HcommResult ret = HcommThreadGetNotifyNum(handle, &currentNotifyNum);
         CHK_PRT_RET(
             ret != HCCL_SUCCESS, HCCL_ERROR("[%s] HcommThreadGetNotifyNum failed, ret[%d]", __func__, ret),
-            (HcclResult)ret);
+            static_cast<HcclResult>(ret));
         if (notifyNumPerThread > currentNotifyNum) {
             uint32_t addNotifyNum = notifyNumPerThread - currentNotifyNum;
             ret = HcommThreadSupplementNotify(&handle, 1, &addNotifyNum);
         }
         CHK_PRT_RET(
             ret != HCCL_SUCCESS, HCCL_ERROR("[%s] HcommThreadSupplementNotify failed, ret[%d]", __func__, ret),
-            (HcclResult)ret);
+            static_cast<HcclResult>(ret));
     } else {
         if (useType == HCCL_DED_THREAD_TYPE_AICPU_LAUNCH_GE) {
             *thread = 0;

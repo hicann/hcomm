@@ -48,7 +48,7 @@ public:
     HcclResult HcclGetNotifyNumInThread(ThreadHandle thread, uint32_t* notifyNum);
     HcclResult HcclThreadExportToCommEngine(
         uint32_t threadNum, const ThreadHandle* threads, CommEngine dstCommEngine, ThreadHandle* exportedThreads);
-    HcclResult HcclThreadResGetInfo(ThreadHandle thread, ThreadResType resType, uint32_t infoLen, void** info);
+    HcclResult HcclThreadResGetInfo(ThreadHandle thread, ThreadResType resType, uint32_t infoLen, void** info) const;
     HcclResult
     HcclDedicatedThreadAcquire(HcclDedicatedThreadType useType, uint32_t notifyNumPerThread, ThreadHandle* thread);
     HcclResult RegisterOrderLaunchThread(ThreadHandle thread);
@@ -68,8 +68,8 @@ private:
     HcclResult ResetMainThreadLocalNotifies();        // 主线程 mainThread_
     HcclResult ResetDedicatedThreadLocalNotifies();   // 专用线程 dedicatedThreadMap_
     HcclResult ResetOrderLaunchThreadLocalNotifies(); // 保序流线程 orderLaunchThreads_
-    void FreeEngineToThreads();
-    void FreeMainThreads();
+    HcommResult FreeEngineToThreads();
+    HcommResult FreeMainThreads();
     HcclResult SupplementNotify(
         CommEngine engine, std::vector<ThreadMeta>& threadVec, uint32_t threadNum, const ThreadConfig* config);
     HcclResult SupplementThread(

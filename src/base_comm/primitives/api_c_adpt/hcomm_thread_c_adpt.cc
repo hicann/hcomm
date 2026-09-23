@@ -388,7 +388,7 @@ HcommResult HcommThreadExportToCommEngine(
 HcommResult HcommThreadResGetInfo(ThreadHandle handle, ThreadResType resType, uint32_t infoLen, void** info)
 {
     CHK_PTR_NULL(info);
-    CHK_PRT_RET(handle == 0, HCCL_ERROR("[%s] thread is 0", __func__), HCOMM_E_PARA);
+    CHK_PRT_RET(handle == 0, HCCL_ERROR("[%s] thread is 0", __func__), HCOMM_E_PTR);
     CHK_PRT_RET(
         resType == ThreadResType::THREAD_RES_TYPE_INVALID,
         HCCL_ERROR("[%s] resType[%d] is invalid", __func__, static_cast<int32_t>(resType)), HCOMM_E_PARA);
