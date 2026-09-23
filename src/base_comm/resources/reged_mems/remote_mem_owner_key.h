@@ -37,6 +37,8 @@ struct RemoteMemOwnerKeyHash {
         size_t h1 = std::hash<EndpointDesc>{}(key.desc);
         size_t h2 = std::hash<uint64_t>{}(key.pid);
         // boost::hash_combine 组合，避免简单异或导致低位冲突
+        // h1 << 6: 左移6位使原bit0-57移到bit6-63; h1 >> 2: 右移2位使原bit2-63移到bit0-61
+        // 两者相加使h1每个bit同时影响结果多个位置, 配合黄金比例常数实现良好雪崩效应
         return h1 ^ (h2 + 0x9e3779b97f4a7c15ULL + (h1 << 6) + (h1 >> 2));
     }
 };

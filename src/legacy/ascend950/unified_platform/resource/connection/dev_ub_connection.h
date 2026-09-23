@@ -40,8 +40,6 @@ public:
      */
     enum class JettyMode { SELF_CREATE, EXTERNAL_INJECT };
 
-    // TODO(PR#5133 检视意见): 构造函数已达 14 参，后续收敛为 UbConnConfig 结构体（复用 UbConnBuildContext
-    // 承载参数），减少裸标量靠位置区分。
     DevUbConnection(
         const RdmaHandle rdmaHandle, const IpAddress& locAddr, const IpAddress& rmtAddr, const OpMode opMode,
         const bool devUsed = false, const HrtUbJfcMode jfcMode = HrtUbJfcMode::STARS_POLL,
@@ -324,7 +322,7 @@ public:
         const RdmaHandle rdmaHandle, const IpAddress& locAddr, const IpAddress& rmtAddr, const OpMode opMode,
         const bool devUsed = false, const HrtUbJfcMode jfcMode = HrtUbJfcMode::STARS_POLL,
         const IpAddress& locAddrEid = IpAddress(), const IpAddress& rmtAddrEid = IpAddress(),
-        u8 qos = static_cast<u8>(UB_QOS_DEFAULT), u8 taTimeOut = TpManager::TA_TIMEOUT_NOT_SET,
+        const u8 qos = static_cast<u8>(UB_QOS_DEFAULT), u8 taTimeOut = TpManager::TA_TIMEOUT_NOT_SET,
         CommEngine engine = COMM_ENGINE_RESERVED, u32 sqDepth = UB_SQ_DEPTH_NOT_SET, u32 scqDepth = UB_SQ_DEPTH_NOT_SET,
         JettyMode jettyMode = JettyMode::SELF_CREATE);
 };

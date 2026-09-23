@@ -323,7 +323,7 @@ HcclResult HostCpuUrmaChannel::UrmaPostJettySendWr(urma_opcode_t opcode, void* d
         // 源地址 数据长度 tseg
         urma_sge_t srclist = {};
         urmaWriteWr.rw.src.sge = &srclist;
-        urmaWriteWr.rw.src.sge->addr = ReinterpretAs<uint64_t>(static_cast<char*>(const_cast<void*>(src)) + offset);
+        urmaWriteWr.rw.src.sge->addr = ReinterpretAs<uint64_t>(static_cast<const char*>(src) + offset);
         urmaWriteWr.rw.src.sge->len = chunkLen;
         urmaWriteWr.rw.src.sge->tseg = (opcode == URMA_OPC_WRITE) ? ReinterpretAs<urma_target_seg_t*>(localSeg) :
                                                                     ReinterpretAs<urma_target_seg_t*>(remoteSeg);

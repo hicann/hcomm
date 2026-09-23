@@ -125,10 +125,10 @@ HcclResult AicpuTsThread::BuildComStreamInfo(const HcclStreamInfo& streamInfo, H
 }
 #endif
 
-HcclResult AicpuTsThread::InitStream([[maybe_unused]] HcclStreamParam& streamParam)
+HcclResult AicpuTsThread::InitStream([[maybe_unused]] const HcclStreamParam& streamParam)
 {
 #ifdef CCL_KERNEL_AICPU
-    HcclStreamInfo& streamInfo = streamParam.streamInfo;
+    const HcclStreamInfo& streamInfo = streamParam.streamInfo;
 
     static bool isCustom = false;
     static bool init = false;

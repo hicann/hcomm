@@ -15,8 +15,8 @@
 #include <cstdint>
 #include <string>
 #include <utility>
+#include "ccu_common.h"
 #include "ccu_dev_mgr_imp.h"
-#include "dev_type.h"
 
 namespace hcomm {
 

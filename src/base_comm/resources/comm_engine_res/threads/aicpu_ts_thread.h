@@ -85,7 +85,7 @@ private:
         uint64_t sqCqContextSize = 0; // 记录sqeContext大小
     };
     HcclResult InitStreamLite(HcclStreamInfo& streamParam, uint32_t hostPhyId);
-    HcclResult InitStream(HcclStreamParam& streamParam);
+    HcclResult InitStream(const HcclStreamParam& streamParam);
     HcclResult HostInit();
     HcclResult DeviceInit();
     std::string& UpdateUniqueId();

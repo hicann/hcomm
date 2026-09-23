@@ -48,7 +48,7 @@ static HcclResult CreateAndInitThread(
     CHK_PRT_RET(
         ret != HCCL_SUCCESS, HCCL_ERROR("[%s] Failed to init thread at index[%u], ret[%d]", __func__, index, ret), ret);
     // 在线程内部登记"引擎->句柄"映射，后续 FindThreadByCommEngine 按引擎查线程时能查到自己
-    ThreadHandle selfHandle = reinterpret_cast<ThreadHandle>(threadPtr.get());
+    ThreadHandle selfHandle = ReinterpretAs<ThreadHandle>(threadPtr.get());
     CHK_RET(threadPtr->AddThreadHandleToMap(engine, selfHandle));
     newThreads.emplace_back(std::move(threadPtr));
     return HCCL_SUCCESS;
@@ -134,7 +134,7 @@ HcommResult HcommThreadAllocWithCommConfig(
     CommEngine engine, const char* commId, uint32_t threadNum, ThreadType type, const ThreadConfig* config,
     ThreadHandle* threads)
 {
-    CHK_RET((HcclResult)HcommThreadAllocWithCommConfigCheck(engine, threadNum, type, config, threads));
+    CHK_RET(static_cast<HcclResult>(HcommThreadAllocWithCommConfigCheck(engine, threadNum, type, config, threads)));
     const std::string commIdStr = (commId != nullptr) ? std::string(commId) : std::string();
     HCCL_INFO(
         "[%s] begin. engine[%d], threadType[%d], threadNum[%u], threads[%p]", __func__, engine,
@@ -196,7 +196,7 @@ HcommResult HcommThreadAllocWithStream(CommEngine engine, aclrtStream stream, ui
 
     // 登记句柄映射并生成返回句柄（若中途失败，newThreads 析构时会自动释放已创建的线程）
     std::vector<std::shared_ptr<hccl::Thread>> newThreads{std::move(handle)};
-    CHK_RET(newThreads[0]->AddThreadHandleToMap(engine, reinterpret_cast<ThreadHandle>(newThreads[0].get())));
+    CHK_RET(newThreads[0]->AddThreadHandleToMap(engine, ReinterpretAs<ThreadHandle>(newThreads[0].get())));
     CHK_RET(HcommResMgr::EnsureKernelBinLoaded(engine));
     CHK_RET(hccl::StoreThreadHandles(newThreads, thread, engine, HcommResMgr::GetBinHandle()));
 
@@ -303,7 +303,7 @@ HcommResult HcommThreadResetNotifies(ThreadHandle thread)
             HCCL_ERROR(
                 "[%s] hrtNotifyReset failed, thread[0x%llx], notifyIdx[%u], notifyId[%u], ret[%d]", __func__, thread, i,
                 notify->notifyId_, rst),
-            (HcommResult)rst);
+            static_cast<HcommResult>(rst));
         HCCL_INFO(
             "[%s] reset notify success, thread[0x%llx], notifyIdx[%u], notifyId[%u]", __func__, thread, i,
             notify->notifyId_);

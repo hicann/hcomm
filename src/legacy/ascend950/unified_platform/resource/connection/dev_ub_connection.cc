@@ -81,7 +81,8 @@ DevUbConnection::DevUbConnection(
         }
         isExclusiveJfc = true;
         HCCL_INFO(
-            "[DevUbConnection][Constructor] exclusive JFC created, scqDepth[%u], jfcHandle[%p].", scqDepth, jfcHandle);
+            "[DevUbConnection][Constructor] exclusive JFC created, scqDepth[%u], jfcHandle[%llu].", scqDepth,
+            jfcHandle);
     } else if (engine_ == COMM_ENGINE_AIV) {
         CreateAivUrmaJfc();
     } else if (jfcMode == HrtUbJfcMode::USER_CTL) {

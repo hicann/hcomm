@@ -8,27 +8,16 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
-#ifndef PROF_SAL_LITE_H
-#define PROF_SAL_LITE_H
-
-#include <cstdint>
+#include "prof_sal_lite.h"
+#include <sys/syscall.h>
+#include <unistd.h>
 
 namespace Hccl {
 
-int32_t SalGetTidLite();
-
-inline uint64_t ProfGetCurCpuTimestampLite()
+int32_t SalGetTidLite()
 {
-#ifndef CCL_LLT
-    uint64_t cntvct = 0;
-#if defined __aarch64__
-    asm volatile("mrs %0, cntvct_el0" : "=r"(cntvct));
-#endif
-    return cntvct;
-#endif
-    return 0;
+    thread_local int32_t cachedTid = static_cast<int32_t>(syscall(SYS_gettid));
+    return cachedTid;
 }
 
 } // namespace Hccl
-
-#endif // PROF_SAL_LITE_H

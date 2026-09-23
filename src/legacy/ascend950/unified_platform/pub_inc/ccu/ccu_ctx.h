@@ -200,7 +200,7 @@ private:
     template <typename T>
     T CreateResAssist(std::array<std::vector<T>, MAX_CCU_IODIE_NUM>& resRecord);
     template <typename T>
-    std::vector<T> CreateBlockResAssist(uint32_t count, std::array<std::vector<T>, MAX_CCU_IODIE_NUM>& resRecord);
+    std::vector<T> CreateBlockResAssist(const uint32_t count, std::array<std::vector<T>, MAX_CCU_IODIE_NUM>& resRecord);
 
     // CCU Profiling
     uint64_t GetArgIndex(

@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include "cast_utils.h"
 #include "ccu_comp.h"
 
 #include <random>
@@ -446,7 +447,7 @@ HcclResult CcuComponent::CreateAndImportLoopJettys(
     auto& rdmaHandleMgr = Hccl::RdmaHandleManager::GetInstance();
     const auto ctxHandle = static_cast<CtxHandle>(rdmaHandleMgr.GetByIp(devPhyId_, ipAddr));
     const auto _jfcHandle = rdmaHandleMgr.GetJfcHandle(ctxHandle, cqInfo, Hccl::HrtUbJfcMode::CCU_POLL);
-    const JfcHandle jfcHandle = reinterpret_cast<JfcHandle>(_jfcHandle);
+    const JfcHandle jfcHandle = ReinterpretAs<JfcHandle>(_jfcHandle);
 
     const auto& rmaBufferIter = ccuRmaBufferMap_.find(dieId);
     CHK_PRT_RET(

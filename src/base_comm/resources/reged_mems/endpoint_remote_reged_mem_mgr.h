@@ -11,6 +11,7 @@
 #ifndef ENDPOINT_REMOTE_REGED_MEM_MGR_H
 #define ENDPOINT_REMOTE_REGED_MEM_MGR_H
 
+#include "cast_utils.h"
 #include <cstdint>
 #include <functional>
 #include <memory>
@@ -79,7 +80,7 @@ public:
         // 重复导入时不做无意义的硬件 import+unimport 空转）；未命中才构造新缓冲
         auto findRef = it->second->FindAndRef(key);
         if (findRef.first) {
-            outMem->addr = reinterpret_cast<void*>(findRef.second->GetAddr());
+            outMem->addr = ReinterpretAs<void*>(findRef.second->GetAddr());
             outMem->size = findRef.second->GetSize();
             HCCL_INFO(
                 "[EndpointRemoteRegedMemMgr][MemoryImport] reuse imported buffer, pid[%llu], key[%s].", ownerKey.pid,
@@ -98,7 +99,7 @@ public:
             return HCCL_E_INTERNAL;
         }
         // 新导入路径（重复导入已在 FindAndRef 命中时提前返回）
-        outMem->addr = reinterpret_cast<void*>(remoteBuffer->GetAddr());
+        outMem->addr = ReinterpretAs<void*>(remoteBuffer->GetAddr());
         outMem->size = remoteBuffer->GetSize();
         HCCL_INFO(
             "[EndpointRemoteRegedMemMgr][MemoryImport] success, pid[%llu], key[%s], newlyAdded.", ownerKey.pid,

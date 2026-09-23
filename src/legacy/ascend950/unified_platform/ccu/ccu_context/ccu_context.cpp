@@ -1151,7 +1151,7 @@ CcuContext::GroupOpSize CcuContext::CreateGroupOpSize()
 
 template <typename T>
 std::vector<T>
-CcuContext::CreateBlockResAssist(uint32_t count, std::array<std::vector<T>, MAX_CCU_IODIE_NUM>& resRecord)
+CcuContext::CreateBlockResAssist(const uint32_t count, std::array<std::vector<T>, MAX_CCU_IODIE_NUM>& resRecord)
 {
     std::vector<T> block;
     // 获取DieId

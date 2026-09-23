@@ -28,8 +28,8 @@ class ServerSocketContext {
 public:
     virtual ~ServerSocketContext() = default;
 
-    virtual HcclResult ServerSocketListen(uint32_t port) = 0;
-    virtual HcclResult ServerSocketStopListen([[maybe_unused]] uint32_t port) { return HCCL_E_NOT_SUPPORT; }
+    virtual HcclResult ServerSocketListen(const uint32_t port) = 0;
+    virtual HcclResult ServerSocketStopListen([[maybe_unused]] const uint32_t port) { return HCCL_E_NOT_SUPPORT; }
     virtual HcclResult ServerSocketGetListenPort([[maybe_unused]] uint32_t* port) { return HCCL_E_NOT_SUPPORT; }
 };
 

@@ -9,6 +9,7 @@
  */
 
 #include "aicpu_launch_manager.h"
+#include "cast_utils.h"
 #include "adapter_rts_common.h"
 #include "mem_device_pub.h"
 #include "notify_manager.h"
@@ -166,7 +167,7 @@ HcclResult AicpuLaunchMgr::ThreadKernelLaunchImpl(
     DeviceMem addr = DeviceMem::alloc(sizeof(opParam));
     CHK_RET(hrtMemSyncCopy(
         addr.ptr(), sizeof(opParam), &opParam, sizeof(opParam), HcclRtMemcpyKind::HCCL_RT_MEMCPY_KIND_HOST_TO_DEVICE));
-    uint64_t context = reinterpret_cast<uint64_t>(addr.ptr());
+    uint64_t context = ReinterpretAs<uint64_t>(addr.ptr());
     HCCL_INFO("AicpuLaunchMgr::%s, call KernelLaunch", __func__);
     HcclResult ret = KernelLaunchAicpuCustom(context, config.kernelName.c_str(), localStream.ptr(), config.binHandle);
     CHK_PRT_RET(
@@ -258,7 +259,7 @@ AicpuLaunchMgr::ThreadKernelLaunchDestroy(ThreadHandle* threadHandles, uint32_t 
     DeviceMem addr = DeviceMem::alloc(sizeof(opParam));
     CHK_RET(hrtMemSyncCopy(
         addr.ptr(), sizeof(opParam), &opParam, sizeof(opParam), HcclRtMemcpyKind::HCCL_RT_MEMCPY_KIND_HOST_TO_DEVICE));
-    uint64_t context = reinterpret_cast<uint64_t>(addr.ptr());
+    uint64_t context = ReinterpretAs<uint64_t>(addr.ptr());
     HcclResult ret = KernelLaunchAicpuCustom(context, kernelName.c_str(), localStream.ptr(), binHandle);
     CHK_PRT_RET(
         ret != HCCL_SUCCESS, HCCL_ERROR("[AicpuLaunchMgr][%s] KernelLaunch failed, return [%d].", __func__, ret), ret);
@@ -296,7 +297,7 @@ HcclResult AicpuLaunchMgr::LaunchNotifyKernel(NotifyMgrAicpuParam& opParam, aclr
     DeviceMem addr = DeviceMem::alloc(sizeof(opParam));
     CHK_RET(hrtMemSyncCopy(
         addr.ptr(), sizeof(opParam), &opParam, sizeof(opParam), HcclRtMemcpyKind::HCCL_RT_MEMCPY_KIND_HOST_TO_DEVICE));
-    uint64_t context = reinterpret_cast<uint64_t>(addr.ptr());
+    uint64_t context = ReinterpretAs<uint64_t>(addr.ptr());
     HcclResult ret = KernelLaunchAicpuCustom(context, "RunAicpuIndOpNotify", localStream.ptr(), binCustomHandle);
     CHK_PRT_RET(
         ret != HCCL_SUCCESS, HCCL_ERROR("[AicpuLaunchMgr][LaunchNotifyKernel] KernelLaunch failed, ret[%d]", ret), ret);
