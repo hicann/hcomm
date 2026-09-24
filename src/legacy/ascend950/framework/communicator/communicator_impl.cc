@@ -3472,6 +3472,9 @@ HcclResult CommunicatorImpl::InitAndLaunchDpuKernel()
     hostShareBuf = malloc(SHARE_HBM_MEMORY_SIZE);
     CHK_PTR_NULL(hostShareBuf);
 
+    // 下发前同步HCCL_EXEC_TIMEOUT配置，避免内核so反向依赖宿主库符号
+    SetDpuExecTimeout(EnvConfig::GetInstance().GetRtsConfig().GetExecTimeOut());
+
     // 下发
     HcclResult ret = LaunchDpuKernel(funcHandle);
     if (ret != HCCL_SUCCESS) {
