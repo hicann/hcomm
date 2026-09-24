@@ -104,20 +104,17 @@ CollComm::~CollComm()
     // 兜底释放所有team的syncMem本地内存
     HcclTeamMgr::GetInstance().ClearByCollComm(this);
     // 兜底释放所有未注销的 HcommWindow device 副本（legacySymWin 部分由 symmetricMemory_ 析构清理）
-    std::vector<HcclCommSymWindow> unregisteredWins;
+    std::unordered_map<void*, void*> unregisteredWins;
     {
         std::unique_lock<std::shared_mutex> lock(hcommWindowMutex_);
-        unregisteredWins.reserve(hcommToSymMap_.size());
-        for (auto& pair : hcommToSymMap_) {
-            unregisteredWins.emplace_back(pair.first);
-        }
-        hcommToSymMap_.clear();
+        // 交换已有节点，避免析构时为临时句柄列表分配内存
+        unregisteredWins.swap(hcommToSymMap_);
         symToHcommMap_.clear();
     }
     // 全局window索引与L3回填资源的清理在成员锁外执行，避免持锁访问全局单例造成数据竞争
-    for (HcclCommSymWindow win : unregisteredWins) {
-        EraseHcommWindowOwner(win);
-        (void)HcommTeamWindowDeregister(win); // 释放 L3 回填资源（remoteMems/sizes）
+    for (const auto& pair : unregisteredWins) {
+        EraseHcommWindowOwner(pair.first);
+        (void)HcommTeamWindowDeregister(pair.first); // 释放 L3 回填资源（remoteMems/sizes）
     }
     HCCL_INFO("[CollComm][~CollComm] collComm deinit");
     (void)DestroyAicpuComm();
