@@ -103,7 +103,6 @@ list(FILTER FRAMEWORK_HOST_SOURCES EXCLUDE REGEX "src/legacy/ascend910/framework
 list(FILTER FRAMEWORK_HOST_SOURCES EXCLUDE REGEX "src/legacy/ascend910/framework/common/src/topo/topo_device/.*")
 
 set(orion_list
-    ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/dfx/profiling/aicpu/common/prof_sal_lite.cc
     ${HCCL_CODE_ROOT}/src/base_comm/resources/comm_engine_res/threads/aicpu_ts_thread.cc
     ${HCCL_CODE_ROOT}/src/base_comm/resources/comm_engine_res/threads/thread.cc
     ${HCCL_CODE_ROOT}/src/base_comm/resources/comm_engine_res/threads/cpu_ts_thread.cc

@@ -11,11 +11,17 @@
 #ifndef PROF_SAL_LITE_H
 #define PROF_SAL_LITE_H
 
+#include <sys/syscall.h>
+#include <unistd.h>
 #include <cstdint>
 
 namespace Hccl {
 
-int32_t SalGetTidLite();
+inline int32_t SalGetTidLite()
+{
+    thread_local int32_t cachedTid = static_cast<int32_t>(syscall(SYS_gettid));
+    return cachedTid;
+}
 
 inline uint64_t ProfGetCurCpuTimestampLite()
 {
