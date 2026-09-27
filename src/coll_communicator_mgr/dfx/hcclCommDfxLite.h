@@ -33,6 +33,7 @@ public:
     HcclResult UpdateProfStat();
     HcclResult SetCurrDfxOpInfo(const Hccl::DfxDfxOpInfo* newDfxOpInfo);
     const void* GetLatestDfxOpInfo() const;
+    void MarkCompactReportOp(const Hccl::DfxDfxOpInfo* opInfo);
     void AddChannelRemoteRankId(u64 handle, u32 remoteRankId);
     u32 GetChannelRemoteRankId(u64 handle) const;
     Hccl::DfxCommContext GetDfxCommContext() const;
@@ -48,6 +49,7 @@ private:
     u32 rankSize_{0};
     u32 localRank_{0};
     bool initializedFlag_{false};
+    const Hccl::DfxDfxOpInfo* compactReportOpInfo_{nullptr};
 };
 } // namespace hccl
 #endif // HCCL_COMM_DFX_LITE_H
