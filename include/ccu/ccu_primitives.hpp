@@ -79,21 +79,33 @@ namespace ccu {
     inline CcuResult LoadArg(Variable v, uint32_t argId) { return CcuLoadArg(v.handle, argId); }
     inline CcuResult Load(uint64_t addr, Array<Variable>& vArr, uint32_t num)
     {
+        if (num == 0 || num > vArr.size()) {
+            return CcuResult::CCU_E_PARA;
+        }
         return CcuLoadVar(addr, vArr[0].handle, num);
     }
     inline CcuResult Load(uint64_t addr, Variable v) { return CcuLoadVar(addr, v.handle, 1); }
     inline CcuResult Load(Variable addrVar, Array<Variable>& vArr, uint32_t num)
     {
+        if (num == 0 || num > vArr.size()) {
+            return CcuResult::CCU_E_PARA;
+        }
         return CcuLoadVarFromVarAddr(addrVar.handle, vArr[0].handle, num);
     }
     inline CcuResult Load(Variable addrVar, Variable v) { return CcuLoadVarFromVarAddr(addrVar.handle, v.handle, 1); }
     inline CcuResult Store(uint64_t addr, Array<Variable>& vArr, uint32_t num)
     {
+        if (num == 0 || num > vArr.size()) {
+            return CcuResult::CCU_E_PARA;
+        }
         return CcuStoreVar(addr, vArr[0].handle, num);
     }
     inline CcuResult Store(uint64_t addr, Variable v) { return CcuStoreVar(addr, v.handle, 1); }
     inline CcuResult Store(Variable addrVar, Array<Variable>& vArr, uint32_t num)
     {
+        if (num == 0 || num > vArr.size()) {
+            return CcuResult::CCU_E_PARA;
+        }
         return CcuStoreVarToVarAddr(addrVar.handle, vArr[0].handle, num);
     }
     inline CcuResult Store(Variable addrVar, Variable v) { return CcuStoreVarToVarAddr(addrVar.handle, v.handle, 1); }
