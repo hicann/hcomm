@@ -19,6 +19,6 @@ typedef enum {
 
   - 0：不开启确定性计算。
   - 1：开启确定性计算。
-  - 2：开启保序功能（仅Atlas A2训练系列产品/Atlas A2推理系列产品支持）。
+  - 2：开启保序功能（仅Atlas A2系列产品支持）。
 
 - HCCL_CONFIG_RESERVED：预留参数。
