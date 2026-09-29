@@ -604,7 +604,7 @@ STATIC void RsListenCreditLimitDeinit(struct RsListenInfo *listenInfo)
     (void)pthread_mutex_destroy(&listenInfo->acceptCreditMutex);
 }
 
-int RsListenNodeAlloc(struct RsConnCb *connCb, struct RsIpAddrInfo *ipAddr, uint32_t serverPort,
+int RsListenNodeAlloc(struct RsConnCb *connCb, struct RsIpAddrInfo *ipAddr, uint32_t serverPort, bool tagChkDis,
     struct RsListenInfo **node)
 {
     struct RsListenInfo *listenInfo = NULL;
@@ -617,9 +617,10 @@ int RsListenNodeAlloc(struct RsConnCb *connCb, struct RsIpAddrInfo *ipAddr, uint
     listenInfo = calloc(1, sizeof(struct RsListenInfo));
     CHK_PRT_RETURN(listenInfo == NULL, hccp_err("alloc mem for socket listen info failed!"), -ENOMEM);
 
-    hccp_info_socket("create listen node for IP(%s)!", ipAddr->readAddr);
+    hccp_info_socket("create listen node for IP(%s), tagChkDis(%d)!", ipAddr->readAddr, tagChkDis);
     listenInfo->serverIpAddr = *ipAddr;
     listenInfo->state = RS_CONN_STATE_RESET;
+    listenInfo->tagChkDis = tagChkDis;
     ret = RsListenCreditLimitInit(listenInfo);
     if (ret != 0) {
         hccp_err("rs_listen_credit_limit_init failed, ret:%d", ret);

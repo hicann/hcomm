@@ -559,7 +559,7 @@ void TcRsSocketBatchConnect2()
 
     gRsCb = malloc(sizeof(struct rs_cb));
     gRsCb->hccpMode = 1;
-    gRsCb->connCb.wlistEnable = 1;
+
     gRsCb->sslEnable = 1;
     connSocketErr.state = 7;
     mocker((stub_fn_t)RsSocketRecv, 1, -11);
@@ -926,8 +926,8 @@ void TcRsEpollOps2()
     struct RsQpResp resp2 = {0};
     int i = 0;
     struct RsInitConfig cfg = {0};
-    struct SocketListenInfo listen[2] = {0};
-    struct SocketConnectInfo conn[2] = {0};
+    struct SocketListenInfoV2 listen[2] = {0};
+    struct SocketConnectInfoV2 conn[2] = {0};
     struct RsSocketCloseInfoT sockClose[2] = {0};
     struct SocketFdData socketInfo[3] = {0};
     struct rs_cb* rsCb = NULL;
@@ -939,19 +939,20 @@ void TcRsEpollOps2()
     EXPECT_INT_EQ(ret, 0);
     ret = RsDev2rscb(devId, &rsCb, false);
     EXPECT_INT_EQ(ret, 0);
-    rsCb->connCb.wlistEnable = 0;
 
     listen[0].phyId = 0;
     listen[0].family = AF_INET;
     listen[0].localIp.addr.s_addr = inet_addr("127.0.0.3");
     listen[0].port = 16666;
-    ret = RsSocketListenStart(&listen[0], 1);
+    listen[0].tagChkDis = true;
+    ret = RsSocketListenStartV2(&listen[0], 1);
 
     usleep(SLEEP_TIME);
 
     mocker((stub_fn_t)strcpy_s, 10, -1);
     conn[0].port = 16666;
-    ret = RsSocketBatchConnect(&conn[0], 1);
+    conn[0].tagChkDis = true;
+    ret = RsSocketBatchConnectV2(&conn[0], 1);
     EXPECT_INT_EQ(ret, -22);
     mocker_clean();
 
@@ -964,7 +965,8 @@ void TcRsEpollOps2()
     conn[0].tag[2] = 3;
     conn[0].tag[3] = 4;
     conn[0].port = 16666;
-    ret = RsSocketBatchConnect(&conn[0], 1);
+    conn[0].tagChkDis = true;
+    ret = RsSocketBatchConnectV2(&conn[0], 1);
 
     usleep(SLEEP_TIME);
 
@@ -1007,7 +1009,7 @@ void TcRsEpollOps2()
 
     usleep(SLEEP_TIME);
 
-    struct SocketConnectInfo connCtl = {0};
+    struct SocketConnectInfoV2 connCtl = {0};
     connCtl.phyId = 0;
     connCtl.family = AF_INET;
     connCtl.localIp.addr.s_addr = inet_addr("127.0.0.3");
@@ -1015,7 +1017,8 @@ void TcRsEpollOps2()
     memset(connCtl.tag, 0, 128);
     strcpy(connCtl.tag, "abcde");
     connCtl.port = 16666;
-    ret = RsSocketBatchConnect(&connCtl, 1);
+    connCtl.tagChkDis = true;
+    ret = RsSocketBatchConnectV2(&connCtl, 1);
 
     usleep(SLEEP_TIME);
     usleep(SLEEP_TIME);
@@ -1157,16 +1160,17 @@ void TcRsEpollOps2()
 
     mocker((stub_fn_t)RsEpollCtl, 10, -1);
     listen[0].port = 16666;
-    ret = RsSocketListenStop(&listen[0], 1);
+    ret = RsSocketListenStop((struct SocketListenInfo*)&listen[0], 1);
     EXPECT_INT_NE(ret, 0);
     mocker_clean();
 
-    struct SocketListenInfo listenCtl = {0};
+    struct SocketListenInfoV2 listenCtl = {0};
     listenCtl.phyId = 0;
     listenCtl.localIp.addr.s_addr = inet_addr("127.0.0.9");
     listenCtl.port = 16666;
     mocker((stub_fn_t)RsEpollCtl, 10, -1);
-    ret = RsSocketListenStart(&listenCtl, 1);
+    listenCtl.tagChkDis = true;
+    ret = RsSocketListenStartV2(&listenCtl, 1);
     mocker_clean();
 
     usleep(SLEEP_TIME);
@@ -1186,7 +1190,7 @@ void TcRsEpollOps2()
     ret = RsSocketBatchClose(0, &sockClose[1], 1);
     /* ------Resource CLEAN-------- */
     listen[0].port = 16666;
-    ret = RsSocketListenStop(&listen[0], 1);
+    ret = RsSocketListenStop((struct SocketListenInfo*)&listen[0], 1);
 
     ret = RsRdevDeinit(devId, NOTIFY, rdevIndex);
     EXPECT_INT_EQ(ret, 0);
@@ -1215,8 +1219,8 @@ void TcRsQpConnectAsync2()
     struct RsQpResp resp2 = {0};
     int i = 0;
     struct RsInitConfig cfg = {0};
-    struct SocketListenInfo listen[2] = {0};
-    struct SocketConnectInfo conn[2] = {0};
+    struct SocketListenInfoV2 listen[2] = {0};
+    struct SocketConnectInfoV2 conn[2] = {0};
     struct RsSocketCloseInfoT sockClose[2] = {0};
     struct SocketFdData socketInfo[3] = {0};
     struct rs_cb* rsCb = NULL;
@@ -1228,13 +1232,13 @@ void TcRsQpConnectAsync2()
     EXPECT_INT_EQ(ret, 0);
     ret = RsDev2rscb(devId, &rsCb, false);
     EXPECT_INT_EQ(ret, 0);
-    rsCb->connCb.wlistEnable = 0;
 
     listen[0].phyId = 0;
     listen[0].family = AF_INET;
     listen[0].localIp.addr.s_addr = inet_addr("127.0.0.3");
     listen[0].port = 16666;
-    ret = RsSocketListenStart(&listen[0], 1);
+    listen[0].tagChkDis = true;
+    ret = RsSocketListenStartV2(&listen[0], 1);
 
     usleep(SLEEP_TIME);
 
@@ -1247,7 +1251,8 @@ void TcRsQpConnectAsync2()
     conn[0].tag[2] = 3;
     conn[0].tag[3] = 4;
     conn[0].port = 16666;
-    ret = RsSocketBatchConnect(&conn[0], 1);
+    conn[0].tagChkDis = true;
+    ret = RsSocketBatchConnectV2(&conn[0], 1);
 
     usleep(SLEEP_TIME);
     usleep(SLEEP_TIME);
@@ -1361,7 +1366,7 @@ void TcRsQpConnectAsync2()
 
     /* ------Resource CLEAN-------- */
     listen[0].port = 16666;
-    ret = RsSocketListenStop(&listen[0], 1);
+    ret = RsSocketListenStop((struct SocketListenInfo*)&listen[0], 1);
 
     ret = RsRdevDeinit(devId, NOTIFY, rdevIndex);
     EXPECT_INT_EQ(ret, 0);
@@ -1383,8 +1388,8 @@ void TcRsSendWr2()
     struct RsQpResp resp2 = {0};
     int i = 0;
     struct RsInitConfig cfg = {0};
-    struct SocketListenInfo listen[2] = {0};
-    struct SocketConnectInfo conn[2] = {0};
+    struct SocketListenInfoV2 listen[2] = {0};
+    struct SocketConnectInfoV2 conn[2] = {0};
     struct RsSocketCloseInfoT sockClose[2] = {0};
     struct SocketFdData socketInfo[3] = {0};
     struct rs_cb* rsCb = NULL;
@@ -1396,13 +1401,13 @@ void TcRsSendWr2()
     EXPECT_INT_EQ(ret, 0);
     ret = RsDev2rscb(devId, &rsCb, false);
     EXPECT_INT_EQ(ret, 0);
-    rsCb->connCb.wlistEnable = 0;
 
     listen[0].phyId = 0;
     listen[0].family = AF_INET;
     listen[0].localIp.addr.s_addr = inet_addr("127.0.0.3");
     listen[0].port = 16666;
-    ret = RsSocketListenStart(&listen[0], 1);
+    listen[0].tagChkDis = true;
+    ret = RsSocketListenStartV2(&listen[0], 1);
 
     usleep(SLEEP_TIME);
 
@@ -1415,7 +1420,8 @@ void TcRsSendWr2()
     conn[0].tag[2] = 3;
     conn[0].tag[3] = 4;
     conn[0].port = 16666;
-    ret = RsSocketBatchConnect(&conn[0], 1);
+    conn[0].tagChkDis = true;
+    ret = RsSocketBatchConnectV2(&conn[0], 1);
 
     usleep(SLEEP_TIME);
 
@@ -1498,7 +1504,7 @@ void TcRsSendWr2()
 
     /* ------Resource CLEAN-------- */
     listen[0].port = 16666;
-    ret = RsSocketListenStop(&listen[0], 1);
+    ret = RsSocketListenStop((struct SocketListenInfo*)&listen[0], 1);
 
     ret = RsRdevDeinit(devId, NOTIFY, rdevIndex);
     EXPECT_INT_EQ(ret, 0);
@@ -1521,8 +1527,8 @@ void TcRsGetGidIndex2()
     struct RsQpResp resp2 = {0};
     int i = 0;
     struct RsInitConfig cfg = {0};
-    struct SocketListenInfo listen[2] = {0};
-    struct SocketConnectInfo conn[2] = {0};
+    struct SocketListenInfoV2 listen[2] = {0};
+    struct SocketConnectInfoV2 conn[2] = {0};
     struct RsSocketCloseInfoT sockClose[2] = {0};
     struct SocketFdData socketInfo[3] = {0};
     struct rs_cb* rsCb = NULL;
@@ -1534,13 +1540,13 @@ void TcRsGetGidIndex2()
     EXPECT_INT_EQ(ret, 0);
     ret = RsDev2rscb(devId, &rsCb, false);
     EXPECT_INT_EQ(ret, 0);
-    rsCb->connCb.wlistEnable = 0;
 
     listen[0].phyId = 0;
     listen[0].family = AF_INET;
     listen[0].localIp.addr.s_addr = inet_addr("127.0.0.3");
     listen[0].port = 16666;
-    ret = RsSocketListenStart(&listen[0], 1);
+    listen[0].tagChkDis = true;
+    ret = RsSocketListenStartV2(&listen[0], 1);
 
     usleep(SLEEP_TIME);
 
@@ -1553,7 +1559,8 @@ void TcRsGetGidIndex2()
     conn[0].tag[2] = 3;
     conn[0].tag[3] = 4;
     conn[0].port = 16666;
-    ret = RsSocketBatchConnect(&conn[0], 1);
+    conn[0].tagChkDis = true;
+    ret = RsSocketBatchConnectV2(&conn[0], 1);
 
     usleep(1000);
 
@@ -1668,7 +1675,7 @@ void TcRsGetGidIndex2()
 
     /* ------Resource CLEAN-------- */
     listen[0].port = 16666;
-    ret = RsSocketListenStop(&listen[0], 1);
+    ret = RsSocketListenStop((struct SocketListenInfo*)&listen[0], 1);
 
     ret = RsRdevDeinit(devId, NOTIFY, rdevIndex);
     EXPECT_INT_EQ(ret, 0);
@@ -1691,8 +1698,8 @@ void TcRsMrAbnormal2()
     struct RsQpResp resp2 = {0};
     int i = 0;
     struct RsInitConfig cfg = {0};
-    struct SocketListenInfo listen[2] = {0};
-    struct SocketConnectInfo conn[2] = {0};
+    struct SocketListenInfoV2 listen[2] = {0};
+    struct SocketConnectInfoV2 conn[2] = {0};
     struct RsSocketCloseInfoT sockClose[2] = {0};
     struct SocketFdData socketInfo[3] = {0};
     struct rs_cb* rsCb = NULL;
@@ -1711,13 +1718,13 @@ void TcRsMrAbnormal2()
     EXPECT_INT_EQ(ret, 0);
     ret = RsDev2rscb(devId, &rsCb, false);
     EXPECT_INT_EQ(ret, 0);
-    rsCb->connCb.wlistEnable = 0;
 
     listen[0].phyId = 0;
     listen[0].family = AF_INET;
     listen[0].localIp.addr.s_addr = inet_addr("127.0.0.3");
     listen[0].port = 16666;
-    ret = RsSocketListenStart(&listen[0], 1);
+    listen[0].tagChkDis = true;
+    ret = RsSocketListenStartV2(&listen[0], 1);
 
     usleep(SLEEP_TIME);
 
@@ -1730,7 +1737,8 @@ void TcRsMrAbnormal2()
     conn[0].tag[2] = 3;
     conn[0].tag[3] = 4;
     conn[0].port = 16666;
-    ret = RsSocketBatchConnect(&conn[0], 1);
+    conn[0].tagChkDis = true;
+    ret = RsSocketBatchConnectV2(&conn[0], 1);
 
     usleep(10000);
 
@@ -1859,7 +1867,7 @@ void TcRsMrAbnormal2()
 
     /* ------Resource CLEAN-------- */
     listen[0].port = 16666;
-    ret = RsSocketListenStop(&listen[0], 1);
+    ret = RsSocketListenStop((struct SocketListenInfo*)&listen[0], 1);
 
     ret = RsRdevDeinit(devId, NOTIFY, rdevIndex);
     EXPECT_INT_EQ(ret, 0);
@@ -1888,8 +1896,8 @@ void TcRsSocketOps2()
     uint32_t qpMode = 1;
     int i = 0;
     struct RsInitConfig cfg = {0};
-    struct SocketListenInfo listen[2] = {0};
-    struct SocketConnectInfo conn[2] = {0};
+    struct SocketListenInfoV2 listen[2] = {0};
+    struct SocketConnectInfoV2 conn[2] = {0};
     struct RsSocketCloseInfoT sockClose[2] = {0};
     struct SocketFdData socketInfo[3] = {0};
     struct SocketWlistInfoT whiteList = {0};
@@ -1936,13 +1944,13 @@ void TcRsSocketOps2()
 
     ret = RsDev2rscb(devId, &rsCb, false);
     EXPECT_INT_EQ(ret, 0);
-    rsCb->connCb.wlistEnable = 0;
 
     listen[0].phyId = 0;
     listen[0].family = AF_INET;
     listen[0].localIp.addr.s_addr = inet_addr("127.0.0.3");
     listen[0].port = 16666;
-    ret = RsSocketListenStart(&listen[0], 1);
+    listen[0].tagChkDis = true;
+    ret = RsSocketListenStartV2(&listen[0], 1);
 
     usleep(SLEEP_TIME);
     strcpy(whiteList.tag, "1234");
@@ -1956,7 +1964,8 @@ void TcRsSocketOps2()
     conn[0].tag[2] = 3;
     conn[0].tag[3] = 4;
     conn[0].port = 16666;
-    ret = RsSocketBatchConnect(&conn[0], 1);
+    conn[0].tagChkDis = true;
+    ret = RsSocketBatchConnectV2(&conn[0], 1);
 
     i = 0;
     socketInfo[i].family = AF_INET;
@@ -2074,7 +2083,7 @@ void TcRsSocketOps2()
 
     /* ------Resource CLEAN-------- */
     listen[0].port = 16666;
-    ret = RsSocketListenStop(&listen[0], 1);
+    ret = RsSocketListenStop((struct SocketListenInfo*)&listen[0], 1);
 
     struct RsConnInfo connSendInc = {0};
     mocker((stub_fn_t)send, 10, -1);
@@ -2106,8 +2115,8 @@ void TcRsSocketClose2()
     uint32_t qpMode = 1;
     int i = 0;
     struct RsInitConfig cfg = {0};
-    struct SocketListenInfo listen[2] = {0};
-    struct SocketConnectInfo conn[2] = {0};
+    struct SocketListenInfoV2 listen[2] = {0};
+    struct SocketConnectInfoV2 conn[2] = {0};
     struct RsSocketCloseInfoT sockClose[2] = {0};
     struct SocketFdData socketInfo[3] = {0};
     struct rs_cb* rsCb = NULL;
@@ -2120,7 +2129,6 @@ void TcRsSocketClose2()
 
     ret = RsDev2rscb(devId, &rsCb, false);
     EXPECT_INT_EQ(ret, 0);
-    rsCb->connCb.wlistEnable = 0;
 
     usleep(SLEEP_TIME);
 
@@ -2128,7 +2136,8 @@ void TcRsSocketClose2()
     listen[0].family = AF_INET;
     listen[0].localIp.addr.s_addr = inet_addr("127.0.0.3");
     listen[0].port = 16666;
-    ret = RsSocketListenStart(&listen[0], 1);
+    listen[0].tagChkDis = true;
+    ret = RsSocketListenStartV2(&listen[0], 1);
 
     usleep(SLEEP_TIME);
 
@@ -2141,7 +2150,8 @@ void TcRsSocketClose2()
     conn[0].tag[2] = 3;
     conn[0].tag[3] = 4;
     conn[0].port = 16666;
-    ret = RsSocketBatchConnect(&conn[0], 1);
+    conn[0].tagChkDis = true;
+    ret = RsSocketBatchConnectV2(&conn[0], 1);
 
     usleep(SLEEP_TIME);
 
@@ -2230,7 +2240,7 @@ void TcRsSocketClose2()
 
     /* ------Resource CLEAN-------- */
     listen[0].port = 16666;
-    ret = RsSocketListenStop(&listen[0], 1);
+    ret = RsSocketListenStop((struct SocketListenInfo*)&listen[0], 1);
 
     ret = RsRdevDeinit(devId, NOTIFY, rdevIndex);
     EXPECT_INT_EQ(ret, 0);
