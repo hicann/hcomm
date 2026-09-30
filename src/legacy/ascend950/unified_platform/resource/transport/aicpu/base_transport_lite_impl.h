@@ -167,7 +167,6 @@ public:
 
     virtual HcclResult Fence() { return HCCL_SUCCESS; }
 
-protected:
 private:
 };
 

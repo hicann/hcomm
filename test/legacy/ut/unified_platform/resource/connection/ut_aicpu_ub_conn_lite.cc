@@ -693,3 +693,78 @@ TEST_F(AicpuUbConnLiteTest, test_UBConnLite_BatchOneSidedWrite)
     MOCKER_CPP(&RtsqBase::QuerySqTail).stubs().with(mockcpp::any()).will(returnValue(1));
     ubConn.BatchOneSidedWrite({loc}, {rmt}, cfg, stream, out);
 }
+
+/* ---------- GetInflight / UpdateCi / CheckOverflow (反压新增接口) ---------- */
+
+TEST_F(AicpuUbConnLiteTest, GetInflight_ExpectCorrect)
+{
+    UbJettyLiteId id(1, 1, 1);
+    UbJettyLiteAttr attr(1, 1, 8, 1, false);
+    Eid rmtEid;
+    UbConnLite ubConn(id, attr, rmtEid);
+
+    // pi > ci: 正常差值
+    ubConn.pi = 20;
+    ubConn.ci = 5;
+    EXPECT_EQ(15u, ubConn.GetInflight());
+    // pi < ci: u16回绕
+    ubConn.pi = 5;
+    ubConn.ci = 65530;
+    EXPECT_EQ(11u, ubConn.GetInflight());
+    // pi == ci: 无inflight
+    ubConn.pi = 100;
+    ubConn.ci = 100;
+    EXPECT_EQ(0u, ubConn.GetInflight());
+}
+
+/* ---------- UpdateCi ---------- */
+
+TEST_F(AicpuUbConnLiteTest, UpdateCi_ExpectCorrect)
+{
+    UbJettyLiteId id(1, 1, 1);
+    UbJettyLiteAttr attr(1, 1, 8, 1, false);
+    Eid rmtEid;
+    UbConnLite ubConn(id, attr, rmtEid);
+
+    // 顺序消费: seq 0/1连续, ci推进
+    std::vector<std::pair<u16, u16>> slots = {{0, 10}, {1, 20}};
+    ubConn.UpdateCi(slots.data(), slots.size());
+    EXPECT_EQ(20u, ubConn.ci);
+
+    // piValue回绕 + 乱序暂存: seq 2连续消费(65530), seq 4暂存
+    slots = {{2, 65530}, {4, 40}};
+    ubConn.UpdateCi(slots.data(), slots.size());
+    EXPECT_EQ(65530u, ubConn.ci);
+
+    // 补齐后连续出队: seq 3补齐(65535), 乱序的seq 4(40)随之消费
+    slots = {{3, 65535}};
+    ubConn.UpdateCi(slots.data(), slots.size());
+    EXPECT_EQ(40u, ubConn.ci);
+
+    // 重复seqIdx: 取第一个值
+    slots = {{5, 10}, {5, 99}};
+    ubConn.UpdateCi(slots.data(), slots.size());
+    EXPECT_EQ(10u, ubConn.ci);
+
+    // 空输入: 不变化
+    ubConn.UpdateCi(nullptr, 0);
+    EXPECT_EQ(10u, ubConn.ci);
+}
+
+/* ---------- CheckOverflow ---------- */
+
+TEST_F(AicpuUbConnLiteTest, CheckOverflow_ExpectCorrect)
+{
+    UbJettyLiteId id(1, 1, 1);
+    UbJettyLiteAttr attr(1, 1, 8, 1, false);
+    Eid rmtEid;
+    UbConnLite ubConn(id, attr, rmtEid);
+
+    ubConn.sqDepth_ = 8;
+    ubConn.pi = 5;
+    ubConn.ci = 2; // inflight=3
+
+    // cache版: 3+3<=8, 3+6>8
+    EXPECT_FALSE(ubConn.CheckOverflow(static_cast<u32>(3)));
+    EXPECT_TRUE(ubConn.CheckOverflow(static_cast<u32>(6)));
+}

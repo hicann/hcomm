@@ -11,7 +11,6 @@
 #ifndef HCCLV2_UB_CONN_LITE_H_
 #define HCCLV2_UB_CONN_LITE_H_
 
-#include <queue>
 #include "data_type.h"
 #include "reduce_op.h"
 #include "rma_buf_slice_lite.h"
@@ -20,6 +19,8 @@
 #include "udma_data_struct.h"
 #include "kernel_param_lite.h"
 #include "stream_lite.h"
+#include <algorithm>
+#include <utility>
 
 namespace Hccl {
 
@@ -134,7 +135,55 @@ public:
     void LaunchOneWqeWithNotify(UdmaSqeWriteWithNotify* sqe, u32 opCode);
 
     // 用于aicpu task cache更新DbSqe
-    uint16_t GetPi() const { return pi; }
+    uint16_t GetPiAndIncrementSeq(u16& seq)
+    {
+        seq = dbSendSeq_++;
+        return pi;
+    }
+
+    // 背景线程调用：批量存入完成的(seqIdx, piValue)，按seqIdx顺序推进ci
+    inline void UpdateCi(const std::pair<u16, u16>* slots, size_t count) override
+    {
+        u16 seqIdx = dbDoneSeq_;
+        u16 lastCi = ci;
+
+        // Phase 1: slots头部大概率从dbDoneSeq_开始连续，直接消费
+        size_t i = 0;
+        for (; i < count; i++) {
+            if (slots[i].first != seqIdx) {
+                break;
+            }
+            lastCi = slots[i].second;
+            seqIdx++;
+        }
+
+        // Phase 2: 剩余乱序slot暂存到outOfOrderCis_
+        for (; i < count; i++) {
+            outOfOrderCis_.emplace_back(slots[i].first, slots[i].second);
+        }
+
+        // Phase 3: 从outOfOrderCis_中找连续的seqIdx消费出队
+        while (!outOfOrderCis_.empty()) {
+            auto it
+                = std::find_if(outOfOrderCis_.begin(), outOfOrderCis_.end(), [seqIdx](const std::pair<u16, u16>& p) {
+                      return p.first == seqIdx;
+                  });
+            if (it == outOfOrderCis_.end()) {
+                break;
+            }
+            lastCi = it->second;
+            seqIdx++;
+            *it = std::move(outOfOrderCis_.back());
+            outOfOrderCis_.pop_back();
+        }
+
+        dbDoneSeq_ = seqIdx;
+        ci = lastCi;
+    }
+
+    inline bool CheckOverflow(u32 wqeCount) const { return (static_cast<u32>(GetInflight()) + wqeCount) > sqDepth_; }
+
+    void MakeSureAvailableSpace(u32 wqeCount) const;
 
 private:
     u16 pi{0};
@@ -143,6 +192,8 @@ private:
     u32 ciDetourCount{0};
     u32 maxReadSize{0};
     u32 maxWriteSize{0};
+    // outOfOrderCis_/dbDoneSeq_仅背景线程访问
+    std::vector<std::pair<u16, u16>> outOfOrderCis_; // (seqIdx, piValue)
     void ProcessSlices(
         const RmaBufSliceLite& loc, const RmtRmaBufSliceLite& rmt, u32 maxSliceSize,
         std::function<void(const RmaBufSliceLite&, const RmtRmaBufSliceLite&, SlicePosition)> processOneSlice,
@@ -187,6 +238,8 @@ private:
             wqeTasks_.emplace_back(sqe);
         }
     }
+
+    inline u16 GetInflight() const { return pi - ci; }
 };
 } // namespace Hccl
 

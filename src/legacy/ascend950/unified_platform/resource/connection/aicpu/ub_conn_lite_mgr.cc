@@ -26,13 +26,7 @@ std::string UbConnLiteMgr::GetKey(const UbConnLiteParam& liteParam) const
     return result;
 }
 
-bool UbConnLiteMgr::IsExist(const std::string& key)
-{
-    if (ubConnLiteMap.find(key) == ubConnLiteMap.end()) {
-        return false;
-    }
-    return true;
-}
+bool UbConnLiteMgr::IsExist(const std::string& key) { return ubConnLiteMap.find(key) != ubConnLiteMap.end(); }
 
 UbConnLiteMgr& UbConnLiteMgr::GetInstance()
 {
@@ -63,6 +57,27 @@ void UbConnLiteMgr::Clear(std::vector<char>& uniqueId)
     }
 
     ubConnLiteMap.erase(key);
+}
+
+void UbConnLiteMgr::RegisterCiTracker(UbTransportLiteImpl* transport, RmaConnLite* conn)
+{
+    std::unique_lock<std::shared_mutex> lock(mtx_);
+    ciTrackerMap_[transport] = conn;
+}
+
+void UbConnLiteMgr::UnRegisterCiTracker(UbTransportLiteImpl* transport)
+{
+    std::unique_lock<std::shared_mutex> lock(mtx_);
+    ciTrackerMap_.erase(transport);
+}
+
+void UbConnLiteMgr::AppendCompletedCis(UbTransportLiteImpl* transport, const std::pair<u16, u16>* slots, size_t count)
+{
+    std::shared_lock<std::shared_mutex> lock(mtx_);
+    auto it = ciTrackerMap_.find(transport);
+    if (it != ciTrackerMap_.end() && it->second != nullptr) {
+        it->second->UpdateCi(slots, count);
+    }
 }
 
 } // namespace Hccl

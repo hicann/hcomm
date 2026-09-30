@@ -25,6 +25,7 @@
 #include "ascend_hal.h"
 #include "drv_api_exception.h"
 #include "ub_conn_lite_mgr.h"
+#include "ub_conn_lite.h"
 #include "ins_to_sqe_rule.h"
 #include "stream_lite.h"
 #include "mem_transport_callback.h"
@@ -213,8 +214,8 @@ TEST_F(UbTransportLiteImplTest, construct_test)
     liteBinaryStream.Dump(uniqueId);
 
     StreamLite stream(uniqueId);
-    RtsqA5 rtsq(fakedevPhyId, fakeStreamId, fakeSqId);
-    stream.rtsq = std::make_unique<RtsqA5>(rtsq);
+    stream.rtsq = std::make_unique<RtsqA5>(fakedevPhyId, fakeStreamId, fakeSqId);
+    RtsqA5& rtsq = *static_cast<RtsqA5*>(stream.rtsq.get());
     MOCKER_CPP_VIRTUAL(rtsq, &RtsqA5::SdmaCopy)
         .stubs()
         .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any());
@@ -254,4 +255,39 @@ TEST_F(UbTransportLiteImplTest, construct_test)
     RmtRmaBufSliceLite rmtRmaBufferLite(100, 200, 300, 400, 500, UINT32_MAX);
     transportLite.BatchOneSidedRead({locRmaBufferLite}, {rmtRmaBufferLite}, stream);
     transportLite.BatchOneSidedWrite({locRmaBufferLite}, {rmtRmaBufferLite}, stream);
+}
+
+/* ---------- UbConnLiteMgr AppendCompletedCis ---------- */
+
+TEST_F(UbTransportLiteImplTest, UbConnLiteMgr_AppendCompletedCis_ExpectCiUpdated)
+{
+    UbJettyLiteId id(1, 1, 1);
+    UbJettyLiteAttr attr(1, 1, 8, 1, false);
+    Eid rmtEid;
+    auto ubConn = std::make_unique<UbConnLite>(id, attr, rmtEid);
+
+    UbTransportLiteImpl* fakeKey = reinterpret_cast<UbTransportLiteImpl*>(0x500);
+    {
+        std::unique_lock<std::shared_mutex> lock(UbConnLiteMgr::GetInstance().mtx_);
+        UbConnLiteMgr::GetInstance().ciTrackerMap_[fakeKey] = ubConn.get();
+    }
+
+    std::vector<std::pair<u16, u16>> slots = {{0, 10}, {1, 20}};
+    UbConnLiteMgr::GetInstance().AppendCompletedCis(fakeKey, slots.data(), slots.size());
+    EXPECT_EQ(20u, ubConn->ci);
+
+    {
+        std::unique_lock<std::shared_mutex> lock(UbConnLiteMgr::GetInstance().mtx_);
+        UbConnLiteMgr::GetInstance().ciTrackerMap_.erase(fakeKey);
+    }
+}
+
+TEST_F(UbTransportLiteImplTest, UbConnLiteMgr_AppendCompletedCis_InvalidInput_ExpectNoCrash)
+{
+    // transport未注册（已销毁场景）
+    UbTransportLiteImpl* fakeKey = reinterpret_cast<UbTransportLiteImpl*>(0x900);
+    std::vector<std::pair<u16, u16>> slots = {{0, 10}};
+    EXPECT_NO_THROW(UbConnLiteMgr::GetInstance().AppendCompletedCis(fakeKey, slots.data(), slots.size()));
+    // slots为空
+    EXPECT_NO_THROW(UbConnLiteMgr::GetInstance().AppendCompletedCis(fakeKey, nullptr, 0));
 }

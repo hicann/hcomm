@@ -15,6 +15,7 @@
 
 #include "gtest/gtest.h"
 #include <mockcpp/mockcpp.hpp>
+#include <unordered_set>
 #define private public
 #define protected public
 #include "rtsq_a5.h"
@@ -177,7 +178,7 @@ TEST_F(RtsqA5Test, launch_task_should_dump_generated_sqes_when_task_debug_enable
 
     rtsq.NotifyWait(0);
     rtsq.SdmaCopy(0x100, 0x200, 0x300, 0x400);
-    rtsq.UbDbSend(UbJettyLiteId(18, 18, 18), 0);
+    rtsq.UbDbSend(UbJettyLiteId(18, 18, 18), 0, 0, nullptr);
 
     EXPECT_NO_THROW(rtsq.LaunchTask());
 }
@@ -286,7 +287,7 @@ TEST_F(RtsqA5Test, ub_db_send)
     u32 funcId = 0;
     UbJettyLiteId jettyId(18, 18, 18);
     u32 piVal = 0;
-    rtsq.UbDbSend(jettyId, piVal);
+    rtsq.UbDbSend(jettyId, piVal, 0, nullptr);
 }
 
 TEST_F(RtsqA5Test, ub_direct_send)
@@ -824,4 +825,117 @@ TEST_F(RtsqA5Test, Ut_NonInlineBuild_WithoutProfiling_SqeProfStaysZero)
     std::fill(sqeBuf.begin(), sqeBuf.end(), 0);
     Hccl::BuildA5SqeRdmaDbSend(1, 1, 0x4000, 0x1234, sqeBuf.data());
     EXPECT_EQ(header->sqeProf, 0U);
+}
+
+/* ---------- UbDbSend (seqIdx + DbSendSlotMeta) ---------- */
+
+TEST_F(RtsqA5Test, UbDbSend_ExpectAllRecordedInOrder)
+{
+    RtsqA5 rtsq(fakedevPhyId, fakeStreamId, fakeSqId);
+    UbJettyLiteId jettyId(18, 18, 18);
+    UbTransportLiteImpl* fakeKey = reinterpret_cast<UbTransportLiteImpl*>(0x5678);
+
+    rtsq.UbDbSend(jettyId, 7, 0, nullptr);
+    rtsq.UbDbSend(jettyId, 8, 1, fakeKey);
+    rtsq.UbDbSend(jettyId, 9, 2, nullptr);
+    rtsq.UbDbSend(jettyId, 10, 3, fakeKey);
+
+    // null与有效transport均记录, seqIdx/piValue按调用顺序
+    EXPECT_EQ(4u, rtsq.dbSendTail_);
+    u32 slot0 = 0 % rtsq.dbSendDepth_;
+    u32 slot1 = 1 % rtsq.dbSendDepth_;
+    u32 slot2 = 2 % rtsq.dbSendDepth_;
+    u32 slot3 = 3 % rtsq.dbSendDepth_;
+    EXPECT_EQ(nullptr, rtsq.dbSendSlots_[slot0].transport);
+    EXPECT_EQ(0u, rtsq.dbSendSlots_[slot0].seqIdx);
+    EXPECT_EQ(7u, rtsq.dbSendSlots_[slot0].piValue);
+    EXPECT_EQ(fakeKey, rtsq.dbSendSlots_[slot1].transport);
+    EXPECT_EQ(1u, rtsq.dbSendSlots_[slot1].seqIdx);
+    EXPECT_EQ(8u, rtsq.dbSendSlots_[slot1].piValue);
+    EXPECT_EQ(nullptr, rtsq.dbSendSlots_[slot2].transport);
+    EXPECT_EQ(2u, rtsq.dbSendSlots_[slot2].seqIdx);
+    EXPECT_EQ(9u, rtsq.dbSendSlots_[slot2].piValue);
+    EXPECT_EQ(fakeKey, rtsq.dbSendSlots_[slot3].transport);
+    EXPECT_EQ(3u, rtsq.dbSendSlots_[slot3].seqIdx);
+    EXPECT_EQ(10u, rtsq.dbSendSlots_[slot3].piValue);
+}
+
+/* ---------- PollCompletion ---------- */
+
+TEST_F(RtsqA5Test, PollCompletion_ExpectCorrectConsume)
+{
+    RtsqA5 rtsq(fakedevPhyId, fakeStreamId, fakeSqId);
+    rtsq.sqDepth_ = 8;
+    rtsq.dbSendDepth_ = 16;
+    rtsq.lastHead_ = 4;
+    rtsq.dbSendSlots_.assign(16, DbSendSlotMeta{});
+    UbTransportLiteImpl* key1 = reinterpret_cast<UbTransportLiteImpl*>(0x1111);
+    UbTransportLiteImpl* key2 = reinterpret_cast<UbTransportLiteImpl*>(0x2222);
+
+    // 空数组: 无可消费slot, no-op
+    MOCKER_CPP(&RtsqBase::QuerySqHead).stubs().will(returnValue(4u));
+    EXPECT_NO_THROW(rtsq.PollCompletion());
+    EXPECT_EQ(0u, rtsq.dbSendHead_);
+    EXPECT_EQ(4u, rtsq.lastHead_);
+    GlobalMockObject::reset();
+
+    // head无变化: 不消费
+    rtsq.dbSendTail_ = 1;
+    rtsq.dbSendSlots_[0] = {key1, 4, 0, 100};
+    MOCKER_CPP(&RtsqBase::QuerySqHead).stubs().will(returnValue(4u));
+    rtsq.PollCompletion();
+    EXPECT_EQ(0u, rtsq.dbSendHead_);
+    EXPECT_EQ(4u, rtsq.lastHead_);
+    GlobalMockObject::reset();
+
+    // 部分消费: newHead只到5, 消费slot0后停止, slot1保留
+    rtsq.dbSendTail_ = 2;
+    rtsq.dbSendSlots_[1] = {key1, 6, 1, 101};
+    MOCKER_CPP(&RtsqBase::QuerySqHead).stubs().will(returnValue(5u));
+    rtsq.PollCompletion();
+    EXPECT_EQ(1u, rtsq.dbSendHead_);
+    EXPECT_EQ(5u, rtsq.lastHead_);
+    GlobalMockObject::reset();
+
+    // 跳过非DbSend slot + 同transport连续累积: 5无记录被跳过, 6匹配slot1(同key1)被消费
+    MOCKER_CPP(&RtsqBase::QuerySqHead).stubs().will(returnValue(7u));
+    rtsq.PollCompletion();
+    EXPECT_EQ(2u, rtsq.dbSendHead_);
+    EXPECT_EQ(7u, rtsq.lastHead_);
+    GlobalMockObject::reset();
+
+    // 回绕 + 切换transport: 7匹配slot2(key2), lastHead绕回0
+    rtsq.dbSendTail_ = 3;
+    rtsq.dbSendSlots_[2] = {key2, 7, 2, 102};
+    MOCKER_CPP(&RtsqBase::QuerySqHead).stubs().will(returnValue(0u));
+    rtsq.PollCompletion();
+    EXPECT_EQ(3u, rtsq.dbSendHead_);
+    EXPECT_EQ(0u, rtsq.lastHead_);
+    GlobalMockObject::reset();
+}
+
+/* ---------- Reset ---------- */
+
+TEST_F(RtsqA5Test, Reset_ClearsBackpressureState)
+{
+    RtsqA5 rtsq(fakedevPhyId, fakeStreamId, fakeSqId);
+    rtsq.sqDepth_ = 8;
+    rtsq.dbSendDepth_ = 16;
+    rtsq.lastHead_ = 5;
+    rtsq.dbSendHead_ = 0;
+    rtsq.dbSendTail_ = 1;
+    rtsq.dbSendSlots_.assign(16, DbSendSlotMeta{});
+    rtsq.dbSendSlots_[0] = {reinterpret_cast<UbTransportLiteImpl*>(0x7777), 5, 0, 800};
+
+    MOCKER_CPP(&RtsqBase::QuerySqHead).stubs().will(returnValue(3u));
+    MOCKER_CPP(&RtsqBase::QuerySqTail).stubs().will(returnValue(3u));
+    MOCKER_CPP(&RtsqBase::QuerySqDepth).stubs().will(returnValue(8u));
+    MOCKER_CPP(&RtsqBase::QuerySqBaseAddr).stubs().will(returnValue(0u));
+
+    rtsq.Reset(true);
+
+    EXPECT_EQ(0u, rtsq.dbSendHead_);
+    EXPECT_EQ(0u, rtsq.dbSendTail_);
+    EXPECT_EQ(3u, rtsq.lastHead_);
+    GlobalMockObject::reset();
 }
