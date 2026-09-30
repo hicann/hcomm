@@ -888,6 +888,9 @@ HcclResult HostCpuRoceChannel::NotifyWait(const uint32_t localNotifyIdx, const u
     std::vector<Hccl::QpInfo> qpInfo = GetQpInfos();
     CHK_PRT_RET(qpInfo.empty(), HCCL_ERROR("[HostCpuRoceChannel::%s] qpInfos is Empty", __func__), HCCL_E_ROCE_CONNECT);
 
+    Hccl::IpAddress remoteIp;
+    (void)CommAddrToIpAddress(remoteEp_.commAddr, remoteIp);
+
     // 2.轮询rq_cq
     auto startTime = std::chrono::steady_clock::now();
     auto waitTime = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::seconds(timeout));
@@ -904,31 +907,46 @@ HcclResult HostCpuRoceChannel::NotifyWait(const uint32_t localNotifyIdx, const u
 
         while (true) {
             auto actualNum = ibv_poll_cq(qpInfo[i].recvCq, 1, &wc);
-            CHK_PRT_RET(
-                actualNum < 0,
-                HCCL_ERROR("[HostCpuRoceChannel::%s] ibv_poll_cq err. actualNum=%d", __func__, actualNum),
-                HCCL_E_NETWORK);
-
-            if (actualNum > 0 && wc.imm_data == dpuNotifyId) {
-                if (wc.status != IBV_WC_SUCCESS) {
-                    HCCL_ERROR(
-                        "[HostCpuRoceChannel][%s] ibv_poll_cq return wc.status[%d], wc.opcode[%d], wc.vendorErr[%u], "
-                        "wc.byteLen[%u], wc.wcFlags[%u], wc.sl[%u], qpInfo[%u].qp->qp_num[%u]",
-                        __func__, wc.status, wc.opcode, wc.vendor_err, wc.byte_len, wc.wc_flags, wc.sl, i,
-                        qpInfo[i].qp->qp_num);
-                    return ReportWcStatusError(wc.status);
-                }
-                break;
-            } else if (actualNum > 0) {
+            if (actualNum < 0) {
                 HCCL_ERROR(
-                    "[HostCpuRoceChannel::%s] polled cq unexpected. imm_data[%u] != dpuNotifyId[%u], "
-                    "qpInfo[%u].qp->qp_num[%u]",
-                    __func__, wc.imm_data, dpuNotifyId, i, qpInfo[i].qp->qp_num);
+                    "[HostCpuRoceChannel::%s] ibv_poll_cq err. actualNum=%d, qpInfo[%u].qp->qp_num[%u], "
+                    "qp_state[%u]=[%u], remoteInfo{server[%u], deviceId[%u], deviceIp[%s]}",
+                    __func__, actualNum, i, qpInfo[i].qp->qp_num, i, qpInfo[i].qp->state,
+                    remoteEp_.loc.device.serverIdx, remoteEp_.loc.device.devPhyId, remoteIp.GetIpStr().c_str());
                 return HCCL_E_NETWORK;
             }
 
+            if (actualNum > 0) {
+                if (wc.status != IBV_WC_SUCCESS) {
+                    HCCL_ERROR(
+                        "[HostCpuRoceChannel][%s] ibv_poll_cq return wc.status[%d], wc.opcode[%d], wc.vendorErr[%u], "
+                        "wc.byteLen[%u], wc.wcFlags[%u], wc.sl[%u], qpInfo[%u].qp->qp_num[%u], qp_state[%u]=[%u], "
+                        "remoteInfo{server[%u], deviceId[%u], deviceIp[%s]}",
+                        __func__, wc.status, wc.opcode, wc.vendor_err, wc.byte_len, wc.wc_flags, wc.sl, i,
+                        qpInfo[i].qp->qp_num, i, qpInfo[i].qp->state, remoteEp_.loc.device.serverIdx,
+                        remoteEp_.loc.device.devPhyId, remoteIp.GetIpStr().c_str());
+                    return ReportWcStatusError(wc.status);
+                }
+                if (wc.imm_data != dpuNotifyId) {
+                    HCCL_ERROR(
+                        "[HostCpuRoceChannel::%s] polled cq unexpected. imm_data[%u] != dpuNotifyId[%u], "
+                        "qpInfo[%u].qp->qp_num[%u], qp_state[%u]=[%u], remoteInfo{server[%u], deviceId[%u], "
+                        "deviceIp[%s]}",
+                        __func__, wc.imm_data, dpuNotifyId, i, qpInfo[i].qp->qp_num, i, qpInfo[i].qp->state,
+                        remoteEp_.loc.device.serverIdx, remoteEp_.loc.device.devPhyId, remoteIp.GetIpStr().c_str());
+                    return HCCL_E_NETWORK;
+                }
+                HCCL_INFO("[HostCpuRoceChannel::NotifyWait] poll cq success");
+                break;
+            }
+
             if ((std::chrono::steady_clock::now() - startTime) >= waitTime) {
-                HCCL_ERROR("[HostCpuRoceChannel][%s] call ibv_poll_cq timeout. actualNum=%d", __func__, actualNum);
+                HCCL_ERROR(
+                    "[HostCpuRoceChannel][%s] call ibv_poll_cq timeout. actualNum=%d, localNotifyIdx[%u], "
+                    "dpuNotifyId[%u], qpInfo[%u].qp->qp_num[%u], qp_state[%u]=[%u], remoteInfo{server[%u], "
+                    "deviceId[%u], deviceIp[%s]}",
+                    __func__, actualNum, localNotifyIdx, dpuNotifyId, i, qpInfo[i].qp->qp_num, i, qpInfo[i].qp->state,
+                    remoteEp_.loc.device.serverIdx, remoteEp_.loc.device.devPhyId, remoteIp.GetIpStr().c_str());
                 return HCCL_E_TIMEOUT;
             }
         }
