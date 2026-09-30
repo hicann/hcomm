@@ -133,11 +133,6 @@ void EnvRdmaConfig::Parse()
         "[HCCL_ENV] HCCL_MULTI_QP_THRESHOLD set by %s to [%u]B", multiQpThreshold.GetSource(),
         GetRdmaMultiQpThreshold());
 
-    hostRdmaUdpPortsList.Parse();
-    HCCL_RUN_INFO(
-        "[HCCL_ENV] HCCL_HOST_RDMA_UDP_PORTS_LIST set by %s, device config count[%zu]",
-        hostRdmaUdpPortsList.GetSource(), GetHostRdmaUdpPortsList().GetDeviceConfigCount());
-
     qpPortConfigPath.Parse();
     HCCL_RUN_INFO(
         "[HCCL_ENV] HCCL_RDMA_QP_PORT_CONFIG_PATH set by %s to [%s]", qpPortConfigPath.GetSource(),
@@ -226,10 +221,11 @@ void EnvRdmaConfig::ParseMultiQpSrcPortConfig()
         inFile.close();
         multiQpSrcPortConfig_ = config;
         LogMultiQpSrcPortConfig();
-    } catch (const HcclException& e) {
-        HCCL_ERROR("[EnvRdmaConfig][Parse] LoadMultiQpSrcPortConfig failed: %s", e.what());
     } catch (const std::exception& e) {
         HCCL_ERROR("[EnvRdmaConfig][Parse] LoadMultiQpSrcPortConfig failed: %s", e.what());
+        THROW<InvalidParamsException>(StringFormat(
+            "[Init][EnvVarParam]Env config \"%s\" value is invalid.%s", qpPortConfigPath.GetEnvName().c_str(),
+            e.what()));
     }
 }
 
@@ -367,8 +363,6 @@ u32 EnvRdmaConfig::GetRdmaRetryCnt() const { return rdmaRetryCnt.Get(); }
 u32 EnvRdmaConfig::GetRdmaQueueNum() const { return queueNum.Get(); }
 
 u32 EnvRdmaConfig::GetRdmaMultiQpThreshold() const { return multiQpThreshold.Get(); }
-
-const HostRdmaUdpPortsList& EnvRdmaConfig::GetHostRdmaUdpPortsList() const { return hostRdmaUdpPortsList.Get(); }
 
 const MultiQpSrcPortConfig& EnvRdmaConfig::GetMultiQpSrcPortConfig() const { return multiQpSrcPortConfig_; }
 
