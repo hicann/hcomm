@@ -13,6 +13,7 @@
 #include <securec.h>
 #include <cstring>
 #include <string>
+#include <stdexcept>
 #include <vector>
 
 #define private public
@@ -27,6 +28,22 @@ namespace {
 std::vector<char> BuildMemDesc(uintptr_t addr, uint64_t size, const EndpointDesc& ep, uint64_t pid)
 {
     Hccl::ExchangeRdmaBufferDto dto(addr, size, 42U, "ut");
+    Hccl::BinaryStream stream;
+    dto.Serialize(stream);
+    std::vector<char> desc;
+    stream.Dump(desc);
+
+    std::vector<char> tail(sizeof(EndpointDesc) + sizeof(uint64_t));
+    EXPECT_EQ(memcpy_s(tail.data(), sizeof(EndpointDesc), &ep, sizeof(EndpointDesc)), EOK);
+    EXPECT_EQ(memcpy_s(tail.data() + sizeof(EndpointDesc), sizeof(uint64_t), &pid, sizeof(pid)), EOK);
+    desc.insert(desc.end(), tail.begin(), tail.end());
+    return desc;
+}
+
+std::vector<char>
+BuildUbMemDesc(uintptr_t addr, uint64_t size, HcclMemType memType, const EndpointDesc& ep, uint64_t pid)
+{
+    Hccl::ExchangeUbBufferDto dto(addr, size, memType, "ut", 0U, 0U, 0U);
     Hccl::BinaryStream stream;
     dto.Serialize(stream);
     std::vector<char> desc;
@@ -112,6 +129,167 @@ TEST_F(EndpointRemoteMemMgrTest, Ut_MemoryImport_When_SameDescTwice_Expect_Idemp
     ASSERT_NE(bufferMgr, nullptr);
     EXPECT_EQ(bufferMgr->size(), 1U);
     EXPECT_EQ(bufferMgr->Begin()->second.ref, 2U);
+}
+
+TEST_F(EndpointRemoteMemMgrTest, Ut_MemoryImport_When_RoceDescHasNoMemType_Expect_KeepCallerType)
+{
+    EndpointRemoteRegedMemMgr mgr(nullptr, ParseRoceMemDesc, CreateRoceRemoteBuffer);
+    EndpointDesc ep{};
+    auto desc = BuildMemDesc(0x5800, 0x100, ep, 1234U);
+
+    HcommMem out{COMM_MEM_TYPE_HOST, nullptr, 0};
+    ASSERT_EQ(mgr.MemoryImport(desc.data(), static_cast<uint32_t>(desc.size()), &out), HCCL_SUCCESS);
+    EXPECT_EQ(out.type, COMM_MEM_TYPE_HOST);
+}
+
+TEST_F(EndpointRemoteMemMgrTest, Ut_MemoryImport_When_UbDeviceOrHost_Expect_Return_DescriptorMemType)
+{
+    struct TestCase {
+        HcclMemType hcclType;
+        CommMemType expectedType;
+        uintptr_t addr;
+    };
+    const TestCase cases[] = {
+        {HCCL_MEM_TYPE_DEVICE, COMM_MEM_TYPE_DEVICE, 0x6000},
+        {HCCL_MEM_TYPE_HOST, COMM_MEM_TYPE_HOST, 0x7000},
+    };
+
+    EndpointDesc ep{};
+    for (const auto& testCase : cases) {
+        auto testUbCreator
+            = [](RdmaHandle, const Hccl::Serializable& serializable) -> std::shared_ptr<Hccl::RemoteRmaBuffer> {
+            const auto& dto = dynamic_cast<const Hccl::ExchangeUbBufferDto&>(serializable);
+            return std::make_shared<Hccl::RemoteUbRmaBuffer>(
+                dto.addr, dto.size, dto.tokenId, dto.tokenValue, dto.memType, dto.memInfo);
+        };
+        EndpointRemoteRegedMemMgr mgr(nullptr, ParseUbMemDesc, testUbCreator);
+        auto desc = BuildUbMemDesc(testCase.addr, 0x100, testCase.hcclType, ep, 1234U);
+        uint32_t descLen = static_cast<uint32_t>(desc.size());
+
+        HcommMem out{};
+        out.type = COMM_MEM_TYPE_INVALID;
+        ASSERT_EQ(mgr.MemoryImport(desc.data(), descLen, &out), HCCL_SUCCESS);
+        EXPECT_EQ(out.type, testCase.expectedType);
+        EXPECT_EQ(out.addr, reinterpret_cast<void*>(testCase.addr));
+        EXPECT_EQ(out.size, 0x100U);
+
+        out.type = COMM_MEM_TYPE_INVALID;
+        ASSERT_EQ(mgr.MemoryImport(desc.data(), descLen, &out), HCCL_SUCCESS);
+        EXPECT_EQ(out.type, testCase.expectedType);
+    }
+}
+
+TEST_F(EndpointRemoteMemMgrTest, Ut_MemoryImport_When_UbMemTypeInvalid_Expect_Return_ParaAndResetOutput)
+{
+    EndpointRemoteRegedMemMgr mgr(nullptr, ParseUbMemDesc, CreateUbRemoteBuffer);
+    EndpointDesc ep{};
+    auto desc = BuildUbMemDesc(0x8000, 0x100, HCCL_MEM_TYPE_NUM, ep, 1234U);
+
+    HcommMem out{COMM_MEM_TYPE_HOST, reinterpret_cast<void*>(0x1), 1U};
+    EXPECT_EQ(mgr.MemoryImport(desc.data(), static_cast<uint32_t>(desc.size()), &out), HCCL_E_PARA);
+    EXPECT_EQ(out.type, COMM_MEM_TYPE_INVALID);
+    EXPECT_EQ(out.addr, nullptr);
+    EXPECT_EQ(out.size, 0U);
+    EXPECT_TRUE(mgr.remoteRmaBufferMgrs_.empty());
+}
+
+TEST_F(EndpointRemoteMemMgrTest, Ut_MemoryImport_When_ReusedUbMemTypeMismatch_Expect_Return_ParaAndKeepRef)
+{
+    uint32_t creatorCalls = 0;
+    auto countingCreator =
+        [&creatorCalls](RdmaHandle, const Hccl::Serializable& serializable) -> std::shared_ptr<Hccl::RemoteRmaBuffer> {
+        creatorCalls++;
+        const auto& dto = dynamic_cast<const Hccl::ExchangeUbBufferDto&>(serializable);
+        return std::make_shared<Hccl::RemoteUbRmaBuffer>(
+            dto.addr, dto.size, dto.tokenId, dto.tokenValue, dto.memType, dto.memInfo);
+    };
+    EndpointRemoteRegedMemMgr mgr(nullptr, ParseUbMemDesc, countingCreator);
+    EndpointDesc ep{};
+    auto deviceDesc = BuildUbMemDesc(0x9000, 0x100, HCCL_MEM_TYPE_DEVICE, ep, 1234U);
+    auto hostDesc = BuildUbMemDesc(0x9000, 0x100, HCCL_MEM_TYPE_HOST, ep, 1234U);
+
+    HcommMem out{};
+    ASSERT_EQ(mgr.MemoryImport(deviceDesc.data(), static_cast<uint32_t>(deviceDesc.size()), &out), HCCL_SUCCESS);
+    EXPECT_EQ(out.type, COMM_MEM_TYPE_DEVICE);
+
+    EXPECT_EQ(mgr.MemoryImport(hostDesc.data(), static_cast<uint32_t>(hostDesc.size()), &out), HCCL_E_PARA);
+    EXPECT_EQ(out.type, COMM_MEM_TYPE_INVALID);
+    EXPECT_EQ(out.addr, nullptr);
+    EXPECT_EQ(out.size, 0U);
+    EXPECT_EQ(creatorCalls, 1U);
+
+    auto& bufferMgr = mgr.remoteRmaBufferMgrs_.begin()->second;
+    ASSERT_NE(bufferMgr, nullptr);
+    ASSERT_EQ(bufferMgr->size(), 1U);
+    EXPECT_EQ(bufferMgr->Begin()->second.ref, 1U);
+}
+
+TEST_F(EndpointRemoteMemMgrTest, Ut_MemoryUnimport_When_UbMemTypeMismatch_Expect_ReturnParaAndKeepRef)
+{
+    auto testUbCreator
+        = [](RdmaHandle, const Hccl::Serializable& serializable) -> std::shared_ptr<Hccl::RemoteRmaBuffer> {
+        const auto& dto = dynamic_cast<const Hccl::ExchangeUbBufferDto&>(serializable);
+        return std::make_shared<Hccl::RemoteUbRmaBuffer>(
+            dto.addr, dto.size, dto.tokenId, dto.tokenValue, dto.memType, dto.memInfo);
+    };
+    EndpointRemoteRegedMemMgr mgr(nullptr, ParseUbMemDesc, testUbCreator);
+    EndpointDesc ep{};
+    auto deviceDesc = BuildUbMemDesc(0xa000, 0x100, HCCL_MEM_TYPE_DEVICE, ep, 1234U);
+    auto hostDesc = BuildUbMemDesc(0xa000, 0x100, HCCL_MEM_TYPE_HOST, ep, 1234U);
+
+    HcommMem out{};
+    ASSERT_EQ(mgr.MemoryImport(deviceDesc.data(), static_cast<uint32_t>(deviceDesc.size()), &out), HCCL_SUCCESS);
+
+    EXPECT_EQ(mgr.MemoryUnimport(hostDesc.data(), static_cast<uint32_t>(hostDesc.size())), HCCL_E_PARA);
+    ASSERT_EQ(mgr.remoteRmaBufferMgrs_.size(), 1U);
+    auto& bufferMgr = mgr.remoteRmaBufferMgrs_.begin()->second;
+    ASSERT_NE(bufferMgr, nullptr);
+    ASSERT_EQ(bufferMgr->size(), 1U);
+    EXPECT_EQ(bufferMgr->Begin()->second.ref, 1U);
+
+    EXPECT_EQ(mgr.MemoryUnimport(deviceDesc.data(), static_cast<uint32_t>(deviceDesc.size())), HCCL_SUCCESS);
+    EXPECT_TRUE(mgr.remoteRmaBufferMgrs_.empty());
+}
+
+TEST_F(EndpointRemoteMemMgrTest, Ut_MemoryImport_When_CreatorThrows_Expect_ResetOutput)
+{
+    auto throwingCreator = [](RdmaHandle, const Hccl::Serializable&) -> std::shared_ptr<Hccl::RemoteRmaBuffer> {
+        throw std::runtime_error("creator failure");
+    };
+    EndpointRemoteRegedMemMgr mgr(nullptr, ParseUbMemDesc, throwingCreator);
+    EndpointDesc ep{};
+    auto desc = BuildUbMemDesc(0xb000, 0x100, HCCL_MEM_TYPE_DEVICE, ep, 1234U);
+
+    HcommMem out{COMM_MEM_TYPE_HOST, reinterpret_cast<void*>(0x1), 1U};
+    EXPECT_EQ(mgr.MemoryImport(desc.data(), static_cast<uint32_t>(desc.size()), &out), HCCL_E_PTR);
+    EXPECT_EQ(out.type, COMM_MEM_TYPE_INVALID);
+    EXPECT_EQ(out.addr, nullptr);
+    EXPECT_EQ(out.size, 0U);
+}
+
+TEST_F(EndpointRemoteMemMgrTest, Ut_MemoryImport_When_KeyOverlaps_Expect_ResetOutput)
+{
+    auto testUbCreator
+        = [](RdmaHandle, const Hccl::Serializable& serializable) -> std::shared_ptr<Hccl::RemoteRmaBuffer> {
+        const auto& dto = dynamic_cast<const Hccl::ExchangeUbBufferDto&>(serializable);
+        return std::make_shared<Hccl::RemoteUbRmaBuffer>(
+            dto.addr, dto.size, dto.tokenId, dto.tokenValue, dto.memType, dto.memInfo);
+    };
+    EndpointRemoteRegedMemMgr mgr(nullptr, ParseUbMemDesc, testUbCreator);
+    EndpointDesc ep{};
+    auto desc = BuildUbMemDesc(0xc000, 0x100, HCCL_MEM_TYPE_DEVICE, ep, 1234U);
+    auto overlapDesc = BuildUbMemDesc(0xc080, 0x100, HCCL_MEM_TYPE_HOST, ep, 1234U);
+
+    HcommMem out{};
+    ASSERT_EQ(mgr.MemoryImport(desc.data(), static_cast<uint32_t>(desc.size()), &out), HCCL_SUCCESS);
+
+    out = {COMM_MEM_TYPE_HOST, reinterpret_cast<void*>(0x1), 1U};
+    EXPECT_EQ(mgr.MemoryImport(overlapDesc.data(), static_cast<uint32_t>(overlapDesc.size()), &out), HCCL_E_INTERNAL);
+    EXPECT_EQ(out.type, COMM_MEM_TYPE_INVALID);
+    EXPECT_EQ(out.addr, nullptr);
+    EXPECT_EQ(out.size, 0U);
+    ASSERT_EQ(mgr.remoteRmaBufferMgrs_.size(), 1U);
+    EXPECT_EQ(mgr.remoteRmaBufferMgrs_.begin()->second->size(), 1U);
 }
 
 // 重复导入跳过 creator_：creator 仅在首次导入调用一次（Ub 族 creator 含硬件 import，避免重复导入空转）
