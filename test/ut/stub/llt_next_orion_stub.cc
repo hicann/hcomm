@@ -1698,6 +1698,8 @@ HcclResult HcclCommunicator::GetRankIpPortMap(RankIpPortMapPtr& rankIpPortMap)
     return HCCL_SUCCESS;
 }
 
+void* HcclCommunicator::GetKFCWorkSpaceVA() { return ((void*)1); }
+
 void HrtFree(void* devPtr) {}
 
 HcclResult HrtRaNdaQpCreate(

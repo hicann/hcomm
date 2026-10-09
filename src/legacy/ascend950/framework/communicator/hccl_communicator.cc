@@ -538,4 +538,6 @@ HcclResult HcclCommunicator::GetRankIpPortMap(RankIpPortMapPtr& rankIpPortMap)
     return HCCL_SUCCESS;
 }
 
+void* HcclCommunicator::GetKFCWorkSpaceVA() { return pimpl->GetKFCWorkSpaceAddr(); }
+
 } // namespace Hccl
