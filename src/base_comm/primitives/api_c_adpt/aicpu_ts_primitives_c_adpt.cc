@@ -523,6 +523,7 @@ int32_t HcommWriteOnThread(ThreadHandle thread, ChannelHandle channel, void* dst
                 __func__, thread, channel, dst, src, len),
             ret);
         const Hccl::Buffer rmtBuf{ReinterpretAs<uintptr_t>(dst), len};
+
         EXCEPTION_CATCH(transportLitePtr->Write(locRmaBuf, rmtBuf, *streamLitePtr), ret = HCCL_E_INTERNAL);
     } else {
         HcclBuf locBuf{const_cast<void*>(src), len, nullptr};

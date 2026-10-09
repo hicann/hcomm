@@ -96,8 +96,6 @@ void UbTransportLiteImpl::Init(std::vector<char>& uniqueId)
 
 UbTransportLiteImpl::~UbTransportLiteImpl()
 {
-    UbConnLiteMgr::GetInstance().UnRegisterCiTracker(this);
-    cachedConn_ = nullptr;
     for (auto& it : connUniqueIdVec) {
         DECTOR_TRY_CATCH("UbTransportLiteImpl", UbConnLiteMgr::GetInstance().Clear(it));
     }
@@ -256,17 +254,12 @@ void UbTransportLiteImpl::ParseConnVec(std::vector<char>& data)
         connVec.push_back(lite);
         HCCL_INFO("[%s]idx=%u, %s", __func__, idx, lite->Describe().c_str());
     }
-    cachedConn_ = connVec[0];
-    UbConnLiteMgr::GetInstance().RegisterCiTracker(this, cachedConn_);
-
     CheckConnVec("after ParseConnVec");
 }
 
-void UbTransportLiteImpl::BuildUbDbSendTask(const StreamLite& stream, RmaConnLite* conn, u16 pi)
+void UbTransportLiteImpl::BuildUbDbSendTask(const StreamLite& stream, const UbJettyLiteId& jettyLiteId, u32 pi)
 {
-    u16 seq;
-    UbJettyLiteId jettyLiteId = conn->GetUbJettyLiteIdAndSeq(seq);
-    stream.GetRtsq()->UbDbSend(jettyLiteId, pi, seq, this);
+    stream.GetRtsq()->UbDbSend(jettyLiteId, pi);
 }
 
 void UbTransportLiteImpl::BuildNotifyWaitTask(const StreamLite& stream, u32 notifyId)
@@ -420,7 +413,7 @@ void UbTransportLiteImpl::Post(u32 index, const StreamLite& stream)
     PostLaunchWqe(stream, ubConnLitePtr, needCacheTask, pendingSqeCnt, isReportTask, dbSqeProfInfo);
 
     // 构建rts 的 sqe
-    BuildUbDbSendTask(stream, conn, connOut.pi);
+    BuildUbDbSendTask(stream, conn->GetUbJettyLiteId(), connOut.pi);
 
     HCCL_INFO(
         "UbTransportLiteImpl::Post notifyId[%u], pi=[%u], locEid[%s], rmtEid[%s]", rmtBuffSliceLite.GetNotifyId(),
@@ -659,7 +652,7 @@ void UbTransportLiteImpl::Read(const RmaBufferLite& loc, const Buffer& rmt, cons
     }
     PostLaunchWqe(stream, ubConnLitePtr, needCacheTask, pendingSqeCnt, isReportTask, dbSqeProfInfo);
 
-    BuildUbDbSendTask(stream, conn, connOut.pi);
+    BuildUbDbSendTask(stream, conn->GetUbJettyLiteId(), connOut.pi);
 
     ProfilingProcess(
         ReinterpretAs<void*>(locRmaBufSlicelite.GetAddr()), ReinterpretAs<void*>(rmtRmaBufSlicelite.GetAddr()),
@@ -702,7 +695,7 @@ void UbTransportLiteImpl::Write(const RmaBufferLite& loc, const Buffer& rmt, con
     }
     PostLaunchWqe(stream, ubConnLitePtr, needCacheTask, pendingSqeCnt, isReportTask, dbSqeProfInfo);
 
-    BuildUbDbSendTask(stream, conn, connOut.pi);
+    BuildUbDbSendTask(stream, conn->GetUbJettyLiteId(), connOut.pi);
 
     ProfilingProcess(
         ReinterpretAs<void*>(locRmaBufSlicelite.GetAddr()), ReinterpretAs<void*>(rmtRmaBufSlicelite.GetAddr()),
@@ -746,7 +739,7 @@ void UbTransportLiteImpl::ReadReduce(
     }
     PostLaunchWqe(stream, ubConnLitePtr, needCacheTask, pendingSqeCnt, isReportTask, dbSqeProfInfo);
 
-    BuildUbDbSendTask(stream, conn, connOut.pi);
+    BuildUbDbSendTask(stream, conn->GetUbJettyLiteId(), connOut.pi);
 
     ReduceProfilingProcess(
         ReinterpretAs<void*>(locRmaBufSlicelite.GetAddr()), ReinterpretAs<void*>(rmtRmaBufSlicelite.GetAddr()),
@@ -791,7 +784,7 @@ void UbTransportLiteImpl::WriteReduce(
     }
     PostLaunchWqe(stream, ubConnLitePtr, needCacheTask, pendingSqeCnt, isReportTask, dbSqeProfInfo);
 
-    BuildUbDbSendTask(stream, conn, connOut.pi);
+    BuildUbDbSendTask(stream, conn->GetUbJettyLiteId(), connOut.pi);
 
     ReduceProfilingProcess(
         ReinterpretAs<void*>(locRmaBufSlicelite.GetAddr()), ReinterpretAs<void*>(rmtRmaBufSlicelite.GetAddr()),
@@ -871,8 +864,6 @@ void UbTransportLiteImpl::BatchTransfer(
     // 当前使用1个connection，下标为0 (当前只有一个connection，对应一个jetty)
     RmaConnLite* conn = connVec[0];
 
-    u32 insNum = loc.size();
-
     // 展开下发WQE前, 按需设置cache context
     UbConnLite* ubConnLitePtr = nullptr;
     bool needCacheTask = false;
@@ -880,6 +871,7 @@ void UbTransportLiteImpl::BatchTransfer(
     // 下发DbSqe前, 备份相关信息
     const uint32_t pendingSqeCnt = needCacheTask ? stream.GetRtsq()->GetPendingSqeCnt() : 0;
 
+    u32 insNum = loc.size();
     for (u32 i = 0; i < insNum; i++) {
         cfg.cqeEn = (i == insNum - 1) ? true : false; // 返回最后一个sqe的cqe
         cfg.placeOdr = UB_RELAX_ORDER;
@@ -922,7 +914,7 @@ void UbTransportLiteImpl::BatchTransfer(
     }
     PostLaunchWqe(stream, ubConnLitePtr, needCacheTask, pendingSqeCnt, isReportTask, dbSqeProfInfo);
 
-    BuildUbDbSendTask(stream, conn, connOut.pi);
+    BuildUbDbSendTask(stream, conn->GetUbJettyLiteId(), connOut.pi);
 
     ExecProfiling(loc[insNum - 1], rmt[insNum - 1], totalSize, transferOp[insNum - 1], stream, taskId);
 }
@@ -1162,7 +1154,7 @@ void UbTransportLiteImpl::BatchTransferAll(
     }
     PostLaunchWqe(stream, ubConnLitePtr, needCacheTask, pendingSqeCnt, isReportTask, dbSqeProfInfo);
 
-    BuildUbDbSendTask(stream, conn, connOut.pi); // 约束使用一批wqe的个数不会导致反压
+    BuildUbDbSendTask(stream, conn->GetUbJettyLiteId(), connOut.pi); // 约束使用一批wqe的个数不会导致反压
 
     ExecProfilingAll(
         loc[insNum - 1], rmt[insNum - 1], totalSize, transferOp[insNum - 1], stream, taskId, notifyIdxs[insNum - 1]);
@@ -1271,7 +1263,7 @@ void UbTransportLiteImpl::Drain(const StreamLite& stream)
     }
     PostLaunchWqe(stream, ubConnLitePtr, needCacheTask, pendingSqeCnt, isReportTask, dbSqeProfInfo);
 
-    BuildUbDbSendTask(stream, conn, connOut.pi);
+    BuildUbDbSendTask(stream, conn->GetUbJettyLiteId(), connOut.pi);
     ProfilingProcess(
         ReinterpretAs<void*>(drainNotifyBufSlice.GetAddr()), ReinterpretAs<void*>(drainConstBufSlice.GetAddr()),
         drainNotifyBufSlice.GetSize(), stream, DmaOp::HCCL_DMA_READ, taskId);
@@ -1330,7 +1322,7 @@ void UbTransportLiteImpl::WriteWithNotify(
     }
     PostLaunchWqe(stream, ubConnLitePtr, needCacheTask, pendingSqeCnt, isReportTask, dbSqeProfInfo);
 
-    BuildUbDbSendTask(stream, conn, connOut.pi);
+    BuildUbDbSendTask(stream, conn->GetUbJettyLiteId(), connOut.pi);
 
     WriteWithNotifyProfilingProcess(
         ReinterpretAs<void*>(locRmaBufSlicelite.GetAddr()), ReinterpretAs<void*>(rmtRmaBufSlicelite.GetAddr()),
@@ -1379,7 +1371,7 @@ void UbTransportLiteImpl::WriteReduceWithNotify(
     }
     PostLaunchWqe(stream, ubConnLitePtr, needCacheTask, pendingSqeCnt, isReportTask, dbSqeProfInfo);
 
-    BuildUbDbSendTask(stream, conn, connOut.pi);
+    BuildUbDbSendTask(stream, conn->GetUbJettyLiteId(), connOut.pi);
 
     WriteReduceWithNotifyProfilingProcess(
         ReinterpretAs<void*>(locRmaBufSlicelite.GetAddr()), ReinterpretAs<void*>(rmtRmaBufSlicelite.GetAddr()),
@@ -1412,7 +1404,7 @@ void UbTransportLiteImpl::BatchOneSidedRead(
     //     会导致AicpuTaskCache找不到当前WQE数组, 无法正确更新对应的DbSqeLocation
     PostLaunchWqe(stream, ubConnLitePtr, needCacheTask, pendingSqeCnt, false, DbSqeProfInfo());
 
-    BuildUbDbSendTask(stream, conn, connOut.pi);
+    BuildUbDbSendTask(stream, conn->GetUbJettyLiteId(), connOut.pi);
 }
 
 void UbTransportLiteImpl::BatchOneSidedWrite(
@@ -1441,7 +1433,7 @@ void UbTransportLiteImpl::BatchOneSidedWrite(
     //     会导致AicpuTaskCache找不到当前WQE数组, 无法正确更新对应的DbSqeLocation
     PostLaunchWqe(stream, ubConnLitePtr, needCacheTask, pendingSqeCnt, false, DbSqeProfInfo());
 
-    BuildUbDbSendTask(stream, conn, connOut.pi);
+    BuildUbDbSendTask(stream, conn->GetUbJettyLiteId(), connOut.pi);
 }
 
 Eid UbTransportLiteImpl::GetLocEid() const { return connVec[0]->GetLocEid(); }
@@ -1462,8 +1454,6 @@ HcclResult UbTransportLiteImpl::Clean()
     rmtBufferVec.clear();
     rmtBufferMap.clear();
 
-    UbConnLiteMgr::GetInstance().UnRegisterCiTracker(this);
-    cachedConn_ = nullptr;
     // 清理connVec，connLite由UbConnLiteMgr管理
     for (auto& it : connUniqueIdVec) {
         DECTOR_TRY_CATCH("UbTransportLiteImpl", UbConnLiteMgr::GetInstance().Clear(it));
@@ -1502,5 +1492,4 @@ bool UbTransportLiteImpl::IsReportTask() const
 {
     return taskExceptionEnable_ || DfxProfilingHandlerLite::GetInstance().GetProfL1State();
 }
-
 } // namespace Hccl

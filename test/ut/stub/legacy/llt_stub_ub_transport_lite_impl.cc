@@ -22,11 +22,7 @@ UbTransportLiteImpl::UbTransportLiteImpl(
 {
     callback_ = nullptr;
 }
-UbTransportLiteImpl::UbTransportLiteImpl(std::vector<char>& uniqueId)
-{
-    static RmaConnLite dummyConn;
-    cachedConn_ = &dummyConn;
-}
+UbTransportLiteImpl::UbTransportLiteImpl(std::vector<char>& uniqueId) {}
 
 UbTransportLiteImpl::~UbTransportLiteImpl() {}
 
@@ -40,7 +36,7 @@ void UbTransportLiteImpl::ParseLocBufferMap(std::vector<char>& data) {}
 
 void UbTransportLiteImpl::ParseConnVec(std::vector<char>& data) {}
 
-void UbTransportLiteImpl::BuildUbDbSendTask(const StreamLite& stream, RmaConnLite* conn, u16 pi) {}
+void UbTransportLiteImpl::BuildUbDbSendTask(const StreamLite& stream, const UbJettyLiteId& jettyLiteId, u32 pi) {}
 
 void UbTransportLiteImpl::BuildNotifyWaitTask(const StreamLite& stream, u32 notifyId) {}
 

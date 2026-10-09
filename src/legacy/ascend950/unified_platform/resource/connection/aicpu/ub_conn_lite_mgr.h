@@ -12,15 +12,13 @@
 #define HCCLV2_UB_CONN_LITE_MGR_H_
 
 #include "ub_conn_lite.h"
-#include <memory>
 #include <unordered_map>
+#include <memory>
 #include <mutex>
 #include <shared_mutex>
-#include <vector>
+#include <functional>
 
 namespace Hccl {
-
-class UbTransportLiteImpl;
 
 class UbConnLiteMgr {
 public:
@@ -32,11 +30,6 @@ public:
 
     void Clear(std::vector<char>& uniqueId);
 
-    void AppendCompletedCis(UbTransportLiteImpl* transport, const std::pair<u16, u16>* slots, size_t count);
-
-    void RegisterCiTracker(UbTransportLiteImpl* transport, RmaConnLite* conn);
-    void UnRegisterCiTracker(UbTransportLiteImpl* transport);
-
 private:
     UbConnLiteMgr();
 
@@ -44,8 +37,7 @@ private:
 
     std::unordered_map<std::string, std::unique_ptr<UbConnLite>> ubConnLiteMap;
 
-    mutable std::shared_mutex mtx_;
-    std::unordered_map<UbTransportLiteImpl*, RmaConnLite*> ciTrackerMap_;
+    mutable std::shared_mutex mtx_{};
 
     bool IsExist(const std::string& key);
 };

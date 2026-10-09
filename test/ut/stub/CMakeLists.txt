@@ -123,7 +123,6 @@ set(orion_list
     ${HCCL_CODE_ROOT}/src/legacy/ascend950/unified_platform/resource/buffer/aicpu/rmt_rma_buf_slice_lite.cc
     ${HCCL_CODE_ROOT}/src/legacy/ascend950/unified_platform/resource/connection/aicpu/ub_conn_lite.cc
     ${HCCL_CODE_ROOT}/src/legacy/ascend950/unified_platform/resource/connection/aicpu/ub_conn_lite_mgr.cc
-    ${HCCL_CODE_ROOT}/src/base_comm/resources/comm_engine_res/threads/device/aicpu_rtsq_poll_daemon.cc
     ${HCCL_CODE_ROOT}/src/legacy/ascend950/unified_platform/resource/connection/host_ub_connection.cc
     ${HCCL_CODE_ROOT}/src/legacy/ascend950/unified_platform/resource/stream/stream.cc
     ${HCCL_CODE_ROOT}/src/legacy/ascend950/unified_platform/resource/task/task.cc

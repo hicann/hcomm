@@ -202,7 +202,6 @@ private:
     std::vector<RmaConnLite*> connVec;
 
     std::function<void(u32 streamId, u32 taskId, const TaskParam& taskParam)> callback_{nullptr};
-    RmaConnLite* cachedConn_{nullptr}; // 缓存connVec[0]，避免重复做vector索引
 
     void ProfilingProcess(void* src, void* dst, u64 size, const StreamLite& stream, DmaOp dmaOp, u32 taskId);
 
@@ -238,7 +237,7 @@ private:
 
     void ParseConnVec(std::vector<char>& data);
 
-    void BuildUbDbSendTask(const StreamLite& stream, RmaConnLite* conn, u16 pi);
+    void BuildUbDbSendTask(const StreamLite& stream, const UbJettyLiteId& jettyLiteId, u32 pi);
 
     void BuildNotifyWaitTask(const StreamLite& stream, u32 notifyId);
 

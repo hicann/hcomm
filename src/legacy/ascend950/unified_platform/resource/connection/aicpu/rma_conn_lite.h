@@ -11,7 +11,6 @@
 #ifndef HCCLV2_RMA_CONN_LITE_H
 #define HCCLV2_RMA_CONN_LITE_H
 #include <memory>
-#include <utility>
 #include "rma_buf_slice_lite.h"
 #include "rmt_rma_buf_slice_lite.h"
 #include "log.h"
@@ -53,7 +52,6 @@ public:
     static std::unique_ptr<RmaConnLite> Create(std::vector<char>& uniqueId);
 
     UbJettyLiteId GetUbJettyLiteId() const;
-    UbJettyLiteId GetUbJettyLiteIdAndSeq(u16& seq);
 
     UbJettyLiteAttr GetUbJettyLiteAttr() const;
 
@@ -153,12 +151,6 @@ public:
             loc.size(), rmt.size(), cfg.cqeEn, out.pi);
     }
 
-    virtual void UpdateCi(const std::pair<u16, u16>* slots, size_t count)
-    {
-        (void)slots;
-        (void)count;
-    }
-
 protected:
     u32 qpVa_{0};
 
@@ -171,9 +163,6 @@ protected:
     bool dwqeCacheLocked_{false}; // direct WQE cache Lock
     u32 jfcPollMode_{0};          // 0代表STARS POLL， 1代表软件Poll
     u32 tpn_{0};
-
-    u16 dbSendSeq_{0}; // DbSend下发序号，通信线程自增
-    u16 dbDoneSeq_{0}; // DbSend完成序号，背景线程推进
 
     Eid rmtEid_;
     Eid locEid_;
